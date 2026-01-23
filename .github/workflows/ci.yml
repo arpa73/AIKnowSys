@@ -1,0 +1,220 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "development" ]
+  pull_request:
+    branches: [ "main", "development" ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: jewelry_portfolio
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install pytest pytest-django flake8 pytest-cov
+
+    - name: Run Linting
+      working-directory: ./backend
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --statistics
+
+    - name: Run Tests
+      env:
+        SECRET_KEY: test-secret-key
+        DEBUG: 'True'
+        DATABASE_URL: postgres://postgres:password@localhost:5432/jewelry_portfolio
+      run: |
+        cd backend
+        pytest
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Type Check
+      run: npm run type-check
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Run Unit Tests (excluding integration)
+      run: npm run test:run -- --exclude='**/*.integration.test.ts'
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: jewelry_portfolio
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install backend dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        pip install pytest pytest-django
+
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Run migrations
+      env:
+        SECRET_KEY: test-secret-key
+        DEBUG: 'True'
+        DATABASE_URL: postgres://postgres:password@localhost:5432/jewelry_portfolio
+      run: |
+        cd backend
+        python manage.py migrate
+
+    - name: Create test data
+      env:
+        SECRET_KEY: test-secret-key
+        DEBUG: 'True'
+        DATABASE_URL: postgres://postgres:password@localhost:5432/jewelry_portfolio
+      run: |
+        cd backend
+        python manage.py shell <<EOF
+        from django.contrib.auth import get_user_model
+        from jewelry_portfolio.models import BlogArticle, JewelryArticle, Category
+        
+        User = get_user_model()
+        
+        # Create admin user
+        admin = User.objects.create_superuser('admin', 'admin@test.com', 'admin123', is_admin=True)
+        
+        # Create categories (content_type should be 'blog' or 'article' string)
+        blog_cat = Category.objects.create(name='Techniques', content_type='blog')
+        jewelry_cat = Category.objects.create(name='Rings', content_type='article')
+        
+        # Create blog articles
+        for i in range(10):
+            BlogArticle.objects.create(
+                title=f'Test Blog Article {i+1}',
+                slug=f'test-blog-{i+1}',
+                content=f'Content for blog article {i+1}',
+                excerpt=f'Excerpt {i+1}',
+                is_published=True,
+                author=admin,
+                category=blog_cat if i % 2 == 0 else None
+            )
+        
+        # Create jewelry articles  
+        for i in range(20):
+            JewelryArticle.objects.create(
+                title=f'Test Jewelry {i+1}',
+                description=f'Description for jewelry {i+1}',
+                is_published=True,
+                is_sold=i % 3 == 0,
+                created_by=admin,
+                category=jewelry_cat if i % 2 == 0 else None
+            )
+        
+        print(f'Created {BlogArticle.objects.count()} blog articles')
+        print(f'Created {JewelryArticle.objects.count()} jewelry articles')
+        EOF
+
+
+    - name: Start backend server
+      env:
+        SECRET_KEY: test-secret-key
+        DEBUG: 'True'
+        DATABASE_URL: postgres://postgres:password@localhost:5432/jewelry_portfolio
+        TESTING: 'true'  # Disable rate limiting for integration tests
+      run: |
+        cd backend
+        python manage.py runserver 8000 &
+        echo $! > $GITHUB_WORKSPACE/backend.pid
+        # Wait for backend to be ready (up to 30 seconds)
+        for i in {1..30}; do
+          if curl -s http://localhost:8000/health/ > /dev/null 2>&1; then
+            echo "Backend is ready!"
+            exit 0
+          fi
+          echo "Waiting for backend... ($i/30)"
+          sleep 1
+        done
+        echo "Backend failed to start"
+        exit 1
+
+    - name: Run integration tests
+      working-directory: ./frontend
+      env:
+        VITE_API_BASE_URL: http://localhost:8000
+      run: npm run test:run tests/integration/api/
+
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f $GITHUB_WORKSPACE/backend.pid ]; then
+          kill $(cat $GITHUB_WORKSPACE/backend.pid) || true
+        fi
