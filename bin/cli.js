@@ -2,18 +2,35 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { init } from '../lib/commands/init.js';
 import { scan } from '../lib/commands/scan.js';
 import { migrate } from '../lib/commands/migrate.js';
 import { installAgents } from '../lib/commands/install-agents.js';
 import { installSkills } from '../lib/commands/install-skills.js';
 
+// Get version from package.json
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+let packageJson;
+try {
+  packageJson = JSON.parse(
+    readFileSync(join(__dirname, '../package.json'), 'utf-8')
+  );
+} catch (error) {
+  console.error(chalk.red('Error: Could not read package.json'));
+  process.exit(1);
+}
+
 const program = new Command();
 
 program
   .name('aiknowsys')
   .description('AI-Powered Development Workflow for Consistent, High-Quality Code')
-  .version('1.0.0');
+  .version(packageJson.version);
 
 program
   .command('init')

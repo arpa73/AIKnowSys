@@ -183,7 +183,7 @@ export async function installAgents(options) {
 
 ## 9. Release Checklist
 
-- [ ] Update version in `package.json`
+- [ ] Bump version: `npm version patch/minor/major` (auto-updates package.json)
 - [ ] Test all commands locally
 - [ ] Run `npm pack --dry-run` to verify package contents
 - [ ] Update CODEBASE_CHANGELOG.md
