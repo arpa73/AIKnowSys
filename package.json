@@ -1,0 +1,51 @@
+{
+  "name": "knowledge-system",
+  "version": "1.0.0",
+  "description": "AI-Powered Development Workflow for Consistent, High-Quality Code",
+  "keywords": [
+    "ai",
+    "copilot",
+    "claude",
+    "agents",
+    "knowledge-management",
+    "documentation",
+    "developer-workflow",
+    "code-review"
+  ],
+  "author": "arpa73",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arpa73/knowledge-system-template.git"
+  },
+  "homepage": "https://github.com/arpa73/knowledge-system-template#readme",
+  "bugs": {
+    "url": "https://github.com/arpa73/knowledge-system-template/issues"
+  },
+  "type": "module",
+  "bin": {
+    "knowledge-system": "./bin/cli.js",
+    "ks": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "templates/",
+    "scripts/",
+    "AGENTS.template.md",
+    "CODEBASE_CHANGELOG.template.md",
+    "CODEBASE_ESSENTIALS.template.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.23",
+    "ora": "^8.0.1"
+  }
+}

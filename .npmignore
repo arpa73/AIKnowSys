@@ -1,0 +1,31 @@
+# Development files
+.github/
+.vscode/
+.idea/
+
+# Documentation (included in repo, not package)
+docs/
+examples/
+CONTRIBUTING.md
+
+# Scripts (bash versions, npm uses lib/)
+scripts/
+
+# Test files
+*.test.js
+__tests__/
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes

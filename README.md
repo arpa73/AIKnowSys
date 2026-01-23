@@ -48,7 +48,36 @@ From production use in gnwebsite:
 
 ## Quick Start
 
-### For New Projects
+### Install via npm (Recommended)
+
+```bash
+# For new projects - interactive setup
+npx knowledge-system init
+
+# For existing projects - auto-detect and migrate
+npx knowledge-system migrate
+
+# Or install globally
+npm install -g knowledge-system
+knowledge-system init
+```
+
+**Available commands:**
+
+| Command | Description |
+|---------|-------------|
+| `npx knowledge-system init` | Initialize for a new project |
+| `npx knowledge-system migrate` | Full migration for existing projects |
+| `npx knowledge-system scan` | Scan codebase and generate draft ESSENTIALS |
+| `npx knowledge-system install-agents` | Install Developer + Architect agents |
+| `npx knowledge-system install-skills` | Install universal skills |
+
+### Alternative: Manual Setup
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
+
+#### For New Projects
 
 ```bash
 # Clone the template
@@ -62,7 +91,7 @@ cd knowledge-system-template
 # Files will be generated with your configuration
 ```
 
-### For Existing Projects
+#### For Existing Projects
 
 ```bash
 # Clone into your project
@@ -83,6 +112,8 @@ cp -r temp-template/templates ./
 # Complete TODO sections in CODEBASE_ESSENTIALS.md
 # Start using: @Developer <your request>
 ```
+
+</details>
 
 ---
 
