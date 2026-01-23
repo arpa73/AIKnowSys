@@ -210,6 +210,45 @@
 
 ---
 
+## Change Management (OpenSpec)
+
+**Recommended:** Use OpenSpec for spec-driven development on major changes.
+
+### When to Create OpenSpec Proposals:
+
+| Change Type | Create Proposal? |
+|-------------|------------------|
+| New features or capabilities | ✅ Yes |
+| Breaking changes (API, schema) | ✅ Yes |
+| Architecture changes | ✅ Yes |
+| Security-related changes | ✅ Yes |
+| Bug fixes, typos, formatting | ❌ No |
+| Non-breaking dependency updates | ❌ No |
+| Configuration changes | ❌ No |
+
+### OpenSpec Commands:
+
+```bash
+openspec list              # List active changes
+openspec list --specs      # List specifications  
+openspec create add-X      # Create new proposal
+openspec validate --strict # Validate all specs
+openspec archive X --yes   # Archive after deployment
+```
+
+### OpenSpec Workflow:
+
+1. **Create proposal:** `openspec create add-feature-name`
+2. **Fill out:** `proposal.md`, `tasks.md`, spec deltas
+3. **Validate:** `openspec validate add-feature-name --strict`
+4. **Get approval** before implementing
+5. **Implement** following tasks.md checklist
+6. **Archive** after deployment
+
+**See:** `openspec/AGENTS.md` for full workflow (if OpenSpec is installed)
+
+---
+
 ## Development Workflow
 
 ### Setting Up Local Environment

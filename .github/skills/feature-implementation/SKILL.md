@@ -1,11 +1,11 @@
 ---
 name: feature-implementation
-description: Step-by-step guide for implementing new features in gnwebsite fullstack Django/Vue project. Use when planning features, adding models/endpoints/APIs, creating UI components, or making changes spanning backend and frontend. Covers API-first development, OpenAPI schema sync, test-driven workflow, and when to create OpenSpec proposals vs direct implementation.
+description: Step-by-step guide for implementing new features in any project. Use when planning features, adding models/endpoints/APIs, creating UI components, or making changes spanning backend and frontend. Covers when to create OpenSpec proposals vs direct implementation, and provides framework-agnostic implementation patterns.
 ---
 
 # Feature Implementation Guide
 
-Comprehensive workflow for adding new features to gnwebsite fullstack application (Django backend + Vue frontend).
+Comprehensive workflow for adding new features to your project.
 
 ## When to Use This Skill
 
@@ -20,8 +20,8 @@ Use when:
 
 Before starting:
 - Read [CODEBASE_ESSENTIALS.md](../../../CODEBASE_ESSENTIALS.md) - Current patterns
-- Read [developer-checklist](../developer-checklist/SKILL.md) - Pre-commit checks
-- For breaking changes: Read [openspec/AGENTS.md](../../../openspec/AGENTS.md)
+- Check for relevant skills in `.github/skills/`
+- For breaking changes: Read `openspec/AGENTS.md` (if OpenSpec is installed)
 
 ## Decision Tree: Proposal or Direct Implementation?
 
@@ -131,483 +131,228 @@ openspec validate --strict
 
 Skip proposal, go directly to implementation steps below.
 
-## Implementation Workflow: Backend → Frontend
+## Implementation Workflow
 
-### Phase 1: Backend Foundation
+### Phase 1: Plan & Design
 
-#### 1. Create Django Model
+#### 1. Understand the Requirement
+- What problem does this solve?
+- Who are the users?
+- What are the acceptance criteria?
 
-**File**: `backend/jewelry_portfolio/models.py`
-
-```python
-class MyNewModel(models.Model):
-    """Model description"""
-    name = models.CharField(max_length=200)
-    description = models.TextField()
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return self.name
-```
-
-**Run migrations:**
+#### 2. Check Existing Patterns
 ```bash
-docker exec -it gnwebsite-backend-1 python manage.py makemigrations
-docker exec -it gnwebsite-backend-1 python manage.py migrate
+# Read project patterns
+cat CODEBASE_ESSENTIALS.md
+
+# Search for similar implementations
+grep -r "similar_feature" src/
 ```
 
-#### 2. Create Serializer
+#### 3. Break Down the Work
+Create a task list in your notes:
+- [ ] Backend/API changes needed
+- [ ] Frontend/UI changes needed
+- [ ] Database/schema changes
+- [ ] Tests to write
+- [ ] Documentation updates
 
-**File**: `backend/jewelry_portfolio/serializers.py`
+### Phase 2: Implement Backend First
 
-```python
-class MyNewModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyNewModel
-        fields = ['id', 'name', 'description', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
-```
+**Follow your project's backend patterns from CODEBASE_ESSENTIALS.md**
 
-**⚠️ CRITICAL - SerializerMethodField Arrays:**
+#### General Backend Checklist:
+1. **Create/modify data models**
+2. **Add API endpoints**
+3. **Write unit tests**
+4. **Run backend tests**
 
-```python
-# ✅ CORRECT - Use actual serializer class
-@extend_schema_field(RelatedItemSerializer(many=True))
-def get_items(self, obj):
-    return RelatedItemSerializer(obj.items.all(), many=True).data
-
-# ❌ WRONG - Generic object typing breaks frontend
-# @extend_schema_field(field={"type": "array", "items": {"type": "object"}})
-```
-
-#### 3. Create ViewSet/View
-
-```python
-from rest_framework import viewsets, permissions
-
-class MyNewModelViewSet(viewsets.ModelViewSet):
-    """API endpoint for MyNewModel"""
-    queryset = MyNewModel.objects.all()
-    serializer_class = MyNewModelSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        # Add filtering
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active == 'true')
-        return queryset
-```
-
-#### 4. Add URL Pattern
-
-**File**: `backend/jewelry_portfolio/urls.py`
-
-```python
-from .views import MyNewModelViewSet
-
-router = DefaultRouter()
-router.register(r'my-new-models', MyNewModelViewSet, basename='my-new-model')
-```
-
-#### 5. Write Backend Tests
-
-**File**: `backend/jewelry_portfolio/test_my_new_model.py`
-
-```python
-from django.test import TestCase
-from rest_framework.test import APIClient
-
-class MyNewModelAPITests(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.model = MyNewModel.objects.create(name='Test', description='Desc')
-    
-    def test_list_models(self):
-        response = self.client.get('/api/my-new-models/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['results']), 1)
-    
-    def test_filter_by_active(self):
-        MyNewModel.objects.create(name='Inactive', is_active=False)
-        response = self.client.get('/api/my-new-models/?is_active=true')
-        self.assertEqual(len(response.data['results']), 1)
-    
-    def test_create_model(self):
-        data = {'name': 'New', 'description': 'New desc'}
-        response = self.client.post('/api/my-new-models/', data)
-        self.assertEqual(response.status_code, 201)
-```
-
-**Run tests:**
+Example test command (varies by project):
 ```bash
-docker exec gnwebsite-backend-1 pytest backend/jewelry_portfolio/test_my_new_model.py -v
+# Python/Django
+pytest backend/ -v
+
+# Node.js
+npm test
+
+# Go
+go test ./...
 ```
 
-#### 6. Generate OpenAPI Schema
+### Phase 3: Implement Frontend
 
+**Follow your project's frontend patterns from CODEBASE_ESSENTIALS.md**
+
+#### General Frontend Checklist:
+1. **Create/modify components**
+2. **Connect to API endpoints**
+3. **Handle loading/error states**
+4. **Write component tests**
+5. **Run frontend tests**
+
+Example test commands (varies by project):
 ```bash
-docker exec gnwebsite-backend-1 python manage.py spectacular --file openapi_schema.json --format openapi-json
+# React/Vue with Vitest
+npm run test:run
+
+# Type checking
+npm run type-check
 ```
 
-### Phase 2: Frontend Integration
+### Phase 4: Testing & Validation
 
-#### 7. Generate TypeScript Client
-
+#### Run Full Test Suite
 ```bash
-cd frontend
-npx @openapitools/openapi-generator-cli generate \
-  -i ../backend/openapi_schema.json \
-  -g typescript-fetch \
-  -o src/api/generated
+# Follow your project's validation matrix
+# See CODEBASE_ESSENTIALS.md for exact commands
 ```
 
-**Verify generated:**
-- `src/api/generated/models/MyNewModel.ts`
-- `src/api/generated/apis/MyNewModelApi.ts`
+#### Manual Testing Checklist
+- [ ] Happy path works
+- [ ] Error handling works  
+- [ ] Loading states display correctly
+- [ ] No console errors
+- [ ] Responsive design works (if applicable)
 
-#### 8. Create Service Wrapper
+### Phase 5: Documentation & Commit
 
-**File**: `frontend/src/services/myNewModelService.ts`
+#### Update Documentation
+If you created a new pattern, add it to `CODEBASE_ESSENTIALS.md`:
+```markdown
+### Pattern: Feature Name
+- How to use it
+- Why this approach
+- Example code
+```
+
+#### Update Changelog
+Add entry to `CODEBASE_CHANGELOG.md`:
+```markdown
+## Session: Add Feature Name (Date)
+
+**Goal**: Brief description
+
+**Changes**:
+- [file](file#L123): What changed
+- [another/file](another/file): What changed
+
+**Validation**:
+- ✅ Backend tests: X passed
+- ✅ Frontend tests: X passed
+```
+
+#### Commit with Good Message
+```bash
+git add .
+git commit -m "feat: Add feature description
+
+- Backend: What was added
+- Frontend: What was added
+- Tests: Coverage added
+
+Tests: X passed"
+```
+
+## Common Patterns
+
+### ✅ API Error Handling
 
 ```typescript
-import { myNewModelApi, type MyNewModel, type MyNewModelRequest } from '@/api'
-
-export const myNewModelService = {
-  async getAll(filters?: { isActive?: boolean }) {
-    return await myNewModelApi.myNewModelList({ isActive: filters?.isActive })
-  },
-  
-  async getById(id: number) {
-    return await myNewModelApi.myNewModelRetrieve({ id })
-  },
-  
-  async create(data: MyNewModelRequest) {
-    return await myNewModelApi.myNewModelCreate({ myNewModelRequest: data })
-  },
-  
-  async update(id: number, data: MyNewModelRequest) {
-    return await myNewModelApi.myNewModelUpdate({ id, myNewModelRequest: data })
-  },
-  
-  async delete(id: number) {
-    await myNewModelApi.myNewModelDestroy({ id })
-  }
+// CORRECT - graceful error handling
+try {
+  const data = await api.create(payload)
+  showSuccess('Created successfully')
+} catch (error) {
+  console.error('Create failed:', error)
+  showError('Failed to create. Please try again.')
 }
+
+// WRONG - no error handling
+const data = await api.create(payload) // Will crash on error!
 ```
 
-#### 9. Write Service Tests
-
-**File**: `frontend/src/services/__tests__/myNewModelService.spec.ts`
+### ✅ Loading States
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { myNewModelService } from '../myNewModelService'
-import { myNewModelApi } from '@/api'
-
-vi.mock('@/api', () => ({
-  myNewModelApi: {
-    myNewModelList: vi.fn(),
-    myNewModelCreate: vi.fn(),
-    // ... other methods
-  }
-}))
-
-describe('myNewModelService', () => {
-  beforeEach(() => vi.clearAllMocks())
-  
-  it('should fetch all models', async () => {
-    const mockData = { results: [{ id: 1, name: 'Test' }] }
-    vi.mocked(myNewModelApi.myNewModelList).mockResolvedValue(mockData)
-    
-    const result = await myNewModelService.getAll()
-    
-    expect(result).toEqual(mockData)
-  })
-})
-```
-
-#### 10. Create Vue Component
-
-**File**: `frontend/src/views/MyNewModelManagement.vue`
-
-```vue
-<template>
-  <div class="management-page">
-    <h2>My New Models</h2>
-    
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    
-    <div v-else>
-      <div v-for="item in items" :key="item.id" class="item-card">
-        <h3>{{ item.name }}</h3>
-        <p>{{ item.description }}</p>
-        <button @click="handleEdit(item.id)">Edit</button>
-        <button @click="handleDelete(item.id)">Delete</button>
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { myNewModelService } from '@/services/myNewModelService'
-import type { MyNewModel } from '@/api'
-
-const items = ref<MyNewModel[]>([])
+// CORRECT - show loading feedback
 const loading = ref(false)
-const error = ref('')
 
-const loadItems = async () => {
+async function loadData() {
   loading.value = true
   try {
-    const response = await myNewModelService.getAll()
-    items.value = response.results || []
-  } catch (err) {
-    error.value = 'Failed to load items'
+    data.value = await api.getAll()
   } finally {
     loading.value = false
   }
 }
 
-const handleDelete = async (id: number) => {
-  if (!confirm('Are you sure?')) return
-  await myNewModelService.delete(id)
-  await loadItems()
-}
-
-onMounted(() => loadItems())
-</script>
+// Template
+<div v-if="loading">Loading...</div>
+<div v-else>{{ data }}</div>
 ```
 
-#### 11. Write Component Tests
-
-**File**: `frontend/src/views/__tests__/MyNewModelManagement.spec.ts`
+### ✅ Test Coverage
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import MyNewModelManagement from '../MyNewModelManagement.vue'
-import { myNewModelService } from '@/services/myNewModelService'
-
-vi.mock('@/services/myNewModelService')
-
-describe('MyNewModelManagement', () => {
-  it('should load and display items', async () => {
-    vi.mocked(myNewModelService.getAll).mockResolvedValue({
-      results: [{ id: 1, name: 'Test', description: 'Desc' }]
-    })
-    
-    const wrapper = mount(MyNewModelManagement)
-    await wrapper.vm.$nextTick()
-    
-    expect(wrapper.text()).toContain('Test')
-  })
+// Cover these cases:
+describe('Feature', () => {
+  it('handles success case', async () => { ... })
+  it('handles error case', async () => { ... })
+  it('handles empty data', async () => { ... })
+  it('handles loading state', async () => { ... })
 })
-```
-
-#### 12. Add Route (if needed)
-
-**File**: `frontend/src/router/index.ts`
-
-```typescript
-{
-  path: '/admin/my-new-models',
-  name: 'MyNewModelManagement',
-  component: () => import('@/views/MyNewModelManagement.vue'),
-  meta: { requiresAuth: true, requiresAdmin: true }
-}
-```
-
-### Phase 3: Testing & Validation
-
-#### 13. Run All Tests
-
-```bash
-# Backend
-docker exec gnwebsite-backend-1 pytest -v
-
-# Frontend
-cd frontend
-npm run test:run
-npm run type-check
-```
-
-#### 14. Manual Testing
-
-- [ ] Create item via UI
-- [ ] Edit existing item
-- [ ] Delete item with confirmation
-- [ ] Filter/search works
-- [ ] Error messages display
-- [ ] Loading states work
-- [ ] No console errors
-- [ ] Responsive design works
-
-### Phase 4: Documentation & Commit
-
-#### 15. Update Documentation
-
-If new pattern, update `CODEBASE_ESSENTIALS.md`:
-```markdown
-## Pattern: My New Feature
-- Use MyNewModelService for API calls
-- Always validate input before create/update
-- Default filter returns all items
-```
-
-#### 16. Update Changelog
-
-`CODEBASE_CHANGELOG.md`:
-```markdown
-### Session: Add My New Model Feature (Jan 13, 2026)
-
-**Goal**: Add MyNewModel management
-
-**Changes**:
-- Created backend (model, serializer, viewset, tests)
-- Generated TypeScript client
-- Built admin UI component
-- Added comprehensive tests
-
-**Validation**:
-- ✅ Backend: 15 tests passed
-- ✅ Frontend: 8 tests passed
-- ✅ Type check: passed
-```
-
-#### 17. Commit
-
-```bash
-git add .
-git commit -m "feat: Add MyNewModel management
-
-- Create backend with full CRUD
-- Add TypeScript client
-- Build admin UI
-- Add test coverage
-
-Tests: 23 passed"
-```
-
-## Common Patterns & Anti-Patterns
-
-### ✅ Image Handling
-
-```typescript
-// CORRECT
-import { useImageUrl } from '@/composables/useImageUrl'
-const { getImageUrl } = useImageUrl()
-const imageUrl = getImageUrl(item.image)
-
-// WRONG - can fail silently
-const imageUrl = item.image?.fileUrl
-```
-
-### ✅ API Client Usage
-
-```typescript
-// CORRECT - use service wrapper
-import { myNewModelService } from '@/services/myNewModelService'
-const items = await myNewModelService.getAll()
-
-// WRONG - raw fetch breaks auth/types
-const response = await fetch('/api/my-new-models/')
-```
-
-### ✅ OpenAPI Schema Typing
-
-```python
-# CORRECT - proper serializer typing
-@extend_schema_field(RelatedItemSerializer(many=True))
-def get_items(self, obj):
-    return RelatedItemSerializer(obj.items.all(), many=True).data
-
-# WRONG - breaks frontend types
-@extend_schema_field(field={"type": "array", "items": {"type": "object"}})
-```
-
-### ✅ Error Handling
-
-```typescript
-// CORRECT
-try {
-  await myNewModelService.create(data)
-  toast.success('Created')
-} catch (err) {
-  console.error('Create failed:', err)
-  toast.error('Failed to create')
-}
 ```
 
 ## Troubleshooting
 
-### Backend Tests Fail
-- Check migrations: `python manage.py migrate`
-- Verify test data in `setUp()` method
-- Check database state between tests
+### Tests Fail
+- Check if test data matches expected format
+- Verify mocks are set up correctly
+- Run tests in isolation to find conflicts
 
-### Frontend Tests Fail
-- Verify mock data matches API contract
-- Check if component needs auth context
-- Ensure dependencies mocked
-
-### Type Check Fails
-- Regenerate TypeScript client after backend changes
-- Check for `any` types
-- Verify imports correct
+### Type Errors
+- Regenerate types if API changed
+- Check import paths are correct
+- Verify nullable fields are handled
 
 ### Integration Issues
-- Check CORS in backend settings
-- Verify endpoints match
-- Check auth configuration
+- Check API endpoint URLs match
+- Verify authentication is configured
+- Check CORS settings if applicable
 
 ## Key Workflow Rules
 
-1. **Backend first**: Always implement and test backend before frontend
-2. **Schema sync**: Regenerate OpenAPI schema after backend changes
-3. **Type safety**: Use generated types, no `any` types
-4. **Test coverage**: Write tests for both backend and frontend
-5. **Service wrappers**: Always wrap API calls in service layer
-6. **Error handling**: Handle errors gracefully with user feedback
+1. **Plan before coding**: Understand requirements fully
+2. **Backend first**: API before UI
+3. **Test as you go**: Don't leave tests for the end
+4. **Document patterns**: Help future developers
+5. **Small commits**: Easier to review and revert
 
 ## Examples
 
-### Example 1: Adding a Filter
+### Example 1: Adding a Filter Feature
 
-**Backend**:
+**Backend (generic)**:
 ```python
-# 1. Add filter to viewset
-def get_queryset(self):
-    queryset = super().get_queryset()
-    category = self.request.query_params.get('category')
-    if category:
-        queryset = queryset.filter(category_id=category)
-    return queryset
-
-# 2. Write test
-def test_filter_by_category(self):
-    response = self.client.get('/api/items/?category=1')
-    self.assertEqual(len(response.data['results']), 2)
+# Add query parameter handling
+def get_list(request):
+    items = Item.objects.all()
+    if 'status' in request.query_params:
+        items = items.filter(status=request.query_params['status'])
+    return items
 ```
 
-**Frontend**:
+**Frontend (generic)**:
 ```typescript
-// 1. Regenerate client
-// 2. Update service
-async getAll(filters?: { category?: number }) {
-  return await itemsApi.itemsList({ category: filters?.category })
+// Add filter state and API call
+const filter = ref('')
+const items = ref([])
+
+async function loadItems() {
+  items.value = await api.getItems({ status: filter.value })
 }
 
-// 3. Use in component
-const items = await itemService.getAll({ category: selectedCategory.value })
+watch(filter, loadItems)
 ```
 
 ### Example 2: OpenSpec Proposal Flow
@@ -620,16 +365,14 @@ openspec create add-user-profiles
 # 3. Validate
 openspec validate add-user-profiles --strict
 
-# 4. Get approval
-# 5. Implement following this guide
+# 4. Get approval before implementing
+# 5. Implement following the workflow above
 # 6. After deployment
 openspec archive add-user-profiles --yes
 ```
 
 ## Related Resources
 
-- [developer-checklist](../developer-checklist/SKILL.md) - Pre-commit validation
-- [CODEBASE_ESSENTIALS.md](../../../CODEBASE_ESSENTIALS.md) - Current patterns
-- [openspec/AGENTS.md](../../../openspec/AGENTS.md) - OpenSpec workflow
-- [Backend tests](../../../backend/jewelry_portfolio/) - Example test patterns
-- [Frontend tests](../../../frontend/src/views/__tests__/) - Component tests
+- [CODEBASE_ESSENTIALS.md](../../../CODEBASE_ESSENTIALS.md) - Project patterns
+- [code-refactoring](../code-refactoring/SKILL.md) - Test-driven refactoring
+- `openspec/AGENTS.md` - OpenSpec workflow (if installed)

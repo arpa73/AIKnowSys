@@ -48,12 +48,41 @@ From production use in gnwebsite:
 
 ## Quick Start
 
-### For New Projects
+### Install via npm (Recommended)
+
+```bash
+# For new projects - interactive setup
+npx aiknowsys init
+
+# For existing projects - auto-detect and migrate
+npx aiknowsys migrate
+
+# Or install globally
+npm install -g aiknowsys
+aiknowsys init
+```
+
+**Available commands:**
+
+| Command | Description |
+|---------|-------------|
+| `npx aiknowsys init` | Initialize for a new project |
+| `npx aiknowsys migrate` | Full migration for existing projects |
+| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS |
+| `npx aiknowsys install-agents` | Install Developer + Architect agents |
+| `npx aiknowsys install-skills` | Install universal skills |
+
+### Alternative: Manual Setup
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
+
+#### For New Projects
 
 ```bash
 # Clone the template
-git clone https://github.com/YOUR_ORG/knowledge-system-template.git
-cd knowledge-system-template
+git clone https://github.com/YOUR_ORG/aiknowsys.git
+cd aiknowsys
 
 # Run interactive setup
 ./scripts/setup.sh
@@ -62,11 +91,11 @@ cd knowledge-system-template
 # Files will be generated with your configuration
 ```
 
-### For Existing Projects
+#### For Existing Projects
 
 ```bash
 # Clone into your project
-git clone https://github.com/YOUR_ORG/knowledge-system-template.git temp-template
+git clone https://github.com/YOUR_ORG/aiknowsys.git temp-template
 cp -r temp-template/scripts ./
 cp -r temp-template/templates ./
 
@@ -83,6 +112,8 @@ cp -r temp-template/templates ./
 # Complete TODO sections in CODEBASE_ESSENTIALS.md
 # Start using: @Developer <your request>
 ```
+
+</details>
 
 ---
 
@@ -508,6 +539,58 @@ const token = req.cookies.access_token
 const token = req.headers.authorization
 ```
 ```
+
+---
+
+## OpenSpec Integration (Recommended)
+
+**For teams and major features, we recommend using OpenSpec for spec-driven development.**
+
+### What is OpenSpec?
+
+OpenSpec is a specification-driven development tool that helps manage:
+- Breaking changes and API contracts
+- Architecture decisions with proposals
+- Feature planning with structured tasks
+- Change tracking and archiving
+
+### How it integrates with Knowledge System
+
+1. **During `init`:** You'll be asked if you want to use OpenSpec - if yes, it's **automatically installed**
+2. **During `scan`:** OpenSpec directories are automatically detected
+3. **In templates:** CODEBASE_ESSENTIALS.md includes an OpenSpec section
+4. **In skills:** The feature-implementation skill covers OpenSpec workflows
+
+### When to use OpenSpec proposals
+
+| Change Type | Create Proposal? |
+|-------------|------------------|
+| New features or capabilities | ✅ Yes |
+| Breaking changes (API, schema) | ✅ Yes |
+| Architecture changes | ✅ Yes |
+| Bug fixes, typos, formatting | ❌ No |
+| Non-breaking dependency updates | ❌ No |
+
+### Quick Start with OpenSpec
+
+```bash
+# Install OpenSpec CLI
+npm install -g openspec
+
+# Initialize in your project
+openspec init
+
+# Create a proposal for a new feature
+openspec create add-user-profiles
+
+# Validate before implementing
+openspec validate add-user-profiles --strict
+
+# After deployment, archive the change
+openspec archive add-user-profiles --yes
+```
+
+**Learn more:** [OpenSpec Documentation](https://github.com/your-org/openspec)
 
 ---
 
