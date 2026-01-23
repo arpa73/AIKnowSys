@@ -214,9 +214,9 @@ npm pack --dry-run
 
 # Local install test
 npm link
-knowledge-system --help
+aiknowsys --help
 ```
 
 ---
 
-*This file defines the AI-assisted development workflow for knowledge-system-template.*
+*This file defines the AI-assisted development workflow for aiknowsys.*

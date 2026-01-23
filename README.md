@@ -52,25 +52,25 @@ From production use in gnwebsite:
 
 ```bash
 # For new projects - interactive setup
-npx knowledge-system init
+npx aiknowsys init
 
 # For existing projects - auto-detect and migrate
-npx knowledge-system migrate
+npx aiknowsys migrate
 
 # Or install globally
-npm install -g knowledge-system
-knowledge-system init
+npm install -g aiknowsys
+aiknowsys init
 ```
 
 **Available commands:**
 
 | Command | Description |
 |---------|-------------|
-| `npx knowledge-system init` | Initialize for a new project |
-| `npx knowledge-system migrate` | Full migration for existing projects |
-| `npx knowledge-system scan` | Scan codebase and generate draft ESSENTIALS |
-| `npx knowledge-system install-agents` | Install Developer + Architect agents |
-| `npx knowledge-system install-skills` | Install universal skills |
+| `npx aiknowsys init` | Initialize for a new project |
+| `npx aiknowsys migrate` | Full migration for existing projects |
+| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS |
+| `npx aiknowsys install-agents` | Install Developer + Architect agents |
+| `npx aiknowsys install-skills` | Install universal skills |
 
 ### Alternative: Manual Setup
 

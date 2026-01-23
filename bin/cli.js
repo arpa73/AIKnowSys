@@ -11,7 +11,7 @@ import { installSkills } from '../lib/commands/install-skills.js';
 const program = new Command();
 
 program
-  .name('knowledge-system')
+  .name('aiknowsys')
   .description('AI-Powered Development Workflow for Consistent, High-Quality Code')
   .version('1.0.0');
 

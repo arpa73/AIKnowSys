@@ -1,4 +1,4 @@
-# Knowledge System Template - Codebase Essentials
+# aiknowsys - Codebase Essentials
 
 > **Last Updated:** January 23, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
@@ -191,4 +191,4 @@ export async function installAgents(options) {
 
 ---
 
-*This file is the single source of truth for AI assistants working on knowledge-system-template.*
+*This file is the single source of truth for AI assistants working on aiknowsys.*

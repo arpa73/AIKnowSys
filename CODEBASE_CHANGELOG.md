@@ -11,8 +11,8 @@
 **Changes:**
 
 - [package.json](package.json): Created npm package configuration
-  - Name: `knowledge-system`
-  - Binaries: `knowledge-system` and `ks` (alias)
+  - Name: `aiknowsys`
+  - Binaries: `aiknowsys` and `aks` (alias)
   - Dependencies: commander, inquirer, chalk, ora
   
 - [bin/cli.js](bin/cli.js): Main CLI entry point
