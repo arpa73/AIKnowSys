@@ -542,6 +542,58 @@ const token = req.headers.authorization
 
 ---
 
+## OpenSpec Integration (Recommended)
+
+**For teams and major features, we recommend using OpenSpec for spec-driven development.**
+
+### What is OpenSpec?
+
+OpenSpec is a specification-driven development tool that helps manage:
+- Breaking changes and API contracts
+- Architecture decisions with proposals
+- Feature planning with structured tasks
+- Change tracking and archiving
+
+### How it integrates with Knowledge System
+
+1. **During `init`:** You'll be asked if you want to use OpenSpec - if yes, it's **automatically installed**
+2. **During `scan`:** OpenSpec directories are automatically detected
+3. **In templates:** CODEBASE_ESSENTIALS.md includes an OpenSpec section
+4. **In skills:** The feature-implementation skill covers OpenSpec workflows
+
+### When to use OpenSpec proposals
+
+| Change Type | Create Proposal? |
+|-------------|------------------|
+| New features or capabilities | ✅ Yes |
+| Breaking changes (API, schema) | ✅ Yes |
+| Architecture changes | ✅ Yes |
+| Bug fixes, typos, formatting | ❌ No |
+| Non-breaking dependency updates | ❌ No |
+
+### Quick Start with OpenSpec
+
+```bash
+# Install OpenSpec CLI
+npm install -g openspec
+
+# Initialize in your project
+openspec init
+
+# Create a proposal for a new feature
+openspec create add-user-profiles
+
+# Validate before implementing
+openspec validate add-user-profiles --strict
+
+# After deployment, archive the change
+openspec archive add-user-profiles --yes
+```
+
+**Learn more:** [OpenSpec Documentation](https://github.com/your-org/openspec)
+
+---
+
 ## Philosophy
 
 ### Why This Approach Works

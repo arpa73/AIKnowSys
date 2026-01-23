@@ -66,6 +66,11 @@
 
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
+**For breaking changes or new features, consider using OpenSpec:**
+- See "Change Management (OpenSpec)" section in CODEBASE_ESSENTIALS.md
+- Create proposal: `openspec create add-feature-name`
+- Get approval before implementing
+
 ### 3️⃣ IMPLEMENT: Write Code + Tests
 
 Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
