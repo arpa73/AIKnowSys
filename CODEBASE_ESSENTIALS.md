@@ -10,11 +10,11 @@
 
 | Component | Technology |
 |-----------|------------|
-| Runtime | Node.js 18+ |
+| Runtime | Node.js 20+ |
 | Language | JavaScript (ES Modules) |
-| CLI Framework | Commander.js 12.x |
-| User Prompts | Inquirer.js 9.x |
-| Terminal UI | Chalk 5.x, Ora 8.x |
+| CLI Framework | Commander.js 14.x |
+| User Prompts | Inquirer.js 13.x |
+| Terminal UI | Chalk 5.x, Ora 9.x |
 | Package Manager | npm |
 | Distribution | npm registry |
 
