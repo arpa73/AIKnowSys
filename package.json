@@ -40,7 +40,9 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "node bin/cli.js --help",
+    "prepublishOnly": "node bin/cli.js --help && npm pack --dry-run",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "chalk": "^5.3.0",
