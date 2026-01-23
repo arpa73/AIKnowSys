@@ -16,11 +16,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/arpa73/knowledge-system-template.git"
+    "url": "https://github.com/arpa73/aiknowsys.git"
   },
-  "homepage": "https://github.com/arpa73/knowledge-system-template#readme",
+  "homepage": "https://github.com/arpa73/aiknowsys#readme",
   "bugs": {
-    "url": "https://github.com/arpa73/knowledge-system-template/issues"
+    "url": "https://github.com/arpa73/aiknowsys/issues"
   },
   "type": "module",
   "bin": {

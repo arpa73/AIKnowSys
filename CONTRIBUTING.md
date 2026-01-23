@@ -83,8 +83,8 @@ For scripts or automation:
 1. **Fork the repository**
 
 ```bash
-git clone https://github.com/[YOUR-USERNAME]/knowledge-system-template.git
-cd knowledge-system-template
+git clone https://github.com/[YOUR-USERNAME]/aiknowsys.git
+cd aiknowsys
 ```
 
 2. **Create a feature branch**
@@ -179,7 +179,7 @@ Then create a Pull Request on GitHub with:
 
 ## Getting Help
 
-- **Questions**: [GitHub Discussions](https://github.com/[YOUR-USERNAME]/knowledge-system-template/discussions)
+- **Questions**: [GitHub Discussions](https://github.com/[YOUR-USERNAME]/aiknowsys/discussions)
 - **Real-time chat**: [Discord](link-to-discord) (if available)
 - **Email**: [your-email] for private concerns
 

@@ -52,13 +52,13 @@ The knowledge system template includes **placeholders** that you must fill in ba
 **When to use:** Starting a greenfield project.
 
 ```bash
-# 1. Clone or download the knowledge-system-template
-git clone https://github.com/your-org/knowledge-system-template.git
+# 1. Clone or download aiknowsys
+git clone https://github.com/your-org/aiknowsys.git
 
 # 2. Copy template files to your project
-cp -r knowledge-system-template/templates/* /path/to/your/project/
-cp -r knowledge-system-template/scripts /path/to/your/project/
-cp -r knowledge-system-template/.github /path/to/your/project/
+cp -r aiknowsys/templates/* /path/to/your/project/
+cp -r aiknowsys/scripts /path/to/your/project/
+cp -r aiknowsys/.github /path/to/your/project/
 
 # 3. Run interactive setup
 cd /path/to/your/project
@@ -88,12 +88,12 @@ bash scripts/setup.sh
 **When to use:** Adding knowledge system to established codebase.
 
 ```bash
-# 1. Clone or download the knowledge-system-template
-git clone https://github.com/your-org/knowledge-system-template.git
+# 1. Clone or download aiknowsys
+git clone https://github.com/your-org/aiknowsys.git
 
 # 2. Copy files to your project
-cp -r knowledge-system-template/scripts /path/to/your/project/
-cp -r knowledge-system-template/templates /path/to/your/project/
+cp -r aiknowsys/scripts /path/to/your/project/
+cp -r aiknowsys/templates /path/to/your/project/
 
 # 3. Run migration workflow
 cd /path/to/your/project

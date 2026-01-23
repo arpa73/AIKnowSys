@@ -15,7 +15,7 @@ mkdir -p .github/agents
 # Copy templates
 if [ ! -f "templates/agents/developer.agent.template.md" ]; then
   echo "❌ Error: templates/agents/ not found"
-  echo "   Run this script from the knowledge-system-template directory"
+  echo "   Run this script from the aiknowsys directory"
   exit 1
 fi
 

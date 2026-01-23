@@ -81,8 +81,8 @@ aiknowsys init
 
 ```bash
 # Clone the template
-git clone https://github.com/YOUR_ORG/knowledge-system-template.git
-cd knowledge-system-template
+git clone https://github.com/YOUR_ORG/aiknowsys.git
+cd aiknowsys
 
 # Run interactive setup
 ./scripts/setup.sh
@@ -95,7 +95,7 @@ cd knowledge-system-template
 
 ```bash
 # Clone into your project
-git clone https://github.com/YOUR_ORG/knowledge-system-template.git temp-template
+git clone https://github.com/YOUR_ORG/aiknowsys.git temp-template
 cp -r temp-template/scripts ./
 cp -r temp-template/templates ./
 

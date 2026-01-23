@@ -128,12 +128,12 @@ Use the migration script to auto-detect your stack:
 
 ```bash
 # 1. Clone the template repository
-git clone https://github.com/your-org/knowledge-system-template.git /tmp/knowledge-template
+git clone https://github.com/your-org/aiknowsys.git /tmp/aiknowsys-template
 
 # 2. Copy migration tools to your project
 cd /path/to/your/project
-cp -r /tmp/knowledge-template/scripts ./
-cp -r /tmp/knowledge-template/templates ./
+cp -r /tmp/aiknowsys-template/scripts ./
+cp -r /tmp/aiknowsys-template/templates ./
 
 # 3. Run the migration script
 bash scripts/migrate-existing.sh

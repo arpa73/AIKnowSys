@@ -33,7 +33,7 @@
 ## 3. Project Structure
 
 ```
-knowledge-system-template/
+aiknowsys/
 ├── bin/
 │   └── cli.js              # CLI entry point
 ├── lib/

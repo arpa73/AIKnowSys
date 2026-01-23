@@ -165,7 +165,7 @@ echo "📝 Creating CODEBASE_ESSENTIALS.md..."
 
 if [ ! -f "templates/CODEBASE_ESSENTIALS.template.md" ]; then
   echo "❌ Error: templates/CODEBASE_ESSENTIALS.template.md not found"
-  echo "   Make sure you're running this from the knowledge-system-template directory"
+  echo "   Make sure you're running this from the aiknowsys directory"
   exit 1
 fi
 
