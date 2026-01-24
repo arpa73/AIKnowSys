@@ -33,6 +33,10 @@ describe('init command', () => {
     assert.ok(fs.existsSync(path.join(testDir, 'CODEBASE_ESSENTIALS.md')), 'CODEBASE_ESSENTIALS.md should exist');
     assert.ok(fs.existsSync(path.join(testDir, 'AGENTS.md')), 'AGENTS.md should exist');
     assert.ok(fs.existsSync(path.join(testDir, 'CODEBASE_CHANGELOG.md')), 'CODEBASE_CHANGELOG.md should exist');
+    
+    // Verify content includes project name
+    const essentials = fs.readFileSync(path.join(testDir, 'CODEBASE_ESSENTIALS.md'), 'utf-8');
+    assert.ok(essentials.includes(`test-${testDir.split('-').pop()}`), 'Should include project name');
   });
 
   it('should install custom agents', async () => {
