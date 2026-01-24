@@ -144,10 +144,12 @@ describe('init command', () => {
         encoding: 'utf-8'
       });
 
-      // Verify AI prompt is displayed
+      // Verify AI Bootstrap prompt is displayed
       assert.ok(output.includes('AI Assistant Prompt'), 'Should show AI prompt section');
-      assert.ok(output.includes('Complete TODO sections'), 'Should mention completing TODOs');
+      assert.ok(output.includes('AI-Guided Project Bootstrap'), 'Should mention AI-Guided Bootstrap');
       assert.ok(output.includes('CODEBASE_ESSENTIALS.md'), 'Should reference CODEBASE_ESSENTIALS.md');
+      // New AI-first flow: helps build project for empty directories
+      assert.ok(output.includes('let\'s design the project') || output.includes('scan your existing codebase'), 'Should mention project design or scanning');
     } finally {
       if (fs.existsSync(testYesDir)) {
         fs.rmSync(testYesDir, { recursive: true, force: true });
