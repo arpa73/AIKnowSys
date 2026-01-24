@@ -1,4 +1,4 @@
-# Knowledge System Template
+# aiknowsys - Knowledge System Template
 
 **AI-Powered Development Workflow for Consistent, High-Quality Code**
 
