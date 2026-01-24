@@ -74,6 +74,42 @@ aiknowsys init
 
 **💡 AI-Assisted Completion:** After running any command, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, etc.) to automatically complete the TODO sections based on your actual codebase. No more manual documentation work!
 
+---
+
+## AI Tool Compatibility
+
+### ✅ Works with ANY AI Tool
+
+These components work with **all AI assistants** (Claude Desktop, ChatGPT, Cursor, Gemini CLI, etc.):
+
+- **`CODEBASE_ESSENTIALS.md`** - Reference this file manually: `@CODEBASE_ESSENTIALS.md`
+- **`AGENTS.md`** - Copy/paste workflow instructions to any AI
+- **`CODEBASE_CHANGELOG.md`** - Historical context for any AI
+- **`.github/skills/`** - Read skills with: `@.github/skills/feature-implementation/SKILL.md`
+
+You can use the core knowledge system with any AI tool by manually referencing these files.
+
+### 🎯 GitHub Copilot-Specific Features
+
+These features **only work in VS Code with GitHub Copilot Chat**:
+
+- **Custom Agents** (`@Developer`, `@SeniorArchitect`) - Automatic agent triggering
+- **Auto-handoff workflow** - Developer → Architect review pipeline
+- **`.github/agents/`** directory - Auto-loaded by Copilot's Agent Skills feature
+
+**Without Copilot:** You can still follow the Developer → Architect workflow by manually copying prompts to your AI tool. The automation just won't be automatic.
+
+### 🔮 Roadmap: Multi-Tool Support
+
+**Planned for near future:**
+- **Claude Desktop MCP Server** - Native agent support for Claude Desktop
+- **Cursor integration** - Custom agent support
+- **Universal agent format** - Tool-agnostic agent definitions
+
+Stay tuned for updates!
+
+---
+
 ### Alternative: Manual Setup
 
 <details>
@@ -142,6 +178,8 @@ cp -r temp-template/templates ./
 ### 2. Custom Agents (Developer + Architect)
 
 **Purpose:** Automated quality gate enforcing documented patterns.
+
+**Platform:** GitHub Copilot in VS Code (other AI tools: see [AI Tool Compatibility](#ai-tool-compatibility))
 
 **Workflow:**
 ```
@@ -640,6 +678,9 @@ A: Create separate validation commands per language. Example: `pytest` for Pytho
 
 **Q: Can I use this without AI assistants?**  
 A: Yes! The documentation and workflow benefit human developers too. Think of it as "docs that AI can also read."
+
+**Q: Does this only work with GitHub Copilot?**  
+A: No! Core knowledge files (CODEBASE_ESSENTIALS.md, skills) work with any AI tool. The custom agents (`@Developer`, `@SeniorArchitect`) require GitHub Copilot in VS Code, but you can manually follow the same workflow with Claude Desktop, ChatGPT, Cursor, or any AI assistant. See [AI Tool Compatibility](#ai-tool-compatibility) for details.
 
 **Q: How do I update the system as my project evolves?**  
 A: Update CODEBASE_ESSENTIALS.md when patterns change. Agents automatically enforce the updated patterns. Add changelog entry documenting the evolution.
