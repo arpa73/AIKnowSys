@@ -74,3 +74,6 @@ Cargo.lock
 *.tmp
 *.temp
 .cache/
+
+# npm files
+.npmrc
