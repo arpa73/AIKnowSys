@@ -148,8 +148,9 @@ describe('init command', () => {
       assert.ok(output.includes('AI Assistant Prompt'), 'Should show AI prompt section');
       assert.ok(output.includes('AI-Guided Project Bootstrap'), 'Should mention AI-Guided Bootstrap');
       assert.ok(output.includes('CODEBASE_ESSENTIALS.md'), 'Should reference CODEBASE_ESSENTIALS.md');
-      // New AI-first flow: helps build project for empty directories
-      assert.ok(output.includes('let\'s design the project') || output.includes('scan your existing codebase'), 'Should mention project design or scanning');
+      // New AI-first flow: documentation before code
+      assert.ok(output.includes('discuss and design the project') || output.includes('scan your existing codebase'), 'Should mention project design or scanning');
+      assert.ok(output.includes('document the architecture') || output.includes('Complete all TODO sections'), 'Should emphasize documentation');
     } finally {
       if (fs.existsSync(testYesDir)) {
         fs.rmSync(testYesDir, { recursive: true, force: true });

@@ -362,6 +362,20 @@ openspec archive X --yes   # Archive after deployment
 4. **Fill in examples** with real code from your project
 5. **Update regularly** as patterns evolve
 
+**⚠️ CRITICAL RULES FOR AI AGENTS:**
+
+When filling this template, you MUST:
+- ✅ Replace `{{PLACEHOLDERS}}` with **REAL values from the project**, not generic text
+- ✅ Keep section headings **EXACTLY as written** (e.g., "Testing Patterns" stays "Testing Patterns")
+- ✅ Use actual commands, file paths, and code snippets from the codebase
+- ✅ Make content specific to THIS project, not generic advice
+
+When filling this template, you MUST NOT:
+- ❌ Change section headings (e.g., "Testing Patterns" → "Testing Guidelines")
+- ❌ Replace placeholders with other placeholders (e.g., `{{TEST_ORGANIZATION}}` → "Manual testing only")
+- ❌ Add generic content that could apply to any project
+- ❌ Skip sections - fill them or remove them
+
 **Common placeholders:**
 - `{{PROJECT_NAME}}` - Your project name
 - `{{DATE}}` - Current date

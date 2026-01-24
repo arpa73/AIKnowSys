@@ -1,6 +1,6 @@
 # aiknowsys - Codebase Essentials
 
-> **Last Updated:** January 23, 2026  
+> **Last Updated:** January 24, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
 > **Maintainer:** arpa73
 
@@ -90,6 +90,36 @@ export async function commandName(options) {
 }
 ```
 
+### Inquirer Prompt Compatibility
+```javascript
+// ⚠️ IMPORTANT: Use 'rawlist' instead of 'list' for VS Code terminal compatibility
+// VS Code integrated terminal doesn't support arrow key navigation in 'list' prompts
+// 'rawlist' shows numbered options that users can type (1, 2, 3)
+
+// ✅ GOOD: Works in all terminals (VS Code, iTerm, terminals, WSL)
+await inquirer.prompt([{
+  type: 'rawlist',      // Shows numbered list, user types number
+  name: 'choice',
+  message: 'Select option:',
+  choices: [...],
+  default: 1            // Use number for default (1 = first option)
+}]);
+
+// ❌ BAD: Doesn't work in VS Code terminal
+await inquirer.prompt([{
+  type: 'list',         // Requires arrow keys - broken in VS Code
+  name: 'choice',
+  message: 'Select option:',
+  choices: [...]
+}]);
+
+// Other types that work universally:
+// - 'input' (text input)
+// - 'confirm' (yes/no)
+// - 'checkbox' (multi-select with space key)
+// - 'password' (hidden input)
+```
+
 ### Template Variable Replacement
 ```javascript
 // Use {{VARIABLE}} syntax in templates
@@ -130,7 +160,14 @@ export async function installAgents(options) {
    - Never modify files in `templates/` - they're the source of truth
    - User customization happens in generated files
 
-5. **Backwards Compatibility**
+5. **Template Structure Integrity**
+   - When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
+   - Replace {{PLACEHOLDERS}} with real values, not generic placeholders
+   - Preserve template structure exactly (don't rename sections)
+   - Example: Keep "Testing Patterns" as-is, don't change to "Testing Guidelines"
+   - Example: Replace {{TEST_ORGANIZATION}} with actual test structure, not "Manual testing only"
+
+6. **Backwards Compatibility**
    - Bash scripts in `scripts/` must remain functional
    - npm CLI is additive, not replacement
 
