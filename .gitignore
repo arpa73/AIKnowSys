@@ -66,6 +66,9 @@ coverage/
 .coverage
 htmlcov/
 
+# Test temporary files
+test/tmp/
+
 # Rust
 target/
 Cargo.lock

@@ -40,8 +40,9 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "node bin/cli.js --help",
-    "prepublishOnly": "node bin/cli.js --help && npm pack --dry-run",
+    "test": "node --test test/*.test.js",
+    "test:cli": "node bin/cli.js --help",
+    "prepublishOnly": "npm run test:cli && npm pack --dry-run",
     "postversion": "git push && git push --tags"
   },
   "dependencies": {

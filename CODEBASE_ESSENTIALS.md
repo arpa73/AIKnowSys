@@ -24,6 +24,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
+| `npm test` | Run unit tests | All tests pass |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
 | `npm pack --dry-run` | Package contents | Lists correct files |
