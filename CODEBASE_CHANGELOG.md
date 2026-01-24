@@ -23,11 +23,23 @@
     - For existing projects: Mentions OpenSpec in step 6
     - For new projects: Mentions OpenSpec in Phase 3 completion notes
   - **Line 574:** Pass `answers.useOpenSpec` to `displayAIBootstrapPrompt`
+  - **Lines 328-375:** Improved `setupOpenSpec` function
+    - Better error handling: separate install and init failures
+    - Changed `stdio: 'pipe'` to `stdio: 'inherit'` for better user feedback during install
+    - Clearer messaging: users see npm install progress in real-time
+    - Helpful fallback: suggests `npx openspec init` if global install fails
+
+- [test/init.test.js](test/init.test.js): Added OpenSpec integration tests
+  - New test: `should support OpenSpec integration when enabled`
+  - New test: `should mention OpenSpec in AI prompt when enabled`
+  - Validates conditional logic and backward compatibility
 
 **Validation:**
-- ✅ All 9 tests passing
+- ✅ All 11 tests passing (was 9, added 2)
 - ✅ No regressions in existing init flow
 - ✅ OpenSpec prompts display correctly in both AI and manual modes
+- ✅ Automatic installation works when user has npm permissions
+- ✅ Graceful fallback with clear instructions if installation fails
 
 **Key Learning:** OpenSpec integration makes aiknowsys more enterprise-friendly by offering spec-driven development from day 1, addressing company requirements for structured change management.
 
