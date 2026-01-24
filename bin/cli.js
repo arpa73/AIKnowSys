@@ -10,6 +10,7 @@ import { scan } from '../lib/commands/scan.js';
 import { migrate } from '../lib/commands/migrate.js';
 import { installAgents } from '../lib/commands/install-agents.js';
 import { installSkills } from '../lib/commands/install-skills.js';
+import { update } from '../lib/commands/update.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +66,14 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-s, --skills <skills...>', 'Specific skills to install')
   .action(installSkills);
+
+program
+  .command('update')
+  .description('Update agents, skills, and workflow to latest version')
+  .option('-d, --dir <directory>', 'Project directory', '.')
+  .option('-y, --yes', 'Update all components without prompting')
+  .option('-f, --force', 'Force update even if already up to date')
+  .action(update);
 
 // Default command - show help with styled banner
 program

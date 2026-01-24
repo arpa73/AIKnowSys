@@ -1,8 +1,4 @@
-# Knowledge System Template - Agents Configuration
-
-> Defines the AI-assisted development workflow for this project.
-
----
+# AI Agent Instructions
 
 ## 🚨 MANDATORY SESSION START PROTOCOL
 
@@ -25,7 +21,7 @@
 **Step 3: Proceed with Implementation**
 
 ### Why This Protocol Exists:
-- Prevents pattern violations (ES Modules, path handling, etc.)
+- Prevents pattern violations
 - Ensures validation happens before claiming work is complete
 - Creates accountability trail for complex changes
 - Catches architectural issues before they become bugs
@@ -37,15 +33,11 @@
 **Before ANY change (even small fixes):**
 - [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
 - [ ] Read relevant skill if applicable
-- [ ] Make changes
+- [ ] Make changes + write/update tests
 - [ ] **VALIDATE** (see validation matrix below)
 - [ ] Update docs if patterns changed
 
----
-
-## Validation Matrix
-
-Before any change is considered complete, run these validations:
+**Validation Matrix (ALWAYS run after changes):**
 
 | Changed | Commands | Required |
 |---------|----------|----------|
@@ -89,46 +81,31 @@ Before any change is considered complete, run these validations:
 - Create proposal: `openspec create add-feature-name`
 - Get approval before implementing
 
-### 3️⃣ IMPLEMENT: Write Code
+### 3️⃣ IMPLEMENT: Write Code + Tests
 
-Follow patterns from CODEBASE_ESSENTIALS.md:
-- ES Modules only (import/export)
-- Use `path.resolve()` for user paths
-- Use `getPackageDir()` for template paths
-- Graceful error handling with helpful messages
+Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ### 4️⃣ VALIDATE: Run Tests & Checks (MANDATORY - DO NOT SKIP!)
 
+**⚠️ CRITICAL: Run validation EVERY TIME you make a change (even small fixes!)**
+
+**Use the Validation Matrix from Quick Reference above.**
+
+**🚨 RULE: Never claim work is complete without running validation!**
+**✅ Only say "done" after all relevant tests pass!**
+
+### 5️⃣ DOCUMENT: Update Changelog (MANDATORY for significant changes)
+
+**When to update** (automatic, don't ask):
+- After architectural changes, new features, performance fixes
+- After bug fixes that reveal design issues
+- When you discover missing/outdated patterns
+
+**What to update**:
 ```bash
-# Always run after changes
-node bin/cli.js --help
-node bin/cli.js <changed-command> --help
-
-# Before publishing
-npm pack --dry-run
+# Add session entry to CODEBASE_CHANGELOG.md at the TOP
+# Update CODEBASE_ESSENTIALS.md if patterns/invariants changed
 ```
-
----
-
-## 🛑 VALIDATION CHECKPOINT
-
-**Before saying "done" to the user, ALWAYS paste this checklist:**
-
-```
-✅ Validation Results:
-   [ ] Tests passed (npm test / pytest / cargo test)
-   [ ] CLI commands work (node bin/cli.js --help)
-   [ ] No syntax/linting errors
-   [ ] Docs updated (if patterns changed)
-```
-
-**If you can't check all boxes, you're NOT done!**
-
-**Never claim work is complete without showing this checklist with actual results.**
-
----
-
-### 5️⃣ DOCUMENT: Update Changelog (for significant changes)
 
 **Session entry template**:
 ```markdown
@@ -138,10 +115,11 @@ npm pack --dry-run
 
 **Changes**:
 - [file/path](file/path#L123): Description with line numbers
+- [another/file](another/file): What changed
 
 **Validation**:
-- ✅ CLI: All commands work
-- ✅ Templates: No broken variables
+- ✅ Tests: X passed
+- ✅ Type check: No errors
 
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 ```
@@ -155,171 +133,85 @@ Only end your turn after completing steps 1-5. Tell the user:
 
 ---
 
-## 📖 REAL EXAMPLE SCENARIOS
+## 🚫 When NOT to Update Changelog
 
-**These examples show the correct workflow for common situations:**
-
-### Scenario 1: Simple Feature Request
-
-**User says:** "Add dark mode"
-
-**Correct workflow:**
-1. Read CODEBASE_ESSENTIALS.md for existing styling patterns
-2. Create todo list (3-5 items: research pattern, implement, test, validate, document)
-3. Implement changes following documented patterns
-4. Run validation matrix (tests, type-check, lint)
-5. Update CODEBASE_ESSENTIALS.md if new patterns introduced
-6. Show validation checkpoint checklist before claiming done
+- Trivial changes (typos, formatting)
+- Work in progress (wait until complete)
+- Exploratory research without implementation
+- Simple bug fixes that don't reveal new patterns
 
 ---
 
-### Scenario 2: Multi-Phase Request (STOP BETWEEN PHASES!)
-
-**User says:** "First plan the user authentication system, then we'll build it"
-
-**Correct workflow:**
-1. **Phase 1 - Planning:**
-   - Read CODEBASE_ESSENTIALS.md for auth patterns
-   - Research best practices (JWT vs sessions, etc.)
-   - Create design document with approach
-   - **STOP** - Present plan and say: "Here's the plan. Please review and let me know if you approve."
-   - **WAIT** for explicit approval ("looks good", "proceed", "go ahead")
-
-2. **Phase 2 - Implementation:**
-   - Only start after user approval
-   - Create todo list for implementation
-   - Implement → Test → Validate → Document
-   - Show validation checkpoint before claiming done
-
-**🚨 Key:** Recognize stop signals ("first X, then Y") and WAIT between phases!
-
----
-
-### Scenario 3: Quick Fix
-
-**User says:** "Quick fix for that typo in the README"
-
-**Correct workflow:**
-1. Still read CODEBASE_ESSENTIALS.md (yes, even for quick fixes!)
-2. Create todo (even if it's just one item: "Fix typo + validate")
-3. Make the fix
-4. Run validation: check links, verify formatting
-5. No changelog needed for typos (unless it changed a pattern)
-6. Show validation checkpoint
-
-**Remember:** "Quick" doesn't mean "skip the process"!
-
----
-
-### Scenario 4: Knowledge System Setup (NEW PROJECT)
-
-**User says:** "Help me set up aiknowsys for my new React project"
-
-**Correct workflow:**
-1. **Phase 1 - Discuss & Design** (THEN STOP)
-   - Ask about project goals, tech stack choices
-   - Discuss architecture decisions
-   - Present design summary
-   - **WAIT** for approval
-
-2. **Phase 2 - Document** (THEN STOP)
-   - Fill CODEBASE_ESSENTIALS.md with agreed tech stack
-   - Document patterns and conventions
-   - Set up validation matrix
-   - Show what you filled in
-   - **WAIT** for approval
-
-3. **Phase 3 - DONE!**
-   - Knowledge system is ready
-   - User can now build the project (separate session)
-
-**🚫 DO NOT:** Build the full codebase, create package.json, or implement features!
-**✅ ONLY:** Fill in the knowledge system documentation!
-
----
-
-## Custom Agents
-
-### @Developer
-
-**Role:** Primary implementer for features and fixes.
-
-**Workflow:**
-1. Implement the requested change
-2. Ensure code follows patterns in CODEBASE_ESSENTIALS.md
-3. Auto-handoff to @SeniorArchitect for review
-
-**Guidelines:**
-- Use ES Modules (import/export)
-- Follow existing command structure patterns
-- Keep CLI output user-friendly with chalk/ora
-- Handle errors gracefully
-
-### @SeniorArchitect
-
-**Role:** Code reviewer enforcing quality standards.
-
-**Review Criteria:**
-- **KISS:** Is this the simplest solution?
-- **DRY:** Any duplication that should be abstracted?
-- **SOLID:** Single responsibility, proper abstractions?
-- **YAGNI:** Any speculative features?
-- **CODEBASE_ESSENTIALS.md compliance:** Follows documented patterns?
-
-**Checklist:**
-- [ ] Code follows ES Module patterns
-- [ ] Error handling is user-friendly
-- [ ] No hardcoded paths (uses path.join/resolve)
-- [ ] Templates use {{VARIABLE}} syntax consistently
-- [ ] README updated if commands/options changed
-
----
-
-## Agent Workflow
-
-```
-User Request
-    ↓
-@Developer implements
-    ↓
-Auto-handoff to @SeniorArchitect
-    ↓
-Review against CODEBASE_ESSENTIALS.md
-    ↓
-✅ Approved  OR  🔄 Request changes
-```
-
----
-
-## 📚 Skills Reference
+## 📚 Skills Workflow
 
 **Skills are located in `.github/skills/` and provide step-by-step workflows.**
 
-**Available skills:**
-- `feature-implementation` - Adding new commands/features
-- `code-refactoring` - Test-driven refactoring
+**Universal skills included:**
 - `dependency-updates` - Safe upgrade procedures
 - `documentation-management` - Changelog archiving
+- `code-refactoring` - Test-driven refactoring
+- `testing-best-practices` - Framework-agnostic testing
 - `skill-creator` - How to create new skills
 
----
-
-## Quick Commands
-
-```bash
-# Test CLI
-node bin/cli.js --help
-node bin/cli.js init --help
-node bin/cli.js scan --dir /tmp/test-project
-
-# Check package contents
-npm pack --dry-run
-
-# Local install test
-npm link
-aiknowsys --help
-```
+**To use a skill:**
+1. AI detects trigger words
+2. Reads relevant skill file
+3. Follows step-by-step workflow
+4. Applies to current task
 
 ---
 
-*This file defines the AI-assisted development workflow for aiknowsys.*
+## 🎯 General Best Practices
+
+1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md for existing patterns
+2. **Update proactively** - Don't wait for user to ask
+3. **Be concise** - Keep summaries short and factual
+4. **Link files** - Include line numbers when referencing code
+5. **Maintain structure** - Follow existing organization
+
+---
+
+## 🔧 Custom Agents Integration
+
+**If custom agents are installed:**
+
+This project uses Developer + Architect agents for automated code review.
+
+**Workflow:**
+1. User requests feature
+2. Developer implements
+3. Developer auto-hands off to Architect
+4. Architect reviews against CODEBASE_ESSENTIALS.md
+5. Architect approves or requests changes
+
+**See:** `.github/agents/README.md` for details
+
+---
+
+## 📝 Customization Instructions
+
+**This is a template file. To customize:**
+
+1. **{{VALIDATION_MATRIX}}** - Replace with your actual validation commands
+   ```markdown
+   | Backend | pytest | ✅ MANDATORY |
+   | Frontend | npm run type-check | ✅ MANDATORY |
+   ```
+
+2. **{{SKILL_MAPPING}}** - Add your project's skill trigger words
+   ```markdown
+   | "refactor", "clean up" | code-refactoring | Test-driven refactoring |
+   | "update deps" | dependency-updates | Safe dependency updates |
+   ```
+
+3. **Add project-specific sections** as needed
+
+4. **Remove placeholder text** and instructions
+
+5. **Rename to `AGENTS.md`** when complete
+
+---
+
+*This file helps AI agents follow a consistent workflow: Read → Plan → Implement → Validate → Document → Confirm*
+
+*Part of the Knowledge System Template. See [README](README.md) for full documentation.*

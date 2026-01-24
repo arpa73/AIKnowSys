@@ -4,6 +4,70 @@
 
 ---
 
+## Session: Update Command Implementation (January 24, 2026)
+
+**Goal:** Add `update` command to allow users to get latest agents, skills, and workflow improvements without manual file copying.
+
+**Changes:**
+
+- [lib/commands/update.js](lib/commands/update.js): New update command
+  - **Version tracking:** Creates `.aiknowsys-version` file to track installed version
+  - **Smart updates:** Compares current vs latest version, skips if already up to date
+  - **Selective updates:** Interactive checkbox to choose what to update (agents, skills, AGENTS.md, CODEBASE_ESSENTIALS.md)
+  - **Automatic backups:** Creates backups before updating (.github/agents.backup/, .github/skills.backup/, AGENTS.md.backup, CODEBASE_ESSENTIALS.md.backup)
+  - **Smart AGENTS.md handling:** Detects customizations, updates template, provides AI restoration prompt (~10 seconds)
+  - **Opt-in ESSENTIALS update:** CODEBASE_ESSENTIALS.md unchecked by default, AI restoration prompt for complex merges (~30-60 seconds)
+  - **Force flag:** `--force` option to re-update even if already current version (fixed at line 39)
+  - **Silent mode:** `--yes` flag to update all without prompting
+
+- [bin/cli.js](bin/cli.js): Registered update command
+  - Added import for update command
+  - Added command registration with options: `--dir`, `--yes`, `--force`
+  - Command appears in help output
+
+- [.gitignore](.gitignore): Version file tracking decision
+  - `.aiknowsys-version` should be committed (acts like lockfile for team consistency)
+  - Ensures all team members know which knowledge system version is in use
+
+- [README.md](README.md#L65-L75): Updated commands table
+  - Added `npx aiknowsys update` row
+  - Shows "N/A (updates existing)" for auto-install column
+  - Listed between scan and install-agents commands
+
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L188-L199): Added version tracking pattern
+  - Documented version tracking pattern for future commands
+  - Example code for reading `.aiknowsys-version` file
+  - Included in "Adding New Commands" section
+
+**Validation:**
+- ✅ All 9 tests passing
+- ✅ CLI: `node bin/cli.js update --help` shows --force flag
+- ✅ Update command: Successfully updates agents, skills, AGENTS.md, and optionally CODEBASE_ESSENTIALS.md
+- ✅ Version tracking: Creates and reads `.aiknowsys-version` file (committed to git)
+- ✅ Already up-to-date: Shows friendly message when current
+- ✅ Backups: Creates backup directories before updating
+- ✅ Force flag: Fixed implementation (line 39: added `&& !options.force`)
+- ✅ Smart restoration: Detects customizations and shows AI prompts to restore from backup
+- ✅ ESSENTIALS opt-in: Unchecked by default with strong warning, requires user selection
+
+**Use Cases:**
+- `aiknowsys update` - Interactive: choose what to update
+- `aiknowsys update --yes` - Update all without prompting
+- `aiknowsys update --force` - Force re-update even if current
+
+**Key Learning:**
+- Fixed bug: CLI flag definitions must match implementation logic
+- Version check now correctly includes `&& !options.force` to enable forced updates
+- **Best of both worlds:** Update templates with latest improvements + AI prompt to restore customizations
+- AI restoration for AGENTS.md takes ~10 seconds (simple placeholder replacement)
+- AI restoration for CODEBASE_ESSENTIALS.md takes ~30-60 seconds (complex merge of entire sections)
+- `.aiknowsys-version` should be committed for team consistency (acts like package-lock.json)
+- Backups enable safe updates with easy rollback
+- Smart detection: Only shows restoration prompt if customizations exist
+- **Opt-in safety:** CODEBASE_ESSENTIALS.md unchecked by default, requires deliberate user action
+
+---
+
 ## Session: User Feedback Integration - AI Guardrails & Stop Points (January 24, 2026)
 
 **Goal:** Implement feedback from real-world testing to prevent AI from rushing ahead and ensure knowledge system setup is the focus, not full project implementation.

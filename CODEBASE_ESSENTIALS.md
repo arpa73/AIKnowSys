@@ -207,6 +207,19 @@ export async function installAgents(options) {
      .action(newCommand);
    ```
 4. Update README.md command table
+5. For commands that check/create files, add version tracking if needed
+
+**Version Tracking Pattern:**
+```javascript
+// For update-like commands, track version in .aiknowsys-version file
+function getCurrentVersion(targetDir) {
+  const versionFile = path.join(targetDir, '.aiknowsys-version');
+  if (fs.existsSync(versionFile)) {
+    return fs.readFileSync(versionFile, 'utf-8').trim();
+  }
+  return null;
+}
+```
 
 ---
 

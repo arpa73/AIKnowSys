@@ -69,6 +69,7 @@ aiknowsys init
 | `npx aiknowsys init` | Initialize for a new project | ✅ Yes |
 | `npx aiknowsys migrate` | Full migration for existing projects | ✅ Yes |
 | `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
+| `npx aiknowsys update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
 | `npx aiknowsys install-agents` | Install Developer + Architect agents | N/A (standalone) |
 | `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 
