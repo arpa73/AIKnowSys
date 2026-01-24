@@ -34,7 +34,7 @@ program
 
 program
   .command('init')
-  .description('Initialize knowledge system for a new project')
+  .description('Initialize knowledge system with AI-assisted setup')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-y, --yes', 'Skip prompts and use defaults')
   .action(init);

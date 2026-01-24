@@ -134,4 +134,45 @@ describe('init command', () => {
       }
     }
   });
+
+  it('should display AI prompt when --yes flag is used', () => {
+    const testYesDir = path.join(__dirname, 'tmp', `yes-ai-${Date.now()}`);
+    
+    try {
+      const output = execSync(`node bin/cli.js init --dir ${testYesDir} --yes`, {
+        cwd: projectRoot,
+        encoding: 'utf-8'
+      });
+
+      // Verify AI prompt is displayed
+      assert.ok(output.includes('AI Assistant Prompt'), 'Should show AI prompt section');
+      assert.ok(output.includes('Complete TODO sections'), 'Should mention completing TODOs');
+      assert.ok(output.includes('CODEBASE_ESSENTIALS.md'), 'Should reference CODEBASE_ESSENTIALS.md');
+    } finally {
+      if (fs.existsSync(testYesDir)) {
+        fs.rmSync(testYesDir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it('should display AI-assisted setup message in output', () => {
+    const testAIDir = path.join(__dirname, 'tmp', `ai-msg-${Date.now()}`);
+    
+    try {
+      const output = execSync(`node bin/cli.js init --dir ${testAIDir} --yes`, {
+        cwd: projectRoot,
+        encoding: 'utf-8'
+      });
+
+      // Verify key messages are present
+      assert.ok(output.includes('Knowledge system initialized'), 'Should show success message');
+      assert.ok(output.includes('with TODO sections'), 'Should mention TODO sections in file descriptions');
+      assert.ok(output.includes('.github/agents'), 'Should mention agents directory');
+      assert.ok(output.includes('.github/skills'), 'Should mention skills directory');
+    } finally {
+      if (fs.existsSync(testAIDir)) {
+        fs.rmSync(testAIDir, { recursive: true, force: true });
+      }
+    }
+  });
 });
