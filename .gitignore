@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/     # Commented out - this ignores Python lib BUT also our JS lib folder!
 lib64/
 parts/
 sdist/
