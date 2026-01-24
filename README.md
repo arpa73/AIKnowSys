@@ -72,6 +72,8 @@ aiknowsys init
 | `npx aiknowsys install-agents` | Install Developer + Architect agents |
 | `npx aiknowsys install-skills` | Install universal skills |
 
+**💡 AI-Assisted Completion:** After running any command, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, etc.) to automatically complete the TODO sections based on your actual codebase. No more manual documentation work!
+
 ### Alternative: Manual Setup
 
 <details>
