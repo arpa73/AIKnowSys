@@ -4,6 +4,35 @@
 
 ---
 
+## Session: OpenSpec Integration (January 24, 2026)
+
+**Goal:** Add OpenSpec as a first-class option during initialization to make aiknowsys attractive for companies enforcing spec-driven development.
+
+**Changes:**
+
+- [lib/commands/init.js](lib/commands/init.js): OpenSpec integration in init flow
+  - **Lines 408-438:** Added OpenSpec question before AI/manual mode selection
+    - Shows benefits: structured decision-making, team alignment, prevents scope creep
+    - Applies to both AI-assisted and manual flows
+    - Default: false (opt-in)
+  - **Lines 453-456, 460-467:** Inject `useOpenSpec` into answers object
+  - **Lines 560-563:** Call `setupOpenSpec(targetDir)` if user says yes
+  - **Lines 162-259:** Updated `displayAIBootstrapPrompt` function
+    - Added `useOpenSpec` parameter (default: false)
+    - Shows OpenSpec note in prompt header when enabled
+    - For existing projects: Mentions OpenSpec in step 6
+    - For new projects: Mentions OpenSpec in Phase 3 completion notes
+  - **Line 574:** Pass `answers.useOpenSpec` to `displayAIBootstrapPrompt`
+
+**Validation:**
+- ✅ All 9 tests passing
+- ✅ No regressions in existing init flow
+- ✅ OpenSpec prompts display correctly in both AI and manual modes
+
+**Key Learning:** OpenSpec integration makes aiknowsys more enterprise-friendly by offering spec-driven development from day 1, addressing company requirements for structured change management.
+
+---
+
 ## Session: Update Command Implementation (January 24, 2026)
 
 **Goal:** Add `update` command to allow users to get latest agents, skills, and workflow improvements without manual file copying.
