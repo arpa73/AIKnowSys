@@ -64,15 +64,15 @@ aiknowsys init
 
 **Available commands:**
 
-| Command | Description |
-|---------|-------------|
-| `npx aiknowsys init` | Initialize for a new project |
-| `npx aiknowsys migrate` | Full migration for existing projects |
-| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS |
-| `npx aiknowsys install-agents` | Install Developer + Architect agents |
-| `npx aiknowsys install-skills` | Install universal skills |
+| Command | Description | Auto-installs agents/skills? |
+|---------|-------------|------------------------------|
+| `npx aiknowsys init` | Initialize for a new project | ✅ Yes |
+| `npx aiknowsys migrate` | Full migration for existing projects | ✅ Yes |
+| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
+| `npx aiknowsys install-agents` | Install Developer + Architect agents | N/A (standalone) |
+| `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 
-**💡 AI-Assisted Completion:** After running any command, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, etc.) to automatically complete the TODO sections based on your actual codebase. No more manual documentation work!
+**💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
 
 ---
 
