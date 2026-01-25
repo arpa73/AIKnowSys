@@ -18,7 +18,21 @@
 [Call manage_todo_list with steps including validation]
 ```
 
-**Step 3: Proceed with Implementation**
+**Step 3: Check TDD Requirement** (for new features/functionality)
+```
+If implementing new feature:
+  - [ ] 🔴 RED: Write failing test FIRST
+  - [ ] 🟢 GREEN: Implement minimal code to pass
+  - [ ] 🔵 REFACTOR: Clean up while keeping tests green
+  - [ ] ✅ VALIDATE: Run full test suite
+
+If fixing bug:
+  - [ ] Write test that reproduces bug (should fail)
+  - [ ] Fix bug (test should pass)
+  - [ ] Run full test suite
+```
+
+**Step 4: Proceed with Implementation**
 
 ### Why This Protocol Exists:
 - Prevents pattern violations
@@ -33,6 +47,8 @@
 **Before ANY change (even small fixes):**
 - [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
 - [ ] Read relevant skill if applicable
+- [ ] **FOR NEW FEATURES:** Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR)
+- [ ] **FOR BUG FIXES:** Write test reproducing bug, then fix
 - [ ] Make changes + write/update tests
 - [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
 - [ ] Update docs if patterns changed
@@ -77,18 +93,24 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
-**💡 TDD Recommended:** For new features, practice Test-Driven Development:
-1. **RED**: Write a failing test first
-2. **GREEN**: Write minimal code to make it pass
-3. **REFACTOR**: Clean up code while tests stay green
+### 3️⃣½ TDD SELF-AUDIT: Did You Follow RED-GREEN-REFACTOR? (MANDATORY)
 
-See `.github/skills/tdd-workflow/SKILL.md` for detailed TDD guidance.
+**Before proceeding to validation, ask yourself:**
 
-**Benefits of TDD:**
-- Better code design (forces decoupling)
-- Fewer bugs (issues caught before implementation)
-- Confidence in refactoring (tests catch regressions)
-- Living documentation (tests show intent)
+- [ ] **Did I write the test BEFORE implementation?** (RED phase)
+- [ ] **Did I see the test fail first?** (Confirms test actually tests something)
+- [ ] **Did I implement minimal code to pass?** (GREEN phase)
+- [ ] **Did I refactor while keeping tests green?** (REFACTOR phase)
+
+**If NO to any:**
+- You violated Critical Invariant #7 (TDD requirement)
+- Document violation in CODEBASE_CHANGELOG.md under "Key Learning"
+- Explain why TDD wasn't followed (time pressure, uncertainty, etc.)
+- Note what was lost (design benefits, confidence, etc.)
+
+**If YES to all:**
+- ✅ Proceed to validation with confidence!
+- Tests were written with intention, not retrofitted
 
 ### 4️⃣ VALIDATE: Run Tests & Checks (MANDATORY - DO NOT SKIP!)
 
@@ -157,6 +179,7 @@ Only end your turn after completing steps 1-5. Tell the user:
 - `code-refactoring` - Test-driven refactoring
 - `testing-best-practices` - Framework-agnostic testing
 - `skill-creator` - How to create new skills
+- `tdd-workflow` - Test-driven development (mandatory for features)
 
 **To use a skill:**
 1. AI detects trigger words
