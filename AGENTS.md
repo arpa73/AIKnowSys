@@ -53,11 +53,15 @@ If fixing bug:
 - [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
 - [ ] Update docs if patterns changed
 
-**Validation Matrix:**
+**Validation Matrix (ALWAYS run after changes):**
 
-👉 **See [CODEBASE_ESSENTIALS.md - Validation Matrix](CODEBASE_ESSENTIALS.md#validation-matrix)**
-
-The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of truth. Always run all commands from that matrix after making changes.
+| Changed | Commands | Required |
+|---------|----------|----------|
+| Any JS file | `node bin/cli.js --help` | ✅ MANDATORY |
+| CLI commands | `node bin/cli.js <command> --help` | ✅ MANDATORY |
+| Templates | Verify no broken `{{VARIABLE}}` refs | ✅ MANDATORY |
+| README | Links valid, examples accurate | ✅ MANDATORY |
+| Package | `npm pack --dry-run` | ✅ Before publish |
 
 **🚨 RULE: Never claim work is complete without running validation!**
 
@@ -102,7 +106,12 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 | Trigger Words | Skill to Read | Why |
 |---------------|---------------|-----|
-{{SKILL_MAPPING}}
+| "add command", "new feature", "implement" | `feature-implementation` | Proper command structure |
+| "refactor", "clean up", "simplify" | `code-refactoring` | Test-driven refactoring |
+| "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
+| "update docs", "changelog" | `documentation-management` | AI-optimized docs |
+| "create skill", "new skill" | `skill-creator` | Proper skill format |
+| "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
 
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
