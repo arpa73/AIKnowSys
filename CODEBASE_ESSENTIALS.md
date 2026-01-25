@@ -46,15 +46,20 @@ aiknowsys/
 │   │   ├── install-agents.js
 │   │   └── install-skills.js
 │   └── utils.js            # Shared utilities
-├── templates/
+├── templates/              # All template files
 │   ├── agents/             # Agent templates
-│   └── skills/             # Skill templates
+│   ├── skills/             # Skill templates
+│   ├── git-hooks/          # TDD git hooks
+│   ├── scripts/            # TDD install scripts
+│   ├── workflows/          # GitHub Actions workflows
+│   ├── stacks/             # Stack-specific templates
+│   ├── AGENTS.template.md
+│   ├── CODEBASE_ESSENTIALS.template.md
+│   ├── CODEBASE_ESSENTIALS.minimal.template.md
+│   └── CODEBASE_CHANGELOG.template.md
 ├── scripts/                # Bash alternatives (legacy)
 ├── examples/               # Stack-specific examples
 ├── docs/                   # Documentation
-├── AGENTS.template.md      # Template for users
-├── CODEBASE_ESSENTIALS.template.md
-├── CODEBASE_CHANGELOG.template.md
 └── package.json
 ```
 
