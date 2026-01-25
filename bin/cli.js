@@ -38,6 +38,7 @@ program
   .description('Initialize knowledge system with AI-assisted setup')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-y, --yes', 'Skip prompts and use defaults')
+  .option('-t, --template <type>', 'Template size: minimal (10 sections) or full (13+ sections)', 'full')
   .action(init);
 
 program
