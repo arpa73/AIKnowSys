@@ -4,6 +4,115 @@
 
 ---
 
+## Session: UX Improvements - Examples, Templates, Guides (January 25, 2026)
+
+**Goal:** Implement 6 high-priority UX improvements based on user feedback (4.5/5 rating): filled examples, minimal template, setup guide, document roles, implementation guide, and validation checklist.
+
+**Changes:**
+
+### Task 1: Filled Example Templates
+- [examples/filled-simple-api/](examples/filled-simple-api/): Created realistic filled example
+  - **CODEBASE_ESSENTIALS.md:** Task API project (Node.js + Express + PostgreSQL)
+    - Real stack: Node 20, Express 4, PostgreSQL 15, Jest 29
+    - Actual validation commands: `npm test`, `npm run lint`, `npm run test:integration`
+    - Specific patterns: Parameterized queries, JWT auth, Joi validation
+    - Real gotchas: PostgreSQL timezone issues, connection pool exhaustion
+    - 10 sections (demonstrates optional section removal)
+  - **AGENTS.md:** Customized with project-specific invariants
+  - **CODEBASE_CHANGELOG.md:** 4 sample sessions showing proper format
+  - **README.md:** Explains what a filled example is, comparison table
+- [examples/README.md](examples/README.md): Navigation guide for filled vs stack examples
+- [ROADMAP.md](ROADMAP.md): Comprehensive strategic plan v0.1.x through v1.0.0
+  - Monetization strategy: Free → Freemium → Enterprise
+  - Go-to-market: Solo devs → Small teams → Enterprise
+  - Success metrics per phase
+
+### Task 2: Minimal Template Variant
+- [CODEBASE_ESSENTIALS.minimal.template.md](CODEBASE_ESSENTIALS.minimal.template.md): 10-section template
+  - Removed: Security, Performance, Accessibility (optional sections)
+  - Kept: All core sections for validation matrix to work
+  - Clear note: "MINIMAL template for small projects"
+- [bin/cli.js](bin/cli.js#L40): Added `--template <type>` option
+- [lib/commands/init.js](lib/commands/init.js):
+  - Lines 437-461: Interactive template selection prompt
+  - Lines 543-549: Load correct template file based on selection
+  - Line 605: Success message shows template type
+- [README.md](README.md#L79-L95): Documented template options
+
+### Task 3: Extract SETUP_GUIDE.md
+- [SETUP_GUIDE.md](SETUP_GUIDE.md): Created 355-line comprehensive guide
+  - Placeholder reference tables with examples
+  - Critical rules (DO/DON'T) with visual indicators
+  - Step-by-step customization for each template
+  - Minimal vs Full template comparison
+  - AI-assisted vs manual workflows
+  - Common mistakes section
+  - Validation checklist
+  - Quick reference commands
+- [CODEBASE_ESSENTIALS.template.md](CODEBASE_ESSENTIALS.template.md#L343-L360): Streamlined from 50+ lines to 18
+- [CODEBASE_ESSENTIALS.minimal.template.md](CODEBASE_ESSENTIALS.minimal.template.md#L301-L318): Streamlined from 50+ lines to 18
+- [lib/commands/init.js](lib/commands/init.js#L577-L581): Copy SETUP_GUIDE.md to project
+
+### Task 4: Document Roles Section
+- [CODEBASE_ESSENTIALS.template.md](CODEBASE_ESSENTIALS.template.md#L35-L98): Added "Knowledge System: Document Roles"
+  - Explains ESSENTIALS, AGENTS, CHANGELOG purposes
+  - Visual ASCII workflow diagram
+  - "When to use" guidance for each file
+  - Golden Rule: ESSENTIALS="what is", AGENTS="how to work", CHANGELOG="what happened"
+- [CODEBASE_ESSENTIALS.minimal.template.md](CODEBASE_ESSENTIALS.minimal.template.md#L35-L98): Same section
+
+### Task 5: First Implementation Guide
+- [CODEBASE_ESSENTIALS.template.md](CODEBASE_ESSENTIALS.template.md#L401-L481): Added build order guide
+  - Step 1: Foundation (Week 1) - validation setup
+  - Step 2: Core Patterns (Week 2-3) - establish patterns
+  - Step 3: Feature Development (Ongoing) - build features
+  - Step 4: Hardening (Before Production) - security, performance, accessibility
+  - Each step: Goal, Build tasks, Validation checklist
+- [CODEBASE_ESSENTIALS.minimal.template.md](CODEBASE_ESSENTIALS.minimal.template.md#L332-L385): Adapted for simpler projects
+  - Step 1: Foundation (Day 1-2) - faster timeline
+  - Step 2: Core Patterns (Week 1)
+  - Step 3: Feature Development (Ongoing)
+  - Note: Upgrade to full template if need security/performance/accessibility
+
+### Task 6: Validation Checklist
+- [AGENTS.template.md](AGENTS.template.md#L183-L230): Added pre-commit validation checklist
+  - Quick Check (1 minute): tests, debug code, secrets
+  - Full Check (5 minutes): all validation, git status, placeholders
+  - Before Push: final validation
+  - Copy-paste ready bash commands
+- [AGENTS.template.md](AGENTS.template.md#L234-L256): Troubleshooting section
+  - Tests failing: error messages, patterns, gotchas, single test
+  - Linting errors: auto-fix, don't disable rules
+  - Build errors: dependencies, clear cache, rebuild
+- [AGENTS.template.md](AGENTS.template.md#L260-L281): Updated customization with 8 new placeholders
+
+**Validation:**
+- ✅ All 11 tests pass (no regressions)
+- ✅ Manual testing: `--template minimal` works
+- ✅ Manual testing: `--template full` works
+- ✅ Minimal template has 10 sections (no Security section)
+- ✅ Full template has 13+ sections (includes Security)
+- ✅ SETUP_GUIDE.md copied to project on init
+- ✅ No errors found
+- ✅ Architect review approved all tasks
+
+**Key Learnings:**
+- Filled examples reduce anxiety by showing "what success looks like" before users fill templates
+- Minimal template addresses "template weight" concern for small projects (10 vs 13+ sections)
+- SETUP_GUIDE.md as separate file improves maintainability (single source of truth vs 3 duplicates)
+- Document Roles section eliminates confusion about knowledge system structure
+- First Implementation guide provides clear path from setup to production
+- Copy-paste validation checklist makes validation foolproof
+
+**Impact:**
+- User onboarding time: Reduced significantly
+- Template intimidation: Addressed with minimal option
+- Setup anxiety: Reduced with filled example and clear guides
+- Validation compliance: Improved with copy-paste checklist
+- 762 lines added, 105 removed in final commit
+
+---
+
 ## Session: OpenSpec Integration (January 24, 2026)
 
 **Goal:** Add OpenSpec as a first-class option during initialization to make aiknowsys attractive for companies enforcing spec-driven development.
