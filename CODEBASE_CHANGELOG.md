@@ -4,6 +4,54 @@
 
 ---
 
+## Session: TDD Enforcement Tests (January 25, 2026)
+
+**Goal:** Add tests for TDD installation feature to comply with Critical Invariant #7 (TDD requirement).
+
+**Context:** After implementing comprehensive TDD enforcement system (6 layers) and making it opt-in for users, we discovered during code review that we had violated our own TDD requirement AGAIN - we implemented the TDD installation feature without writing tests first. User correctly challenged the "optional test" recommendation, agent corrected to blocking requirement.
+
+**Changes:**
+- [test/init.test.js](test/init.test.js#L317-L419): Added 2 comprehensive tests (+103 lines)
+  - Test 1: "should install TDD enforcement files with --yes flag"
+    - Verifies tdd-workflow skill installed
+    - Verifies git hooks installed (pre-commit, README.md)
+    - Verifies install script installed (scripts/install-git-hooks.sh)
+    - Verifies GitHub Actions workflow installed
+    - Checks executable permissions on Unix
+    - Validates AGENTS.md includes "TDD SELF-AUDIT" and "RED-GREEN-REFACTOR"
+  - Test 2: "should verify TDD files have correct permissions on Unix systems"
+    - Skips on Windows (chmod not supported)
+    - Validates pre-commit hook executable (mode & 0o111)
+    - Validates install script executable
+- [lib/commands/init.js](lib/commands/init.js#L800-L813): Fixed TDD installation
+  - Added `useTDD: true` to default answers when using --yes flag (line 807)
+  - Added `useTDD: true` to AI mode defaults (line 791)
+  - Fixed file paths to reference `templates/` directory structure (lines 915-955)
+- [templates/git-hooks/pre-commit](templates/git-hooks/pre-commit): NEW - Moved from root to templates
+- [templates/git-hooks/README.md](templates/git-hooks/README.md): NEW - Moved from root to templates  
+- [templates/scripts/install-git-hooks.sh](templates/scripts/install-git-hooks.sh): NEW - Moved from root to templates
+- [templates/workflows/tdd-compliance.yml](templates/workflows/tdd-compliance.yml): NEW - Moved from root to templates
+
+**Validation:**
+- ✅ Tests: 30/30 passing (28 existing + 2 new)
+- ✅ TDD installation works correctly with --yes flag
+- ✅ Files copied from correct template locations
+- ✅ Executable permissions set properly on Unix
+- ✅ No breaking changes
+- ⚠️ **Process violation**: Tests written AFTER implementation (violated Critical Invariant #7)
+
+**Key Learning:** ⚠️ **We violated TDD implementing the TDD enforcement system itself** - The irony is profound. We built a 6-layer system to prevent TDD violations, but didn't follow TDD while building it. This demonstrates that even with strong intentions and enforcement mechanisms, it's easy to slip into "implementation first" mode when focusing on "does it work?" instead of "did we follow process?".
+
+**Lesson:** The TDD self-audit (Step 3½ in AGENTS.md) caught this during review. User's challenge ("shouldn't the missing tests be blocking?") was correct - our own CODEBASE_ESSENTIALS.md requires tests for all features. Even reviewers can forget process requirements. The lesson: Standards apply to everyone, including those who create the standards.
+
+**Meta-observation:** This violation is educational. We now have:
+1. First violation: Automation session (scan features)
+2. Second violation: TDD enforcement session (installation feature)
+
+Both documented in changelog. Both caught during reflection. Both now have tests. The 6-layer TDD enforcement system exists BECAUSE of these violations - turning mistakes into improvements.
+
+---
+
 ## Session: Automation Enhancements (January 25, 2026)
 
 **Goal:** Maximize scan auto-detection to make adoption as easy as possible, address user feedback priorities #1 (examples) and #2 (minimal template).
