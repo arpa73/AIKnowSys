@@ -178,6 +178,71 @@ This project uses Developer + Architect agents for automated code review.
 
 ---
 
+## ✅ Pre-Commit Validation Checklist
+
+**Run this checklist BEFORE every commit. Copy-paste into terminal:**
+
+### Quick Check (1 minute)
+```bash
+# 1. Validation Matrix commands
+{{VALIDATION_CMD_1}}  # e.g., npm test
+{{VALIDATION_CMD_2}}  # e.g., npm run lint
+
+# 2. No debug code
+grep -r "console.log\|debugger\|TODO:" src/ || echo "✓ No debug code"
+
+# 3. No secrets
+grep -r "password\|api_key\|secret" . --exclude-dir={node_modules,.git} || echo "✓ No secrets"
+```
+
+### Full Check (5 minutes)
+```bash
+# Run all validation commands from matrix
+{{ALL_VALIDATION_COMMANDS}}
+
+# Additional checks
+git status                          # No untracked files
+git diff                            # Review changes
+grep "{{" {{TEMPLATE_FILES}}        # No unfilled placeholders
+```
+
+### Before Push
+```bash
+# Final validation
+{{VALIDATION_CMD_1}}
+
+# Check commits
+git log origin/main..HEAD           # Review commits
+
+# Push
+git push
+```
+
+---
+
+## 🔍 Troubleshooting Validation Failures
+
+### Tests Failing
+1. Read error message carefully
+2. Check CODEBASE_ESSENTIALS.md for test patterns
+3. Review "Common Gotchas" section
+4. Run single failing test: `{{SINGLE_TEST_CMD}}`
+5. Check if pattern violated (Critical Invariants)
+
+### Linting Errors
+1. Auto-fix if possible: `{{AUTO_FIX_CMD}}`
+2. Review Core Patterns for style rules
+3. Don't disable rules - fix the code
+4. If rule is wrong, update ESSENTIALS first
+
+### Build Errors
+1. Check dependency versions (Technology Stack section)
+2. Clear cache: `{{CLEAR_CACHE_CMD}}`
+3. Rebuild from scratch: `{{CLEAN_BUILD_CMD}}`
+4. Check environment variables
+
+---
+
 ## 📝 Customization Instructions
 
 **This is a template file. To customize:**
@@ -194,14 +259,22 @@ This project uses Developer + Architect agents for automated code review.
    | "update deps" | dependency-updates | Safe dependency updates |
    ```
 
-3. **Add project-specific sections** as needed
+3. **Validation Checklist Placeholders:**
+   - `{{VALIDATION_CMD_1}}` → Your primary test command (e.g., `npm test`)
+   - `{{VALIDATION_CMD_2}}` → Your lint command (e.g., `npm run lint`)
+   - `{{ALL_VALIDATION_COMMANDS}}` → All commands from validation matrix
+   - `{{TEMPLATE_FILES}}` → Files to check for placeholders
+   - `{{SINGLE_TEST_CMD}}` → How to run one test (e.g., `npm test -- file.test.js`)
+   - `{{AUTO_FIX_CMD}}` → Auto-fix linting (e.g., `npm run lint:fix`)
+   - `{{CLEAR_CACHE_CMD}}` → Clear build cache
+   - `{{CLEAN_BUILD_CMD}}` → Clean rebuild command
 
-4. **Remove placeholder text** and instructions
+4. **Add project-specific sections** as needed
 
-5. **Rename to `AGENTS.md`** when complete
+5. **Remove placeholder text** and instructions
 
 ---
 
 *This file helps AI agents follow a consistent workflow: Read → Plan → Implement → Validate → Document → Confirm*
 
-*Part of the Knowledge System Template. See [README](README.md) for full documentation.*
+*Part of aiknowsys. See [README](README.md) and [SETUP_GUIDE.md](SETUP_GUIDE.md) for full documentation.*
