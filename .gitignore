@@ -80,3 +80,6 @@ Cargo.lock
 
 # npm files
 .npmrc
+
+# workdocs
+workdocs/
