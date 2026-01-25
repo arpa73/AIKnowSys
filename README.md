@@ -250,6 +250,107 @@ const tasks = await api.get('/tasks');
 
 ---
 
+## 🧪 TDD Enforcement System
+
+**New in v0.3.1:** Multi-layered enforcement of Test-Driven Development to prevent "implement first, test later" violations.
+
+### The Problem
+
+Even with TDD documented in `CODEBASE_ESSENTIALS.md` as Critical Invariant #7, it's easy to forget and write implementation before tests (we did this ourselves and caught it!).
+
+### The Solution: 4 Layers of Enforcement
+
+#### Layer 1: Pre-Work Checklist (AGENTS.md)
+
+Every AI session now starts with explicit TDD reminder:
+
+```markdown
+**Step 3: Check TDD Requirement**
+  - [ ] 🔴 RED: Write failing test FIRST
+  - [ ] 🟢 GREEN: Implement minimal code to pass
+  - [ ] 🔵 REFACTOR: Clean up while keeping tests green
+```
+
+#### Layer 2: TDD Self-Audit (AGENTS.md Step 3½)
+
+Before validation, AI must self-audit:
+
+```markdown
+Did you follow RED-GREEN-REFACTOR?
+- [ ] Wrote test BEFORE implementation (RED)
+- [ ] Saw test fail first
+- [ ] Implemented minimal code (GREEN)
+- [ ] Refactored while keeping tests green
+
+If NO to any: Document violation in CODEBASE_CHANGELOG.md
+```
+
+#### Layer 3: Git Hook (Local Enforcement)
+
+Pre-commit hook checks for test changes:
+
+```bash
+# Install git hooks
+./scripts/install-git-hooks.sh
+
+# Now when you commit lib/ without test/ changes:
+⚠️  WARNING: Staging lib/ changes without test/ changes
+
+Did you follow TDD?
+  🔴 RED: Write failing test first
+  🟢 GREEN: Implement minimal code to pass
+  🔵 REFACTOR: Clean up while keeping tests green
+
+Continue with commit anyway? (y/N)
+```
+
+**See:** `.git-hooks/README.md` for hook documentation
+
+#### Layer 4: GitHub Actions (CI Enforcement)
+
+PR checks enforce TDD compliance:
+
+```yaml
+# .github/workflows/tdd-compliance.yml
+# Fails CI if lib/ changed without test/ changes
+```
+
+**See workflow:** [`.github/workflows/tdd-compliance.yml`](.github/workflows/tdd-compliance.yml)
+
+### Skills Integration
+
+**New skill:** `.github/skills/tdd-workflow/SKILL.md`
+
+Complete TDD guide with:
+- RED-GREEN-REFACTOR cycle explained
+- Step-by-step examples
+- Common pitfalls and solutions
+- Integration with project workflow
+
+**Trigger words:** "implement", "add feature", "TDD", "test first", "red-green-refactor"
+
+**Enhanced:** `.github/skills/feature-implementation/SKILL.md` now includes Phase 0: TDD Setup (mandatory before implementation)
+
+### Why This Matters
+
+**From our own experience:**
+
+We violated our own TDD requirement during the automation enhancement session (v0.3.0). We implemented scan auto-detection features, THEN wrote tests. This backwards approach:
+
+❌ Lost design benefits of test-first thinking  
+❌ Tests became "verification" not "design"  
+✅ Still achieved test coverage (28/28 passing)  
+✅ Documented violation as lesson learned  
+
+**The lesson:** Even rule creators forget rules when moving fast. Having multiple enforcement layers prevents this.
+
+**Learn more:**
+- See [CODEBASE_CHANGELOG.md](CODEBASE_CHANGELOG.md) "Automation Enhancements" session
+- Read [.github/skills/tdd-workflow/SKILL.md](.github/skills/tdd-workflow/SKILL.md)
+- Review [.git-hooks/README.md](.git-hooks/README.md)
+
+
+
 ## AI Tool Compatibility
 
 ### ✅ Works with ANY AI Tool
