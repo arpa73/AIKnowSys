@@ -4,6 +4,70 @@
 
 ---
 
+## Session: Session Persistence & Continuous Learning (January 25, 2026)
+
+**Goal:** Implement session persistence and continuous learning features from everything-claude-code competitive analysis, using platform-agnostic approach.
+
+**Context:** After analyzing everything-claude-code repository (Claude Code plugin with 10+ months evolution), identified high-value features: session persistence (JavaScript hooks for context loading) and continuous learning (pattern extraction to ~/.claude/skills/learned/). Adapted their approach to our platform-agnostic philosophy - documentation-driven protocols instead of JavaScript hooks.
+
+**Changes:**
+- [docs/everything-claude-code-comparison.md](docs/everything-claude-code-comparison.md): NEW - Comprehensive competitive analysis (399 lines)
+  - Executive Summary: Platform comparison (Claude Code plugin vs npm package)
+  - Feature Comparison: 5 shared features, 5 unique to each
+  - Recommendations: 4 prioritized adoptions (session persistence HIGH, continuous learning MEDIUM-HIGH)
+  - Implementation Plan: 3 phases with success metrics
+- [templates/aiknowsys-structure/sessions/README.md](templates/aiknowsys-structure/sessions/README.md): NEW - Session persistence guide (69 lines)
+  - Purpose: Track completed work, in-progress tasks, context for next session
+  - File format: YYYY-MM-DD-session.md with structured sections
+  - Benefits: Context continuity, reduced friction, progress tracking
+- [templates/aiknowsys-structure/learned/README.md](templates/aiknowsys-structure/learned/README.md): NEW - Continuous learning guide (79 lines)
+  - Pattern Types: 5 categories (error_resolution, user_corrections, workarounds, debugging_techniques, project_specific)
+  - Skill Format: Markdown template with trigger words, problem/solution structure
+  - Workflow: Encounter → Document → Add triggers → Reuse
+- [templates/AGENTS.template.md](templates/AGENTS.template.md#L65-L85): Added Step 0 "SESSION START: Check Context Continuity" (+21 lines)
+  - Protocol: Check .aiknowsys/sessions/ for files < 7 days old
+  - Action: Read latest, review "Notes for Next Session", acknowledge continuity
+- [templates/AGENTS.template.md](templates/AGENTS.template.md#L173-L203): Enhanced Step 6 "Save Session Context" (+31 lines)
+  - Template: Current state, completed, in-progress, notes for next session, context to load
+  - Format: Markdown with checkboxes and file references
+- [templates/AGENTS.template.md](templates/AGENTS.template.md#L204-L256): Added "CONTINUOUS LEARNING" section (+52 lines)
+  - When: After complex sessions or discovering patterns
+  - Example: Django query optimization with N+1 problem solution
+- [lib/commands/init.js](lib/commands/init.js#L911-L937): Added Step 3.6 for session persistence (+26 lines)
+  - Creates: .aiknowsys/sessions/ and .aiknowsys/learned/ directories
+  - Copies: README.md files from templates/aiknowsys-structure/
+  - Spinner: "Setting up session persistence..." → "Session persistence ready"
+- [test/init.test.js](test/init.test.js#L412-L453): Added comprehensive session persistence test (+41 lines)
+  - Validates: Directory creation (.aiknowsys, sessions, learned)
+  - Checks: README content mentions correct concepts
+  - Verifies: AGENTS.md includes SESSION START and CONTINUOUS LEARNING sections
+- [ROADMAP.md](ROADMAP.md): Restructured milestones
+  - v0.4.0: NEW "Memory & Learning" milestone (5/6 items complete ✅)
+  - v0.5.0: Pattern Library & Ecosystem (was v0.4.0)
+  - v0.6.0: Platform Extensions (was v0.5.0)
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L28): Updated validation matrix
+  - Changed: "All 17 tests pass" → "All 31 tests pass"
+
+**Validation:**
+- ✅ Tests: 31/31 passing (30 existing + 1 new session persistence test)
+- ✅ CLI: --help command works
+- ✅ Manual test: .aiknowsys directories created with README files
+- ✅ Architect reviews: Both approved, all Critical Invariants met
+- ✅ TDD followed: Test written first, saw it fail, implemented, saw it pass
+- ✅ Zero breaking changes
+
+**Key Learning:** Platform-agnostic implementation can match feature-richness of platform-specific tools. By using documentation protocols instead of JavaScript hooks, we achieved session persistence and continuous learning that works with ANY AI assistant (GitHub Copilot, Claude, ChatGPT, Cursor), not just one IDE extension.
+
+**Architecture Decision:** Used .aiknowsys/ directory (not .github/) to separate session data from GitHub-specific files. Session file format: YYYY-MM-DD-session.md. Pattern types: 5 categories covering common discovery scenarios.
+
+**Success Metrics (v0.4.0):**
+- Do agents check session files on start? (qualitative feedback)
+- Are session notes created after complex work? (check .aiknowsys/sessions/)
+- Are learned patterns saved and reused? (check .aiknowsys/learned/ growth)
+- Context continuity validated? (reduced repeated explanations)
+
+---
+
 ## Session: TDD Enforcement Tests (January 25, 2026)
 
 **Goal:** Add tests for TDD installation feature to comply with Critical Invariant #7 (TDD requirement).

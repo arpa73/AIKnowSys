@@ -408,4 +408,47 @@ describe('init command', () => {
     const scriptStats = fs.statSync(installScriptPath);
     assert.ok((scriptStats.mode & 0o111) !== 0, 'install-git-hooks.sh should be executable');
   });
+
+  it('should create .aiknowsys directory structure for session persistence', async () => {
+    const testDirSession = path.join(__dirname, 'tmp', `test-session-${Date.now()}`);
+    fs.mkdirSync(testDirSession, { recursive: true });
+    
+    await init({ dir: testDirSession, yes: true });
+
+    // Verify .aiknowsys directory structure
+    const aiknowsysDir = path.join(testDirSession, '.aiknowsys');
+    assert.ok(fs.existsSync(aiknowsysDir), '.aiknowsys directory should exist');
+
+    const sessionsDir = path.join(aiknowsysDir, 'sessions');
+    assert.ok(fs.existsSync(sessionsDir), '.aiknowsys/sessions directory should exist');
+    
+    const learnedDir = path.join(aiknowsysDir, 'learned');
+    assert.ok(fs.existsSync(learnedDir), '.aiknowsys/learned directory should exist');
+
+    // Verify README files
+    const sessionsReadme = path.join(sessionsDir, 'README.md');
+    assert.ok(fs.existsSync(sessionsReadme), 'sessions/README.md should exist');
+    
+    const sessionsReadmeContent = fs.readFileSync(sessionsReadme, 'utf-8');
+    assert.ok(sessionsReadmeContent.toLowerCase().includes('session'), 'sessions README should mention sessions');
+    assert.ok(sessionsReadmeContent.includes('YYYY-MM-DD-session.md'), 'sessions README should show file format');
+
+    const learnedReadme = path.join(learnedDir, 'README.md');
+    assert.ok(fs.existsSync(learnedReadme), 'learned/README.md should exist');
+    
+    const learnedReadmeContent = fs.readFileSync(learnedReadme, 'utf-8');
+    assert.ok(learnedReadmeContent.toLowerCase().includes('learned'), 'learned README should mention learned skills');
+    assert.ok(learnedReadmeContent.includes('Pattern Types'), 'learned README should document pattern types');
+
+    // Verify AGENTS.md includes session protocols
+    const agentsPath = path.join(testDirSession, 'AGENTS.md');
+    const agentsContent = fs.readFileSync(agentsPath, 'utf-8');
+    assert.ok(agentsContent.includes('SESSION START'), 'AGENTS.md should include session start protocol');
+    assert.ok(agentsContent.includes('.aiknowsys/sessions/'), 'AGENTS.md should reference sessions directory');
+    assert.ok(agentsContent.includes('CONTINUOUS LEARNING'), 'AGENTS.md should include continuous learning section');
+    assert.ok(agentsContent.includes('.aiknowsys/learned/'), 'AGENTS.md should reference learned directory');
+
+    // Clean up after assertions pass
+    testDirsToCleanup.push(testDirSession);
+  });
 });

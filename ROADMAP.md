@@ -127,11 +127,76 @@ AI agents produce code without understanding project context, breaking invariant
 
 ---
 
-### v0.4.0 - Ecosystem (3-6 months)
-**Status:** Vision  
-**Focus:** Network effects
+### v0.4.0 - Memory & Learning (Next - 1-2 weeks)
+**Status:** 🚀 In Progress (Jan 2026)  
+**Focus:** Session continuity and organic knowledge growth  
+**Inspired By:** everything-claude-code comparison analysis
 
-#### Skill Marketplace
+#### Session Persistence (Week 1)
+- [x] `.aiknowsys/sessions/` directory structure ✅
+  - Session tracking files with timestamps
+  - Completed/in-progress task tracking
+  - Context notes for next session
+  - Created by `aiknowsys init`
+
+- [x] Session Start Protocol in AGENTS.md ✅
+  - Check for recent session files
+  - Load previous context
+  - Continue from "Notes for Next Session"
+  - Maintain continuity between conversations
+
+- [x] Session End Documentation Pattern ✅
+  - Guide agents to create session notes
+  - Template: Current state, completed, in-progress, next steps
+  - File format: `YYYY-MM-DD-session.md`
+
+#### Continuous Learning (Week 1-2)
+- [x] `.aiknowsys/learned/` directory for discovered patterns ✅
+  - Project-specific skills extracted from sessions
+  - Error resolutions, workarounds, debugging techniques
+  - User corrections and project conventions
+  - Organic skill library growth
+
+- [x] Pattern Extraction Protocol in AGENTS.md ✅
+  - Identify reusable patterns during work
+  - Save to `.aiknowsys/learned/` using skill format
+  - Pattern types: error_resolution, user_corrections, workarounds
+  - Self-documenting agent behavior
+
+- [ ] Update skill-creator to support learned skills
+  - Output to `.aiknowsys/learned/` directory
+  - Simplified template for discovered patterns
+  - Auto-detection of pattern type
+
+**Success Metrics:**
+- Agents check session files on start
+- Session notes created after complex work
+- Learned patterns saved and reused
+- Context continuity validated
+
+**Key Differentiator:**
+Platform-agnostic implementation (no hooks required - just documentation patterns)
+
+---
+
+### v0.5.0 - Pattern Library & Ecosystem (2-4 months)
+**Status:** Planned  
+**Focus:** Enhanced guidance and network effects
+
+#### Enhanced Pattern Library (Weeks 1-2)
+- [ ] Add "Common Patterns" section to ESSENTIALS templates
+  - Framework-specific patterns (Django CBVs, Next.js server components)
+  - Code examples for each pattern
+  - Architecture decision rationale
+  - Stack-specific best practices
+
+- [ ] Populate all stack templates with patterns
+  - python-django: CBVs, serializers, signals, middleware
+  - typescript-nextjs: Server components, app router, data fetching
+  - typescript-vue: Composables, component composition, state management
+  - Each pattern with concrete code example
+
+#### Skill Marketplace (Weeks 3-4)
 - [ ] Skill registry/catalog
   - Browse skills by category
   - Search and filter
@@ -162,19 +227,15 @@ AI agents produce code without understanding project context, breaking invariant
   - Install with one command
   - Customizable rules
 
-- [ ] OpenSpec official partnership
-  - Co-marketing
-  - Integrated workflows
-  - Shared documentation
-
 **Success Metrics:**
+- Enhanced patterns in all 7 stack templates
 - 20+ skills in marketplace
 - 5,000+ npm downloads/month
-- 2+ tool integrations live
+- Session persistence adoption >60%
 
 ---
 
-### v0.5.0 - Platform (6-12 months)
+### v0.6.0 - Platform Extensions (4-6 months)
 **Status:** Exploration  
 **Focus:** Developer experience
 

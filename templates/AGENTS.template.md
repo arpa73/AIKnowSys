@@ -65,6 +65,27 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 ## 📋 SESSION WORKFLOW (Follow This Order!)
 
+### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
+
+**Before reading ESSENTIALS, check for session continuity:**
+
+```
+1. Check .aiknowsys/sessions/ for recent session files
+2. If recent session exists (< 7 days old):
+   - Read the latest session file
+   - Review "Notes for Next Session"
+   - Continue from where previous session ended
+3. Acknowledge continuity: "Continuing from [date] session..."
+```
+
+**Why This Helps:**
+- Prevents context loss between conversations
+- Maintains continuity on complex features
+- Reduces repeated explanations
+- Tracks progress automatically
+
+**Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
+
 ### 1️⃣ START: Read Context (REQUIRED)
 
 **ALWAYS read these files at the start of every conversation:**
@@ -73,6 +94,7 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 **When you need history:**
 - **@CODEBASE_CHANGELOG.md** - Session-by-session changes and validation notes
+- **@.aiknowsys/learned/** - Project-specific patterns discovered over time
 
 ### 2️⃣ PLAN: Check Skills Before Coding
 
@@ -151,12 +173,104 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 ```
 
-### 6️⃣ END: Confirm Completion
+### 6️⃣ END: Save Session Context & Confirm Completion
 
-Only end your turn after completing steps 1-5. Tell the user:
-- What you fixed/built
-- What tests passed
-- That changelog is updated (if applicable)
+**Before ending your turn:**
+
+1. **Create/Update Session File** (for complex work):
+   ```markdown
+   # Save to .aiknowsys/sessions/YYYY-MM-DD-session.md
+   
+   ## Current State
+   [Brief summary of what was accomplished]
+   
+   ### Completed
+   - [x] Feature X implemented
+   - [x] Tests passing
+   
+   ### In Progress
+   - [ ] Documentation update pending
+   
+   ### Notes for Next Session
+   - Need to add error handling for edge case Y
+   - Consider refactoring Z for clarity
+   
+   ### Context to Load
+   ```
+   src/components/NewFeature.tsx - Main implementation
+   tests/NewFeature.test.ts - Test coverage
+   ```
+   ```
+
+2. **Confirm to user:**
+   - What you fixed/built
+   - What tests passed
+   - That changelog is updated (if applicable)
+   - Session notes saved (if complex work)
+
+---
+
+## 📚 CONTINUOUS LEARNING
+
+**After complex sessions or when discovering patterns:**
+
+### Pattern Extraction Protocol
+
+**When you notice:**
+- Recurring error with consistent solution
+- User corrects same mistake multiple times
+- Project-specific convention emerges
+- Workaround for library/framework issue
+- Debugging technique that works well
+
+**Do this:**
+1. Create learned skill in `.aiknowsys/learned/`
+2. Use skill format with clear trigger words
+3. Document the pattern for future reuse
+
+**Example:**
+```markdown
+# Learned Skill: Django Query Optimization Pattern
+
+**Pattern Type:** project_specific  
+**Created:** {{DATE}}  
+**Trigger Words:** "slow query", "n+1 problem", "django performance"
+
+## When to Use
+Use when encountering slow Django queries with related objects.
+
+## Pattern
+Always use select_related() for foreign keys and prefetch_related() for many-to-many.
+
+\```python
+# ❌ N+1 query problem
+users = User.objects.all()
+for user in users:
+    print(user.profile.bio)  # Query per user!
+
+# ✅ Optimized with select_related
+users = User.objects.select_related('profile').all()
+for user in users:
+    print(user.profile.bio)  # Single query!
+\```
+
+## Related
+- Django ORM documentation
+- Performance monitoring with django-debug-toolbar
+```
+
+**Pattern Types:**
+- `error_resolution` - How specific errors were fixed
+- `user_corrections` - Patterns from user feedback
+- `workarounds` - Solutions to library quirks
+- `debugging_techniques` - Effective debugging approaches
+- `project_specific` - Project conventions and standards
+
+**Why This Matters:**
+- System gets smarter over time
+- Reduces repeated explanations
+- Captures project-specific knowledge
+- Team can share discoveries
 
 ---
 

@@ -24,7 +24,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 17 tests pass |
+| `npm test` | Run unit tests | All 31 tests pass |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
