@@ -75,6 +75,22 @@ aiknowsys init
 
 **💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
 
+**📋 Template Options:**
+
+- **Minimal Template** (10 sections): For learning projects, prototypes, and simple tools
+  ```bash
+  npx aiknowsys init --template minimal
+  ```
+  Includes: Tech Stack, Validation Matrix, Structure, Patterns, Invariants, Gotchas, Testing, Architecture, Change Management, Workflow
+
+- **Full Template** (13+ sections): For production projects and complex systems (default)
+  ```bash
+  npx aiknowsys init --template full  # or just: npx aiknowsys init
+  ```
+  Includes all minimal sections + Security, Performance, Accessibility
+
+See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled example using the minimal template.
+
 ---
 
 ## AI Tool Compatibility
