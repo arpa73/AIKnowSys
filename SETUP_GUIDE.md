@@ -320,6 +320,146 @@ GOOD: "See [src/utils/validator.ts](src/utils/validator.ts#L45-L67) for Joi sche
 
 ---
 
+## 🚀 First Implementation: What to Build Next
+
+**You've finished setup! Now what?**
+
+Here's the recommended order for your first implementation session:
+
+### 1️⃣ Test Your Validation Matrix (5 minutes)
+
+Before building anything, verify your validation commands work:
+
+```bash
+# Run each command from your Validation Matrix
+npm test               # Should pass (even if no tests yet)
+npm run lint          # Should pass
+npm run type-check    # Should pass
+npm run build         # Should succeed
+```
+
+**Why this matters:** Ensures you can validate your work before you start coding.
+
+### 2️⃣ Set Up Your First Feature Branch (2 minutes)
+
+```bash
+git checkout -b feature/hello-world
+```
+
+**Why this matters:** Practice the workflow you'll use for all features.
+
+### 3️⃣ Write Your First Test (10 minutes)
+
+Pick the simplest possible feature (e.g., a "hello world" endpoint or utility function):
+
+```bash
+# Example for Node.js API
+# test/api/health.test.js
+test('GET /health returns 200', async () => {
+  const response = await request(app).get('/health');
+  expect(response.status).toBe(200);
+  expect(response.body).toEqual({ status: 'ok' });
+});
+```
+
+**Run it:** `npm test` → Should fail (RED phase) ✅
+
+**Why this matters:** Validates your test setup works and practices TDD.
+
+### 4️⃣ Implement the Feature (10 minutes)
+
+Now write the minimal code to make the test pass:
+
+```javascript
+// src/routes/health.js
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+```
+
+**Run it:** `npm test` → Should pass (GREEN phase) ✅
+
+**Why this matters:** Completes the RED-GREEN cycle and proves the workflow works.
+
+### 5️⃣ Run Full Validation (2 minutes)
+
+```bash
+npm test              # Tests pass
+npm run lint         # Code style OK
+npm run type-check   # Types OK (if applicable)
+npm run build        # Build succeeds
+```
+
+**Why this matters:** Practice the validation ritual you'll use for every change.
+
+### 6️⃣ Update Changelog (5 minutes)
+
+Add your first session entry to CODEBASE_CHANGELOG.md:
+
+```markdown
+## Session: First Implementation (Jan 25, 2026)
+
+**Goal**: Validate knowledge system workflow with simple feature
+
+**Changes**:
+- [test/api/health.test.js](test/api/health.test.js): Added health check test
+- [src/routes/health.js](src/routes/health.js): Implemented /health endpoint
+
+**Validation**:
+- ✅ Tests: 1/1 passing
+- ✅ Lint: No errors
+- ✅ Build: Success
+
+**Key Learning**: TDD workflow works! Writing test first revealed that Express wasn't configured yet.
+```
+
+**Why this matters:** Creates your first historical record and practices documentation.
+
+### 7️⃣ Commit and Push (2 minutes)
+
+```bash
+git add .
+git commit -m "feat: add health check endpoint
+
+- Add GET /health endpoint returning {status: 'ok'}
+- Add test for health endpoint
+- Validates knowledge system workflow
+
+Tests: 1/1 passing
+Validation: All checks pass"
+
+git push origin feature/hello-world
+```
+
+**Why this matters:** Establishes good commit message habits from day one.
+
+---
+
+## 🎯 What You've Accomplished
+
+After completing these steps, you've:
+
+✅ Validated your entire toolchain works  
+✅ Practiced TDD (RED → GREEN workflow)  
+✅ Ran the full validation matrix  
+✅ Updated the changelog  
+✅ Made your first proper commit  
+
+**Most importantly:** You've proven the knowledge system workflow works end-to-end!
+
+---
+
+## 📚 Next Steps
+
+Now you're ready to build real features:
+
+1. **Check AGENTS.md** - Review the workflow for each session
+2. **Read relevant skills** - Before implementing features, check `.github/skills/`
+3. **Follow the process** - Read ESSENTIALS → Plan → Code → Test → Validate → Document
+4. **Keep iterating** - Each session makes the knowledge system more valuable
+
+---
+
 ## Getting Help
 
 - **Examples**: See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled template

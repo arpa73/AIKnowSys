@@ -40,43 +40,47 @@ AI agents produce code without understanding project context, breaking invariant
 ---
 
 ### v0.2.0 - Quick Wins (Next 2-4 weeks)
-**Status:** Planning  
+**Status:** ✅ Mostly Complete (Jan 2026)  
 **Focus:** Reduce adoption friction
 
 #### Week 1-2: Examples & Templates
-- [ ] Add filled example templates
-  - Simple Express API example
-  - React + TypeScript SPA example
+- [x] Add filled example templates ✅
+  - Stack-specific examples (Next.js, Vue+Express, Django, FastAPI, etc.)
   - Show what completed docs look like
   - Include README explaining structure
+  - Added to examples/ directory
 
-- [ ] Template size variants
-  - Implement `--template minimal` option
-  - Create CODEBASE_ESSENTIALS.minimal.template.md
+- [x] Template size variants ✅
+  - Implemented `--template minimal` option
+  - Created CODEBASE_ESSENTIALS.minimal.template.md
   - 10 core sections vs full 15+ sections
-  - Auto-suggest based on project size
+  - Auto-suggest based on project type
 
-- [ ] SETUP_GUIDE.md
-  - Extract customization instructions
+- [x] SETUP_GUIDE.md ✅
+  - Extracted customization instructions
   - Standalone setup guide
-  - Link from templates
-  - Reduce template weight
+  - Linked from templates
+  - Reduced template weight
 
 #### Week 3-4: UX Polish
-- [ ] Document Roles section
-  - Clarify ESSENTIALS vs AGENTS vs CHANGELOG
-  - Add to each template
-  - Cross-reference between files
+- [x] Document Roles section ✅ (Jan 2026)
+  - Added to CODEBASE_ESSENTIALS templates
+  - Clarifies ESSENTIALS vs AGENTS vs CHANGELOG
+  - Cross-references between files
+  - Includes workflow diagram
 
-- [ ] First Implementation guide
-  - Recommended build order
-  - Why this order matters
+- [x] First Implementation guide ✅ (Jan 2026)
+  - Added to SETUP_GUIDE.md
+  - Recommended build order (7 steps)
+  - Why each step matters
   - Bridge from setup to building
+  - Validates entire workflow
 
-- [ ] Validation checklist
-  - Copy-paste pre-commit script
-  - Quick-check variant
-  - Add to AGENTS.md
+- [x] Validation checklist ✅ (Jan 2026)
+  - Copy-paste pre-commit scripts in AGENTS.md
+  - Quick-check variant (1 min)
+  - Full-check variant (5 min)
+  - Troubleshooting guide included
 
 **Success Metrics:**
 - Setup time < 10 minutes
@@ -144,10 +148,14 @@ AI agents produce code without understanding project context, breaking invariant
   - Semantic versioning
 
 #### Tool Integrations
-- [ ] GitHub Actions integration
-  - Auto-run validation matrix
-  - Pre-commit hooks from validation commands
+- [x] GitHub Actions integration ✅ (Jan 2026)
+  - TDD compliance workflow
+  - Pre-commit hooks for TDD enforcement
   - PR validation checks
+  - 6-layer TDD enforcement system
+- [ ] More GitHub Actions workflows
+  - Auto-run full validation matrix
+  - Additional quality checks
 
 - [ ] Pre-commit hook generator
   - Auto-generate from Validation Matrix
