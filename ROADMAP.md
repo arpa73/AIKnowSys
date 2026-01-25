@@ -127,12 +127,12 @@ AI agents produce code without understanding project context, breaking invariant
 
 ---
 
-### v0.4.0 - Memory & Learning (Next - 1-2 weeks)
-**Status:** 🚀 In Progress (Jan 2026)  
+### v0.4.0 - Memory & Learning ✅
+**Status:** ✅ Complete (Jan 25, 2026)  
 **Focus:** Session continuity and organic knowledge growth  
 **Inspired By:** everything-claude-code comparison analysis
 
-#### Session Persistence (Week 1)
+#### Session Persistence
 - [x] `.aiknowsys/sessions/` directory structure ✅
   - Session tracking files with timestamps
   - Completed/in-progress task tracking
@@ -150,7 +150,7 @@ AI agents produce code without understanding project context, breaking invariant
   - Template: Current state, completed, in-progress, next steps
   - File format: `YYYY-MM-DD-session.md`
 
-#### Continuous Learning (Week 1-2)
+#### Continuous Learning
 - [x] `.aiknowsys/learned/` directory for discovered patterns ✅
   - Project-specific skills extracted from sessions
   - Error resolutions, workarounds, debugging techniques
@@ -163,19 +163,28 @@ AI agents produce code without understanding project context, breaking invariant
   - Pattern types: error_resolution, user_corrections, workarounds
   - Self-documenting agent behavior
 
-- [ ] Update skill-creator to support learned skills
-  - Output to `.aiknowsys/learned/` directory
-  - Simplified template for discovered patterns
-  - Auto-detection of pattern type
+- [x] Skill-creator learned pattern support ✅
+  - "Creating Learned Patterns" section in SKILL.md
+  - learned-pattern-template.md for easy reuse
+  - Documentation of pattern format and types
+  - Extracted from real usage (update-command pattern)
 
-**Success Metrics:**
-- Agents check session files on start
-- Session notes created after complex work
-- Learned patterns saved and reused
-- Context continuity validated
+**Success Metrics: ✅ VALIDATED**
+- ✅ Agents check session files on start (protocol in AGENTS.md)
+- ✅ Session notes created (first session: 2026-01-25-session.md)
+- ✅ Learned patterns saved (first pattern: update-command-agents-customizations.md)
+- ✅ Context continuity proven (dogfooding session documented)
 
-**Key Differentiator:**
-Platform-agnostic implementation (no hooks required - just documentation patterns)
+**Key Achievement:**
+Platform-agnostic implementation - works with any AI assistant (no hooks required)
+
+**Validated During:**
+- Published to npm (v0.4.0)
+- Dogfooded: Updated own codebase from 0.1.0 → 0.4.0
+- First session file created documenting entire release process
+- First learned pattern created from real issue discovery
+- Check command enhanced based on learned pattern
+- All 33 tests passing (100% pass rate)
 
 ---
 
