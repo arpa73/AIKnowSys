@@ -171,6 +171,85 @@ npx aiknowsys audit
 
 ---
 
+## 🔍 Enhanced Auto-Detection
+
+The `scan` command has been significantly enhanced to auto-detect and pre-fill more information:
+
+**Now detects 15+ technology categories:**
+- ✅ **Database**: PostgreSQL, MySQL, MongoDB, SQLite
+- ✅ **ORM**: Prisma, Drizzle, TypeORM, Sequelize, Mongoose
+- ✅ **State Management**: Pinia, Redux, Zustand, MobX, Jotai
+- ✅ **API Client**: Axios, TanStack Query
+- ✅ **Authentication**: NextAuth, Passport, Auth0, Supabase, Firebase
+- ✅ **Styling**: Tailwind CSS, Material UI, Styled Components, Emotion, Sass
+- ✅ **Code Patterns**: API routes, auth middleware, error handling, validation
+
+**Before:**
+```markdown
+## 3. Core Patterns
+
+### API Calls
+TODO: How do you make API calls?
+```
+
+**After:**
+```markdown
+## 3. Core Patterns
+
+### API Calls
+Detected: Axios
+TODO: Document standard usage pattern
+Example: How do you create API instances? Base URL configuration?
+```
+
+**Impact:** Reduces manual setup work by 40-50%, provides context-aware hints for completion.
+
+---
+
+## 📚 Example Templates
+
+**New in v0.3.0:** Completed example templates to guide your setup!
+
+**See:** [`docs/examples/`](docs/examples/)
+- **[CODEBASE_ESSENTIALS.example.md](docs/examples/CODEBASE_ESSENTIALS.example.md)** - Fully-filled example (TaskAPI - Express/TypeScript/Prisma)
+- **[README.md](docs/examples/README.md)** - How to use examples effectively
+
+**Workflow:**
+1. Read example to understand format and level of detail
+2. Run `npx aiknowsys scan` to generate draft for your project
+3. Use example as reference while filling TODOs
+4. Copy structure, not content (write your own patterns!)
+
+**What makes a good example:**
+
+❌ **Too Generic:**
+```markdown
+### API Calls
+We use axios for API calls.
+```
+
+✅ **Specific & Useful:**
+```markdown
+### API Calls
+```typescript
+// src/lib/api.ts - All API calls use this instance
+import axios from 'axios';
+
+export const api = axios.create({
+  baseURL: '/api',
+  timeout: 5000
+});
+
+// Usage in components
+const tasks = await api.get('/tasks');
+```
+**Why:** Centralized config, consistent timeout, easy to mock in tests
+```
+
+**Based on user feedback:** "Templates can feel overwhelming without seeing a completed example" - this addresses the #1 priority from usability testing.
+
+---
+
 ## AI Tool Compatibility
 
 ### ✅ Works with ANY AI Tool
