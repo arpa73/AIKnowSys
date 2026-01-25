@@ -332,4 +332,80 @@ describe('init command', () => {
     assert.ok(vueExpressContent.includes('npm run dev'), 'Vue-Express should have dev command');
     assert.ok(vueExpressContent.includes('packages/'), 'Vue-Express should reference packages structure');
   });
+
+  it('should install TDD enforcement files with --yes flag (defaults to TDD enabled)', async () => {
+    const testDirTDD = path.join(__dirname, 'tmp', `test-tdd-${Date.now()}`);
+    fs.mkdirSync(testDirTDD, { recursive: true });
+    testDirsToCleanup.push(testDirTDD);
+
+    // --yes flag should use default (useTDD: true)
+    await init({ dir: testDirTDD, yes: true });
+
+    // Verify TDD skill was installed
+    const tddSkillPath = path.join(testDirTDD, '.github', 'skills', 'tdd-workflow', 'SKILL.md');
+    assert.ok(fs.existsSync(tddSkillPath), 'TDD workflow skill should be installed');
+    
+    const skillContent = fs.readFileSync(tddSkillPath, 'utf-8');
+    assert.ok(skillContent.toLowerCase().includes('red-green-refactor'), 'TDD skill should contain Red-Green-Refactor content');
+
+    // Verify git hooks were installed
+    const preCommitPath = path.join(testDirTDD, '.git-hooks', 'pre-commit');
+    assert.ok(fs.existsSync(preCommitPath), 'pre-commit hook should be installed');
+    
+    const preCommitContent = fs.readFileSync(preCommitPath, 'utf-8');
+    assert.ok(preCommitContent.includes('TDD compliance check'), 'pre-commit hook should contain TDD check');
+
+    const gitHooksReadme = path.join(testDirTDD, '.git-hooks', 'README.md');
+    assert.ok(fs.existsSync(gitHooksReadme), '.git-hooks/README.md should exist');
+
+    // Verify install script was created
+    const installScriptPath = path.join(testDirTDD, 'scripts', 'install-git-hooks.sh');
+    assert.ok(fs.existsSync(installScriptPath), 'install-git-hooks.sh should be installed');
+    
+    // On Unix systems, verify it's executable
+    if (process.platform !== 'win32') {
+      const stats = fs.statSync(installScriptPath);
+      const isExecutable = (stats.mode & 0o111) !== 0;
+      assert.ok(isExecutable, 'install-git-hooks.sh should be executable');
+    }
+
+    // Verify GitHub Actions workflow was installed
+    const workflowPath = path.join(testDirTDD, '.github', 'workflows', 'tdd-compliance.yml');
+    assert.ok(fs.existsSync(workflowPath), 'tdd-compliance.yml workflow should be installed');
+    
+    const workflowContent = fs.readFileSync(workflowPath, 'utf-8');
+    assert.ok(workflowContent.includes('TDD Compliance Check'), 'Workflow should be TDD compliance check');
+    assert.ok(workflowContent.includes('lib/'), 'Workflow should check lib/ directory');
+    assert.ok(workflowContent.includes('test/'), 'Workflow should check test/ directory');
+
+    // Verify AGENTS.md includes TDD workflow steps
+    const agentsPath = path.join(testDirTDD, 'AGENTS.md');
+    const agentsContent = fs.readFileSync(agentsPath, 'utf-8');
+    assert.ok(agentsContent.includes('TDD SELF-AUDIT'), 'AGENTS.md should include TDD self-audit section');
+    assert.ok(agentsContent.toUpperCase().includes('RED-GREEN-REFACTOR'), 'AGENTS.md should mention RED-GREEN-REFACTOR');
+  });
+
+  it('should verify TDD files have correct permissions on Unix systems', async () => {
+    // Skip on Windows
+    if (process.platform === 'win32') {
+      console.log('  ⏭️  Skipping permission test on Windows');
+      return;
+    }
+
+    const testDirPerms = path.join(__dirname, 'tmp', `test-tdd-perms-${Date.now()}`);
+    fs.mkdirSync(testDirPerms, { recursive: true });
+    testDirsToCleanup.push(testDirPerms);
+
+    await init({ dir: testDirPerms, yes: true });
+
+    // Check pre-commit hook permissions
+    const preCommitPath = path.join(testDirPerms, '.git-hooks', 'pre-commit');
+    const preCommitStats = fs.statSync(preCommitPath);
+    assert.ok((preCommitStats.mode & 0o111) !== 0, 'pre-commit should be executable');
+
+    // Check install script permissions
+    const installScriptPath = path.join(testDirPerms, 'scripts', 'install-git-hooks.sh');
+    const scriptStats = fs.statSync(installScriptPath);
+    assert.ok((scriptStats.mode & 0o111) !== 0, 'install-git-hooks.sh should be executable');
+  });
 });

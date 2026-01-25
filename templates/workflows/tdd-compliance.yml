@@ -1,0 +1,81 @@
+name: TDD Compliance Check
+
+# Runs on pull requests to enforce Test-Driven Development
+# Ensures that new code in lib/ comes with corresponding tests in test/
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+
+jobs:
+  check-tdd-compliance:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need to compare with previous commit
+      
+      - name: Check for new code without tests
+        run: |
+          echo "🔍 Checking TDD compliance..."
+          
+          # Check if lib/ directory changed
+          LIB_CHANGED=$(git diff --name-only HEAD^..HEAD | grep "^lib/" || true)
+          
+          if [ -n "$LIB_CHANGED" ]; then
+            echo "✓ Detected changes in lib/ directory:"
+            echo "$LIB_CHANGED"
+            
+            # Require test/ directory to also have changes
+            TEST_CHANGED=$(git diff --name-only HEAD^..HEAD | grep "^test/" || true)
+            
+            if [ -z "$TEST_CHANGED" ]; then
+              echo ""
+              echo "❌ TDD VIOLATION DETECTED"
+              echo ""
+              echo "New code was added to lib/ without corresponding test changes."
+              echo ""
+              echo "Critical Invariant #7: Test-Driven Development (TDD)"
+              echo "→ Write tests BEFORE implementation for new features"
+              echo "→ Follow RED-GREEN-REFACTOR cycle"
+              echo ""
+              echo "Changed files in lib/:"
+              echo "$LIB_CHANGED"
+              echo ""
+              echo "Expected: Changes in test/ directory"
+              echo "Found: No test changes"
+              echo ""
+              echo "📚 See: .github/skills/feature-implementation/SKILL.md"
+              echo "📚 See: AGENTS.md (Step 3: TDD Requirement)"
+              exit 1
+            else
+              echo "✓ Found corresponding test changes:"
+              echo "$TEST_CHANGED"
+              echo ""
+              echo "✅ TDD compliance check passed!"
+            fi
+          else
+            echo "ℹ️  No changes in lib/ directory - skipping TDD check"
+          fi
+      
+      - name: Verify tests exist for new features
+        run: |
+          echo ""
+          echo "📊 Test Coverage Summary:"
+          
+          # Count test files
+          TEST_COUNT=$(find test -name "*.test.js" 2>/dev/null | wc -l)
+          echo "Total test files: $TEST_COUNT"
+          
+          # Count lib files
+          LIB_COUNT=$(find lib -name "*.js" 2>/dev/null | wc -l)
+          echo "Total lib files: $LIB_COUNT"
+          
+          echo ""
+          echo "💡 Remember: Tests should be written BEFORE implementation!"
+          echo "   🔴 RED → 🟢 GREEN → 🔵 REFACTOR"
