@@ -118,10 +118,10 @@ const handleEdit = () => emit('edit', props.user.id)
 
 <template>
   <div class="user-card">
-    <div class="avatar">{{ initials }}</div>
+    <div class="avatar">{ { initials } }</div>
     <div class="details">
-      <h3>{{ user.name }}</h3>
-      <p v-if="showEmail">{{ user.email }}</p>
+      <h3>{ { user.name } }</h3>
+      <p v-if="showEmail">{ { user.email } }</p>
     </div>
     <button @click="handleEdit">Edit</button>
   </div>
@@ -385,9 +385,9 @@ onMounted(() => fetchUsers())
 <template>
   <div>
     <div v-if="loading">Loading...</div>
-    <div v-else-if="error">Error: {{ error }}</div>
+    <div v-else-if="error">Error: { { error } }</div>
     <ul v-else-if="users">
-      <li v-for="user in users" :key="user.id">{{ user.name }}</li>
+      <li v-for="user in users" :key="user.id">{ { user.name } }</li>
     </ul>
   </div>
 </template>
@@ -530,7 +530,7 @@ const handleSubmit = async () => {
         placeholder="Username"
       />
       <span v-if="touched.username && errors.username" class="error">
-        {{ errors.username }}
+        { { errors.username } }
       </span>
     </div>
     
@@ -596,7 +596,7 @@ onErrorCaptured((err) => {
 <template>
   <div v-if="error" class="error-boundary">
     <h3>Something went wrong</h3>
-    <p>{{ error.message }}</p>
+    <p>{ { error.message } }</p>
   </div>
   <slot v-else />
 </template>
@@ -906,7 +906,7 @@ const items = ref(Array.from({ length: 10000 }, (_, i) => ({ id: i, name: `Item 
     key-field="id"
   >
     <template #default="{ item }">
-      <div class="item">{{ item.name }}</div>
+      <div class="item">{ { item.name } }</div>
     </template>
   </RecycleScroller>
 </template>
