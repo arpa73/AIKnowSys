@@ -206,7 +206,363 @@ export async function GET(request) {
 
 ---
 
-## 6. Common Gotchas
+## 6. Common Patterns
+
+### Server Components: Data Fetching & Composition
+
+**Pattern: Parallel Data Fetching**
+
+```typescript
+// ✅ GOOD: Fetch in parallel for better performance
+async function Dashboard() {
+  const [user, posts, stats] = await Promise.all([
+    fetchUser(),
+    fetchPosts(),
+    fetchStats()
+  ]);
+  
+  return (
+    <div>
+      <UserProfile user={user} />
+      <PostsList posts={posts} />
+      <StatsPanel stats={stats} />
+    </div>
+  );
+}
+
+// ❌ BAD: Sequential fetching (slow waterfall)
+async function Dashboard() {
+  const user = await fetchUser();   // Waits
+  const posts = await fetchPosts(); // Then waits
+  const stats = await fetchStats(); // Then waits
+  return <div>...</div>;
+}
+```
+
+**Pattern: Streaming with Suspense**
+
+```typescript
+// app/dashboard/page.tsx
+import { Suspense } from 'react';
+
+export default function DashboardPage() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      
+      {/* Fast content shows immediately */}
+      <QuickStats />
+      
+      {/* Slow content streams in */}
+      <Suspense fallback={<PostsSkeleton />}>
+        <PostsList />
+      </Suspense>
+      
+      <Suspense fallback={<ChartSkeleton />}>
+        <AnalyticsChart />
+      </Suspense>
+    </div>
+  );
+}
+
+// Slow component (automatically streamed)
+async function PostsList() {
+  const posts = await db.post.findMany(); // Slow query
+  return <div>{posts.map(p => <Post key={p.id} {...p} />)}</div>;
+}
+```
+
+### Server Actions: Mutations
+
+**Pattern: Form Submission with Server Actions**
+
+```typescript
+// app/posts/actions.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+export async function createPost(formData: FormData) {
+  // 1. Validate input
+  const title = formData.get('title') as string;
+  const content = formData.get('content') as string;
+  
+  if (!title || !content) {
+    return { error: 'Title and content are required' };
+  }
+  
+  // 2. Create post
+  const post = await db.post.create({
+    data: { title, content, authorId: 'current-user-id' }
+  });
+  
+  // 3. Revalidate cache
+  revalidatePath('/posts');
+  
+  // 4. Redirect to new post
+  redirect(`/posts/${post.id}`);
+}
+
+// app/posts/new/page.tsx
+import { createPost } from '../actions';
+
+export default function NewPostPage() {
+  return (
+    <form action={createPost}>
+      <input name="title" required />
+      <textarea name="content" required />
+      <button type="submit">Create Post</button>
+    </form>
+  );
+}
+```
+
+**Pattern: Optimistic Updates with useOptimistic**
+
+```typescript
+// app/posts/[id]/LikeButton.tsx
+'use client';
+
+import { useOptimistic } from 'react';
+import { likePost } from './actions';
+
+export function LikeButton({ postId, initialLikes }: Props) {
+  const [optimisticLikes, addOptimisticLike] = useOptimistic(
+    initialLikes,
+    (state, amount: number) => state + amount
+  );
+  
+  return (
+    <form action={async () => {
+      addOptimisticLike(1); // Instant UI update
+      await likePost(postId); // Then sync with server
+    }}>
+      <button type="submit">
+        👍 {optimisticLikes}
+      </button>
+    </form>
+  );
+}
+```
+
+### Prisma Patterns
+
+**Pattern: Transactions with $transaction**
+
+```typescript
+// Transfer points between users (must be atomic)
+async function transferPoints(fromId: string, toId: string, amount: number) {
+  const result = await db.$transaction(async (tx) => {
+    // 1. Deduct from sender
+    const sender = await tx.user.update({
+      where: { id: fromId },
+      data: { points: { decrement: amount } }
+    });
+    
+    // Validate balance
+    if (sender.points < 0) {
+      throw new Error('Insufficient points');
+    }
+    
+    // 2. Add to receiver
+    await tx.user.update({
+      where: { id: toId },
+      data: { points: { increment: amount } }
+    });
+    
+    // 3. Log transaction
+    await tx.transaction.create({
+      data: { fromId, toId, amount }
+    });
+    
+    return sender;
+  });
+  
+  return result;
+}
+```
+
+**Pattern: Efficient Queries with select & include**
+
+```typescript
+// ❌ BAD: Over-fetching (fetches all columns)
+const user = await db.user.findUnique({
+  where: { id: userId }
+});
+
+// ✅ GOOD: Select only needed fields
+const user = await db.user.findUnique({
+  where: { id: userId },
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    // Don't fetch password hash, unused fields
+  }
+});
+
+// ✅ GOOD: Include relations efficiently
+const posts = await db.post.findMany({
+  include: {
+    author: {
+      select: { id: true, name: true } // Only author name, not all fields
+    },
+    _count: {
+      select: { comments: true } // Just the count, not all comments
+    }
+  }
+});
+```
+
+### Authentication with NextAuth.js
+
+**Pattern: Protecting Routes with Middleware**
+
+```typescript
+// middleware.ts
+import { withAuth } from 'next-auth/middleware';
+
+export default withAuth({
+  callbacks: {
+    authorized: ({ token, req }) => {
+      // Check if user has required role
+      if (req.nextUrl.pathname.startsWith('/admin')) {
+        return token?.role === 'admin';
+      }
+      return !!token; // Just needs to be logged in
+    }
+  }
+});
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/admin/:path*']
+};
+```
+
+**Pattern: Getting Session in Server Components**
+
+```typescript
+// app/dashboard/page.tsx
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect('/login');
+  }
+  
+  return <div>Welcome, {session.user.name}!</div>;
+}
+```
+
+### Error Handling Patterns
+
+**Pattern: Global Error Boundary**
+
+```typescript
+// app/error.tsx (catches errors in nested routes)
+'use client';
+
+export default function Error({
+  error,
+  reset
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <p>{error.message}</p>
+      <button onClick={reset}>Try again</button>
+    </div>
+  );
+}
+```
+
+**Pattern: Not Found Handling**
+
+```typescript
+// app/posts/[id]/page.tsx
+import { notFound } from 'next/navigation';
+
+export default async function PostPage({ params }: Props) {
+  const { id } = await params;
+  const post = await db.post.findUnique({ where: { id } });
+  
+  if (!post) {
+    notFound(); // Renders app/posts/[id]/not-found.tsx
+  }
+  
+  return <article>{post.content}</article>;
+}
+
+// app/posts/[id]/not-found.tsx
+export default function NotFound() {
+  return <h2>Post not found</h2>;
+}
+```
+
+### Dynamic Metadata for SEO
+
+**Pattern: generateMetadata for Dynamic Pages**
+
+```typescript
+// app/posts/[id]/page.tsx
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const post = await db.post.findUnique({ where: { id } });
+  
+  if (!post) return { title: 'Post Not Found' };
+  
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [post.coverImage],
+    },
+  };
+}
+```
+
+### Image Optimization
+
+**Pattern: Next.js Image Component**
+
+```typescript
+import Image from 'next/image';
+
+// ✅ GOOD: Optimized, responsive images
+export function PostCover({ src, alt }: Props) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={1200}
+      height={630}
+      priority // For above-the-fold images
+      placeholder="blur"
+      blurDataURL="/placeholder.jpg"
+    />
+  );
+}
+
+// ❌ BAD: No optimization
+export function PostCover({ src, alt }: Props) {
+  return <img src={src} alt={alt} />;
+}
+```
+
+---
+
+## 7. Common Gotchas
 
 ### 1. Client Component Hydration Mismatch
 
@@ -260,7 +616,7 @@ export default async function Page({ params }: PageProps) {
 
 ---
 
-## 7. Testing Patterns
+## 8. Testing Patterns
 
 ### Unit Testing (Vitest + Testing Library)
 
@@ -296,7 +652,7 @@ describe('GET /api/users', () => {
 
 ---
 
-## 8. Architecture Decisions
+## 9. Architecture Decisions
 
 ### Why App Router over Pages Router?
 
@@ -319,7 +675,7 @@ describe('GET /api/users', () => {
 
 ---
 
-## 9. Change Management
+## 10. Change Management
 
 ### Small Changes (no spec needed)
 
@@ -345,7 +701,7 @@ describe('GET /api/users', () => {
 
 ---
 
-## 10. Development Workflow
+## 11. Development Workflow
 
 ### First-Time Setup
 

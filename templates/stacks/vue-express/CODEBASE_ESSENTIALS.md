@@ -273,7 +273,499 @@ export const useUsersStore = defineStore('users', () => {
 
 ---
 
-## 5. Critical Invariants
+## 5. Common Patterns
+
+### Vue Composables: Reusable Logic
+
+**Pattern: Custom Composable for API Calls**
+
+```typescript
+// packages/frontend/src/composables/useApi.ts
+import { ref } from 'vue';
+import type { Ref } from 'vue';
+
+export function useApi<T>(apiFn: () => Promise<T>) {
+  const data = ref<T | null>(null) as Ref<T | null>;
+  const loading = ref(false);
+  const error = ref<Error | null>(null);
+  
+  async function execute() {
+    loading.value = true;
+    error.value = null;
+    try {
+      data.value = await apiFn();
+    } catch (e) {
+      error.value = e as Error;
+    } finally {
+      loading.value = false;
+    }
+  }
+  
+  return { data, loading, error, execute };
+}
+
+// Usage in component
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { useApi } from '@/composables/useApi';
+import { usersApi } from '@/api/users';
+
+const { data: users, loading, error, execute } = useApi(usersApi.getAll);
+
+onMounted(() => execute());
+</script>
+
+<template>
+  <div v-if="loading">Loading...</div>
+  <div v-else-if="error">Error: { { error.message } }</div>
+  <div v-else>
+    <UserCard v-for="user in users" :key="user.id" :user="user" />
+  </div>
+</template>
+```
+
+**Pattern: Form Validation Composable**
+
+```typescript
+// packages/frontend/src/composables/useForm.ts
+import { ref, computed } from 'vue';
+
+export function useForm<T>(initialValues: T) {
+  const values = ref<T>(initialValues);
+  const errors = ref<Partial<Record<keyof T, string>>>({});
+  const touched = ref<Partial<Record<keyof T, boolean>>>({});
+  
+  function setFieldValue<K extends keyof T>(field: K, value: T[K]) {
+    values.value[field] = value;
+    touched.value[field] = true;
+  }
+  
+  function setFieldError<K extends keyof T>(field: K, error: string) {
+    errors.value[field] = error;
+  }
+  
+  const isValid = computed(() => Object.keys(errors.value).length === 0);
+  
+  return { values, errors, touched, setFieldValue, setFieldError, isValid };
+}
+
+// Usage
+const { values, errors, setFieldValue, isValid } = useForm({
+  email: '',
+  password: ''
+});
+
+function validateEmail() {
+  if (!values.value.email.includes('@')) {
+    setFieldError('email', 'Invalid email');
+  }
+}
+</script>
+```
+
+### Vue Router: Navigation Patterns
+
+**Pattern: Route Guards with Authentication**
+
+```typescript
+// packages/frontend/src/router/index.ts
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/',
+      name: 'Home',
+      component: () => import('@/views/Home.vue')
+    },
+    {
+      path: '/dashboard',
+      name: 'Dashboard',
+      component: () => import('@/views/Dashboard.vue'),
+      meta: { requiresAuth: true }
+    }
+  ]
+});
+
+// Global navigation guard
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next({ name: 'Login', query: { redirect: to.fullPath } });
+  } else {
+    next();
+  }
+});
+
+export default router;
+```
+
+**Pattern: Programmatic Navigation with Type Safety**
+
+```typescript
+// Define route names as const
+export const ROUTES = {
+  HOME: 'Home',
+  DASHBOARD: 'Dashboard',
+  USER_PROFILE: 'UserProfile',
+} as const;
+
+// Type-safe navigation
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+// ✅ Type-safe with autocomplete
+router.push({ name: ROUTES.DASHBOARD });
+
+// ✅ With params
+router.push({ 
+  name: ROUTES.USER_PROFILE, 
+  params: { id: userId } 
+});
+```
+
+### Pinia: Advanced State Management
+
+**Pattern: Store Composition**
+
+```typescript
+// packages/frontend/src/stores/cart.ts
+import { defineStore } from 'pinia';
+import { useAuthStore } from './auth';
+import { computed, ref } from 'vue';
+
+export const useCartStore = defineStore('cart', () => {
+  // Compose with other stores
+  const authStore = useAuthStore();
+  
+  const items = ref<CartItem[]>([]);
+  
+  const total = computed(() => 
+    items.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  );
+  
+  async function checkout() {
+    if (!authStore.isAuthenticated) {
+      throw new Error('Must be logged in to checkout');
+    }
+    // Checkout logic...
+  }
+  
+  return { items, total, checkout };
+});
+```
+
+**Pattern: Persisted State**
+
+```typescript
+// packages/frontend/src/stores/preferences.ts
+import { defineStore } from 'pinia';
+import { ref, watch } from 'vue';
+
+export const usePreferencesStore = defineStore('preferences', () => {
+  // Load from localStorage
+  const theme = ref<'light' | 'dark'>(
+    (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
+  );
+  
+  // Persist to localStorage on changes
+  watch(theme, (newTheme) => {
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  }, { immediate: true });
+  
+  function toggleTheme() {
+    theme.value = theme.value === 'light' ? 'dark' : 'light';
+  }
+  
+  return { theme, toggleTheme };
+});
+```
+
+### Express Middleware Patterns
+
+**Pattern: Error Handling Middleware**
+
+```typescript
+// packages/backend/src/middleware/errorHandler.ts
+import { Request, Response, NextFunction } from 'express';
+
+export class AppError extends Error {
+  constructor(
+    public message: string,
+    public statusCode: number = 500,
+    public isOperational: boolean = true
+  ) {
+    super(message);
+    Object.setPrototypeOf(this, AppError.prototype);
+  }
+}
+
+export function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      error: err.message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
+  
+  // Unexpected errors
+  console.error('Unexpected error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+}
+
+// Usage in routes
+import { AppError } from '../middleware/errorHandler';
+
+export async function getUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await userService.getById(req.params.id);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+    res.json(user);
+  } catch (error) {
+    next(error); // Pass to error handler
+  }
+}
+```
+
+**Pattern: Authentication Middleware**
+
+```typescript
+// packages/backend/src/middleware/auth.ts
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+
+export interface AuthRequest extends Request {
+  userId?: string;
+}
+
+export async function requireAuth(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    req.userId = payload.userId;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// Usage
+router.get('/profile', requireAuth, getProfile);
+```
+
+**Pattern: Request Validation Middleware**
+
+```typescript
+// packages/backend/src/middleware/validate.ts
+import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
+
+export function validate(schema: z.ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
+        });
+      }
+      next(error);
+    }
+  };
+}
+
+// Usage
+import { z } from 'zod';
+
+const createUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+  password: z.string().min(8)
+});
+
+router.post('/users', validate(createUserSchema), createUser);
+```
+
+### Prisma Advanced Patterns
+
+**Pattern: Soft Deletes**
+
+```prisma
+// packages/backend/prisma/schema.prisma
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  deletedAt DateTime?
+  
+  @@index([deletedAt])
+}
+```
+
+```typescript
+// packages/backend/src/services/users.ts
+// Middleware to exclude soft-deleted records
+export const prisma = new PrismaClient().$extends({
+  query: {
+    user: {
+      async findMany({ args, query }) {
+        args.where = { ...args.where, deletedAt: null };
+        return query(args);
+      },
+      async findUnique({ args, query }) {
+        args.where = { ...args.where, deletedAt: null };
+        return query(args);
+      }
+    }
+  }
+});
+
+// Soft delete function
+export async function softDeleteUser(id: string) {
+  return prisma.user.update({
+    where: { id },
+    data: { deletedAt: new Date() }
+  });
+}
+```
+
+**Pattern: Optimistic Concurrency Control**
+
+```prisma
+model Post {
+  id      String @id @default(cuid())
+  title   String
+  version Int    @default(0)
+}
+```
+
+```typescript
+// packages/backend/src/services/posts.ts
+export async function updatePost(id: string, version: number, data: UpdateData) {
+  const post = await prisma.post.update({
+    where: { 
+      id,
+      version // Ensures version matches
+    },
+    data: {
+      ...data,
+      version: { increment: 1 }
+    }
+  });
+  
+  if (!post) {
+    throw new AppError('Post was modified by another user', 409);
+  }
+  
+  return post;
+}
+```
+
+### WebSocket Integration Pattern
+
+**Pattern: Real-time Updates with Socket.io**
+
+```typescript
+// packages/backend/src/socket.ts
+import { Server } from 'socket.io';
+import { Server as HttpServer } from 'http';
+
+export function setupSocket(httpServer: HttpServer) {
+  const io = new Server(httpServer, {
+    cors: {
+      origin: process.env.FRONTEND_URL,
+      credentials: true
+    }
+  });
+  
+  io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    
+    socket.on('join-room', (roomId: string) => {
+      socket.join(roomId);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
+    });
+  });
+  
+  return io;
+}
+
+// Emit events from services
+import { io } from '../socket';
+
+export async function createPost(data: CreatePostDTO) {
+  const post = await prisma.post.create({ data });
+  
+  // Notify connected clients
+  io.to('posts-room').emit('post-created', post);
+  
+  return post;
+}
+```
+
+```typescript
+// packages/frontend/src/composables/useSocket.ts
+import { onMounted, onUnmounted } from 'vue';
+import { io, Socket } from 'socket.io-client';
+
+let socket: Socket | null = null;
+
+export function useSocket(url: string = import.meta.env.VITE_API_URL) {
+  if (!socket) {
+    socket = io(url);
+  }
+  
+  onUnmounted(() => {
+    if (socket) {
+      socket.disconnect();
+      socket = null;
+    }
+  });
+  
+  return socket;
+}
+
+// Usage in component
+const socket = useSocket();
+
+onMounted(() => {
+  socket.on('post-created', (post) => {
+    // Update UI with new post
+    postsStore.addPost(post);
+  });
+});
+```
+
+---
+
+## 6. Critical Invariants
 
 ### Type Safety Across Stack
 
@@ -295,7 +787,7 @@ export const useUsersStore = defineStore('users', () => {
 
 ---
 
-## 6. Common Gotchas
+## 7. Common Gotchas
 
 ### 1. CORS Configuration
 
@@ -339,7 +831,7 @@ import type { User } from '@{{PROJECT_NAME}}/shared';
 
 ---
 
-## 7. Testing Patterns
+## 8. Testing Patterns
 
 ### Frontend Component Tests
 
@@ -381,7 +873,7 @@ describe('POST /api/users', () => {
 
 ---
 
-## 8. Architecture Decisions
+## 9. Architecture Decisions
 
 ### Why Monorepo?
 
@@ -403,7 +895,7 @@ describe('POST /api/users', () => {
 
 ---
 
-## 9. Development Workflow
+## 10. Development Workflow
 
 ### First-Time Setup
 
