@@ -50,24 +50,41 @@ If fixing bug:
 - [ ] **FOR NEW FEATURES:** Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR)
 - [ ] **FOR BUG FIXES:** Write test reproducing bug, then fix
 - [ ] Make changes + write/update tests
-- [ ] **VALIDATE** (see validation matrix below)
+- [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
 - [ ] Update docs if patterns changed
 
-**Validation Matrix (ALWAYS run after changes):**
+**Validation Matrix:**
 
-| Changed | Commands | Required |
-|---------|----------|----------|
-| Any JS file | `node bin/cli.js --help` | ✅ MANDATORY |
-| CLI commands | `node bin/cli.js <command> --help` | ✅ MANDATORY |
-| Templates | Verify no broken `{{VARIABLE}}` refs | ✅ MANDATORY |
-| README | Links valid, examples accurate | ✅ MANDATORY |
-| Package | `npm pack --dry-run` | ✅ Before publish |
+👉 **See [CODEBASE_ESSENTIALS.md - Validation Matrix](CODEBASE_ESSENTIALS.md#validation-matrix)**
+
+The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of truth. Always run all commands from that matrix after making changes.
 
 **🚨 RULE: Never claim work is complete without running validation!**
 
 ---
 
 ## 📋 SESSION WORKFLOW (Follow This Order!)
+
+### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
+
+**Before reading ESSENTIALS, check for session continuity:**
+
+```
+1. Check .aiknowsys/sessions/ for recent session files
+2. If recent session exists (< 7 days old):
+   - Read the latest session file
+   - Review "Notes for Next Session"
+   - Continue from where previous session ended
+3. Acknowledge continuity: "Continuing from [date] session..."
+```
+
+**Why This Helps:**
+- Prevents context loss between conversations
+- Maintains continuity on complex features
+- Reduces repeated explanations
+- Tracks progress automatically
+
+**Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
 
 ### 1️⃣ START: Read Context (REQUIRED)
 
@@ -77,6 +94,7 @@ If fixing bug:
 
 **When you need history:**
 - **@CODEBASE_CHANGELOG.md** - Session-by-session changes and validation notes
+- **@.aiknowsys/learned/** - Project-specific patterns discovered over time
 
 ### 2️⃣ PLAN: Check Skills Before Coding
 
@@ -84,12 +102,7 @@ If fixing bug:
 
 | Trigger Words | Skill to Read | Why |
 |---------------|---------------|-----|
-| "add command", "new feature", "implement" | `feature-implementation` | Proper command structure |
-| "refactor", "clean up", "simplify" | `code-refactoring` | Test-driven refactoring |
-| "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
-| "update docs", "changelog" | `documentation-management` | AI-optimized docs |
-| "create skill", "new skill" | `skill-creator` | Proper skill format |
-| "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
+{{SKILL_MAPPING}}
 
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
@@ -160,12 +173,104 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 ```
 
-### 6️⃣ END: Confirm Completion
+### 6️⃣ END: Save Session Context & Confirm Completion
 
-Only end your turn after completing steps 1-5. Tell the user:
-- What you fixed/built
-- What tests passed
-- That changelog is updated (if applicable)
+**Before ending your turn:**
+
+1. **Create/Update Session File** (for complex work):
+   ```markdown
+   # Save to .aiknowsys/sessions/YYYY-MM-DD-session.md
+   
+   ## Current State
+   [Brief summary of what was accomplished]
+   
+   ### Completed
+   - [x] Feature X implemented
+   - [x] Tests passing
+   
+   ### In Progress
+   - [ ] Documentation update pending
+   
+   ### Notes for Next Session
+   - Need to add error handling for edge case Y
+   - Consider refactoring Z for clarity
+   
+   ### Context to Load
+   ```
+   src/components/NewFeature.tsx - Main implementation
+   tests/NewFeature.test.ts - Test coverage
+   ```
+   ```
+
+2. **Confirm to user:**
+   - What you fixed/built
+   - What tests passed
+   - That changelog is updated (if applicable)
+   - Session notes saved (if complex work)
+
+---
+
+## 📚 CONTINUOUS LEARNING
+
+**After complex sessions or when discovering patterns:**
+
+### Pattern Extraction Protocol
+
+**When you notice:**
+- Recurring error with consistent solution
+- User corrects same mistake multiple times
+- Project-specific convention emerges
+- Workaround for library/framework issue
+- Debugging technique that works well
+
+**Do this:**
+1. Create learned skill in `.aiknowsys/learned/`
+2. Use skill format with clear trigger words
+3. Document the pattern for future reuse
+
+**Example:**
+```markdown
+# Learned Skill: Django Query Optimization Pattern
+
+**Pattern Type:** project_specific  
+**Created:** {{DATE}}  
+**Trigger Words:** "slow query", "n+1 problem", "django performance"
+
+## When to Use
+Use when encountering slow Django queries with related objects.
+
+## Pattern
+Always use select_related() for foreign keys and prefetch_related() for many-to-many.
+
+\```python
+# ❌ N+1 query problem
+users = User.objects.all()
+for user in users:
+    print(user.profile.bio)  # Query per user!
+
+# ✅ Optimized with select_related
+users = User.objects.select_related('profile').all()
+for user in users:
+    print(user.profile.bio)  # Single query!
+\```
+
+## Related
+- Django ORM documentation
+- Performance monitoring with django-debug-toolbar
+```
+
+**Pattern Types:**
+- `error_resolution` - How specific errors were fixed
+- `user_corrections` - Patterns from user feedback
+- `workarounds` - Solutions to library quirks
+- `debugging_techniques` - Effective debugging approaches
+- `project_specific` - Project conventions and standards
+
+**Why This Matters:**
+- System gets smarter over time
+- Reduces repeated explanations
+- Captures project-specific knowledge
+- Team can share discoveries
 
 ---
 
@@ -188,7 +293,7 @@ Only end your turn after completing steps 1-5. Tell the user:
 - `code-refactoring` - Test-driven refactoring
 - `testing-best-practices` - Framework-agnostic testing
 - `skill-creator` - How to create new skills
-- `tdd-workflow` - Test-driven development workflow
+- `tdd-workflow` - Test-driven development (mandatory for features)
 
 **To use a skill:**
 1. AI detects trigger words
@@ -225,30 +330,100 @@ This project uses Developer + Architect agents for automated code review.
 
 ---
 
+## ✅ Pre-Commit Validation Checklist
+
+**Run this checklist BEFORE every commit. Copy-paste into terminal:**
+
+### Quick Check (1 minute)
+```bash
+# 1. Validation Matrix commands
+{{VALIDATION_CMD_1}}  # e.g., npm test
+{{VALIDATION_CMD_2}}  # e.g., npm run lint
+
+# 2. No debug code
+grep -r "console.log\|debugger\|TODO:" src/ || echo "✓ No debug code"
+
+# 3. No secrets
+grep -r "password\|api_key\|secret" . --exclude-dir={node_modules,.git} || echo "✓ No secrets"
+```
+
+### Full Check (5 minutes)
+```bash
+# Run all validation commands from matrix
+{{ALL_VALIDATION_COMMANDS}}
+
+# Additional checks
+git status                          # No untracked files
+git diff                            # Review changes
+grep "{{" {{TEMPLATE_FILES}}        # No unfilled placeholders
+```
+
+### Before Push
+```bash
+# Final validation
+{{VALIDATION_CMD_1}}
+
+# Check commits
+git log origin/main..HEAD           # Review commits
+
+# Push
+git push
+```
+
+---
+
+## 🔍 Troubleshooting Validation Failures
+
+### Tests Failing
+1. Read error message carefully
+2. Check CODEBASE_ESSENTIALS.md for test patterns
+3. Review "Common Gotchas" section
+4. Run single failing test: `{{SINGLE_TEST_CMD}}`
+5. Check if pattern violated (Critical Invariants)
+
+### Linting Errors
+1. Auto-fix if possible: `{{AUTO_FIX_CMD}}`
+2. Review Core Patterns for style rules
+3. Don't disable rules - fix the code
+4. If rule is wrong, update ESSENTIALS first
+
+### Build Errors
+1. Check dependency versions (Technology Stack section)
+2. Clear cache: `{{CLEAR_CACHE_CMD}}`
+3. Rebuild from scratch: `{{CLEAN_BUILD_CMD}}`
+4. Check environment variables
+
+---
+
 ## 📝 Customization Instructions
 
 **This is a template file. To customize:**
 
-1. **{{VALIDATION_MATRIX}}** - Replace with your actual validation commands
-   ```markdown
-   | Backend | pytest | ✅ MANDATORY |
-   | Frontend | npm run type-check | ✅ MANDATORY |
-   ```
-
-2. **{{SKILL_MAPPING}}** - Add your project's skill trigger words
+1. **{{SKILL_MAPPING}}** - Add your project's skill trigger words
    ```markdown
    | "refactor", "clean up" | code-refactoring | Test-driven refactoring |
    | "update deps" | dependency-updates | Safe dependency updates |
+   | "write tests", "TDD", "test first" | tdd-workflow | Test-driven development |
    ```
+
+2. **Validation Checklist Placeholders:**
+   - `{{VALIDATION_CMD_1}}` → Your primary test command (e.g., `npm test`)
+   - `{{VALIDATION_CMD_2}}` → Your lint command (e.g., `npm run lint`)
+   - `{{ALL_VALIDATION_COMMANDS}}` → All commands from validation matrix in ESSENTIALS
+   - `{{TEMPLATE_FILES}}` → Files to check for placeholders
+   - `{{SINGLE_TEST_CMD}}` → How to run one test (e.g., `npm test -- file.test.js`)
+   - `{{AUTO_FIX_CMD}}` → Auto-fix linting (e.g., `npm run lint:fix`)
+   - `{{CLEAR_CACHE_CMD}}` → Clear build cache
+   - `{{CLEAN_BUILD_CMD}}` → Clean rebuild command
 
 3. **Add project-specific sections** as needed
 
 4. **Remove placeholder text** and instructions
 
-5. **Rename to `AGENTS.md`** when complete
+**Note:** Validation Matrix is in CODEBASE_ESSENTIALS.md - no need to duplicate it here.
 
 ---
 
 *This file helps AI agents follow a consistent workflow: Read → Plan → Implement → Validate → Document → Confirm*
 
-*Part of the Knowledge System Template. See [README](README.md) for full documentation.*
+*Part of aiknowsys. See [README](README.md) and [SETUP_GUIDE.md](SETUP_GUIDE.md) for full documentation.*
