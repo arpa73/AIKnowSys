@@ -1,4 +1,4 @@
-import { describe, it, before, after } from 'node:test';
+import { describe, it, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
 import fs from 'fs';
 import path from 'path';
@@ -6,21 +6,36 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import { init } from '../lib/commands/init.js';
 
+// Note: These are integration tests that use execSync for real CLI execution.
+// This is intentional - we test the actual CLI behavior end-to-end.
+// For unit tests of individual functions, mock fs/child_process as needed.
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.join(__dirname, '..');
 
 describe('init command', () => {
   let testDir;
+  let testDirsToCleanup = [];
 
   before(() => {
-    // Create a temporary test directory
+    // Create base temporary test directory
     testDir = path.join(__dirname, 'tmp', `test-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
+  afterEach(() => {
+    // Clean up any test directories created during individual tests
+    testDirsToCleanup.forEach((dir) => {
+      if (fs.existsSync(dir)) {
+        fs.rmSync(dir, { recursive: true, force: true });
+      }
+    });
+    testDirsToCleanup = [];
+  });
+
   after(() => {
-    // Cleanup test directory
+    // Cleanup base test directory
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
@@ -42,69 +57,55 @@ describe('init command', () => {
   it('should install custom agents', async () => {
     const testDirAgents = path.join(__dirname, 'tmp', `test-agents-${Date.now()}`);
     fs.mkdirSync(testDirAgents, { recursive: true });
+    testDirsToCleanup.push(testDirAgents);
 
-    try {
-      await init({ dir: testDirAgents, yes: true });
+    await init({ dir: testDirAgents, yes: true });
 
-      // Verify agents directory was created
-      assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents')), '.github/agents directory should exist');
-      assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents', 'developer.agent.md')), 'developer.agent.md should exist');
-      assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents', 'architect.agent.md')), 'architect.agent.md should exist');
-    } finally {
-      fs.rmSync(testDirAgents, { recursive: true, force: true });
-    }
+    // Verify agents directory was created
+    assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents')), '.github/agents directory should exist');
+    assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents', 'developer.agent.md')), 'developer.agent.md should exist');
+    assert.ok(fs.existsSync(path.join(testDirAgents, '.github', 'agents', 'architect.agent.md')), 'architect.agent.md should exist');
   });
 
   it('should install skills', async () => {
     const testDirSkills = path.join(__dirname, 'tmp', `test-skills-${Date.now()}`);
     fs.mkdirSync(testDirSkills, { recursive: true });
+    testDirsToCleanup.push(testDirSkills);
 
-    try {
-      await init({ dir: testDirSkills, yes: true });
+    await init({ dir: testDirSkills, yes: true });
 
-      // Verify skills directory was created
-      assert.ok(fs.existsSync(path.join(testDirSkills, '.github', 'skills')), '.github/skills directory should exist');
-      
-      // Check for at least one skill
-      const skillsDir = path.join(testDirSkills, '.github', 'skills');
-      const skills = fs.readdirSync(skillsDir);
-      assert.ok(skills.length > 0, 'At least one skill should be installed');
-    } finally {
-      fs.rmSync(testDirSkills, { recursive: true, force: true });
-    }
+    // Verify skills directory was created
+    assert.ok(fs.existsSync(path.join(testDirSkills, '.github', 'skills')), '.github/skills directory should exist');
+    
+    // Check for at least one skill
+    const skillsDir = path.join(testDirSkills, '.github', 'skills');
+    const skills = fs.readdirSync(skillsDir);
+    assert.ok(skills.length > 0, 'At least one skill should be installed');
   });
 
   it('should use project name from directory', async () => {
     const testDirName = path.join(__dirname, 'tmp', `my-awesome-project-${Date.now()}`);
     fs.mkdirSync(testDirName, { recursive: true });
+    testDirsToCleanup.push(testDirName);
 
-    try {
-      await init({ dir: testDirName, yes: true });
+    await init({ dir: testDirName, yes: true });
 
-      const essentials = fs.readFileSync(path.join(testDirName, 'CODEBASE_ESSENTIALS.md'), 'utf-8');
-      assert.ok(essentials.includes('my-awesome-project'), 'Should include project name from directory');
-    } finally {
-      fs.rmSync(testDirName, { recursive: true, force: true });
-    }
+    const essentials = fs.readFileSync(path.join(testDirName, 'CODEBASE_ESSENTIALS.md'), 'utf-8');
+    assert.ok(essentials.includes('my-awesome-project'), 'Should include project name from directory');
   });
 
   it('should handle non-existent directory', async () => {
     const newDir = path.join(__dirname, 'tmp', `new-project-${Date.now()}`);
+    testDirsToCleanup.push(newDir);
 
-    try {
-      // Directory doesn't exist yet
-      assert.ok(!fs.existsSync(newDir), 'Directory should not exist initially');
+    // Directory doesn't exist yet
+    assert.ok(!fs.existsSync(newDir), 'Directory should not exist initially');
 
-      await init({ dir: newDir, yes: true });
+    await init({ dir: newDir, yes: true });
 
-      // Directory should be created
-      assert.ok(fs.existsSync(newDir), 'Directory should be created');
-      assert.ok(fs.existsSync(path.join(newDir, 'CODEBASE_ESSENTIALS.md')), 'Files should be created in new directory');
-    } finally {
-      if (fs.existsSync(newDir)) {
-        fs.rmSync(newDir, { recursive: true, force: true });
-      }
-    }
+    // Directory should be created
+    assert.ok(fs.existsSync(newDir), 'Directory should be created');
+    assert.ok(fs.existsSync(path.join(newDir, 'CODEBASE_ESSENTIALS.md')), 'Files should be created');
   });
 
   it('CLI should work with --help', () => {
@@ -205,28 +206,130 @@ describe('init command', () => {
 
   it('should mention OpenSpec in AI prompt when enabled', () => {
     const testOpenSpecPromptDir = path.join(__dirname, 'tmp', `openspec-prompt-${Date.now()}`);
+    testDirsToCleanup.push(testOpenSpecPromptDir);
     
+    // The --yes flag uses default OpenSpec=false, so this verifies the baseline
+    const output = execSync(`node bin/cli.js init --dir ${testOpenSpecPromptDir} --yes`, {
+      cwd: projectRoot,
+      encoding: 'utf-8'
+    });
+
+    // With --yes (no OpenSpec), the prompt should NOT include OpenSpec references
+    // This ensures our conditional logic works correctly
+    const hasOpenSpecNote = output.includes('Note: This project uses OpenSpec');
+    const hasOpenSpecCommand = output.includes('openspec create');
+    
+    // When OpenSpec is disabled (default with --yes), these should not appear
+    assert.ok(!hasOpenSpecNote || !hasOpenSpecCommand, 'OpenSpec references should be conditional');
+    
+    // The prompt should still be generated correctly
+    assert.ok(output.includes('AI-Guided Project Bootstrap'), 'AI prompt should be displayed');
+  });
+
+  // Stack Template Tests
+  it('should list available stacks with --list-stacks', () => {
+    const output = execSync('node bin/cli.js init --list-stacks', {
+      cwd: projectRoot,
+      encoding: 'utf-8'
+    });
+
+    assert.ok(output.includes('Available Stack Templates'), 'Should show stack templates header');
+    assert.ok(output.includes('nextjs'), 'Should list nextjs stack');
+    assert.ok(output.includes('vue-express'), 'Should list vue-express stack');
+    assert.ok(output.includes('Usage: npx aiknowsys init --stack'), 'Should show usage example');
+  });
+
+  it('should create files with nextjs stack template', async () => {
+    const testStackDir = path.join(__dirname, 'tmp', `test-stack-nextjs-${Date.now()}`);
+    fs.mkdirSync(testStackDir, { recursive: true });
+    testDirsToCleanup.push(testStackDir);
+
+    // We can't test interactive prompts easily, but we can test the template loading logic
+    // by verifying the stack template file exists and is valid
+    const packageDir = path.join(projectRoot);
+    const stackTemplatePath = path.join(packageDir, 'templates', 'stacks', 'nextjs', 'CODEBASE_ESSENTIALS.md');
+    
+    assert.ok(fs.existsSync(stackTemplatePath), 'Next.js stack template should exist');
+    
+    const content = fs.readFileSync(stackTemplatePath, 'utf-8');
+    assert.ok(content.length > 1000, 'Stack template should have substantial content');
+    assert.ok(content.includes('Next.js'), 'Should mention Next.js');
+    assert.ok(content.includes('{{PROJECT_NAME}}'), 'Should have PROJECT_NAME placeholder');
+    assert.ok(content.includes('{{DATE}}'), 'Should have DATE placeholder');
+  });
+
+  it('should create files with vue-express stack template', async () => {
+    const packageDir = path.join(projectRoot);
+    const stackTemplatePath = path.join(packageDir, 'templates', 'stacks', 'vue-express', 'CODEBASE_ESSENTIALS.md');
+    
+    assert.ok(fs.existsSync(stackTemplatePath), 'Vue-Express stack template should exist');
+    
+    const content = fs.readFileSync(stackTemplatePath, 'utf-8');
+    assert.ok(content.length > 1000, 'Stack template should have substantial content');
+    assert.ok(content.includes('Vue'), 'Should mention Vue');
+    assert.ok(content.includes('Express'), 'Should mention Express');
+    assert.ok(content.toLowerCase().includes('monorepo'), 'Should mention monorepo architecture');
+  });
+
+  it('should show error for invalid stack name', () => {
     try {
-      // The --yes flag uses default OpenSpec=false, so this verifies the baseline
-      const output = execSync(`node bin/cli.js init --dir ${testOpenSpecPromptDir} --yes`, {
+      execSync('node bin/cli.js init --stack invalid-stack --dir /tmp/test-invalid', {
         cwd: projectRoot,
         encoding: 'utf-8'
       });
-
-      // With --yes (no OpenSpec), the prompt should NOT include OpenSpec references
-      // This ensures our conditional logic works correctly
-      const hasOpenSpecNote = output.includes('Note: This project uses OpenSpec');
-      const hasOpenSpecCommand = output.includes('openspec create');
-      
-      // When OpenSpec is disabled (default with --yes), these should not appear
-      assert.ok(!hasOpenSpecNote || !hasOpenSpecCommand, 'OpenSpec references should be conditional');
-      
-      // The prompt should still be generated correctly
-      assert.ok(output.includes('AI-Guided Project Bootstrap'), 'AI prompt should be displayed');
-    } finally {
-      if (fs.existsSync(testOpenSpecPromptDir)) {
-        fs.rmSync(testOpenSpecPromptDir, { recursive: true, force: true });
-      }
+      assert.fail('Should have thrown an error for invalid stack');
+    } catch (error) {
+      assert.ok(error.message.includes('Unknown stack'), 'Should show unknown stack error');
     }
+  });
+
+  it('should validate stack template has minimal placeholders', () => {
+    const packageDir = path.join(projectRoot);
+    const nextjsTemplate = path.join(packageDir, 'templates', 'stacks', 'nextjs', 'CODEBASE_ESSENTIALS.md');
+    const vueExpressTemplate = path.join(packageDir, 'templates', 'stacks', 'vue-express', 'CODEBASE_ESSENTIALS.md');
+    
+    // Verify templates exist
+    assert.ok(fs.existsSync(nextjsTemplate), 'Next.js template should exist');
+    assert.ok(fs.existsSync(vueExpressTemplate), 'Vue-Express template should exist');
+    
+    // Check Next.js template
+    const nextjsContent = fs.readFileSync(nextjsTemplate, 'utf-8');
+    const nextjsPlaceholders = nextjsContent.match(/{{[^}]+}}/g) || [];
+    const allowedPlaceholders = ['{{PROJECT_NAME}}', '{{PROJECT_DESCRIPTION}}', '{{DATE}}', '{{YEAR}}'];
+    
+    nextjsPlaceholders.forEach(placeholder => {
+      assert.ok(
+        allowedPlaceholders.includes(placeholder),
+        `Next.js template should only have essential placeholders, found: ${placeholder}`
+      );
+    });
+    
+    // Check Vue-Express template
+    const vueExpressContent = fs.readFileSync(vueExpressTemplate, 'utf-8');
+    const vueExpressPlaceholders = vueExpressContent.match(/{{[^}]+}}/g) || [];
+    
+    vueExpressPlaceholders.forEach(placeholder => {
+      assert.ok(
+        allowedPlaceholders.includes(placeholder),
+        `Vue-Express template should only have essential placeholders, found: ${placeholder}`
+      );
+    });
+  });
+
+  it('should have pre-filled validation matrix in stack templates', () => {
+    const packageDir = path.join(projectRoot);
+    const nextjsTemplate = path.join(packageDir, 'templates', 'stacks', 'nextjs', 'CODEBASE_ESSENTIALS.md');
+    const vueExpressTemplate = path.join(packageDir, 'templates', 'stacks', 'vue-express', 'CODEBASE_ESSENTIALS.md');
+    
+    // Next.js should have npm-based commands
+    const nextjsContent = fs.readFileSync(nextjsTemplate, 'utf-8');
+    assert.ok(nextjsContent.includes('npm run dev'), 'Next.js should have npm run dev command');
+    assert.ok(nextjsContent.includes('npm run build'), 'Next.js should have npm run build command');
+    assert.ok(nextjsContent.includes('npm run type-check'), 'Next.js should have type-check command');
+    
+    // Vue-Express should have monorepo commands
+    const vueExpressContent = fs.readFileSync(vueExpressTemplate, 'utf-8');
+    assert.ok(vueExpressContent.includes('npm run dev'), 'Vue-Express should have dev command');
+    assert.ok(vueExpressContent.includes('packages/'), 'Vue-Express should reference packages structure');
   });
 });

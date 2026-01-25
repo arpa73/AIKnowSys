@@ -73,6 +73,7 @@
 | "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
 | "update docs", "changelog" | `documentation-management` | AI-optimized docs |
 | "create skill", "new skill" | `skill-creator` | Proper skill format |
+| "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
 
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
@@ -152,6 +153,7 @@ Only end your turn after completing steps 1-5. Tell the user:
 - `code-refactoring` - Test-driven refactoring
 - `testing-best-practices` - Framework-agnostic testing
 - `skill-creator` - How to create new skills
+- `tdd-workflow` - Test-driven development workflow
 
 **To use a skill:**
 1. AI detects trigger words

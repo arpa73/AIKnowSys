@@ -54,6 +54,9 @@ From production use in gnwebsite:
 # For new projects - interactive setup
 npx aiknowsys init
 
+# For new projects with pre-built stack template
+npx aiknowsys init --stack nextjs
+
 # For existing projects - auto-detect and migrate
 npx aiknowsys migrate
 
@@ -61,6 +64,35 @@ npx aiknowsys migrate
 npm install -g aiknowsys
 aiknowsys init
 ```
+
+**🚀 Pre-built Stack Templates:**
+
+Skip most customization work with production-ready stack templates:
+
+```bash
+# List available stacks
+npx aiknowsys init --list-stacks
+
+# Initialize with Next.js stack
+npx aiknowsys init --stack nextjs
+
+# Initialize with Vue + Express full-stack monorepo
+npx aiknowsys init --stack vue-express
+```
+
+**Available stacks:**
+- `nextjs` - Next.js 15 + App Router + TypeScript + Tailwind + Prisma
+- `vue-express` - Vue 3 + Express full-stack monorepo with shared types
+
+Each stack template includes:
+- ✅ Pre-filled Technology Snapshot
+- ✅ Stack-specific validation matrix with proper commands
+- ✅ Core patterns and conventions for the stack
+- ✅ Common gotchas and solutions
+- ✅ Testing patterns and examples
+- ✅ Architecture decisions (why this stack)
+
+**Setup time:** 2-3 minutes (vs 10-15 min interactive, vs 45 min manual)
 
 **Available commands:**
 
@@ -70,6 +102,9 @@ aiknowsys init
 | `npx aiknowsys migrate` | Full migration for existing projects | ✅ Yes |
 | `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
 | `npx aiknowsys update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
+| `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
+| `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
+| `npx aiknowsys audit` | Find common issues and pattern violations | N/A (analysis) |
 | `npx aiknowsys install-agents` | Install Developer + Architect agents | N/A (standalone) |
 | `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 
@@ -90,6 +125,49 @@ aiknowsys init
   Includes all minimal sections + Security, Performance, Accessibility
 
 See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled example using the minimal template.
+
+**🚀 Enhanced Interactive Setup (Manual Mode):**
+
+Manual mode now asks intelligent questions about your project and automatically fills many placeholders:
+
+- ✅ **Technology Snapshot**: Framework, language, build tool, package manager
+- ✅ **Validation Matrix**: Auto-generates test, lint, type-check commands
+- ✅ **Tooling Details**: Database, linter, test framework selections
+- ✅ **Individual Commands**: {{TEST_CMD}}, {{LINT_CMD}}, {{TYPE_CHECK_CMD}} all filled
+
+**Before**: 50+ placeholders to fill manually
+**After**: Only structure and pattern placeholders remain (for AI or human completion)
+
+This significantly reduces setup time while maintaining flexibility for project-specific details.
+
+**🔍 Verification & Maintenance Commands:**
+
+New commands to validate and maintain your knowledge system:
+
+```bash
+# Validate your setup
+npx aiknowsys check
+# ✓ Checks required files exist
+# ✓ Verifies agents and skills installed
+# ✓ Detects unfilled placeholders
+# ✓ Validates validation matrix
+
+# Fix redundancy (sync validation matrix reference)
+npx aiknowsys sync
+# Updates AGENTS.md to reference ESSENTIALS.md (DRY principle)
+
+# Find issues and violations
+npx aiknowsys audit
+# ⚠️ Detects validation matrix duplication
+# ⚠️ Finds generic placeholder values
+# ⚠️ Checks file size bloat
+# ℹ️ Suggests improvements
+```
+
+**When to use:**
+- `check` - Before committing, after setup, or when troubleshooting
+- `sync` - After upgrading from old templates with duplicated validation matrix
+- `audit` - Periodic health checks, before releases, or when reviewing code quality
 
 ---
 
@@ -222,6 +300,7 @@ User → @Developer → Implements feature → Auto-handoff → @SeniorArchitect
 - `code-refactoring` - Test-driven refactoring patterns
 - `testing-best-practices` - Framework-agnostic testing guide
 - `skill-creator` - How to create new skills
+- `tdd-workflow` - Test-Driven Development (RED-GREEN-REFACTOR cycle)
 
 **Custom skills you can add:**
 - Feature implementation workflows

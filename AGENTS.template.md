@@ -34,14 +34,16 @@
 - [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
 - [ ] Read relevant skill if applicable
 - [ ] Make changes + write/update tests
-- [ ] **VALIDATE** (see validation matrix below)
+- [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
 - [ ] Update docs if patterns changed
 
-**Validation Matrix (ALWAYS run after changes):**
+**Validation Matrix:**
 
-| Changed | Commands | Required |
-|---------|----------|----------|
-{{VALIDATION_MATRIX}}
+👉 **See [CODEBASE_ESSENTIALS.md - Validation Matrix](CODEBASE_ESSENTIALS.md#validation-matrix)**
+
+The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of truth. Always run all commands from that matrix after making changes.
+
+**🚨 RULE: Never claim work is complete without running validation!**
 
 ---
 
@@ -74,6 +76,19 @@
 ### 3️⃣ IMPLEMENT: Write Code + Tests
 
 Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
+
+**💡 TDD Recommended:** For new features, practice Test-Driven Development:
+1. **RED**: Write a failing test first
+2. **GREEN**: Write minimal code to make it pass
+3. **REFACTOR**: Clean up code while tests stay green
+
+See `.github/skills/tdd-workflow/SKILL.md` for detailed TDD guidance.
+
+**Benefits of TDD:**
+- Better code design (forces decoupling)
+- Fewer bugs (issues caught before implementation)
+- Confidence in refactoring (tests catch regressions)
+- Living documentation (tests show intent)
 
 ### 4️⃣ VALIDATE: Run Tests & Checks (MANDATORY - DO NOT SKIP!)
 
@@ -247,31 +262,28 @@ git push
 
 **This is a template file. To customize:**
 
-1. **{{VALIDATION_MATRIX}}** - Replace with your actual validation commands
-   ```markdown
-   | Backend | pytest | ✅ MANDATORY |
-   | Frontend | npm run type-check | ✅ MANDATORY |
-   ```
-
-2. **{{SKILL_MAPPING}}** - Add your project's skill trigger words
+1. **{{SKILL_MAPPING}}** - Add your project's skill trigger words
    ```markdown
    | "refactor", "clean up" | code-refactoring | Test-driven refactoring |
    | "update deps" | dependency-updates | Safe dependency updates |
+   | "write tests", "TDD", "test first" | tdd-workflow | Test-driven development |
    ```
 
-3. **Validation Checklist Placeholders:**
+2. **Validation Checklist Placeholders:**
    - `{{VALIDATION_CMD_1}}` → Your primary test command (e.g., `npm test`)
    - `{{VALIDATION_CMD_2}}` → Your lint command (e.g., `npm run lint`)
-   - `{{ALL_VALIDATION_COMMANDS}}` → All commands from validation matrix
+   - `{{ALL_VALIDATION_COMMANDS}}` → All commands from validation matrix in ESSENTIALS
    - `{{TEMPLATE_FILES}}` → Files to check for placeholders
    - `{{SINGLE_TEST_CMD}}` → How to run one test (e.g., `npm test -- file.test.js`)
    - `{{AUTO_FIX_CMD}}` → Auto-fix linting (e.g., `npm run lint:fix`)
    - `{{CLEAR_CACHE_CMD}}` → Clear build cache
    - `{{CLEAN_BUILD_CMD}}` → Clean rebuild command
 
-4. **Add project-specific sections** as needed
+3. **Add project-specific sections** as needed
 
-5. **Remove placeholder text** and instructions
+4. **Remove placeholder text** and instructions
+
+**Note:** Validation Matrix is in CODEBASE_ESSENTIALS.md - no need to duplicate it here.
 
 ---
 

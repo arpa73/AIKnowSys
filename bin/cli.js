@@ -11,6 +11,9 @@ import { migrate } from '../lib/commands/migrate.js';
 import { installAgents } from '../lib/commands/install-agents.js';
 import { installSkills } from '../lib/commands/install-skills.js';
 import { update } from '../lib/commands/update.js';
+import { check } from '../lib/commands/check.js';
+import { sync } from '../lib/commands/sync.js';
+import { audit } from '../lib/commands/audit.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +42,8 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-y, --yes', 'Skip prompts and use defaults')
   .option('-t, --template <type>', 'Template size: minimal (10 sections) or full (13+ sections)', 'full')
+  .option('-s, --stack <name>', 'Use pre-built stack template (nextjs, vue-express, etc.)')
+  .option('--list-stacks', 'List available stack templates')
   .action(init);
 
 program
@@ -75,6 +80,24 @@ program
   .option('-y, --yes', 'Update all components without prompting')
   .option('-f, --force', 'Force update even if already up to date')
   .action(update);
+
+program
+  .command('check')
+  .description('Validate knowledge system setup and configuration')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(check);
+
+program
+  .command('sync')
+  .description('Sync AGENTS.md validation reference with CODEBASE_ESSENTIALS.md')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(sync);
+
+program
+  .command('audit')
+  .description('Find common issues and pattern violations in knowledge system')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(audit);
 
 // Default command - show help with styled banner
 program

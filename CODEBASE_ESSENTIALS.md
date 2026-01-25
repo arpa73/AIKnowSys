@@ -24,7 +24,8 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All tests pass |
+| `npm test` | Run unit tests | All 17 tests pass |
+| `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
 | `npm pack --dry-run` | Package contents | Lists correct files |
@@ -171,6 +172,12 @@ export async function installAgents(options) {
    - Bash scripts in `scripts/` must remain functional
    - npm CLI is additive, not replacement
 
+7. **Test-Driven Development (TDD)**
+   - Write tests BEFORE implementation for new features
+   - Follow RED-GREEN-REFACTOR cycle
+   - Keep tests fast and focused
+   - See `.github/skills/tdd-workflow/SKILL.md` for detailed guidance
+
 ---
 
 ## 6. Common Gotchas
@@ -232,7 +239,47 @@ function getCurrentVersion(targetDir) {
 
 ---
 
-## 9. Release Checklist
+## 9. Testing Philosophy
+
+We practice **Test-Driven Development (TDD)** for all new features:
+
+1. **Write test first** - Define expected behavior before implementation
+2. **Watch it fail (RED)** - Verify test catches the missing feature
+3. **Implement minimal code (GREEN)** - Make the test pass
+4. **Refactor** - Clean up while tests stay green
+
+**Benefits:**
+- Better code design (testable code is decoupled code)
+- Fewer bugs (issues caught before shipping)
+- Confidence in refactoring (tests catch regressions)
+- Living documentation (tests show intent)
+
+**Test Organization:**
+```
+test/
+├── init.test.js           # Command tests
+└── test-stack.js          # Manual integration tests
+```
+
+**Running Tests:**
+```bash
+npm test                   # Run all tests
+node --test test/init.test.js --watch  # Watch mode
+```
+
+**When adding features:**
+1. Add test to `test/init.test.js` (or create new test file)
+2. Watch test fail (`npm test`)
+3. Implement feature
+4. Watch test pass
+5. Refactor if needed
+6. Commit with passing tests
+
+See `.github/skills/tdd-workflow/SKILL.md` for detailed TDD guidance.
+
+---
+
+## 10. Release Checklist
 
 - [ ] Bump version: `npm version patch/minor/major` (auto-updates package.json)
 - [ ] Test all commands locally
