@@ -133,6 +133,70 @@ Skip proposal, go directly to implementation steps below.
 
 ## Implementation Workflow
 
+**\u26a0\ufe0f CRITICAL: Follow TDD (Test-Driven Development) for ALL new features**
+
+This is Critical Invariant #7 from CODEBASE_ESSENTIALS.md. Not optional.
+
+### Phase 0: TDD Setup (MANDATORY for new features)
+
+#### Before Writing ANY Implementation Code:
+
+**Step 1: Write the Test FIRST** \ud83d\udd34 RED
+```bash
+# Create test file if it doesn't exist
+touch test/my-feature.test.js
+
+# Write failing test
+describe('myFeature', () => {
+  it('should do the thing I want', () => {
+    const result = myFeature()
+    assert.strictEqual(result, expectedValue)
+  })
+})
+```
+
+**Step 2: Run Test - Watch It FAIL** \ud83d\udd34 RED
+```bash
+npm test  # or appropriate test command
+# Expected: Test fails (RED) - function doesn't exist yet
+```
+
+**Why this matters:**
+- Confirms test actually tests something
+- Prevents false positives
+- Forces thinking about API design before implementation
+
+**Step 3: Implement Minimal Code** \ud83d\udfe2 GREEN
+```javascript
+// Write JUST ENOUGH code to make test pass
+export function myFeature() {
+  return expectedValue  // Start simple
+}
+```
+
+**Step 4: Run Test - Watch It PASS** \ud83d\udfe2 GREEN
+```bash
+npm test  # Test should pass now
+```
+
+**Step 5: Refactor** \ud83d\udd35 REFACTOR
+```javascript
+// Now make it elegant/efficient while keeping tests green
+export function myFeature() {
+  // Better implementation
+  return computedValue
+}
+```
+
+**Step 6: Run Test Again**
+```bash
+npm test  # Still passes after refactor
+```
+
+**\u2705 NOW you can proceed to Phase 1 below with confidence!**
+
+---
+
 ### Phase 1: Plan & Design
 
 #### 1. Understand the Requirement

@@ -1,384 +1,492 @@
+# TDD Workflow Skill
+
+**Purpose:** Practice Test-Driven Development (TDD) - write tests before implementation to ensure quality and design.
+
+**When to use:** When implementing new features, fixing bugs, or refactoring code. TDD reduces defects, improves design, and provides living documentation.
+
 ---
-name: tdd-workflow
-description: Complete Test-Driven Development (TDD) workflow guide. Use when implementing new features, adding functionality, or when user mentions "test first", "TDD", or "red-green-refactor". Ensures compliance with Critical Invariant #7 and provides step-by-step RED-GREEN-REFACTOR process.
+
+## What is TDD?
+
+Test-Driven Development is a discipline where you:
+1. **RED**: Write a failing test
+2. **GREEN**: Write minimal code to make it pass
+3. **REFACTOR**: Clean up code while keeping tests green
+
+**Benefits:**
+- ✅ Better code design (testable = decoupled)
+- ✅ Fewer bugs (catch issues before implementation)
+- ✅ Living documentation (tests show intent)
+- ✅ Confident refactoring (tests catch regressions)
+- ✅ No over-engineering (only write what's needed)
+
 ---
 
-# Test-Driven Development (TDD) Workflow
+## The TDD Cycle (Red-Green-Refactor)
 
-This skill enforces Critical Invariant #7: Always write tests BEFORE implementation.
+### 1. RED - Write a Failing Test
 
-## When to Use This Skill
+Write the smallest possible test that fails:
 
-**ALWAYS use for:**
-- New features or functionality
-- New API endpoints or models
-- New UI components with logic
-- Bug fixes (write test that reproduces bug first)
-
-**Trigger words:**
-- "implement", "add feature", "create new"
-- "TDD", "test first", "test-driven"
-- "red-green-refactor"
-
-## The TDD Cycle: RED-GREEN-REFACTOR
-
-### 🔴 Phase 1: RED (Write Failing Test)
-
-**Step 1: Create test file**
-```bash
-# If test file doesn't exist
-touch test/my-feature.test.js
-```
-
-**Step 2: Write the test FIRST**
 ```javascript
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
-import { myFeature } from '../lib/my-feature.js'
+// test/calculator.test.js
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { add } from '../src/calculator.js';
 
-describe('myFeature', () => {
-  it('should return expected result when given valid input', () => {
-    const result = myFeature({ input: 'test' })
-    assert.strictEqual(result.success, true)
-    assert.strictEqual(result.output, 'processed: test')
-  })
-})
+describe('Calculator', () => {
+  it('should add two numbers', () => {
+    assert.strictEqual(add(2, 3), 5);
+  });
+});
 ```
 
-**Step 3: Run test - MUST FAIL**
+**Run the test** - it should FAIL (function doesn't exist yet)
+
 ```bash
 npm test
-
-# Expected output:
-# ✗ myFeature > should return expected result...
-#   Error: Cannot find module '../lib/my-feature.js'
+# ❌ FAIL: Cannot find module '../src/calculator.js'
 ```
 
-**✅ Success criteria:**
-- Test fails for the RIGHT reason
-- Error message is clear
-- You understand what needs to be implemented
+### 2. GREEN - Write Minimal Code
 
-**❌ If test passes already:**
-- You're not writing a new test
-- Test doesn't actually test the feature
-- Implementation already exists (not TDD)
-
----
-
-### 🟢 Phase 2: GREEN (Make Test Pass)
-
-**Step 4: Implement MINIMAL code**
-
-Write the SIMPLEST code that makes the test pass:
+Write the **simplest** code to make the test pass:
 
 ```javascript
-// lib/my-feature.js
-
-export function myFeature({ input }) {
-  // Minimal implementation - just make the test pass
-  return {
-    success: true,
-    output: `processed: ${input}`
-  }
+// src/calculator.js
+export function add(a, b) {
+  return a + b;
 }
 ```
 
-**Don't add:**
-- Extra features not tested
-- Edge case handling not in test
-- Optimizations or clever code
-- Multiple responsibilities
+**Run the test** - it should PASS
 
-**Step 5: Run test - MUST PASS**
 ```bash
 npm test
-
-# Expected output:
-# ✓ myFeature > should return expected result...
-# Tests: 1 passed, 1 total
+# ✅ PASS: should add two numbers
 ```
 
-**✅ Success criteria:**
-- All tests pass (including existing ones)
-- Implementation is simple and clear
-- Code does ONLY what tests require
+### 3. REFACTOR - Improve Code
+
+Clean up code while keeping tests green:
+
+```javascript
+// src/calculator.js
+export function add(a, b) {
+  // Validate inputs
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new TypeError('Both arguments must be numbers');
+  }
+  return a + b;
+}
+```
+
+Add test for validation:
+
+```javascript
+it('should throw error for non-numeric input', () => {
+  assert.throws(() => add('2', 3), TypeError);
+});
+```
+
+**Run tests** - all should still PASS
 
 ---
 
-### 🔵 Phase 3: REFACTOR (Improve While Green)
+## TDD for Different Scenarios
 
-**Step 6: Make it better**
+### Scenario 1: Adding a New Feature
 
-Now that tests pass, improve the code:
+**Goal:** Add a `multiply` function
+
+**Step 1 - RED:** Write test first
 
 ```javascript
-// lib/my-feature.js
+it('should multiply two numbers', () => {
+  assert.strictEqual(multiply(4, 5), 20);
+});
+```
 
-const PREFIX = 'processed: '
+**Step 2 - GREEN:** Implement
 
-export function myFeature({ input }) {
-  // Refactored: extracted constant, added validation
-  if (!input || typeof input !== 'string') {
-    throw new Error('Input must be a non-empty string')
+```javascript
+export function multiply(a, b) {
+  return a * b;
+}
+```
+
+**Step 3 - REFACTOR:** Add edge cases
+
+```javascript
+it('should handle zero multiplication', () => {
+  assert.strictEqual(multiply(5, 0), 0);
+});
+
+it('should handle negative numbers', () => {
+  assert.strictEqual(multiply(-3, 4), -12);
+});
+```
+
+### Scenario 2: Fixing a Bug
+
+**Bug Report:** "Calculator crashes with very large numbers"
+
+**Step 1 - RED:** Write test that reproduces the bug
+
+```javascript
+it('should handle large numbers', () => {
+  const large = Number.MAX_SAFE_INTEGER;
+  assert.doesNotThrow(() => add(large, 1));
+});
+```
+
+**Step 2 - GREEN:** Fix the bug
+
+```javascript
+export function add(a, b) {
+  const result = a + b;
+  if (!Number.isSafeInteger(result)) {
+    throw new RangeError('Result exceeds safe integer range');
   }
+  return result;
+}
+```
+
+**Step 3 - REFACTOR:** Add more edge case tests
+
+### Scenario 3: Refactoring Existing Code
+
+**Goal:** Refactor complex function to be more readable
+
+**Step 1:** Write tests for current behavior (characterization tests)
+
+```javascript
+// Capture current behavior before refactoring
+describe('Complex function', () => {
+  it('should return expected output for input A', () => {
+    assert.strictEqual(complexFunction('A'), expectedResultA);
+  });
   
-  return {
-    success: true,
-    output: `${PREFIX}${input.trim()}`
-  }
-}
+  it('should return expected output for input B', () => {
+    assert.strictEqual(complexFunction('B'), expectedResultB);
+  });
+});
 ```
 
-**Step 7: Add tests for edge cases**
-```javascript
-describe('myFeature', () => {
-  it('should return expected result when given valid input', () => {
-    // ... existing test
-  })
+**Step 2:** Refactor code
 
-  it('should throw error for invalid input', () => {
-    assert.throws(
-      () => myFeature({ input: '' }),
-      { message: 'Input must be a non-empty string' }
-    )
-  })
-
-  it('should trim whitespace from input', () => {
-    const result = myFeature({ input: '  test  ' })
-    assert.strictEqual(result.output, 'processed: test')
-  })
-})
-```
-
-**Step 8: Run tests - MUST STILL PASS**
-```bash
-npm test
-
-# Expected output:
-# ✓ myFeature > should return expected result...
-# ✓ myFeature > should throw error for invalid input
-# ✓ myFeature > should trim whitespace from input
-# Tests: 3 passed, 3 total
-```
-
-**✅ Success criteria:**
-- Code is cleaner/more maintainable
-- All tests still pass
-- No new functionality without tests
+**Step 3:** Run tests - if they pass, refactoring preserved behavior
 
 ---
 
-## Full Workflow Example
+## TDD Best Practices
 
-### Scenario: Add a user validation function
+### 1. Write the Test You Wish You Had
 
-**1. 🔴 RED: Write failing test**
+Design your API through tests:
 
 ```javascript
-// test/validate-user.test.js
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
-import { validateUser } from '../lib/validate-user.js'
+// Good: Expressive, clear intent
+it('should format user greeting with name and time', () => {
+  const greeting = formatGreeting('Alice', 'morning');
+  assert.strictEqual(greeting, 'Good morning, Alice!');
+});
+```
 
-describe('validateUser', () => {
-  it('should return valid:true for user with required fields', () => {
-    const user = { name: 'Alice', email: 'alice@example.com' }
-    const result = validateUser(user)
+### 2. Test One Thing at a Time
+
+```javascript
+// ❌ BAD: Testing multiple behaviors
+it('should handle all edge cases', () => {
+  assert.strictEqual(divide(10, 2), 5);
+  assert.throws(() => divide(10, 0));
+  assert.strictEqual(divide(-10, 2), -5);
+});
+
+// ✅ GOOD: One test per behavior
+it('should divide two positive numbers', () => {
+  assert.strictEqual(divide(10, 2), 5);
+});
+
+it('should throw error when dividing by zero', () => {
+  assert.throws(() => divide(10, 0), Error);
+});
+
+it('should handle negative divisor', () => {
+  assert.strictEqual(divide(-10, 2), -5);
+});
+```
+
+### 3. Use Descriptive Test Names
+
+```javascript
+// ❌ BAD: Vague
+it('works', () => { ... });
+
+// ✅ GOOD: Descriptive
+it('should return empty array when no items match filter', () => { ... });
+```
+
+### 4. Follow the AAA Pattern
+
+**Arrange-Act-Assert:**
+
+```javascript
+it('should calculate total price with tax', () => {
+  // Arrange: Set up test data
+  const price = 100;
+  const taxRate = 0.1;
+  
+  // Act: Execute the function
+  const total = calculateTotal(price, taxRate);
+  
+  // Assert: Verify the result
+  assert.strictEqual(total, 110);
+});
+```
+
+### 5. Keep Tests Fast
+
+- Avoid I/O (file system, network, database) in unit tests
+- Use mocks/stubs for external dependencies
+- Run tests frequently (every few minutes)
+
+### 6. Don't Test Implementation Details
+
+```javascript
+// ❌ BAD: Testing internal state
+it('should set internal cache property', () => {
+  const obj = new MyClass();
+  obj.doSomething();
+  assert.ok(obj._cache !== null); // Testing private details
+});
+
+// ✅ GOOD: Testing observable behavior
+it('should return cached result on second call', () => {
+  const obj = new MyClass();
+  const first = obj.doSomething();
+  const second = obj.doSomething();
+  assert.strictEqual(first, second);
+});
+```
+
+---
+
+## TDD Workflow Checklist
+
+Before starting any feature:
+
+- [ ] **Write the test first** - What should the code do?
+- [ ] **Run the test** - Verify it fails (RED)
+- [ ] **Write minimal code** - Make it pass (GREEN)
+- [ ] **Run the test** - Verify it passes
+- [ ] **Refactor** - Improve code quality
+- [ ] **Run tests** - Verify they still pass
+- [ ] **Commit** - Save your progress
+
+---
+
+## Common TDD Pitfalls to Avoid
+
+### 1. Writing Tests After Implementation
+
+**Problem:** You lose the design benefits of TDD
+
+**Solution:** Discipline! Write test first, then implement
+
+### 2. Writing Too Much Code at Once
+
+**Problem:** Hard to debug when test fails
+
+**Solution:** Baby steps - smallest possible change
+
+### 3. Not Running Tests Frequently
+
+**Problem:** Lose feedback loop, harder to find issues
+
+**Solution:** Run tests after every change (use watch mode)
+
+### 4. Skipping the Refactor Step
+
+**Problem:** Code becomes messy over time
+
+**Solution:** Always clean up after tests pass
+
+### 5. Testing Implementation Instead of Behavior
+
+**Problem:** Tests break when refactoring
+
+**Solution:** Test public API, not internal details
+
+---
+
+## TDD with aiknowsys
+
+When using TDD in your aiknowsys project:
+
+1. **Add test commands to Validation Matrix:**
+
+```markdown
+| Command | Purpose | Expected |
+|---------|---------|----------|
+| `npm test` | Run all tests | All pass |
+| `npm run test:watch` | Watch mode | Continuous feedback |
+| `npm run test:coverage` | Coverage report | >80% coverage |
+```
+
+2. **Update AGENTS.md workflow:**
+
+```markdown
+### Rules:
+- **ALWAYS write tests before implementation** (TDD)
+- Mark todo as in-progress
+- Write failing test (RED)
+- Implement minimal code (GREEN)
+- Refactor while tests pass
+- Mark todo as completed
+```
+
+3. **Document TDD in Testing Patterns section:**
+
+```markdown
+### Testing Approach: Test-Driven Development (TDD)
+
+We practice TDD for all new features:
+1. Write test first (captures intent)
+2. Implement to pass test
+3. Refactor for quality
+
+Example test structure:
+- `test/unit/` - Unit tests (fast, isolated)
+- `test/integration/` - Integration tests (slower, realistic)
+- `test/e2e/` - End-to-end tests (slowest, full stack)
+```
+
+---
+
+## Example: TDD Session for Real Feature
+
+**Feature:** Add CSV export to data processor
+
+### Step 1: Write Test First (RED)
+
+```javascript
+// test/csv-exporter.test.js
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { exportToCSV } from '../src/csv-exporter.js';
+
+describe('CSV Exporter', () => {
+  it('should export array of objects to CSV string', () => {
+    const data = [
+      { name: 'Alice', age: 30 },
+      { name: 'Bob', age: 25 }
+    ];
     
-    assert.strictEqual(result.valid, true)
-    assert.strictEqual(result.errors, undefined)
-  })
-})
-```
-
-Run: `npm test` → ❌ Fails (module doesn't exist)
-
-**2. 🟢 GREEN: Minimal implementation**
-
-```javascript
-// lib/validate-user.js
-export function validateUser(user) {
-  return { valid: true }
-}
-```
-
-Run: `npm test` → ✅ Passes
-
-**3. 🔵 REFACTOR: Add more tests + improve**
-
-```javascript
-// test/validate-user.test.js (add more tests)
-describe('validateUser', () => {
-  it('should return valid:true for user with required fields', () => {
-    // ... existing test
-  })
-
-  it('should return valid:false when name is missing', () => {
-    const user = { email: 'alice@example.com' }
-    const result = validateUser(user)
+    const csv = exportToCSV(data);
     
-    assert.strictEqual(result.valid, false)
-    assert.deepStrictEqual(result.errors, ['Name is required'])
-  })
-
-  it('should return valid:false when email is invalid', () => {
-    const user = { name: 'Alice', email: 'not-an-email' }
-    const result = validateUser(user)
-    
-    assert.strictEqual(result.valid, false)
-    assert.ok(result.errors.some(e => e.includes('email')))
-  })
-})
+    assert.strictEqual(csv, 'name,age\nAlice,30\nBob,25');
+  });
+});
 ```
 
-Run: `npm test` → ❌ Fails (need to implement validation)
+**Run:** `npm test` → ❌ FAIL (function doesn't exist)
+
+### Step 2: Implement Minimal Code (GREEN)
 
 ```javascript
-// lib/validate-user.js (improved implementation)
-export function validateUser(user) {
-  const errors = []
+// src/csv-exporter.js
+export function exportToCSV(data) {
+  if (data.length === 0) return '';
   
-  if (!user.name || user.name.trim() === '') {
-    errors.push('Name is required')
-  }
+  const headers = Object.keys(data[0]);
+  const rows = data.map(obj => Object.values(obj).join(','));
   
-  if (!user.email || !isValidEmail(user.email)) {
-    errors.push('Valid email is required')
-  }
-  
-  return {
-    valid: errors.length === 0,
-    errors: errors.length > 0 ? errors : undefined
-  }
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  return [headers.join(','), ...rows].join('\n');
 }
 ```
 
-Run: `npm test` → ✅ Passes
+**Run:** `npm test` → ✅ PASS
 
----
+### Step 3: Add Edge Cases (More Tests)
 
-## Common Pitfalls
+```javascript
+it('should handle empty array', () => {
+  assert.strictEqual(exportToCSV([]), '');
+});
 
-### ❌ Writing tests after implementation
-**Problem:** Tests become "verification tests" not "design tests"
-**Solution:** Delete implementation, start over with test first
+it('should escape commas in values', () => {
+  const data = [{ name: 'Smith, John', age: 30 }];
+  const csv = exportToCSV(data);
+  assert.strictEqual(csv, 'name,age\n"Smith, John",30');
+});
 
-### ❌ Writing too many tests at once
-**Problem:** Overwhelmed, unclear what to implement
-**Solution:** One test at a time, make it pass, then next test
-
-### ❌ Implementing more than needed to pass test
-**Problem:** Scope creep, untested code paths
-**Solution:** Implement ONLY what makes current test pass
-
-### ❌ Skipping RED phase
-**Problem:** Test might always pass (false positive)
-**Solution:** ALWAYS watch test fail before implementing
-
-### ❌ Not refactoring
-**Problem:** Code works but is messy
-**Solution:** After GREEN, improve code while tests stay green
-
----
-
-## TDD Benefits
-
-### Design Benefits
-- Forces thinking about API before implementation
-- Creates minimal, focused interfaces
-- Reveals coupling and dependencies early
-
-### Confidence Benefits
-- Every line of code has a test
-- Refactoring is safe (tests catch regressions)
-- Documentation through examples
-
-### Workflow Benefits
-- Clear progress (count passing tests)
-- Natural stopping points
-- Easy to resume work (look at failing test)
-
----
-
-## Integration with Project Workflow
-
-### Before Starting Feature
-```bash
-# 1. Read skill
-cat .github/skills/tdd-workflow/SKILL.md
-
-# 2. Create test file
-touch test/my-feature.test.js
-
-# 3. Start TDD cycle (RED)
+it('should handle missing values', () => {
+  const data = [
+    { name: 'Alice', age: 30 },
+    { name: 'Bob' } // age missing
+  ];
+  const csv = exportToCSV(data);
+  assert.ok(csv.includes('Bob,'));
+});
 ```
 
-### During Implementation
-```bash
-# Continuous cycle:
-# 🔴 Write failing test
-# 🟢 Make it pass
-# 🔵 Refactor
-# Repeat
+### Step 4: Refactor for Edge Cases
+
+```javascript
+export function exportToCSV(data) {
+  if (!Array.isArray(data) || data.length === 0) return '';
+  
+  const headers = Object.keys(data[0]);
+  
+  const escapeValue = (val) => {
+    if (val === undefined || val === null) return '';
+    const str = String(val);
+    return str.includes(',') ? `"${str}"` : str;
+  };
+  
+  const rows = data.map(obj => 
+    headers.map(key => escapeValue(obj[key])).join(',')
+  );
+  
+  return [headers.join(','), ...rows].join('\n');
+}
 ```
 
-### Before Committing
-```bash
-# Run all tests
-npm test
-
-# Git hook will check for test changes
-git add lib/my-feature.js test/my-feature.test.js
-git commit -m "feat: add my-feature (TDD)"
-```
-
-### Self-Audit (from AGENTS.md Step 3½)
-- [ ] Did I write test BEFORE implementation? (RED)
-- [ ] Did I see test fail first?
-- [ ] Did I implement minimal code to pass? (GREEN)
-- [ ] Did I refactor while keeping tests green? (REFACTOR)
+**Run:** `npm test` → ✅ ALL PASS
 
 ---
 
-## Enforcement Mechanisms
+## Quick Reference Card
 
-This project has 4 layers of TDD enforcement:
+```
+TDD CYCLE:
+┌─────────────────────────────────────┐
+│ 1. RED    → Write failing test     │
+│ 2. GREEN  → Minimal implementation  │
+│ 3. REFACTOR → Clean up code         │
+└─────────────────────────────────────┘
 
-1. **AGENTS.md** - Pre-work checklist (Step 3)
-2. **feature-implementation skill** - Phase 0 TDD requirement
-3. **Git hook** - `.git-hooks/pre-commit` checks for test changes
-4. **GitHub Actions** - `.github/workflows/tdd-compliance.yml` PR check
+GOLDEN RULES:
+• Test first, code second
+• One test at a time
+• Smallest possible change
+• Run tests frequently
+• Refactor when green
 
-To install git hook:
-```bash
-./scripts/install-git-hooks.sh
+TEST STRUCTURE (AAA):
+• Arrange  → Set up data
+• Act      → Call function
+• Assert   → Verify result
 ```
 
 ---
 
-## Quick Reference
+**Remember:** TDD is a discipline, not a burden. The time "lost" writing tests is gained back 10x in:
+- Fewer bugs in production
+- Faster debugging
+- Confident refactoring
+- Better API design
+- Living documentation
 
-**RED-GREEN-REFACTOR Cycle:**
-1. 🔴 Write failing test
-2. Run test (must fail)
-3. 🟢 Write minimal code
-4. Run test (must pass)
-5. 🔵 Refactor code
-6. Run test (must still pass)
-7. Repeat
-
-**Golden Rules:**
-- Test FIRST, code second
-- One test at a time
-- Simplest code to pass
-- All tests must pass before commit
-- Refactor only when green
-
----
-
-*This skill enforces Critical Invariant #7 from CODEBASE_ESSENTIALS.md*
+**Start small:** Try TDD for one feature today. Once you experience the benefits, you'll never go back! 🚀
