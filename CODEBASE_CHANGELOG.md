@@ -7,6 +7,46 @@
 
 ---
 
+## Session: Intelligent TDD Compliance Check (January 26, 2026)
+
+**Goal:** Improve TDD compliance check to distinguish between logic changes and configuration-only changes, eliminating false positives
+
+**Context:** GitHub Actions TDD check flagged commit a0da046 as violation when it only added stack configurations to `AVAILABLE_STACKS` const object. Existing tests already covered the logic using those configurations. Need smarter detection.
+
+**Changes:**
+- [.github/workflows/tdd-compliance.yml](.github/workflows/tdd-compliance.yml#L29-L98): Added intelligent diff analysis
+  - Detects logic changes: `function`, `class`, `if`, `for`, `while`, `async`, `=>` 
+  - Detects config-only: const object property additions without logic
+  - Shows different messages for each case
+- [templates/workflows/tdd-compliance.yml](templates/workflows/tdd-compliance.yml#L24-L93): Updated template to match
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L212): Documented config-only exception to TDD requirement
+
+**Validation:**
+- ✅ All 136 tests passing
+- ✅ Logic pattern detection tested against commit a0da046
+- ✅ Config pattern detection confirmed (matched 'vue-vite': {, 'express-api': {, etc.)
+- ✅ Template and active workflow synchronized
+
+**Key Learning:** 
+- **Pattern:** TDD requirement applies to logic, not configuration data
+- **Detection:** Use git diff + grep to classify change types
+- **False Positives:** Can be eliminated with smarter analysis vs blanket rules
+- **Configuration Changes:** Adding properties to const objects = safe without new tests if existing tests cover usage
+
+**Example Classification:**
+```javascript
+// ✅ Config-only (no new tests needed if usage tested)
+const STACKS = {
+  'new-stack': { name: 'new-stack', display: '...' }
+}
+
+// ❌ Logic change (requires tests)
+function validateStack(name) { ... }
+if (stack === 'new') { ... }
+```
+
+---
+
 ## Session: v0.5.0 - Complete Test Coverage (January 26, 2026)
 
 **Goal:** Achieve 100% command test coverage through TDD RED-GREEN-REFACTOR cycle

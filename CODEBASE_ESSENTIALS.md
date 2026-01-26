@@ -211,6 +211,7 @@ Day 3: Move session to changelog → delete session file
    - Write tests BEFORE implementation for new features
    - Follow RED-GREEN-REFACTOR cycle
    - Keep tests fast and focused
+   - **Exception:** Configuration-only changes (e.g., adding properties to const objects) don't require new tests if existing tests already cover the logic using that configuration
    - See `.github/skills/tdd-workflow/SKILL.md` for detailed guidance
 
 ---

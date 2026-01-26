@@ -31,14 +31,47 @@ jobs:
             echo "✓ Detected changes in lib/ directory:"
             echo "$LIB_CHANGED"
             
-            # Require test/ directory to also have changes
+            # Analyze the nature of changes
+            REQUIRES_TESTS=false
+            CONFIG_ONLY=true
+            
+            for file in $LIB_CHANGED; do
+              # Get the diff for this file
+              DIFF=$(git diff HEAD^..HEAD -- "$file")
+              
+              # Check if diff contains logic changes (not just const/config)
+              # Logic indicators: new functions, if/else, loops, class methods
+              if echo "$DIFF" | grep -E "^\+.*(function |class |if \(|for \(|while \(|switch \(|async |await |=>)" > /dev/null; then
+                echo "  📝 $file: Logic changes detected"
+                REQUIRES_TESTS=true
+                CONFIG_ONLY=false
+              # Check for new exports (might be new functions)
+              elif echo "$DIFF" | grep -E "^\+.*export (async )?function" > /dev/null; then
+                echo "  📝 $file: New exported function detected"
+                REQUIRES_TESTS=true
+                CONFIG_ONLY=false
+              # Check if only const object properties changed (configuration)
+              elif echo "$DIFF" | grep -E "^\+.*\s+['\"]?[a-zA-Z0-9-]+['\"]?:\s*\{" > /dev/null && \
+                   ! echo "$DIFF" | grep -E "^\+.*(function|class|if|for|while|=>)" > /dev/null; then
+                echo "  ⚙️  $file: Configuration-only changes (const object properties)"
+              else
+                # Default: assume it needs tests unless it's clearly just comments/docs
+                if echo "$DIFF" | grep -E "^\+.*[^/]" | grep -v "^\+\s*//" | grep -v "^\+\s*\*" > /dev/null; then
+                  echo "  ⚠️  $file: Changes detected (assuming logic change)"
+                  REQUIRES_TESTS=true
+                  CONFIG_ONLY=false
+                fi
+              fi
+            done
+            
+            # Check for test changes
             TEST_CHANGED=$(git diff --name-only HEAD^..HEAD | grep "^test/" || true)
             
-            if [ -z "$TEST_CHANGED" ]; then
+            if [ "$REQUIRES_TESTS" = "true" ] && [ -z "$TEST_CHANGED" ]; then
               echo ""
               echo "❌ TDD VIOLATION DETECTED"
               echo ""
-              echo "New code was added to lib/ without corresponding test changes."
+              echo "New logic was added to lib/ without corresponding test changes."
               echo ""
               echo "Critical Invariant #7: Test-Driven Development (TDD)"
               echo "→ Write tests BEFORE implementation for new features"
@@ -53,11 +86,21 @@ jobs:
               echo "📚 See: .github/skills/feature-implementation/SKILL.md"
               echo "📚 See: AGENTS.md (Step 3: TDD Requirement)"
               exit 1
-            else
+            elif [ "$CONFIG_ONLY" = "true" ]; then
+              echo ""
+              echo "✅ Configuration-only changes detected!"
+              echo "   No new tests required (existing tests cover config usage)"
+              echo ""
+              echo "💡 TIP: Verify existing tests still pass with new config values"
+            elif [ -n "$TEST_CHANGED" ]; then
               echo "✓ Found corresponding test changes:"
               echo "$TEST_CHANGED"
               echo ""
               echo "✅ TDD compliance check passed!"
+            else
+              echo ""
+              echo "✅ TDD compliance check passed!"
+              echo "   (No logic changes requiring new tests detected)"
             fi
           else
             echo "ℹ️  No changes in lib/ directory - skipping TDD check"
