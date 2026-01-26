@@ -1,4 +1,4 @@
-# aiknowsys - Knowledge System Template
+# AIKnowSys - Knowledge System Template
 
 **AI-Powered Development Workflow for Consistent, High-Quality Code**
 
@@ -52,17 +52,17 @@ From production use in gnwebsite:
 
 ```bash
 # For new projects - interactive setup
-npx aiknowsys init
+npx  init
 
 # For new projects with pre-built stack template
-npx aiknowsys init --stack nextjs
+npx  init --stack nextjs
 
 # For existing projects - auto-detect and migrate
-npx aiknowsys migrate
+npx  migrate
 
 # Or install globally
-npm install -g aiknowsys
-aiknowsys init
+npm install -g 
+ init
 ```
 
 **🚀 Pre-built Stack Templates:**
@@ -71,13 +71,13 @@ Skip most customization work with production-ready stack templates:
 
 ```bash
 # List available stacks
-npx aiknowsys init --list-stacks
+npx  init --list-stacks
 
 # Initialize with Next.js stack
-npx aiknowsys init --stack nextjs
+npx  init --stack nextjs
 
 # Initialize with Vue + Express full-stack monorepo
-npx aiknowsys init --stack vue-express
+npx  init --stack vue-express
 ```
 
 **Available stacks:**
@@ -98,15 +98,15 @@ Each stack template includes:
 
 | Command | Description | Auto-installs agents/skills? |
 |---------|-------------|------------------------------|
-| `npx aiknowsys init` | Initialize for a new project | ✅ Yes |
-| `npx aiknowsys migrate` | Full migration for existing projects | ✅ Yes |
-| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
-| `npx aiknowsys update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
-| `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
-| `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
-| `npx aiknowsys audit` | Find common issues and pattern violations | N/A (analysis) |
-| `npx aiknowsys install-agents` | Install Developer + Architect agents | N/A (standalone) |
-| `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
+| `npx  init` | Initialize for a new project | ✅ Yes |
+| `npx  migrate` | Full migration for existing projects | ✅ Yes |
+| `npx  scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
+| `npx  update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
+| `npx  check` | Validate knowledge system setup and configuration | N/A (validation) |
+| `npx  sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
+| `npx  audit` | Find common issues and pattern violations | N/A (analysis) |
+| `npx  install-agents` | Install Developer + Architect agents | N/A (standalone) |
+| `npx  install-skills` | Install universal skills | N/A (standalone) |
 
 **💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
 
@@ -114,13 +114,13 @@ Each stack template includes:
 
 - **Minimal Template** (10 sections): For learning projects, prototypes, and simple tools
   ```bash
-  npx aiknowsys init --template minimal
+  npx  init --template minimal
   ```
   Includes: Tech Stack, Validation Matrix, Structure, Patterns, Invariants, Gotchas, Testing, Architecture, Change Management, Workflow
 
 - **Full Template** (13+ sections): For production projects and complex systems (default)
   ```bash
-  npx aiknowsys init --template full  # or just: npx aiknowsys init
+  npx  init --template full  # or just: npx  init
   ```
   Includes all minimal sections + Security, Performance, Accessibility
 
@@ -146,18 +146,18 @@ New commands to validate and maintain your knowledge system:
 
 ```bash
 # Validate your setup
-npx aiknowsys check
+npx  check
 # ✓ Checks required files exist
 # ✓ Verifies agents and skills installed
 # ✓ Detects unfilled placeholders
 # ✓ Validates validation matrix
 
 # Fix redundancy (sync validation matrix reference)
-npx aiknowsys sync
+npx  sync
 # Updates AGENTS.md to reference ESSENTIALS.md (DRY principle)
 
 # Find issues and violations
-npx aiknowsys audit
+npx  audit
 # ⚠️ Detects validation matrix duplication
 # ⚠️ Finds generic placeholder values
 # ⚠️ Checks file size bloat
@@ -216,7 +216,7 @@ Example: How do you create API instances? Base URL configuration?
 
 **Workflow:**
 1. Read example to understand format and level of detail
-2. Run `npx aiknowsys scan` to generate draft for your project
+2. Run `npx  scan` to generate draft for your project
 3. Use example as reference while filling TODOs
 4. Copy structure, not content (write your own patterns!)
 
@@ -394,8 +394,8 @@ Stay tuned for updates!
 
 ```bash
 # Clone the template
-git clone https://github.com/YOUR_ORG/aiknowsys.git
-cd aiknowsys
+git clone https://github.com/YOUR_ORG/.git
+cd 
 
 # Run interactive setup
 ./scripts/setup.sh
@@ -408,7 +408,7 @@ cd aiknowsys
 
 ```bash
 # Clone into your project
-git clone https://github.com/YOUR_ORG/aiknowsys.git temp-template
+git clone https://github.com/YOUR_ORG/.git temp-template
 cp -r temp-template/scripts ./
 cp -r temp-template/templates ./
 
