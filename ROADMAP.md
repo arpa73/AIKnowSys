@@ -375,56 +375,7 @@ Platform-agnostic implementation - works with any AI assistant (no hooks require
 
 ---
 
-## 💰 Monetization Strategy
-
-### Phase 1: Free & Open Source (v0.1 - v0.4)
-**Goal:** Build user base and ecosystem
-
-**Revenue:** $0 (investment phase)
-
-**Focus:**
-- npm downloads
-- Community contributions
-- Brand awareness
-- User feedback
-
-### Phase 2: Freemium (v0.5)
-**Goal:** Validate premium features
-
-**Revenue:** $1-5k/month
-
-**Free:**
-- Core CLI tool
-- Basic templates
-- Community skills
-- Individual use
-
-**Premium ($9-19/user/month):**
-- VS Code extension (advanced features)
-- Team sync features
-- Priority support
-- Custom skill development
-
-### Phase 3: Enterprise (v1.0+)
-**Goal:** Scale revenue
-
-**Revenue:** $50-200k/year target
-
-**Tiers:**
-- **Team ($99/month):** 5-20 developers
-- **Business ($499/month):** 20-100 developers  
-- **Enterprise ($custom):** 100+ developers
-
-**Features:**
-- SaaS platform (hosted knowledge bases)
-- Advanced analytics
-- Compliance tools
-- Dedicated support
-- Custom skills/templates
-
----
-
-## 📊 Success Metrics by Phase
+##  Success Metrics by Phase
 
 ### v0.2.0 Metrics
 - ⬜ 500+ npm downloads total
