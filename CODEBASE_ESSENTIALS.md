@@ -24,7 +24,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 31 tests pass |
+| `npm test` | Run unit tests | All 136 tests pass |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
@@ -72,27 +72,37 @@ aiknowsys/
 // All commands follow this pattern:
 export async function commandName(options) {
   const targetDir = path.resolve(options.dir);
+  const silent = options._silent || false;
   
   // 1. Display header
-  console.log(chalk.cyan.bold('🎯 Command Title'));
+  if (!silent) {
+    console.log(chalk.cyan.bold('🎯 Command Title'));
+  }
   
-  // 2. Interactive prompts (if needed)
-  const answers = await inquirer.prompt([...]);
+  // 2. Interactive prompts (if needed, skip if silent)
+  if (!silent) {
+    const answers = await inquirer.prompt([...]);
+  }
   
-  // 3. Spinner for long operations
-  const spinner = ora('Doing work...').start();
+  // 3. Spinner for long operations (conditional on silent mode)
+  const spinner = silent ? null : ora('Doing work...').start();
   
   // 4. Execute logic
   try {
     // ... work
-    spinner.succeed('Done');
+    if (spinner) spinner.succeed('Done');
+    
+    // Return data for test assertions
+    return { success: true, data: result };
   } catch (error) {
-    spinner.fail('Failed');
-    process.exit(1);
+    if (spinner) spinner.fail('Failed');
+    throw error;  // Testable - don't use process.exit()
   }
   
   // 5. Display next steps
-  console.log(chalk.cyan('📖 Next steps:'));
+  if (!silent) {
+    console.log(chalk.cyan('📖 Next steps:'));
+  }
 }
 ```
 
@@ -144,6 +154,26 @@ export async function installAgents(options) {
     console.log(...);
   }
 }
+```
+
+### Session Files vs Changelog
+```
+**When to use .aiknowsys/sessions/YYYY-MM-DD-session.md:**
+- Multi-hour or multi-task work in progress
+- Working memory for AI-to-AI continuity
+- Temporary notes, blockers, and next steps
+- Gitignored (never committed)
+
+**When to use CODEBASE_CHANGELOG.md:**
+- Completed work sessions
+- Permanent record (git committed)
+- Learning archive for future reference
+- Single source of truth for project history
+
+**Workflow:**
+Day 1: Create session file → work → update session notes
+Day 2: Continue from session file → complete work
+Day 3: Move session to changelog → delete session file
 ```
 
 ---

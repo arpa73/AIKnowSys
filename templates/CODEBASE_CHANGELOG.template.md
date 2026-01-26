@@ -4,6 +4,9 @@
 
 **Usage:** Read recent sessions to understand project evolution. Add new session after completing work.
 
+⚠️ **AI REMINDER:** For multi-hour/multi-task work, ALSO maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`  
+📝 **Changelog** = Permanent history (committed) | **Sessions** = Working memory (gitignored)
+
 ---
 
 ## Session: Initial Knowledge System Setup ({{DATE}})

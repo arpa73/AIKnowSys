@@ -165,6 +165,8 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 # Update CODEBASE_ESSENTIALS.md if patterns/invariants changed
 ```
 
+⚠️ **ALSO: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
+
 **Session entry template**:
 ```markdown
 ## Session: [Brief Title] (MMM D, YYYY)
