@@ -24,7 +24,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 135 tests pass |
+| `npm test` | Run unit tests | All 164 tests pass |
 | `npm run lint` | Lint codebase | No errors or warnings |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
@@ -77,14 +77,15 @@ aiknowsys/
 ### CLI Command Structure
 ```javascript
 // All commands follow this pattern:
+import { createLogger } from '../logger.js';
+
 export async function commandName(options) {
   const targetDir = path.resolve(options.dir);
   const silent = options._silent || false;
+  const log = createLogger(silent);
   
   // 1. Display header
-  if (!silent) {
-    console.log(chalk.cyan.bold('🎯 Command Title'));
-  }
+  log.header('Command Title', '🎯');
   
   // 2. Interactive prompts (if needed, skip if silent)
   if (!silent) {
@@ -103,14 +104,93 @@ export async function commandName(options) {
     return { success: true, data: result };
   } catch (error) {
     if (spinner) spinner.fail('Failed');
+    log.error('Failed: ' + error.message);
     throw error;  // Testable - don't use process.exit()
   }
   
   // 5. Display next steps
-  if (!silent) {
-    console.log(chalk.cyan('📖 Next steps:'));
-  }
+  log.cyan('📖 Next steps:');
 }
+```
+
+### Logger Utility Pattern
+
+**Location:** `lib/logger.js`
+
+**Purpose:** Centralized logging utility with silent mode support for all CLI commands.
+
+**Factory Function:**
+```javascript
+import { createLogger } from '../logger.js';
+
+const log = createLogger(silent);  // silent = true/false
+```
+
+**Available Methods:**
+
+| Method | Purpose | Color | Icon | Silent Mode |
+|--------|---------|-------|------|-------------|
+| `log(msg)` | Standard output | White | - | ✅ Respects |
+| `error(msg)` | Error messages | Red | ❌ | ⚠️ Always shows |
+| `warn(msg)` | Warnings | Yellow | ⚠️ | ✅ Respects |
+| `info(msg)` | Information | Blue | ℹ️ | ✅ Respects |
+| `success(msg)` | Success messages | Green | ✅ | ✅ Respects |
+| `blank()` | Empty line | - | - | ✅ Respects |
+| `header(msg, icon)` | Section header | Cyan bold | Custom | ✅ Respects |
+| `section(title, icon)` | Subsection | Cyan | Custom | ✅ Respects |
+| `dim(msg)` | Secondary text | Gray | - | ✅ Respects |
+| `cyan(msg)` | Cyan text | Cyan | - | ✅ Respects |
+| `white(msg)` | White text | White | - | ✅ Respects |
+| `yellow(msg)` | Yellow text | Yellow | - | ✅ Respects |
+| `green(msg)` | Green text | Green | - | ✅ Respects |
+
+**Usage Examples:**
+```javascript
+import { createLogger } from '../logger.js';
+
+export async function myCommand(options) {
+  const silent = options._silent || false;
+  const log = createLogger(silent);
+  
+  // Headers and sections
+  log.header('Initialization', '🎯');
+  log.blank();
+  log.section('Configuration', '⚙️');
+  
+  // Standard output
+  log.cyan('Processing files...');
+  log.dim('Step 1 of 3');
+  
+  // Status messages
+  log.info('Found 12 files');
+  log.success('All tests passed!');
+  log.warn('Deprecated feature detected');
+  log.error('File not found: config.json');  // Always shows
+  
+  // Color helpers
+  log.white('Regular text');
+  log.yellow('Highlighted text');
+  log.green('Positive feedback');
+}
+```
+
+**Benefits:**
+- ✅ Testable (silent mode allows testing output)
+- ✅ Consistent UX across all commands
+- ✅ Single source of truth for logging
+- ✅ Errors always show (even in silent mode)
+- ✅ Easy to extend (add new methods in one place)
+
+**Testing:**
+```javascript
+import { test } from 'node:test';
+import { myCommand } from '../lib/commands/myCommand.js';
+
+test('myCommand runs without output in silent mode', async () => {
+  // Silent mode prevents console pollution during tests
+  await myCommand({ _silent: true });
+  // Verify behavior, not output
+});
 ```
 
 ### Inquirer Prompt Compatibility
