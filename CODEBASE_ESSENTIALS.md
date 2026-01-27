@@ -131,7 +131,7 @@ const log = createLogger(silent);  // silent = true/false
 | Method | Purpose | Color | Icon | Silent Mode |
 |--------|---------|-------|------|-------------|
 | `log(msg)` | Standard output | White | - | ✅ Respects |
-| `error(msg)` | Error messages | Red | ❌ | ⚠️ Always shows |
+| `error(msg)` | Error messages | Red | ❌ | ✅ Respects |
 | `warn(msg)` | Warnings | Yellow | ⚠️ | ✅ Respects |
 | `info(msg)` | Information | Blue | ℹ️ | ✅ Respects |
 | `success(msg)` | Success messages | Green | ✅ | ✅ Respects |
@@ -165,7 +165,7 @@ export async function myCommand(options) {
   log.info('Found 12 files');
   log.success('All tests passed!');
   log.warn('Deprecated feature detected');
-  log.error('File not found: config.json');  // Always shows
+  log.error('File not found: config.json');
   
   // Color helpers
   log.white('Regular text');

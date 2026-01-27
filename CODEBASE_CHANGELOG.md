@@ -7,6 +7,72 @@
 
 ---
 
+## Session: P2 Input Sanitization & Silent Test Output (January 27, 2026)
+
+**Goal:** Complete P2 items from CRITICAL_REVIEW.md - input sanitization and silent test output improvements
+
+**Changes:**
+
+### P2: Input Sanitization Utilities (Commits 92b0561, 450bfe7)
+- [lib/sanitize.js](lib/sanitize.js): NEW (245 lines) - Comprehensive input sanitization
+  - `sanitizeProjectName()` - npm package naming (214 char limit, scoped packages)
+  - `sanitizeDirectoryPath()` - filesystem paths (null bytes, traversal, reserved names)
+  - `sanitizeFilename()` - filenames (255 char limit, cross-platform)
+  - `validatePathTraversal()` - security validation (prevents ../ attacks)
+  - `sanitizeSkillName()` - skill naming (lowercase-hyphen format)
+  - Security: null byte detection, Windows reserved names (CON, PRN, etc.)
+  - All functions return `{ valid, sanitized, errors }` objects
+  - Complete JSDoc with @example tags
+- [test/sanitize.test.js](test/sanitize.test.js): NEW (279 lines) - 49 comprehensive tests
+  - TDD compliance: tests written before implementation
+  - Coverage: valid/invalid inputs, edge cases, security scenarios
+- [lib/commands/init/prompts.js](lib/commands/init/prompts.js#L29-L38): Integrated sanitizeProjectName()
+  - Enhanced validation with detailed error messages
+- [lib/commands/install-skills.js](lib/commands/install-skills.js#L22-L31): Integrated sanitizeSkillName()
+  - Auto-sanitization with user warnings
+  - Filters empty sanitized results
+
+### P2: Silent Test Output Improvements (Commit d992392)
+- [lib/logger.js](lib/logger.js#L34-L47): Changed `error()` to respect silent mode
+  - Was always printing, now respects `_silent` flag
+  - Consistency: all logger methods now respect silent mode
+  - Better testability: no console pollution during tests
+- [lib/commands/init.js](lib/commands/init.js#L277-L293): Added silent parameter extraction and propagation
+  - Extract `silent = options._silent || false`
+  - Pass silent to all helper functions
+  - Conditional spinners: `const spinner = silent ? null : ora(...)`
+- [lib/commands/init/templates.js](lib/commands/init/templates.js): All functions accept silent parameter
+  - `installAgentsAndSkills(targetDir, silent = false)`
+  - `setupSessionPersistence(targetDir, silent = false)`
+  - `setupTDDEnforcement(targetDir, silent = false)`
+  - All spinners conditional on silent mode
+- [lib/commands/init/openspec.js](lib/commands/init/openspec.js#L14-L85): Added silent parameter throughout
+  - `setupOpenSpec(targetDir, silent = false)`
+  - All spinners and loggers respect silent mode
+- [lib/commands/scan.js](lib/commands/scan.js#L7-L22): Respects silent for logger and spinners
+  - Extract `silent = options._silent || false`
+  - Conditional spinners throughout
+- [test/logger.test.js](test/logger.test.js#L111-L131): Updated test expectations
+  - Changed from "should always log errors" → "should respect silent mode"
+  - Added test for non-silent error logging
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L128-L168): Documentation updated
+  - Logger method table: `error()` now shows "✅ Respects" instead of "⚠️ Always shows"
+  - Removed outdated "// Always shows" comment from usage example
+
+**Validation:**
+- ✅ `npm test`: 211/213 tests passing (49 new sanitization tests, 2 pre-existing failures)
+- ✅ No console pollution during test runs
+- ✅ Architect review: APPROVED
+- ✅ TDD compliance: Tests updated alongside implementation
+
+**Key Learning:**
+- **Silent Mode Pattern**: All CLI functions should accept `silent` parameter and propagate it through call chain
+- **Spinner Pattern**: Use `const spinner = silent ? null : ora(...)` and `if (spinner) spinner.succeed()`
+- **Input Sanitization**: Factory functions returning `{ valid, sanitized, errors }` provide excellent UX
+- **Test-First Design**: Writing tests first (RED-GREEN-REFACTOR) catches issues early and improves design
+
+---
+
 ## Session: P1 Fixes - ESLint, CI, init.js Refactor (January 27, 2026)
 
 **Goal:** Address P1 issues from CRITICAL_REVIEW.md - add ESLint, GitHub Actions CI, refactor large init.js
