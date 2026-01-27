@@ -24,7 +24,7 @@ try {
   packageJson = JSON.parse(
     readFileSync(join(__dirname, '../package.json'), 'utf-8')
   );
-} catch (error) {
+} catch (_error) {
   console.error(chalk.red('Error: Could not read package.json'));
   process.exit(1);
 }

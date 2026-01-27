@@ -24,7 +24,8 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 136 tests pass |
+| `npm test` | Run unit tests | All 135 tests pass |
+| `npm run lint` | Lint codebase | No errors or warnings |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
@@ -40,7 +41,13 @@ aiknowsys/
 │   └── cli.js              # CLI entry point
 ├── lib/
 │   ├── commands/           # Command implementations
-│   │   ├── init.js         # New project setup
+│   │   ├── init.js         # New project setup (entry point)
+│   │   ├── init/           # Init command modules
+│   │   │   ├── index.js    # Barrel exports
+│   │   │   ├── constants.js # Stack configs
+│   │   │   ├── prompts.js  # Interactive prompts
+│   │   │   ├── display.js  # Output formatting
+│   │   │   └── openspec.js # OpenSpec integration
 │   │   ├── scan.js         # Codebase scanner
 │   │   ├── migrate.js      # Migration workflow
 │   │   ├── install-agents.js
@@ -198,10 +205,10 @@ Day 3: Move session to changelog → delete session file
 
 5. **Template Structure Integrity**
    - When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
-   - Replace {{PLACEHOLDERS}} with real values, not generic placeholders
+   - Replace `{{PLACEHOLDERS}}` with real values, not generic placeholders
    - Preserve template structure exactly (don't rename sections)
    - Example: Keep "Testing Patterns" as-is, don't change to "Testing Guidelines"
-   - Example: Replace {{TEST_ORGANIZATION}} with actual test structure, not "Manual testing only"
+   - Example: Replace `{{TEST_ORGANIZATION}}` with actual test structure, not "Manual testing only"
 
 6. **Backwards Compatibility**
    - Bash scripts in `scripts/` must remain functional
@@ -226,7 +233,7 @@ Day 3: Move session to changelog → delete session file
    - Cannot use `require('chalk')` - must import
 
 3. **Template Variables in Markdown**
-   - Double curly braces `{{VAR}}` can conflict with templating engines
+   - Double curly braces (`{{VAR}}` syntax) can conflict with templating engines
    - Use regex escaping when replacing
 
 4. **Path Separators**

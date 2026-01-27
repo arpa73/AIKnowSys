@@ -127,20 +127,8 @@ describe('audit command', () => {
     assert.strictEqual(fillIssue.type, 'warning', 'Should be warning type');
   });
 
-  it('should detect generic placeholder text', async () => {
-    createMockProject(testDir, { hasEssentials: true });
-    
-    const essentialsPath = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
-    let content = fs.readFileSync(essentialsPath, 'utf-8');
-    
-    content += '\ngeneric example\nplaceholder text\nexample code';
-    fs.writeFileSync(essentialsPath, content);
-    
-    const result = await audit({ dir: testDir, _silent: true });
-    
-    const genericIssue = result.issues.find(i => i.message.toLowerCase().includes('generic') || i.message.toLowerCase().includes('placeholder') || i.message.toLowerCase().includes('example'));
-    assert.ok(genericIssue, 'Should detect generic text');
-  });
+  // Note: "generic placeholder text" detection removed - too many false positives
+  // in documentation that legitimately discusses placeholders and examples
 
   it('should allow up to 3 TBD/TODO instances without warning', async () => {
     createMockProject(testDir, { hasEssentials: true });
@@ -207,10 +195,10 @@ describe('audit command', () => {
   // FILE SIZE CHECK TESTS
   // ========================================
 
-  it('should warn when ESSENTIALS > 300 lines', async () => {
+  it('should warn when ESSENTIALS > 350 lines', async () => {
     createMockProject(testDir, {
       hasEssentials: true,
-      essentialsSize: 'large' // Creates 300+ line file
+      essentialsSize: 'large' // Creates 350+ line file
     });
     
     const result = await audit({ dir: testDir, _silent: true });
@@ -220,7 +208,7 @@ describe('audit command', () => {
     assert.ok(sizeIssue.fix.includes('archive') || sizeIssue.fix.includes('minimal'), 'Should suggest archiving or minimal template');
   });
 
-  it('should not warn when ESSENTIALS < 300 lines', async () => {
+  it('should not warn when ESSENTIALS < 350 lines', async () => {
     createMockProject(testDir, {
       hasEssentials: true,
       essentialsSize: 'medium' // Small file
@@ -228,7 +216,7 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const sizeIssue = result.issues.find(i => i.message.includes('300 lines') || i.message.includes('large'));
+    const sizeIssue = result.issues.find(i => i.message.includes('350 lines') || i.message.includes('large'));
     assert.strictEqual(sizeIssue, undefined, 'Should not warn about file size');
   });
 

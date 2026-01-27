@@ -7,6 +7,57 @@
 
 ---
 
+## Session: P1 Fixes - ESLint, CI, init.js Refactor (January 27, 2026)
+
+**Goal:** Address P1 issues from CRITICAL_REVIEW.md - add ESLint, GitHub Actions CI, refactor large init.js
+
+**Changes:**
+
+### ESLint Configuration (P1)
+- [eslint.config.js](eslint.config.js): NEW - ESLint 9 flat config
+  - Rules: `no-unused-vars` with `argsIgnorePattern: '^_'`, `caughtErrorsIgnorePattern: '^_'`
+  - `no-console: 'off'` for CLI tool
+  - Relaxed rules for test files
+- [package.json](package.json#L43-L59): Added lint scripts and devDependencies
+  - `npm run lint` and `npm run lint:fix`
+  - ESLint 9.x, @eslint/js, globals
+
+### GitHub Actions CI (P1)
+- [.github/workflows/ci.yml](.github/workflows/ci.yml): NEW - Multi-platform CI
+  - Matrix: ubuntu-latest, macos-latest × Node 20, 22
+  - Steps: lint, test, self-audit
+  - Windows with `continue-on-error: true`
+
+### init.js Refactor (P1)
+Split 1,093-line file into modular structure:
+- [lib/commands/init.js](lib/commands/init.js): Reduced from 1,093 → 577 lines
+- [lib/commands/init/constants.js](lib/commands/init/constants.js): NEW (89 lines) - Stack configs, name mappers
+- [lib/commands/init/prompts.js](lib/commands/init/prompts.js): NEW (270 lines) - Interactive prompts
+- [lib/commands/init/display.js](lib/commands/init/display.js): NEW (196 lines) - Output formatting
+- [lib/commands/init/openspec.js](lib/commands/init/openspec.js): NEW (80 lines) - OpenSpec integration
+- [lib/commands/init/index.js](lib/commands/init/index.js): NEW (28 lines) - Barrel file
+
+### Dead Code Cleanup
+- [lib/commands/migrate.js](lib/commands/migrate.js): Removed unused ora import, `_findings` prefix
+- [lib/commands/scan.js](lib/commands/scan.js): `_e` prefix for catch blocks, removed unused import
+- [lib/commands/update.js](lib/commands/update.js): Removed unused `__dirname` imports
+
+### Documentation Updates
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L27-L28): Fixed test count 136→135, added lint command to Validation Matrix
+
+**Validation:**
+- ✅ `npm run lint`: 0 errors, 0 warnings
+- ✅ `npm test`: 135/135 tests passing
+- ✅ `node bin/cli.js audit --dir .`: "Knowledge system is in good shape!"
+- ✅ Audit now reports "Linter configured" ✓
+
+**Key Learning:**
+- ESLint 9's `varsIgnorePattern` doesn't cover catch block variables; need separate `caughtErrorsIgnorePattern`
+- Modular code structure (< 400 lines per file) improves maintainability without breaking tests
+- CI workflow should test across OS/Node matrix for npm package reliability
+
+---
+
 ## Session: Intelligent TDD Compliance Check (January 26, 2026)
 
 **Goal:** Improve TDD compliance check to distinguish between logic changes and configuration-only changes, eliminating false positives

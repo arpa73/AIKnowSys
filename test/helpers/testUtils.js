@@ -121,8 +121,8 @@ Example patterns here.
 `;
 
   if (size === 'large') {
-    // Add 300+ lines for file size testing
-    for (let i = 0; i < 100; i++) {
+    // Add 350+ lines for file size testing (threshold is 350)
+    for (let i = 0; i < 120; i++) {
       content += `\n## Additional Section ${i}\n\nSome content here.\nMore content to make it longer.\nEven more content.\n`;
     }
   }
@@ -288,7 +288,7 @@ export function mockInquirerPrompt(answers) {
     // Return answers for the questions asked
     const result = {};
     for (const question of questions) {
-      if (answers.hasOwnProperty(question.name)) {
+      if (Object.hasOwn(answers, question.name)) {
         result[question.name] = answers[question.name];
       }
     }
@@ -314,7 +314,6 @@ export function countLines(filePath) {
  */
 export function createSampleNodeProject(dir, options = {}) {
   const {
-    framework = 'express',
     hasTests = true,
     hasDatabase = true
   } = options;

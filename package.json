@@ -43,7 +43,9 @@
     "test": "node --test test/*.test.js",
     "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
     "test:cli": "node bin/cli.js --help",
-    "prepublishOnly": "npm run test:cli && npm pack --dry-run",
+    "lint": "eslint lib/ bin/ test/",
+    "lint:fix": "eslint lib/ bin/ test/ --fix",
+    "prepublishOnly": "npm run lint && npm run test:cli && npm pack --dry-run",
     "postversion": "git push && git push --tags"
   },
   "dependencies": {
@@ -51,5 +53,10 @@
     "commander": "^14.0.2",
     "inquirer": "^13.2.1",
     "ora": "^9.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.2.0"
   }
 }
