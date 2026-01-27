@@ -81,5 +81,11 @@ Cargo.lock
 # npm files
 .npmrc
 
+# Session-specific AI memory (temporary, not committed)
+.aiknowsys/sessions/*.md
+!.aiknowsys/sessions/README.md
+.aiknowsys/PENDING_REVIEW.md
+# Note: .aiknowsys/learned/ IS committed (project-specific patterns)
+
 # workdocs
 workdocs/

@@ -2,7 +2,7 @@
 ---
 name: SeniorArchitect
 description: Senior Architect focusing on KISS, DRY, SOLID, YAGNI, and Project Essentials.
-tools: [search, search/changes, editFiles]
+tools: [search, search/changes, editFiles, createFile]
 handoffs:
   - label: "Fix Issues (Developer)"
     agent: Developer
@@ -105,6 +105,7 @@ After completing your review, remind the developer to:
 - **Address all issues:** Check off each item in the "Required Actions" section
 - **Update session file:** Replace pending marker with brief completion status
 - **Delete PENDING_REVIEW.md:** After addressing all issues and updating session
+- **Update CODEBASE_CHANGELOG.md:** For significant changes (architectural changes, new features, bug fixes that reveal design issues)
 - **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
 
 ### Review Output Format:
