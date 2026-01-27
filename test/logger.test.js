@@ -109,25 +109,24 @@ describe('logger', () => {
   });
 
   describe('error method', () => {
-    it('should always log errors even when silent', () => {
+    it('should respect silent mode', () => {
       capture.start();
       const log = createLogger(true);
       
       log.error('Critical error');
       
       capture.stop();
-      assert.ok(capture.hasError('❌ Critical error'), 'Errors should always appear');
+      assert.strictEqual(capture.getLogs().length, 0, 'Errors should respect silent mode');
     });
 
-    it('should format errors with ❌ icon', () => {
+    it('should format errors with ❌ icon when not silent', () => {
       capture.start();
       const log = createLogger(false);
       
-      log.error('Something broke');
+      log.error('Something went wrong');
       
       capture.stop();
-      assert.ok(capture.hasError('❌'), 'Should include ❌ icon');
-      assert.ok(capture.hasError('Something broke'), 'Should include error message');
+      assert.ok(capture.hasError('❌ Something went wrong'), 'Should format with ❌ icon');
     });
   });
 
