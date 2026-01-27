@@ -432,7 +432,87 @@ cp -r temp-template/templates ./
 
 ## Core Components
 
-### 1. CODEBASE_ESSENTIALS.md
+### 1. AI Knowledge System (.aiknowsys/)
+
+**Purpose:** Structured memory and continuous learning for AI assistants.
+
+When you run `init`, AIKnowSys creates a `.aiknowsys/` directory that enables AI assistants to maintain context across sessions and accumulate project-specific knowledge over time.
+
+**Directory Structure:**
+```
+.aiknowsys/
+├── sessions/        # 🚫 Gitignored - Temporary session working memory
+│   ├── README.md    # ✅ Committed - Explains purpose
+│   └── YYYY-MM-DD-session.md  # 🚫 Daily session notes (not committed)
+├── learned/         # ✅ Committed - Permanent project-specific patterns
+│   ├── README.md    # ✅ Committed - Explains pattern format
+│   └── *.md         # ✅ Committed - Discovered patterns
+└── PENDING_REVIEW.md # 🚫 Gitignored - Temporary architect reviews
+```
+
+#### Session Files (Temporary)
+
+**What they are:**
+- Working memory for a single AI conversation
+- Created/updated during complex multi-step work
+- Automatically loaded by AI agents at session start
+
+**Why gitignored:**
+- Session-specific context (like IDE workspace files)
+- Not useful to other developers or other AI sessions
+- Prevents git history clutter
+
+**Benefits:**
+- ✅ Context continuity across messages in same session
+- ✅ AI remembers what you worked on last time
+- ✅ Complex multi-step work doesn't lose progress
+
+#### Learned Patterns (Permanent)
+
+**What they are:**
+- Discovered patterns applicable to whole project
+- Reusable across all AI assistants and team members
+- Examples: Custom validation rules, debugging techniques, library-specific gotchas
+
+**Why committed:**
+- Valuable team knowledge
+- Helps onboard new developers
+- AI assistants get smarter with each session
+- Project knowledge accumulates over time
+
+**Benefits:**
+- ✅ Reduced repeated explanations
+- ✅ Team-wide pattern sharing
+- ✅ AI learns from mistakes and successes
+
+#### Review Files (Ephemeral)
+
+**What they are:**
+- Detailed code reviews created by Architect agent
+- Deleted after Developer addresses issues
+- Temporary handoff mechanism between agents
+
+**Example workflow:**
+1. Developer implements feature
+2. Architect writes review to `PENDING_REVIEW.md`
+3. Developer reads review and fixes issues
+4. Developer deletes `PENDING_REVIEW.md`
+
+#### Gitignore Configuration
+
+The init command automatically adds:
+
+```gitignore
+# Session-specific AI memory (temporary, not committed)
+.aiknowsys/sessions/*.md
+!.aiknowsys/sessions/README.md
+.aiknowsys/PENDING_REVIEW.md
+# Note: .aiknowsys/learned/ IS committed (project-specific patterns)
+```
+
+**Validation:** Run `npx aiknowsys audit` to check if gitignore is configured correctly.
+
+### 2. CODEBASE_ESSENTIALS.md
 
 **Purpose:** Single-source reference for architecture, patterns, and critical invariants.
 

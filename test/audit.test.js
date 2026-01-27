@@ -321,4 +321,87 @@ describe('audit command', () => {
       'Should throw error when no knowledge system found'
     );
   });
+
+  // ========================================
+  // GITIGNORE VALIDATION TESTS
+  // ========================================
+
+  it('should pass when .aiknowsys/ gitignore is configured correctly', async () => {
+    createMockProject(testDir, { hasEssentials: true, hasAgents: true });
+    
+    // Create .aiknowsys directory
+    const aiknowsysDir = path.join(testDir, '.aiknowsys');
+    const sessionsDir = path.join(aiknowsysDir, 'sessions');
+    fs.mkdirSync(sessionsDir, { recursive: true });
+    
+    // Create proper .gitignore
+    const gitignorePath = path.join(testDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, `
+.aiknowsys/sessions/*.md
+!.aiknowsys/sessions/README.md
+.aiknowsys/PENDING_REVIEW.md
+`);
+    
+    const result = await audit({ dir: testDir, _silent: true });
+    
+    // Should not have gitignore warnings
+    const gitignoreIssue = result.issues.find(i => 
+      i.category === 'Gitignore Configuration' || 
+      i.message.includes('gitignored')
+    );
+    assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when gitignore configured correctly');
+  });
+
+  it('should warn when .aiknowsys/ exists but sessions not gitignored', async () => {
+    createMockProject(testDir, { hasEssentials: true });
+    
+    // Create .aiknowsys directory
+    const aiknowsysDir = path.join(testDir, '.aiknowsys');
+    const sessionsDir = path.join(aiknowsysDir, 'sessions');
+    fs.mkdirSync(sessionsDir, { recursive: true });
+    
+    // Create .gitignore without .aiknowsys rules
+    const gitignorePath = path.join(testDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, 'node_modules/\n.env\n');
+    
+    const result = await audit({ dir: testDir, _silent: true });
+    
+    const gitignoreIssue = result.issues.find(i => 
+      i.category === 'Gitignore Configuration' && 
+      i.message.includes('Session files')
+    );
+    assert.ok(gitignoreIssue, 'Should warn when sessions not gitignored');
+    assert.ok(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md'), 'Should suggest adding gitignore pattern');
+  });
+
+  it('should warn when no .gitignore file exists but .aiknowsys/ does', async () => {
+    createMockProject(testDir, { hasEssentials: true });
+    
+    // Create .aiknowsys directory
+    const aiknowsysDir = path.join(testDir, '.aiknowsys');
+    fs.mkdirSync(aiknowsysDir, { recursive: true });
+    
+    // No .gitignore file
+    const result = await audit({ dir: testDir, _silent: true });
+    
+    const gitignoreIssue = result.issues.find(i => 
+      i.category === 'Missing Configuration' && 
+      i.message.includes('.gitignore')
+    );
+    assert.ok(gitignoreIssue, 'Should warn when no .gitignore exists');
+    assert.ok(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md'), 'Should suggest creating gitignore');
+  });
+
+  it('should not warn when .aiknowsys/ directory does not exist', async () => {
+    createMockProject(testDir, { hasEssentials: true });
+    
+    // No .aiknowsys directory
+    const result = await audit({ dir: testDir, _silent: true });
+    
+    const gitignoreIssue = result.issues.find(i => 
+      i.message.includes('.aiknowsys') && 
+      i.type === 'warning'
+    );
+    assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when .aiknowsys does not exist');
+  });
 });
