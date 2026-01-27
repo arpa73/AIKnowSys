@@ -404,4 +404,20 @@ describe('audit command', () => {
     );
     assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when .aiknowsys does not exist');
   });
+
+  it('should increment info counter for optional PENDING_REVIEW.md message', async () => {
+    createMockProject(testDir, { hasEssentials: true });
+    
+    // Create .aiknowsys with sessions ignored but not PENDING_REVIEW.md
+    const aiknowsysDir = path.join(testDir, '.aiknowsys');
+    fs.mkdirSync(aiknowsysDir, { recursive: true });
+    
+    const gitignorePath = path.join(testDir, '.gitignore');
+    fs.writeFileSync(gitignorePath, '.aiknowsys/sessions/*.md\n');
+    
+    const result = await audit({ dir: testDir, _silent: true });
+    
+    // Should have info message about optional PENDING_REVIEW.md
+    assert.ok(result.info > 0, 'Should increment info counter');
+  });
 });
