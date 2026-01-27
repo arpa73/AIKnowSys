@@ -213,7 +213,12 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
    ```
    ```
 
-2. **Confirm to user:**
+2. **Check for Pending Reviews:**
+   - If `.aiknowsys/PENDING_REVIEW.md` exists, read it FIRST
+   - Architect reviews are written here, not in session file
+   - Address all issues before continuing
+
+3. **Confirm to user:**
    - What you fixed/built
    - What tests passed
    - That changelog is updated (if applicable)
@@ -335,7 +340,40 @@ This project uses Developer + Architect agents for automated code review.
 2. Developer implements
 3. Developer auto-hands off to Architect
 4. Architect reviews against CODEBASE_ESSENTIALS.md
-5. Architect approves or requests changes
+5. Architect writes review to `.aiknowsys/PENDING_REVIEW.md`
+6. Developer reads PENDING_REVIEW.md and addresses issues
+7. Developer updates session with brief status, deletes PENDING_REVIEW.md
+
+**Review Workflow:**
+
+**Architect writes review:**
+```markdown
+# .aiknowsys/PENDING_REVIEW.md (created by Architect)
+⚠️ Full detailed review with issues, recommendations, code examples
+```
+
+**Session file gets brief marker:**
+```markdown
+## ⚠️ Architect Review Pending (18:15)
+**Topic:** Logger refactoring  
+**See:** `.aiknowsys/PENDING_REVIEW.md` for details
+```
+
+**After Developer addresses issues:**
+```markdown
+## Architect Review: Logger Refactoring (18:15) ✅
+**Status:** ADDRESSED (18:30)  
+**Issues found:** 3 (method naming, chalk usage, icons)  
+**Outcome:** All fixed, 164 tests passing, committed as 8a970ab
+
+[PENDING_REVIEW.md deleted - no longer needed]
+```
+
+**Benefits:**
+- Session file stays lean (timeline, not archive)
+- PENDING_REVIEW.md is ephemeral (exists only during action)
+- No clutter accumulation
+- Easy to scan what happened without full review text
 
 **See:** `.github/agents/README.md` for details
 

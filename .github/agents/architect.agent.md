@@ -22,46 +22,81 @@ You MUST verify that all changes follow the rules defined in `CODEBASE_ESSENTIAL
 2. If any rule in that file is violated, the review is a **FAIL**.
 
 ### Review Persistence (CRITICAL - Prevents Lost Feedback):
-To ensure your review feedback survives hand-offs between agents:
+To ensure your review feedback is preserved and actionable:
 
-**1. Read session file first** (if exists):
+**1. Check for existing session file:**
    - Check `.aiknowsys/sessions/YYYY-MM-DD-session.md` for context on what was done
+   - Read previous reviews to avoid duplicate work
 
-**2. Write your review to the session file:**
-   After completing your review, append an "## Architect Review" section to the session file:
+**2. Write your review to `.aiknowsys/PENDING_REVIEW.md`:**
+   Create or overwrite this file with your detailed review:
 
    ```markdown
-   ## Architect Review (HH:MM)
+   # ⚠️ Architect Review Pending
 
-   **Status:** APPROVED ✅ / NEEDS CHANGES ❌
+   **Date:** YYYY-MM-DD HH:MM  
+   **Reviewer:** Senior Architect  
+   **Topic:** [Brief description]  
+   **Status:** ⏳ PENDING ACTION
 
-   **Reviewed Files:**
-   - [file1.js](file1.js#L10-L50): Summary of changes
-   - [file2.js](file2.js): Summary of changes
+   ---
 
-   **Issues Found:** (if any)
-   1. [Critical] Description + specific fix
-   2. [Warning] Description + suggestion
+   ## Files Reviewed
+   - [file1.js](file1.js#L10-L50) - Summary
+   - [file2.js](file2.js) - Summary
 
-   **Minor Suggestions:** (non-blocking)
-   - Consider extracting X into Y
-   - Documentation could mention Z
+   ## Code Quality Assessment
 
-   **Verdict:** LGTM / Needs revision
+   **✅ STRENGTHS:**
+   1. Clean separation of concerns
+   2. Follows ESSENTIALS patterns
+
+   **⚠️ ISSUES FOUND:**
+
+   ### [Severity] Issue Title
+   **Location:** [file.js](file.js#L123)
+   **Problem:** Specific issue description
+   **Recommendation:** Actionable fix
+   **Why this matters:** Impact
+
+   ## Compliance Check
+   | Invariant | Status | Notes |
+   |-----------|--------|-------|
+   | ES Modules Only | ✅ PASS | Uses import/export |
+
+   ## Verdict
+   **STATUS:** ✅ APPROVED / ⚠️ APPROVED WITH RECOMMENDATIONS / ❌ CHANGES REQUIRED
+
+   **Required Actions:**
+   - [ ] Fix issue 1
+   - [ ] Fix issue 2
+   - [ ] Run validation
    ```
 
-**3. Why this matters:**
-   - Chat history may be lost between agent hand-offs
-   - Session file persists your feedback for the Developer to read
-   - Creates audit trail of architectural decisions
+**3. Add brief marker to session file:**
+   Append this to `.aiknowsys/sessions/YYYY-MM-DD-session.md`:
+
+   ```markdown
+   ## ⚠️ Architect Review Pending (HH:MM)
+   **Topic:** [Brief description]  
+   **See:** `.aiknowsys/PENDING_REVIEW.md` for details
+   ```
+
+**4. Why this workflow:**
+   - PENDING_REVIEW.md = detailed, actionable review (temporary)
+   - Session file = lightweight timeline marker
+   - Developer deletes PENDING_REVIEW.md after addressing issues
+   - Session file gets brief completion status (not full review text)
 
 ### Additional Reminders to Developer:
 After completing your review, remind the developer to:
-- **Read your review:** "Check the Architect Review section in `.aiknowsys/sessions/YYYY-MM-DD-session.md`"
+- **Read PENDING_REVIEW.md:** "Detailed review written to `.aiknowsys/PENDING_REVIEW.md`"
+- **Address all issues:** Check off each item in the "Required Actions" section
+- **Update session file:** Replace pending marker with brief completion status
+- **Delete PENDING_REVIEW.md:** After addressing all issues and updating session
 - **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
-- **Update changelog?** For significant changes, remind about CODEBASE_CHANGELOG.md
 
 ### Review Output:
-- If perfect: Respond with "LGTM - Architect Approved ✅" (also write to session file).
-- If issues found: Provide bulleted list of violations (also write to session file).
-- **Always tell Developer:** "Review details written to session file for reference."
+- If perfect: Respond with "LGTM - Architect Approved ✅" (write to PENDING_REVIEW.md anyway for audit trail).
+- If issues found: Provide summary and point to PENDING_REVIEW.md for details.
+- **Always tell Developer:** "Review details written to `.aiknowsys/PENDING_REVIEW.md`"
