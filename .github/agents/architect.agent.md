@@ -27,6 +27,7 @@ To ensure your review feedback is preserved and actionable:
 **1. Check for existing session file:**
    - Check `.aiknowsys/sessions/YYYY-MM-DD-session.md` for context on what was done
    - Read previous reviews to avoid duplicate work
+   - **If no session file exists, create it** (any work warranting a review needs session tracking)
 
 **2. Write your review to `.aiknowsys/PENDING_REVIEW.md`:**
    Create or overwrite this file with your detailed review:
@@ -73,9 +74,22 @@ To ensure your review feedback is preserved and actionable:
    - [ ] Run validation
    ```
 
-**3. Add brief marker to session file:**
-   Append this to `.aiknowsys/sessions/YYYY-MM-DD-session.md`:
+**3. Create or update session file:**
+   
+   **If session file `.aiknowsys/sessions/YYYY-MM-DD-session.md` doesn't exist, create it:**
+   ```markdown
+   # Session: [Topic] (MMM D, YYYY)
 
+   ## ⚠️ Architect Review Pending (HH:MM)
+   **Topic:** [Brief description]  
+   **See:** `.aiknowsys/PENDING_REVIEW.md` for details
+
+   **Goal**: [Infer from files reviewed - e.g., "Implement feature X", "Refactor Y for clarity", "Fix Z bug in production"]
+
+   **Changes**: [Will be updated by Developer after addressing issues]
+   ```
+
+   **If session file exists, append:**
    ```markdown
    ## ⚠️ Architect Review Pending (HH:MM)
    **Topic:** [Brief description]  

@@ -90,6 +90,8 @@ If fixing bug:
 
 **Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
 
+**Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
+
 ### 1️⃣ START: Read Context (REQUIRED)
 
 **ALWAYS read these files at the start of every conversation:**
@@ -188,37 +190,33 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 **Before ending your turn:**
 
-1. **Create/Update Session File** (for complex work):
-   ```markdown
-   # Save to .aiknowsys/sessions/YYYY-MM-DD-session.md
-   
-   ## Current State
-   [Brief summary of what was accomplished]
-   
-   ### Completed
-   - [x] Feature X implemented
-   - [x] Tests passing
-   
-   ### In Progress
-   - [ ] Documentation update pending
-   
-   ### Notes for Next Session
-   - Need to add error handling for edge case Y
-   - Consider refactoring Z for clarity
-   
-   ### Context to Load
-   ```
-   src/components/NewFeature.tsx - Main implementation
-   tests/NewFeature.test.ts - Test coverage
-   ```
-   ```
-
-2. **Check for Pending Reviews:**
+1. **Check for Pending Reviews:**
    - If `.aiknowsys/PENDING_REVIEW.md` exists, read it FIRST
    - Architect reviews are written here, not in session file
    - Address all issues before continuing
 
-3. **Confirm to user:**
+3. **Update Session File** (if Architect created one or for complex work):
+   - If Architect created session file with review marker, update it with completion status:
+     ```markdown
+     ## Architect Review: [Topic] (HH:MM) ✅
+     **Status:** ADDRESSED (HH:MM)  
+     **Issues found:** X  
+     **Outcome:** All fixed, tests passing
+     ```
+   - For complex multi-step work without review, create/update session file:
+     ```markdown
+     ## Current State
+     [Brief summary]
+     
+     ### Completed
+     - [x] Feature X implemented
+     
+     ### Notes for Next Session
+     - [Future work]
+     ```
+   - Delete PENDING_REVIEW.md after addressing all issues
+
+4. **Confirm to user:**
    - What you fixed/built
    - What tests passed
    - That changelog is updated (if applicable)

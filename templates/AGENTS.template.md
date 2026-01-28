@@ -86,6 +86,8 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 **Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
 
+**Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
+
 ### 1️⃣ START: Read Context (REQUIRED)
 
 **ALWAYS read these files at the start of every conversation:**
@@ -204,7 +206,33 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
    ```
    ```
 
-2. **Confirm to user:**
+1. **Check for Pending Reviews:**
+   - If `.aiknowsys/PENDING_REVIEW.md` exists, read it FIRST
+   - Architect reviews are written here, not in session file
+   - Address all issues before continuing
+
+2. **Update Session File** (if Architect created one or for complex work):
+   - If Architect created session file with review marker, update it with completion status:
+     ```markdown
+     ## Architect Review: [Topic] (HH:MM) ✅
+     **Status:** ADDRESSED (HH:MM)  
+     **Issues found:** X  
+     **Outcome:** All fixed, tests passing
+     ```
+   - For complex multi-step work without review, create/update session file:
+     ```markdown
+     ## Current State
+     [Brief summary]
+     
+     ### Completed
+     - [x] Feature X implemented
+     
+     ### Notes for Next Session
+     - [Future work]
+     ```
+   - Delete PENDING_REVIEW.md after addressing all issues
+
+3. **Confirm to user:**
    - What you fixed/built
    - What tests passed
    - That changelog is updated (if applicable)

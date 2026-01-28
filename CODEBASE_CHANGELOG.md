@@ -7,6 +7,98 @@
 
 ---
 
+## Session: Quality Improvements from Architect Review (January 28, 2026)
+
+**Goal:** Implement optional enhancements suggested during architectural review (improve UX and clarity)
+
+**Changes:**
+- [.github/agents/architect.agent.md](. github/agents/architect.agent.md#L85): Added goal inference examples
+  - Changed: `[Infer from files reviewed]` → `[Infer from files reviewed - e.g., "Implement feature X", "Refactor Y for clarity", "Fix Z bug in production"]`
+  - Rationale: Reduces cognitive load when creating session files, provides clear patterns
+- [templates/agents/architect.agent.template.md](templates/agents/architect.agent.template.md): Same update for template
+- [AGENTS.md](AGENTS.md#L91): Added session cleanup maintenance note
+  - Added: "**Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context."
+  - Rationale: Prevents local clutter from old session files, keeps focus on recent work
+- [templates/AGENTS.template.md](templates/AGENTS.template.md): Same update for template
+
+**Validation:**
+- ✅ Tests: 226/228 passing (2 pre-existing Windows path failures unrelated to changes)
+- ✅ Documentation: All 4 files updated consistently
+
+**Key Learning:**
+Small documentation improvements have outsized impact on UX. Goal examples reduce decision fatigue, maintenance notes prevent future clutter. Both were "optional" but worth implementing immediately since they're low-cost with clear benefits.
+
+---
+
+## Session: Architect Session File Creation (January 28, 2026)
+
+**Goal:** Ensure Architect creates session files when conducting reviews (previously optional/manual)
+
+**Changes:**
+- [.github/agents/architect.agent.md](. github/agents/architect.agent.md#L26-L60): Architect now creates session file if missing
+  - Added instruction: "If no session file exists, create it"
+  - Updated Step 3 to create OR update session file
+  - If creating: includes review marker + inferred goal + placeholder for changes
+  - If updating: appends review marker only
+  - Rationale: Any work significant enough for review warrants session tracking
+- [AGENTS.md](AGENTS.md#L190-L223): Updated session workflow for Developer
+  - Reordered steps: Check PENDING_REVIEW first, then update session
+  - Clarified: Architect creates session, Developer updates it
+  - Added completion status format: "Architect Review: [Topic] ✅"
+  - Includes outcome summary: issues found, tests passing, etc.
+  - Delete PENDING_REVIEW.md after addressing issues
+- [templates/AGENTS.template.md](templates/AGENTS.template.md): Updated template with same workflow
+- [templates/agents/architect.agent.template.md](templates/agents/architect.agent.template.md): Updated template
+
+**Validation:**
+- ✅ Tests: 226/228 passing (2 unrelated Windows path failures)
+- ✅ Documentation: All agent workflow docs updated consistently
+
+**Key Learning:** 
+Session creation should not be optional when reviews occur. The Architect can assess whether work is significant enough to warrant both a review AND session tracking. This ensures:
+1. All reviews are documented in session history2. No important architectural feedback gets lost
+3. Session continuity is maintained automatically
+4. Developer knows session exists and needs updating
+
+---
+
+## Session: Skill Mapping Auto-Generation (January 28, 2026)
+
+**Goal:** Auto-generate SKILL_MAPPING table in AGENTS.md from installed skills metadata
+
+**Changes:**
+- [lib/skill-mapping.js](lib/skill-mapping.js): NEW (203 lines) - Auto-generate skill mapping table
+  - `parseSkillMetadata(content)` - Parse YAML frontmatter or markdown Purpose sections
+  - `extractTriggerWords(text)` - Extract trigger phrases using regex patterns
+  - `scanSkillsDirectory(skillsDir)` - Async directory scan with fs.promises
+  - `generateSkillMapping(skills)` - Create markdown table rows
+  - `buildSkillMapping(targetDir)` - Main entry point
+  - Supports both YAML frontmatter and markdown format skills
+  - Async file I/O throughout (fs.promises.readdir, fs.promises.readFile)
+- [lib/commands/init/templates.js](lib/commands/init/templates.js#L109-L125): Integration into init command
+  - Auto-generates skill mapping after installing skills
+  - Replaces {{SKILL_MAPPING}} placeholder in AGENTS.md
+  - Uses ora spinner with silent mode support
+- [lib/commands/install-skills.js](lib/commands/install-skills.js#L83-L100): Auto-regeneration after skill install
+  - Always regenerates mapping to include custom skills
+  - Async fs.promises for reading/writing AGENTS.md
+  - Only updates if {{SKILL_MAPPING}} placeholder exists
+- [test/skill-mapping.test.js](test/skill-mapping.test.js): NEW (183 lines) - Comprehensive test suite
+  - 5 describe blocks covering all functions
+  - Fixture-based testing with beforeEach/afterEach cleanup
+  - Tests for YAML frontmatter, markdown formats, trigger extraction
+  - All tests use async/await for async functions
+
+**Validation:**
+- ✅ Tests: 226/228 passed (2 unrelated Windows path failures in sanitize.test.js)
+- ✅ TDD: RED-GREEN-REFACTOR cycle followed
+- ✅ Async refactor: All file I/O uses fs.promises (no sync operations)
+- ✅ Architect review: APPROVED
+
+**Key Learning:** Following async patterns consistently from the start prevents refactor work. The initial implementation used sync file I/O which violated codebase standards. After architectural review, converted all operations to async fs.promises, updated function signatures, and fixed tests to await async calls. Feature now ready for production.
+
+---
+
 ## Session: P2 Input Sanitization & Silent Test Output (January 27, 2026)
 
 **Goal:** Complete P2 items from CRITICAL_REVIEW.md - input sanitization and silent test output improvements
