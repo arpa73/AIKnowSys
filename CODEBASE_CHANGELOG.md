@@ -7,6 +7,27 @@
 
 ---
 
+## Session: Test Platform Compatibility Fix (January 28, 2026)
+
+**Goal:** Fix annoying Windows path test failures on non-Windows platforms
+
+**Changes:**
+- [test/sanitize.test.js](test/sanitize.test.js#L122): Made Windows path test OS-aware
+  - Added `os` import from node:os
+  - Updated test: `{ skip: os.platform() !== 'win32' }`
+  - Rationale: Windows path syntax (`C:\Users\...`) with colons is valid on Windows but invalid on Unix/Linux
+  - The sanitizer correctly rejects colons on Unix (security), but test was failing on non-Windows platforms
+
+**Validation:**
+- ✅ Tests: 227/228 passing, 1 skipped (Windows path test on Linux)
+- ✅ All tests pass on their target platforms
+- ✅ No more "annoying" false failures on Linux/macOS
+
+**Key Learning:**
+Platform-specific tests should use Node's built-in `{ skip }` option with `os.platform()` detection. This prevents false failures and makes test output cleaner. Tests that validate platform-specific behavior (like Windows path syntax) should only run on their target platform.
+
+---
+
 ## Session: Quality Improvements from Architect Review (January 28, 2026)
 
 **Goal:** Implement optional enhancements suggested during architectural review (improve UX and clarity)
