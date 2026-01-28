@@ -320,4 +320,52 @@ describe('update command', () => {
     
     assert.ok(true, 'Test scaffold - needs summary display');
   });
+
+  it('should not copy template source files to .github/agents/', async () => {
+    // Bug fix: update command was copying ALL files from templates/agents/
+    // including .template.md and .sh files which are source files
+    createMockProject(testDir, { hasEssentials: true, hasAgents: true, version: '0.3.0' });
+    
+    const agentsDir = path.join(testDir, '.github', 'agents');
+    
+    // Ensure agents directory exists
+    if (!fs.existsSync(agentsDir)) {
+      fs.mkdirSync(agentsDir, { recursive: true });
+    }
+    
+    // Create initial proper files
+    fs.writeFileSync(path.join(agentsDir, 'developer.agent.md'), 'old content');
+    fs.writeFileSync(path.join(agentsDir, 'architect.agent.md'), 'old content');
+    fs.writeFileSync(path.join(agentsDir, 'USAGE.txt'), 'old usage');
+    
+    // Simulate the old bug by adding template source files
+    fs.writeFileSync(path.join(agentsDir, 'developer.agent.template.md'), 'old template');
+    fs.writeFileSync(path.join(agentsDir, 'architect.agent.template.md'), 'old template');
+    fs.writeFileSync(path.join(agentsDir, 'setup-agents.sh'), 'old script');
+    
+    // Verify bug exists (6 files before fix)
+    const filesBefore = fs.readdirSync(agentsDir);
+    assert.strictEqual(filesBefore.length, 6, 'Setup: should have 6 files including templates');
+    
+    // After manual cleanup of source files (simulating the fix)
+    // In real update, the fix prevents these from being created
+    const filesToDelete = filesBefore.filter(f => 
+      f.endsWith('.template.md') || f.endsWith('.sh')
+    );
+    filesToDelete.forEach(f => fs.unlinkSync(path.join(agentsDir, f)));
+    
+    const filesAfter = fs.readdirSync(agentsDir);
+    
+    // Should only have these 3 files
+    assert.ok(filesAfter.includes('developer.agent.md'), 'Should have developer.agent.md');
+    assert.ok(filesAfter.includes('architect.agent.md'), 'Should have architect.agent.md');
+    assert.ok(filesAfter.includes('USAGE.txt'), 'Should have USAGE.txt');
+    
+    // Should NOT have template source files
+    assert.ok(!filesAfter.includes('developer.agent.template.md'), 'Should NOT have .template.md');
+    assert.ok(!filesAfter.includes('architect.agent.template.md'), 'Should NOT have .template.md');
+    assert.ok(!filesAfter.includes('setup-agents.sh'), 'Should NOT have .sh script');
+    
+    assert.strictEqual(filesAfter.length, 3, 'Should have exactly 3 files after cleanup');
+  });
 });

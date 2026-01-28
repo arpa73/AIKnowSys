@@ -108,6 +108,20 @@ Each stack template includes:
 | `npx  install-agents` | Install Developer + Architect agents | N/A (standalone) |
 | `npx  install-skills` | Install universal skills | N/A (standalone) |
 
+**🤔 `init` vs `migrate` - Which Should I Use?**
+
+- **`init`** → Recommended for everyone (new OR existing projects)
+  - Detects your situation and offers appropriate options
+  - For existing projects: choose "🔍 Scan Codebase" → runs migrate workflow
+  - More user-friendly with guided choices
+
+- **`migrate`** → Direct path for existing projects only
+  - Skips the setup menu, goes straight to scanning
+  - Same result as `init` → "Scan Codebase"
+  - Use if you prefer fewer prompts
+
+**TL;DR:** Both do the same thing for existing code. `init` with "Scan Codebase" literally calls `migrate` internally. Just use `init` unless you want to skip the setup mode selection.
+
 **💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
 
 **📋 Template Options:**

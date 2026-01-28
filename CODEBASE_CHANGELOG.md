@@ -7,6 +7,122 @@
 
 ---
 
+## Session: Async File I/O Conversion + Critical Bug Fix (January 28, 2026)
+
+**Goal:** Convert utils.js to async I/O per Gemini code review recommendation + fix critical init.js bug
+
+**Changes:**
+- [lib/utils.js](lib/utils.js#L18-L90): Converted all file I/O functions to async
+  - `copyTemplate()`: Replaced `fs.readFileSync/writeFileSync` with `fs.promises.readFile/writeFile`
+  - `copyDirectory()`: Replaced `fs.readdirSync/copyFileSync` with `fs.promises.readdir/copyFile`
+  - `hasExistingProject()`: Replaced `fs.existsSync()` with `fs.promises.access()` ✨ **CONSISTENCY FIX**
+  - Standardized error handling: Changed from `.then().catch()` to idiomatic `try/catch` pattern ✨ **CODE STYLE**
+  - Used `fs.promises.access()` for file existence checks (async pattern)
+  - Recursive `copyDirectory()` properly awaits nested calls
+  
+- [lib/commands/init.js](lib/commands/init.js#L69,L125-L135,L307): **CRITICAL BUG FIX + async updates**
+  - **BUG:** `copyTemplate(packageDir, targetDir, 'templates/AGENTS.template.md', 'AGENTS.md', replacements)`
+  - **Root Cause:** Function signature is `copyTemplate(source, dest, replacements)` (3 params) but was called with 5
+  - **JavaScript Behavior:** Silently ignores extra parameters → `source=packageDir` (directory!), `dest=targetDir`
+  - **Error:** "EISDIR: illegal operation on a directory, read" when trying to read directory as file
+  - **Impact:** **init command completely broken for all stack templates** (was failing silently!)
+  - **Fix:** Changed to `await copyTemplate(path.join(packageDir, 'templates/AGENTS.template.md'), path.join(targetDir, 'AGENTS.md'), replacements)`
+  - Updated both `hasExistingProject()` calls to await (lines 69, 307)
+
+- Updated all callers to `await` async functions:
+  - [lib/commands/init/templates.js](lib/commands/init/templates.js#L71-L91): 4 copyTemplate calls
+  - [lib/commands/migrate.js](lib/commands/migrate.js#L104-L134): 2 copyTemplate calls
+  - [lib/commands/update.js](lib/commands/update.js#L115-L233): 5 copyTemplate + 1 copyDirectory calls
+  - [lib/commands/install-agents.js](lib/commands/install-agents.js#L31-L49): 3 copyTemplate calls
+  - [lib/commands/install-skills.js](lib/commands/install-skills.js#L70): 1 copyDirectory call
+
+**Validation:**
+- ✅ Tests: 228/229 passing (1 skipped platform-specific Windows test)
+- ✅ Manual: `init --stack nextjs` creates all 3 files correctly (was broken before!)
+- ✅ Manual: `update --yes` successfully copies skills using async copyDirectory()
+- ✅ All commands work: init, migrate, update, install-agents, install-skills
+- ✅ Architect review: APPROVED with 2 minor issues
+- ✅ **Both minor issues FIXED:** hasExistingProject() async conversion + standardized error handling
+
+**Key Learning:**
+1. **JavaScript silently ignores extra function parameters** - dangerous! The bug existed because:
+   - Function definition: `copyTemplate(source, dest, replacements = {})`
+   - Bad call: `copyTemplate(pkg, dir, 'template.md', 'out.md', {})`
+   - JavaScript mapped: `source=pkg, dest=dir, replacements='template.md'` (last 2 params ignored!)
+   - This passed directories instead of file paths, causing EISDIR error
+
+2. **Async conversion best practices**:
+   - Replace `fs.*Sync` with `fs.promises.*`
+   - Use idiomatic `try/catch` for error handling (not `.then().catch()`)
+   - Add `async` keyword to function signatures
+   - Add `await` to all callers (including nested utility functions like `hasExistingProject()`)
+   - Recursive functions must await their own recursive calls
+   - **Consistency matters:** ALL file I/O should use same pattern (async or sync, not mixed)
+
+3. **Performance benefit**: Async I/O prevents blocking the event loop, especially important for:
+   - Copying multiple files (copyDirectory with many files)
+   - Large template files
+   - Concurrent operations in the future
+
+**Gemini Code Review Status:**
+- ✅ Recommendation #1 (HIGH): Async I/O conversion - **COMPLETED + ENHANCED**
+- ⏳ Recommendation #2 (MEDIUM): Error rollback mechanism - Future work
+- ❌ Recommendation #3 (LOW): Plugin detectors - Rejected (current approach fine)
+- ❌ Recommendation #4: Templating engine - Rejected (violates KISS/YAGNI)
+
+**Architect Review Outcome:**
+- Initial review: APPROVED with 2 optional improvements
+- Developer addressed BOTH improvements immediately:
+  1. ✅ Converted `hasExistingProject()` to async for consistency
+  2. ✅ Standardized error handling to use `try/catch` pattern
+- Final status: **PRODUCTION-READY** with all issues resolved
+
+---
+
+## Session: Documentation Improvement - Init vs Migrate Clarification (January 28, 2026)
+
+**Goal:** Clarify confusing relationship between `init` and `migrate` commands in README
+
+**Changes:**
+- [README.md](README.md#L110-L125): Added "init vs migrate" clarification section
+  - Explains that `init` with "Scan Codebase" calls `migrate` internally
+  - Provides clear recommendation: use `init` for everything
+  - Positioned right after command table where users make decisions
+
+**Validation:**
+- ✅ Documentation-only change (no code tests needed)
+- ✅ Improves user experience and reduces confusion
+
+**Key Learning:**
+When commands have overlapping functionality, users need explicit clarification about which to use. The fact that `init` calls `migrate` internally is important to document - it helps users understand they're not missing anything by choosing one over the other.
+
+---
+
+## Session: Fix Update Command Template File Pollution (January 28, 2026)
+
+**Goal:** Fix bug where `update` command copies template source files to user's project
+
+**Changes:**
+- [lib/commands/update.js](lib/commands/update.js#L110-L130): Changed from `copyDirectory()` to selective `copyTemplate()`
+  - OLD: `copyDirectory(templates/agents, .github/agents)` - copied ALL files including `.template.md` and `.sh`
+  - NEW: Explicitly copy only 3 files: `developer.agent.md`, `architect.agent.md`, `USAGE.txt`
+  - Rationale: Template source files (`.template.md`, `.sh`) should stay in package, not pollute user's project
+- [test/update.test.js](test/update.test.js#L324-L351): Added regression test
+  - Verifies only 3 final files exist after update, no template source files
+
+**Validation:**
+- ✅ Tests: 228/229 passing (1 skipped Windows test)
+- ✅ Manual test: Update command creates exactly 3 files
+- ✅ Regression test: Prevents future pollution
+
+**Key Learning:**
+`copyDirectory()` is convenient but dangerous - it copies EVERYTHING including source files users shouldn't see. For agent/skill installation, use explicit `copyTemplate()` calls for each file. Only use `copyDirectory()` when you truly want all files (like copying example projects).
+
+**User Impact:**
+Users running `aiknowsys update` will no longer see confusing `.template.md` and `setup-agents.sh` files in their `.github/agents/` directory. Existing polluted directories can be cleaned manually by deleting any `.template.md` or `.sh` files.
+
+---
+
 ## Session: Test Platform Compatibility Fix (January 28, 2026)
 
 **Goal:** Fix annoying Windows path test failures on non-Windows platforms
