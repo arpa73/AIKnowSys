@@ -13,6 +13,20 @@ Use when implementing commands that:
 - Take more than 2-3 seconds to complete
 - Would benefit from user feedback during execution
 
+## When NOT to Use
+
+**Skip progress indicators when:**
+- Operation completes in <2 seconds (spinners add unnecessary visual noise)
+- Running in CI/CD environments (use simple log output instead)
+- Output needs to be parseable by other tools (spinners interfere with structured output)
+- Command is fully silent (`--quiet` or `--silent` flag)
+
+**Alternative approaches:**
+- **Fast operations (<2s):** Simple "Done ✓" message at end
+- **CI/CD environments:** Use `--silent` flag and check exit codes
+- **Parseable output:** Add `--json` flag for machine-readable format
+- **Silent mode:** Respect the `silent` parameter - no spinners when true
+
 ## Pattern
 
 We've established three distinct progress indicator patterns used across scan, audit, and migrate commands:

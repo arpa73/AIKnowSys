@@ -110,18 +110,9 @@ To ensure your review feedback is preserved and actionable:
    - Developer deletes PENDING_REVIEW.md after addressing issues
    - Session file gets brief completion status (not full review text)
 
-### Additional Reminders to Developer:
-After completing your review, remind the developer to:
-- **Read PENDING_REVIEW.md:** "Detailed review written to `.aiknowsys/PENDING_REVIEW.md`"
-- **Address all issues:** Check off each item in the "Required Actions" section
-- **Update session file:** Replace pending marker with brief completion status
-- **Delete PENDING_REVIEW.md:** After addressing all issues and updating session
-- **Update CODEBASE_CHANGELOG.md:** For significant changes (architectural changes, new features, bug fixes that reveal design issues)
-- **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
+### Documentation Location Guidance (Read Before Reviewing!):
 
-### Documentation Location Guidance (ESSENTIALS vs Learned Skills):
-
-When recommending where to document patterns, use this decision framework:
+When recommending where to document patterns during your review, use this decision framework:
 
 **Document in {{ESSENTIALS_FILE}} when:**
 - ✅ **Critical Invariants**: Cannot be violated (ES modules only, no globals, etc.)
@@ -156,6 +147,15 @@ When recommending where to document patterns, use this decision framework:
 
 **Action:** Create `.aiknowsys/learned/pattern-name.md` using skill format.
 ```
+
+### Additional Reminders to Developer:
+After completing your review, remind the developer to:
+- **Read PENDING_REVIEW.md:** "Detailed review written to `.aiknowsys/PENDING_REVIEW.md`"
+- **Address all issues:** Check off each item in the "Required Actions" section
+- **Update session file:** Replace pending marker with brief completion status
+- **Delete PENDING_REVIEW.md:** After addressing all issues and updating session
+- **Update CODEBASE_CHANGELOG.md:** For significant changes (architectural changes, new features, bug fixes that reveal design issues)
+- **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
 
 ### Review Output:
 - If perfect: Respond with "LGTM - Architect Approved ✅" (write to PENDING_REVIEW.md anyway for audit trail).

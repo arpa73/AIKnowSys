@@ -1,6 +1,6 @@
 # aiknowsys - Codebase Essentials
 
-> **Last Updated:** January 24, 2026  
+> **Last Updated:** January 29, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
 > **Maintainer:** arpa73
 
@@ -24,7 +24,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 164 tests pass |
+| `npm test` | Run unit tests | All 255+ tests pass |
 | `npm run lint` | Lint codebase | No errors or warnings |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
@@ -113,114 +113,26 @@ export async function commandName(options) {
 }
 ```
 
-### Logger Utility Pattern
+### Logger Pattern
+All commands use `createLogger(silent)` for consistent, testable output. See [learned skill](.aiknowsys/learned/logger-pattern.md) for detailed usage, methods, and examples.
 
-**Location:** `lib/logger.js`
-
-**Purpose:** Centralized logging utility with silent mode support for all CLI commands.
-
-**Factory Function:**
 ```javascript
 import { createLogger } from '../logger.js';
-
 const log = createLogger(silent);  // silent = true/false
 ```
 
-**Available Methods:**
+### Inquirer Prompts
+Use `'rawlist'` instead of `'list'` for VS Code terminal compatibility. See [learned skill](.aiknowsys/learned/inquirer-compatibility.md) for details.
 
-| Method | Purpose | Color | Icon | Silent Mode |
-|--------|---------|-------|------|-------------|
-| `log(msg)` | Standard output | White | - | ✅ Respects |
-| `error(msg)` | Error messages | Red | ❌ | ✅ Respects |
-| `warn(msg)` | Warnings | Yellow | ⚠️ | ✅ Respects |
-| `info(msg)` | Information | Blue | ℹ️ | ✅ Respects |
-| `success(msg)` | Success messages | Green | ✅ | ✅ Respects |
-| `blank()` | Empty line | - | - | ✅ Respects |
-| `header(msg, icon)` | Section header | Cyan bold | Custom | ✅ Respects |
-| `section(title, icon)` | Subsection | Cyan | Custom | ✅ Respects |
-| `dim(msg)` | Secondary text | Gray | - | ✅ Respects |
-| `cyan(msg)` | Cyan text | Cyan | - | ✅ Respects |
-| `white(msg)` | White text | White | - | ✅ Respects |
-| `yellow(msg)` | Yellow text | Yellow | - | ✅ Respects |
-| `green(msg)` | Green text | Green | - | ✅ Respects |
-
-**Usage Examples:**
 ```javascript
-import { createLogger } from '../logger.js';
-
-export async function myCommand(options) {
-  const silent = options._silent || false;
-  const log = createLogger(silent);
-  
-  // Headers and sections
-  log.header('Initialization', '🎯');
-  log.blank();
-  log.section('Configuration', '⚙️');
-  
-  // Standard output
-  log.cyan('Processing files...');
-  log.dim('Step 1 of 3');
-  
-  // Status messages
-  log.info('Found 12 files');
-  log.success('All tests passed!');
-  log.warn('Deprecated feature detected');
-  log.error('File not found: config.json');
-  
-  // Color helpers
-  log.white('Regular text');
-  log.yellow('Highlighted text');
-  log.green('Positive feedback');
-}
-```
-
-**Benefits:**
-- ✅ Testable (silent mode allows testing output)
-- ✅ Consistent UX across all commands
-- ✅ Single source of truth for logging
-- ✅ Errors always show (even in silent mode)
-- ✅ Easy to extend (add new methods in one place)
-
-**Testing:**
-```javascript
-import { test } from 'node:test';
-import { myCommand } from '../lib/commands/myCommand.js';
-
-test('myCommand runs without output in silent mode', async () => {
-  // Silent mode prevents console pollution during tests
-  await myCommand({ _silent: true });
-  // Verify behavior, not output
-});
-```
-
-### Inquirer Prompt Compatibility
-```javascript
-// ⚠️ IMPORTANT: Use 'rawlist' instead of 'list' for VS Code terminal compatibility
-// VS Code integrated terminal doesn't support arrow key navigation in 'list' prompts
-// 'rawlist' shows numbered options that users can type (1, 2, 3)
-
-// ✅ GOOD: Works in all terminals (VS Code, iTerm, terminals, WSL)
+// Use rawlist (numbered options) - works everywhere
 await inquirer.prompt([{
-  type: 'rawlist',      // Shows numbered list, user types number
+  type: 'rawlist',
   name: 'choice',
   message: 'Select option:',
   choices: [...],
-  default: 1            // Use number for default (1 = first option)
+  default: 1
 }]);
-
-// ❌ BAD: Doesn't work in VS Code terminal
-await inquirer.prompt([{
-  type: 'list',         // Requires arrow keys - broken in VS Code
-  name: 'choice',
-  message: 'Select option:',
-  choices: [...]
-}]);
-
-// Other types that work universally:
-// - 'input' (text input)
-// - 'confirm' (yes/no)
-// - 'checkbox' (multi-select with space key)
-// - 'password' (hidden input)
 ```
 
 ### Template Variable Replacement
@@ -244,28 +156,7 @@ export async function installAgents(options) {
 ```
 
 ### Progress Indicators
-For detailed guidance on progress indicators and spinners, see the [learned skill](.aiknowsys/learned/progress-indicators.md). This project uses ora spinners with three distinct patterns depending on the operation type (file processing, multi-step checks, or sequential phases).
-- Always call succeed/fail/info to clear spinner state
-
-### Session Files vs Changelog
-```
-**When to use .aiknowsys/sessions/YYYY-MM-DD-session.md:**
-- Multi-hour or multi-task work in progress
-- Working memory for AI-to-AI continuity
-- Temporary notes, blockers, and next steps
-- Gitignored (never committed)
-
-**When to use CODEBASE_CHANGELOG.md:**
-- Completed work sessions
-- Permanent record (git committed)
-- Learning archive for future reference
-- Single source of truth for project history
-
-**Workflow:**
-Day 1: Create session file → work → update session notes
-Day 2: Continue from session file → complete work
-Day 3: Move session to changelog → delete session file
-```
+For detailed guidance on progress indicators and spinners, see the [learned skill](.aiknowsys/learned/progress-indicators.md). This project uses ora spinners with three distinct patterns depending on the operation type (file processing, multi-step checks, or sequential phases). Always call `succeed()`, `fail()`, or `info()` to clear spinner state.
 
 ---
 
@@ -309,104 +200,46 @@ Day 3: Move session to changelog → delete session file
 
 ## 6. Common Gotchas
 
-1. **ESM `__dirname` Not Available**
-   - Use `fileURLToPath(import.meta.url)` instead
-   - See `lib/utils.js` for `getPackageDir()`
-
-2. **Chalk 5.x is ESM-only**
-   - Cannot use `require('chalk')` - must import
-
-3. **Template Variables in Markdown**
-   - Double curly braces (`{{VAR}}` syntax) can conflict with templating engines
-   - Use regex escaping when replacing
-
-4. **Path Separators**
-   - Always use `path.join()`, never string concatenation
-   - Works across Windows/Unix
+See [learned skill](.aiknowsys/learned/common-gotchas.md) for detailed solutions to common issues:
+- ESM `__dirname` not available (use `fileURLToPath(import.meta.url)`)
+- Chalk 5.x is ESM-only (must use `import`, not `require()`)
+- Template variables in markdown (use regex escaping)
+- Path separators (always use `path.join()`, never string concatenation)
+- Import extensions required (must include `.js`)
+- JSON import syntax (use import assertions)
 
 ---
 
-## 7. Adding New Commands
+## 7. Extending AIKnowSys
 
-1. Create `lib/commands/new-command.js`
-2. Export async function with `options` parameter
-3. Register in `bin/cli.js`:
-   ```javascript
-   import { newCommand } from '../lib/commands/new-command.js';
-   
-   program
-     .command('new-command')
-     .description('Description here')
-     .option('-d, --dir <directory>', 'Target directory', '.')
-     .action(newCommand);
-   ```
-4. Update README.md command table
-5. For commands that check/create files, add version tracking if needed
+For adding new commands or skills, see [learned skill](.aiknowsys/learned/extending-aiknowsys.md).
 
-**Version Tracking Pattern:**
-```javascript
-// For update-like commands, track version in .aiknowsys-version file
-function getCurrentVersion(targetDir) {
-  const versionFile = path.join(targetDir, '.aiknowsys-version');
-  if (fs.existsSync(versionFile)) {
-    return fs.readFileSync(versionFile, 'utf-8').trim();
-  }
-  return null;
-}
-```
+**Quick reference:**
+- Commands: Create `lib/commands/my-command.js`, register in `bin/cli.js`, add tests
+- Skills: Create `templates/skills/my-skill/SKILL.md`, register in `install-skills.js`
+- Follow existing patterns, write tests first (TDD)
 
 ---
 
-## 8. Adding New Skills
+## 8. Testing Philosophy
 
-1. Create `templates/skills/skill-name/SKILL.md`
-2. Follow structure from existing skills
-3. Add to `AVAILABLE_SKILLS` array in `lib/commands/install-skills.js`
-4. Document in README
+We practice **Test-Driven Development (TDD)** for all new features. See [.github/skills/tdd-workflow/SKILL.md](.github/skills/tdd-workflow/SKILL.md) for detailed guidance.
 
----
+**Quick summary:**
+1. Write test first (RED) - Define expected behavior
+2. Watch it fail - Verify test catches the issue
+3. Implement minimal code (GREEN) - Make the test pass  
+4. Refactor - Clean up while tests stay green
 
-## 9. Testing Philosophy
-
-We practice **Test-Driven Development (TDD)** for all new features:
-
-1. **Write test first** - Define expected behavior before implementation
-2. **Watch it fail (RED)** - Verify test catches the missing feature
-3. **Implement minimal code (GREEN)** - Make the test pass
-4. **Refactor** - Clean up while tests stay green
-
-**Benefits:**
-- Better code design (testable code is decoupled code)
-- Fewer bugs (issues caught before shipping)
-- Confidence in refactoring (tests catch regressions)
-- Living documentation (tests show intent)
-
-**Test Organization:**
-```
-test/
-├── init.test.js           # Command tests
-└── test-stack.js          # Manual integration tests
-```
-
-**Running Tests:**
+**Running tests:**
 ```bash
-npm test                   # Run all tests
+npm test                             # Run all tests
 node --test test/init.test.js --watch  # Watch mode
 ```
 
-**When adding features:**
-1. Add test to `test/init.test.js` (or create new test file)
-2. Watch test fail (`npm test`)
-3. Implement feature
-4. Watch test pass
-5. Refactor if needed
-6. Commit with passing tests
-
-See `.github/skills/tdd-workflow/SKILL.md` for detailed TDD guidance.
-
 ---
 
-## 10. Release Checklist
+## 9. Release Checklist
 
 - [ ] Bump version: `npm version patch/minor/major` (auto-updates package.json)
 - [ ] Test all commands locally
