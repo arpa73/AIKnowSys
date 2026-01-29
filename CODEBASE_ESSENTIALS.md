@@ -243,6 +243,53 @@ export async function installAgents(options) {
 }
 ```
 
+### Progress Indicators for Long Operations
+```javascript
+// Pattern 1: File operations - update every N items
+const spinner = silent ? null : ora('Processing files...').start();
+let filesProcessed = 0;
+for (const file of files) {
+  filesProcessed++;
+  if (spinner && filesProcessed % 50 === 0) {
+    spinner.text = `Processing... (${filesProcessed} files)`;
+  }
+}
+if (spinner) spinner.succeed('Processing complete');
+
+// Pattern 2: Multi-step checks - show step count
+const spinner = silent ? null : ora('Starting checks...').start();
+if (spinner) {
+  spinner.text = 'Check 1/5: Validating structure...';
+} else {
+  log.white('Validating structure...');
+}
+// ... check logic ...
+log.log('  ✓ Structure valid');
+
+if (spinner) {
+  spinner.text = 'Check 2/5: Analyzing patterns...';
+} else {
+  log.white('Analyzing patterns...');
+}
+// ... check logic ...
+if (spinner) spinner.succeed('All checks complete');
+
+// Pattern 3: Sequential phases - reuse spinner
+const spinner = ora('Phase 1: Initializing...').start();
+spinner.succeed('Phase 1 complete');
+spinner.start('Phase 2: Processing...');
+spinner.succeed('Phase 2 complete');
+spinner.start('Phase 3: Finalizing...');
+spinner.succeed('Phase 3 complete');
+```
+
+**Key Principles:**
+- Update every N items (not every item) for file operations
+- Use conditional output: spinner shows progress, log shows results
+- Respect silent mode: `spinner = silent ? null : ora(...)`
+- Reuse spinner instances across related phases
+- Always call succeed/fail/info to clear spinner state
+
 ### Session Files vs Changelog
 ```
 **When to use .aiknowsys/sessions/YYYY-MM-DD-session.md:**
