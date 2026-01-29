@@ -114,6 +114,44 @@ After completing your review, remind the developer to:
 - **Update CODEBASE_CHANGELOG.md:** For significant changes (architectural changes, new features, bug fixes that reveal design issues)
 - **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
 
+### Documentation Location Guidance (ESSENTIALS vs Learned Skills):
+
+When recommending where to document patterns, use this decision framework:
+
+**Document in CODEBASE_ESSENTIALS.md when:**
+- ✅ **Critical Invariants**: Cannot be violated (ES modules only, no globals, etc.)
+- ✅ **Core Patterns**: Used in EVERY file of that type (Logger, FileTracker, etc.)
+- ✅ **Architecture Decisions**: Technology choices (Node 20+, Commander.js, etc.)
+- ✅ **Universal Rules**: Applies project-wide (KISS, DRY, test structure, etc.)
+- ⚠️ **Size check**: ESSENTIALS getting large (>350 lines)? Consider moving to learned/
+
+**Document in `.aiknowsys/learned/` when:**
+- ✅ **Project-Specific Patterns**: Emerged from practice (not planned upfront)
+- ✅ **Problem-Solution Pairs**: Recurring error with consistent fix
+- ✅ **Workarounds**: Library/framework-specific solutions
+- ✅ **Advanced Techniques**: Optional patterns that improve quality but aren't mandatory
+- ✅ **Domain Knowledge**: Business logic patterns, API conventions, etc.
+
+**Reasoning:**
+- ESSENTIALS = "What AI MUST know before any change" (single source of truth)
+- Learned = "What AI SHOULD know for this specific context" (discoverable via triggers)
+- Keep ESSENTIALS lean (<350 lines ideal) so AI reads it every session
+- Learned skills can be detailed without bloating core docs
+
+**How to recommend:**
+```markdown
+**Recommendation:** Document this as a learned skill.
+
+**Reasoning:** 
+- Pattern emerged from Sprint 1 implementation (not core architecture)
+- Three distinct patterns discovered through practice
+- Optional technique that improves UX but not mandatory
+- ESSENTIALS.md already at 463 lines (over ideal 350)
+- Fits Pattern Extraction Protocol in AGENTS.md
+
+**Action:** Create `.aiknowsys/learned/pattern-name.md` using skill format.
+```
+
 ### Review Output:
 - If perfect: Respond with "LGTM - Architect Approved ✅" (write to PENDING_REVIEW.md anyway for audit trail).
 - If issues found: Provide summary and point to PENDING_REVIEW.md for details.
