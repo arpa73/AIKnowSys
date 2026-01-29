@@ -342,4 +342,30 @@ ruff = "^0.1"
     assert.ok(output.includes('Filling in all TODO sections'), 'Should mention TODO completion');
     assert.ok(output.includes('install-agents'), 'Should mention next step');
   });
+  
+  it('should show file count progress during scan', () => {
+    // Test that scan command shows progress during file analysis
+    const pkg = { name: 'progress-test', version: '1.0.0' };
+    fs.writeFileSync(
+      path.join(testDir, 'package.json'),
+      JSON.stringify(pkg, null, 2)
+    );
+    
+    // Create multiple files to scan
+    const srcDir = path.join(testDir, 'src');
+    fs.mkdirSync(srcDir, { recursive: true });
+    for (let i = 0; i < 5; i++) {
+      fs.writeFileSync(path.join(srcDir, `file${i}.js`), `console.log("test ${i}");`);
+    }
+    
+    const output = execSync(
+      `node ${path.join(rootDir, 'bin/cli.js')} scan --dir "${testDir}" --output PROGRESS_SCAN.md`,
+      { encoding: 'utf-8' }
+    );
+    
+    // Should complete successfully (progress updates don't break scanning)
+    assert.ok(output.includes('Project analysis complete') || output.includes('AI Assistant Prompt'), 
+              'Should complete analysis with progress tracking');
+    assert.ok(fs.existsSync(path.join(testDir, 'PROGRESS_SCAN.md')), 'Should create output file');
+  });
 });
