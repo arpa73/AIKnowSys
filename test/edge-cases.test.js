@@ -134,10 +134,19 @@ describe('Edge Case 2: Huge File Handling', () => {
       await audit({ dir: massiveDir, _silent: true });
       assert.fail('Should have thrown error for massive file');
     } catch (error) {
+      // Check message for file size info
       assert.match(error.message, /too large|file size|limit/i,
         'Error should mention file size limit');
-      assert.match(error.message, /streaming|split|reduce/i,
-        'Error should suggest alternative approach');
+      
+      // AIKnowSysError stores suggestions separately
+      if (error.suggestion) {
+        assert.match(error.suggestion, /streaming|split|reduce/i,
+          'Error should suggest alternative approach');
+      } else {
+        // Fallback for regular Error
+        assert.match(error.message, /streaming|split|reduce/i,
+          'Error should suggest alternative approach');
+      }
     }
   });
 });
