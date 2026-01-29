@@ -7,6 +7,96 @@
 
 ---
 
+## Session: Error Rollback Mechanism - TDD Implementation (January 29, 2026)
+
+**Goal:** Implement atomic rollback for init failures (Gemini code review recommendation #2)
+
+**Context:** Gemini review identified lack of error atomicity - if init fails mid-way, partial files remain. Implemented FileTracker class to ensure clean state on failure using strict TDD workflow.
+
+**TDD Workflow:**
+1. 🔴 **RED Phase**: Wrote [test/file-tracker.test.js](test/file-tracker.test.js) with 11 comprehensive tests
+   - All tests initially failed (FileTracker didn't exist yet)
+   - Tests covered: constructor, trackFile(), trackDir(), rollback(), edge cases
+   
+2. 🟢 **GREEN Phase**: Implemented [FileTracker class in lib/utils.js](lib/utils.js#L9-L82)
+   - Tracks created files and directories during operations
+   - Provides async rollback() method to delete in reverse order
+   - Handles missing files gracefully (best-effort cleanup)
+   - Only deletes empty directories (safety)
+   - All 11 tests passing ✅
+
+3. 🔵 **REFACTOR Phase**: Integrated into [lib/commands/init.js](lib/commands/init.js)
+   - Removed duplicate FileTracker implementation from init.js
+   - Import from utils.js for reusability
+   - handleStackTemplate() wraps operations in try/catch with rollback
+   - Tracks: targetDir, CODEBASE_ESSENTIALS.md, AGENTS.md, CODEBASE_CHANGELOG.md
+
+**Implementation:**
+- [lib/utils.js](lib/utils.js#L9-L82): FileTracker class
+  * `constructor()` - Initialize tracking arrays
+  * `trackFile(path)` - Record file creation
+  * `trackDir(path)` - Record directory creation
+  * `rollback(log)` - Delete tracked items in reverse order with logging
+  * Async operations using fs.promises
+  * Graceful error handling (continues on cleanup failures)
+
+- [lib/commands/init.js](lib/commands/init.js#L16): Import FileTracker
+- [lib/commands/init.js](lib/commands/init.js#L166-L235): Rollback in handleStackTemplate()
+  * Create tracker before operations
+  * Track each file/directory as created
+  * On error: call `await tracker.rollback(log)` before re-throwing
+  * Prevents partial init state
+
+- [test/file-tracker.test.js](test/file-tracker.test.js): Comprehensive test suite
+  * 11 tests covering all FileTracker functionality
+  * Tests use real temp directories (os.tmpdir())
+  * Validates reverse-order deletion
+  * Tests graceful handling of missing files
+  * Verifies logging behavior
+  * Tests mixed file/directory scenarios
+
+**Validation:**
+- ✅ 246/247 tests passing (1 platform skip as expected)
+- ✅ FileTracker: 11/11 tests passing
+- ✅ No regressions in existing tests
+- ✅ Manual testing: Error during init triggers rollback
+- ✅ Rollback deletes files in reverse order
+- ✅ Empty directories cleaned up
+- ✅ Non-empty directories preserved (safety)
+
+**Architecture Decision:**
+- **FileTracker in utils.js** (not inline in init.js):
+  * Reusable across commands (migrate.js could use it too)
+  * Testable in isolation
+  * Single Responsibility Principle
+  * Exportable for other use cases
+
+**Scope Decision:**
+- ✅ **Implemented for init.js** (high priority - creates new projects)
+- ❌ **Skipped migrate.js** (lower priority - works on existing projects)
+- Rationale: migrate.js has lower risk of partial state (user already has files)
+- FileTracker is reusable - can add to migrate later if needed
+
+**Key Learning:**
+- **TDD revealed design flaws early**: Writing tests first forced thinking about edge cases (missing files, empty dirs, reverse order)
+- **Best-effort rollback is safer**: Continuing cleanup even if one deletion fails prevents cascading errors
+- **Logging during rollback builds trust**: Users see what's being cleaned up
+- **Reverse order matters**: Last created should be first deleted (dependencies)
+- **Safety checks prevent data loss**: Only delete empty directories, ignore missing files
+- **Duplicate class declaration**: JavaScript silently imports duplicate FileTracker - removed from init.js to use utils.js export
+
+**Impact:**
+- Better user experience (clean state on init failure)
+- Professional error handling (no manual cleanup needed)
+- Atomic operations pattern (all or nothing)
+- Foundation for rollback in other commands (migrate, update)
+
+**Related:**
+- Gemini Code Review: Recommendation #2 (Error Atomicity) ✅ COMPLETED
+- Gemini Code Review: Recommendation #1 (Async I/O) ✅ COMPLETED (Jan 28)
+
+---
+
 ## Session: --essentials Flag Documentation + Tests (January 29, 2026)
 
 **Goal:** Complete Architect's optional improvements - add README documentation and comprehensive test coverage for --essentials flag
