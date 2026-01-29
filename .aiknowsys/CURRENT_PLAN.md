@@ -25,6 +25,21 @@
 
 ---
 
+## Sprint 2: Edge Cases & Error Messages (Week 2) 🔄 IN PROGRESS
+
+**Goal:** Handle edge cases gracefully and provide helpful error messages
+
+**Success Criteria:**
+- ✅ Edge case handling (empty files, huge files, special chars) (DONE - commit e46c858)
+- ✅ Better error messages with helpful suggestions (DONE - commit 785c658)
+- ⏳ Real-world testing on 3+ projects
+- ⏳ All tests passing (currently 283/284, 99.6%)
+
+**Progress:** Task 2.1 ✅ | Task 2.2 ✅ | Task 2.3 pending  
+**Commits:** e46c858, 785c658
+
+---
+
 ### Task 1.1: Fix ESLint Warnings (30 minutes)
 
 **Why:** Don't accumulate tech debt, shows professional quality  
