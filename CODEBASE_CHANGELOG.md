@@ -7,6 +7,156 @@
 
 ---
 
+## Session: Sprint 2 Tasks 2.1-2.2 - Edge Cases & Error Messages (January 30, 2026)
+
+**Goal:** Handle edge cases gracefully and provide contextual error messages with helpful suggestions
+
+**Context:** Sprint 2 of 3-sprint quality improvement plan. Following TDD RED-GREEN-REFACTOR workflow for edge case hardening, then implementing structured error handling for better UX.
+
+### Task 2.1: Edge Case Hardening ✅
+
+**Time:** 1 hour (on estimate)
+
+**TDD Workflow:**
+
+**🔴 RED Phase** - Write Failing Tests:
+- Created [test/edge-cases.test.js](test/edge-cases.test.js) (292 lines) with 7 edge case test suites:
+  1. Empty file handling (3 tests) - CODEBASE_ESSENTIALS.md, AGENTS.md, audit failures
+  2. Huge file handling (2 tests) - 51MB file warnings and errors
+  3. Special characters (4 tests) - emoji in names, npm reserved names
+  4. Git not available (1 manual test) - graceful degradation
+  5. Permission errors (1 manual test) - EACCES handling
+  6. Corrupted/invalid content (2 tests) - malformed markdown parsing
+  7. Network/slow filesystem (1 manual test) - timeout handling
+- Result: 7 failing tests (verified RED phase)
+
+**🟢 GREEN Phase** - Implement Edge Case Handling:
+- [lib/commands/check.js](lib/commands/check.js#L36-L60): File size validation
+  * Empty file detection: Throws helpful error with scan suggestion
+  * File size checks: Warn at >5MB, error at >50MB
+  * Return warnings array for programmatic use
+- [lib/commands/audit.js](lib/commands/audit.js#L40-L58): Pre-flight file checks
+  * File size validation before reading (prevents crashes)
+  * Try-catch around file reading for malformed content
+  * Returns {issues, warnings, info, clean} object
+- [lib/sanitize.js](lib/sanitize.js#L25-L45): Special character validation
+  * Emoji detection using Unicode ranges (U+1F300-1F9FF, U+2600-27BF, etc.)
+  * NPM reserved names array (12+ names: node_modules, npm, favicon.ico, etc.)
+  * Specific error messages for each rejection reason
+
+**🔵 REFACTOR Phase** - Clean Up:
+- Consistent error message patterns across all edge cases
+- Helpful suggestions included in all errors
+- No code duplication, clean function signatures
+
+**Validation:**
+- ✅ Tests: 269/270 passing (99.6% pass rate, +14 tests from session start)
+- ✅ Lint: 0 errors, 0 warnings
+- ✅ TDD hook: PASSED (commit e46c858)
+- ✅ All 7 edge cases handled gracefully
+
+**Commit:** e46c858 - feat: Sprint 2.1 - Edge case hardening with TDD
+
+---
+
+### Task 2.2: Contextual Error Messages ✅
+
+**Time:** 1.5 hours (on estimate)
+
+**Changes:**
+- [lib/error-helpers.js](lib/error-helpers.js): NEW (179 lines) - Structured error handling
+  * `AIKnowSysError` class extending Error:
+    - Constructor(message, suggestion, learnMore)
+    - `format(log)` method - displays with logger including icons and formatting
+    - `toPlainText()` method - returns plain text for testing/silent mode
+    - Proper stack traces with `Error.captureStackTrace`
+  * `ErrorTemplates` utility object with 6 common error patterns:
+    - `fileNotFound(filename, suggestions)` - missing files with creation suggestions
+    - `emptyFile(filename)` - empty files with scan suggestions
+    - `fileTooLarge(filename, sizeMB)` - file size errors (>50MB) with splitting advice
+    - `missingSection(section, filename)` - missing required sections with template copy
+    - `validationFailed(failedCount, failures)` - health check failures with fix list
+    - `noKnowledgeSystem()` - no init with setup suggestions
+  * All templates include GitHub documentation links
+
+- [lib/commands/check.js](lib/commands/check.js#L1-L5,L47,L57,L241): Integrated ErrorTemplates
+  * Replaced generic `Error` with `ErrorTemplates.emptyFile()`
+  * Replaced file size error with `ErrorTemplates.fileTooLarge()`
+  * Validation failures use `ErrorTemplates.validationFailed()` with specific failure list
+  * Import statement: `import { ErrorTemplates } from '../error-helpers.js'`
+
+- [lib/commands/audit.js](lib/commands/audit.js#L1-L5,L30,L49,L54): Integrated ErrorTemplates
+  * No knowledge system error: `ErrorTemplates.noKnowledgeSystem()`
+  * Empty file errors: `ErrorTemplates.emptyFile()`
+  * File size errors: `ErrorTemplates.fileTooLarge()`
+
+- [lib/commands/sync.js](lib/commands/sync.js#L1-L5,L24-L30,L43): Integrated ErrorTemplates
+  * File not found errors: `ErrorTemplates.fileNotFound()` with init suggestion
+  * Missing section error: `ErrorTemplates.missingSection()` with template update help
+
+- [test/error-helpers.test.js](test/error-helpers.test.js): NEW (292 lines) - Comprehensive tests
+  * AIKnowSysError class tests (12 tests):
+    - Constructor with/without learnMore link
+    - instanceof Error validation
+    - format(log) method output validation
+    - toPlainText() method output
+    - Multi-line suggestion handling
+  * ErrorTemplates validation (10 tests):
+    - All 6 templates tested with default and custom parameters
+    - fileNotFound with custom suggestions array
+    - fileTooLarge with size formatting
+    - validationFailed with/without failure list
+
+- [test/edge-cases.test.js](test/edge-cases.test.js#L137-L148): Updated test assertions
+  * Changed to check `error.suggestion` property for AIKnowSysError
+  * Fallback to `error.message` for regular Error objects
+  * Validates both message and suggestion content separately
+
+**Example Before/After:**
+
+**Before:**
+```
+Error: CODEBASE_ESSENTIALS.md not found
+```
+
+**After:**
+```
+✗ CODEBASE_ESSENTIALS.md not found
+
+💡 How to fix:
+   This file is required for AIKnowSys to work. Create it by running:
+   
+   1. aiknowsys scan    # Generate from existing codebase
+   2. aiknowsys init    # Start from scratch
+
+📚 Learn more: https://github.com/arpa73/AIKnowSys#getting-started
+```
+
+**Validation:**
+- ✅ Tests: 283/284 passing (99.6% pass rate, +22 tests total)
+- ✅ Lint: 0 errors, 0 warnings (quotes auto-fixed, unused imports removed)
+- ✅ TDD hook: PASSED (commit 785c658)
+- ✅ All error messages now include: Message + Suggestion + Learn More link
+- ✅ Manual testing: Triggered each error type, verified helpful output
+
+**Commits:** 
+- 785c658 - feat: Sprint 2.2 - Contextual error messages with AIKnowSysError
+- 9d31b9e - docs: Update CURRENT_PLAN - Sprint 2 Task 2.2 complete
+
+**Key Learning:**
+1. **Structured errors improve UX**: Separating message from suggestion makes errors actionable
+2. **ErrorTemplates pattern**: Factory functions for common scenarios reduce duplication
+3. **format() vs toPlainText()**: Separate methods for logger display and testing
+4. **Test error.suggestion separately**: AIKnowSysError stores suggestions in property, not message
+5. **Documentation links matter**: Every error should guide users to relevant docs
+
+**Sprint 2 Progress:**
+- Task 2.1: ✅ Edge case hardening (commit e46c858)
+- Task 2.2: ✅ Contextual error messages (commit 785c658)
+- Task 2.3: ⏳ Real-world testing (pending)
+
+---
+
 ## Session: Sprint 1 - Code Quality & UX Improvements (January 29, 2026)
 
 **Goal:** Complete Sprint 1 improvements: ESLint cleanup, FileTracker in migrate.js, and progress indicators
