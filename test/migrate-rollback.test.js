@@ -124,4 +124,22 @@ describe('migrate command rollback (FileTracker integration)', () => {
       'migrate.js should have try-catch with tracker.rollback() on error'
     );
   });
+
+  it('should track CODEBASE_ESSENTIALS.draft.md from scan output', async () => {
+    // This test verifies the draft file created by scan() is tracked
+    // Ensures atomic migration - draft file cleaned up on failure
+    
+    const migrateSource = await fs.readFile(
+      path.join(__dirname, '../lib/commands/migrate.js'),
+      'utf-8'
+    );
+    
+    const hasDraftTracking = 
+      migrateSource.match(/tracker\.trackFile\([^)]*draft/i);
+    
+    assert.ok(
+      hasDraftTracking,
+      'migrate.js should track CODEBASE_ESSENTIALS.draft.md from scan()'
+    );
+  });
 });
