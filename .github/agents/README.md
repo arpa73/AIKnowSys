@@ -61,7 +61,7 @@
 
 ## Usage
 
-### In VS Code with GitHub Copilot Agent Mode
+### In VS Code with GitHub Copilot
 
 **Start with Developer:**
 ```
@@ -71,9 +71,24 @@
 **Developer will:**
 1. Implement the code
 2. Write tests
-3. Automatically call: `@SeniorArchitect please review changes in [file] against CODEBASE_ESSENTIALS.md`
+3. Complete response and show handoff button
 
-**You don't need to manually call Architect** - the handoff is automatic!
+**After Developer completes:**
+- A "Send to Architect" button appears
+- Click it to automatically transition to SeniorArchitect for review
+- The handoff is configured with `send: true`, so review starts immediately
+
+### Planning Complex Features
+
+For multi-step features or architectural changes:
+```
+@Planner create a plan for implementing user authentication with OAuth
+```
+
+**After Planner completes:**
+- A "Send to Developer" button appears
+- Click it to transition to Developer agent with the plan
+- The prompt is pre-filled but not auto-sent (`send: false`), allowing you to review/modify
 
 ### Direct Review Request
 

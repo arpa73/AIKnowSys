@@ -13,7 +13,7 @@ A battle-tested knowledge management system that enables AI-assisted development
 A structured workflow system consisting of:
 
 1. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
-2. **Custom Agents** (Developer + Architect) - Automated code review enforcing KISS/DRY/SOLID/YAGNI
+2. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
 3. **Skills System** - Domain-specific how-to guides for common tasks
 4. **Changelog** - Session-by-session validation and learning history
 5. **Validation Matrix** - Mandatory test running before completion
@@ -102,11 +102,11 @@ Each stack template includes:
 | `npx  migrate` | Full migration for existing projects | ✅ Yes |
 | `npx  scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
 | `npx  update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
-| `npx  check` | Validate knowledge system setup and configuration | N/A (validation) |
-| `npx  sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
-| `npx  audit` | Find common issues and pattern violations | N/A (analysis) |
-| `npx  install-agents` | Install Developer + Architect agents | N/A (standalone) |
-| `npx  install-skills` | Install universal skills | N/A (standalone) |
+| `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
+| `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
+| `npx aiknowsys audit` | Find common issues and pattern violations | N/A (analysis) |
+| `npx aiknowsys install-agents` | Install Planner + Developer + Architect agents | N/A (standalone) |
+| `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 
 **🤔 `init` vs `migrate` - Which Should I Use?**
 
@@ -123,6 +123,64 @@ Each stack template includes:
 **TL;DR:** Both do the same thing for existing code. `init` with "Scan Codebase" literally calls `migrate` internally. Just use `init` unless you want to skip the setup mode selection.
 
 **💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
+
+---
+
+### 🎯 Advanced: Custom Essentials Filename
+
+All commands support the `--essentials` (or `-e`) flag to use a custom filename instead of `CODEBASE_ESSENTIALS.md`:
+
+```bash
+# Initialize with custom filename
+npx aiknowsys init --essentials ARCHITECTURE.md
+
+# All other commands work with the same flag
+npx aiknowsys check --essentials ARCHITECTURE.md
+npx aiknowsys sync --essentials ARCHITECTURE.md
+npx aiknowsys audit --essentials ARCHITECTURE.md
+npx aiknowsys update --essentials ARCHITECTURE.md
+npx aiknowsys migrate --essentials ARCHITECTURE.md
+npx aiknowsys install-agents --essentials ARCHITECTURE.md
+```
+
+**Common Use Cases:**
+
+1. **Corporate Naming Standards**
+   ```bash
+   # Your company requires "ENGINEERING_GUIDE.md"
+   npx aiknowsys init --essentials ENGINEERING_GUIDE.md
+   ```
+
+2. **Monorepo Organization**
+   ```bash
+   # Different essentials per package
+   cd packages/backend
+   npx aiknowsys init --essentials BACKEND_ESSENTIALS.md
+   
+   cd packages/frontend
+   npx aiknowsys init --essentials FRONTEND_ESSENTIALS.md
+   ```
+
+3. **Localization**
+   ```bash
+   # Non-English teams
+   npx aiknowsys init --essentials CODEBASE_ESSENTIALS_FR.md
+   npx aiknowsys init --essentials コードベース要点.md
+   ```
+
+4. **Legacy Project Migration**
+   ```bash
+   # You already have "CONTRIBUTING.md" or "ARCHITECTURE.md"
+   npx aiknowsys init --essentials ARCHITECTURE.md
+   ```
+
+**Important Notes:**
+- Custom agents will automatically reference your custom filename
+- All validation and maintenance commands work seamlessly
+- The system defaults to `CODEBASE_ESSENTIALS.md` if flag not provided
+- Backwards compatible - existing projects continue working without changes
+
+---
 
 **📋 Template Options:**
 
@@ -544,16 +602,31 @@ The init command automatically adds:
 
 **Why it matters:** AI reads this at session start, ensuring all suggestions align with your architecture.
 
-### 2. Custom Agents (Developer + Architect)
+### 2. Custom Agents (Planner → Developer → Architect)
 
-**Purpose:** Automated quality gate enforcing documented patterns.
+**Purpose:** Three-agent workflow with automated quality gates enforcing documented patterns.
 
 **Platform:** GitHub Copilot in VS Code (other AI tools: see [AI Tool Compatibility](#ai-tool-compatibility))
 
 **Workflow:**
 ```
-User → @Developer → Implements feature → Auto-handoff → @SeniorArchitect → Reviews against ESSENTIALS → ✅ Approve or 🔄 Refactor
+User → @Planner → Creates implementation plan → Writes to .aiknowsys/CURRENT_PLAN.md →
+  @Developer → Reads plan → Implements feature → Auto-handoff →
+    @SeniorArchitect → Reviews against ESSENTIALS → Writes to .aiknowsys/PENDING_REVIEW.md → ✅ Approve or 🔄 Refactor
 ```
+
+**What Planner does:**
+- Breaks down complex features into actionable steps
+- Identifies architectural concerns and dependencies
+- Documents implementation plan in `.aiknowsys/CURRENT_PLAN.md`
+- Ensures proper sequencing and risk mitigation
+
+**What Developer does:**
+- Reads implementation plan from `.aiknowsys/CURRENT_PLAN.md`
+- Implements features following project patterns
+- Writes tests (TDD if enabled, coverage testing otherwise)
+- Validates all changes before handoff
+- Auto-calls Architect for code review
 
 **What Architect checks:**
 - KISS (Keep It Simple) - No unnecessary complexity

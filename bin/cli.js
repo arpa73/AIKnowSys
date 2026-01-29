@@ -77,6 +77,7 @@ program
   .command('update')
   .description('Update agents, skills, and workflow to latest version')
   .option('-d, --dir <directory>', 'Project directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .option('-y, --yes', 'Update all components without prompting')
   .option('-f, --force', 'Force update even if already up to date')
   .action(update);
@@ -85,18 +86,21 @@ program
   .command('check')
   .description('Validate knowledge system setup and configuration')
   .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(check);
 
 program
   .command('sync')
   .description('Sync AGENTS.md validation reference with CODEBASE_ESSENTIALS.md')
   .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(sync);
 
 program
   .command('audit')
   .description('Find common issues and pattern violations in knowledge system')
   .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(audit);
 
 // Default command - show help with styled banner

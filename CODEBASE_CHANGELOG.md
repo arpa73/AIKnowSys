@@ -7,6 +7,182 @@
 
 ---
 
+## Session: --essentials Flag Documentation + Tests (January 29, 2026)
+
+**Goal:** Complete Architect's optional improvements - add README documentation and comprehensive test coverage for --essentials flag
+
+**Implementation:**
+- [README.md](README.md#L125-L179): Added "Advanced: Custom Essentials Filename" section
+  - Documented 4 common use cases: corporate naming standards, monorepos, localization, legacy migration
+  - Included clear command examples for all affected commands
+  - Positioned after command table for discoverability
+
+- [test/essentials-flag.test.js](test/essentials-flag.test.js): New comprehensive test suite (7 tests)
+  - Test 1: Custom filename with init command
+  - Test 2: Custom filename with check command
+  - Test 3: Custom filename with sync command
+  - Test 4: Custom filename with audit command
+  - Test 5: Default behavior (backwards compatibility)
+  - Test 6: Agent templates reference custom filename
+  - Test 7: Error handling with custom filename
+
+- [lib/commands/init/templates.js](lib/commands/init/templates.js#L11-L75): Fixed essentials filename propagation
+  - Added essentialsFile parameter to createKnowledgeSystemFiles()
+  - Added essentialsFile parameter to installAgentsAndSkills()
+  - Pass custom filename to copyTemplate() calls
+
+- [lib/commands/init.js](lib/commands/init.js#L438): Pass essentialsFile through init flow
+  - Extract essentialsFile from options
+  - Pass to createKnowledgeSystemFiles() and installAgentsAndSkills()
+
+- [lib/commands/sync.js](lib/commands/sync.js#L50-L96): Use dynamic essentialsFile in output
+  - Fixed markdown links to use custom filename variable
+  - Error messages and success messages use ${essentialsFile} interpolation
+  - References in AGENTS.md updated to use custom filename
+
+**Validation:**
+- ✅ 235/236 tests passing (99.6%) - up from 228/229
+- ✅ New test suite validates all --essentials scenarios
+- ✅ Feature works end-to-end across all commands
+- ✅ Documentation provides clear use cases and examples
+
+**Key Learning:**
+- **Test-first reveals implementation gaps**: Writing comprehensive tests revealed init command didn't propagate essentialsFile to template creation functions
+- **Sync command needs dynamic references**: Hard-coded "CODEBASE_ESSENTIALS.md" strings in sync output broke custom filename feature
+- **README documentation drives adoption**: Without docs, users won't discover --essentials flag exists or understand its use cases
+
+---
+
+## Session: Distribute Custom Agents with Optional TDD (January 29, 2026)
+
+**Goal:** Make custom agents (Planner, Developer, Architect) part of AIKnowSys template distribution with TDD as optional setting
+
+**Implementation:**
+- [templates/agents/planner.agent.template.md](templates/agents/planner.agent.template.md): 
+  - Copied reviewed Planner agent from .github/agents/ 
+  - Added 4 TDD conditional blocks (`{{#if USE_TDD}}...{{else}}...{{/if}}`)
+  - Restored `{{ESSENTIALS_FILE}}` placeholders (2 locations)
+  - Template creates `.agent.md` file in .github/agents/ during installation
+  
+- [templates/agents/developer.agent.template.md](templates/agents/developer.agent.template.md):
+  - Copied reviewed Developer agent from .github/agents/
+  - Added 2 TDD conditional blocks for workflow and implementation guidance
+  - Restored `{{ESSENTIALS_FILE}}` placeholders (4 locations)
+  - Template creates `.agent.md` file in .github/agents/ during installation
+  
+- [templates/agents/architect.agent.template.md](templates/agents/architect.agent.template.md):
+  - Copied reviewed Architect agent from .github/agents/
+  - Added 1 TDD conditional block in compliance table
+  - Restored `{{ESSENTIALS_FILE}}` placeholders (2 locations)  
+  - Template creates `.agent.md` file in .github/agents/ during installation
+
+- [templates/agents/USAGE.txt](templates/agents/USAGE.txt): 
+  - Copied from .github/agents/ (usage guide for three-agent workflow)
+  - Uses .txt extension to avoid appearing in VS Code @-mention agent picker
+  - README.md would pollute user's agent list, USAGE.txt is hidden
+
+- [lib/utils.js](lib/utils.js#L44-L100): Enhanced copyTemplate() with conditional block support
+  - Regex pattern: `\\{\\{#if ${varName}\\}\\}([\\s\\S]*?)\\{\\{else\\}\\}([\\s\\S]*?)\\{\\{/if\\}\\}`
+  - Supports both if-else blocks and if-only blocks
+  - Processes conditionals before simple `{{VAR}}` replacements
+  - Handles boolean true values and "true" strings
+
+- [lib/commands/init.js](lib/commands/init.js#L443): Pass answers to installAgentsAndSkills
+  - Added `answers` parameter to function call
+  - Enables useTDD propagation through template installation flow
+
+- [lib/commands/init/templates.js](lib/commands/init/templates.js#L98-L115):
+  - Updated function signature to accept answers parameter
+  - Passes `useTDD: answers.useTDD` to install-agents.js
+  
+- [lib/commands/install-agents.js](lib/commands/install-agents.js):
+  - Updated header from "Developer + Architect" to "Planner + Developer + Architect Workflow"
+  - Added Planner agent installation (3 agents total)
+  - Added `{{USE_TDD}}` replacements to all three copyTemplate calls
+  - Uses USAGE.txt (not README.md) to avoid VS Code agent picker pollution
+  - Success message lists all three agents: Planner, Developer, Architect
+
+- [README.md](README.md): Updated custom agents documentation
+  - Changed "Developer + Architect" references to "Planner → Developer → Architect"
+  - Added three-agent workflow explanation with lifecycle files
+  - Documented `.aiknowsys/CURRENT_PLAN.md` and `.aiknowsys/PENDING_REVIEW.md` usage
+  - Updated command table to show 3 agents installed
+
+**Validation:**
+- ✅ 228/229 tests passing (1 skipped Windows test)
+- ✅ All template placeholders (`{{ESSENTIALS_FILE}}`, `{{USE_TDD}}`) working correctly
+- ✅ TDD conditionals properly inserted/removed based on user choice
+- ✅ USAGE.txt hidden from VS Code agent picker, README.md avoided
+
+**Key Learning:**
+- **VS Code .agent.md Behavior**: Any .md file in .github/agents/ appears in @-mention picker, .txt files don't
+- **Template Placeholder Preservation**: When copying from working files (with values) to templates (with placeholders), must restore placeholders not overwrite
+- **Conditional Block Order**: Must process `{{#if VAR}}` blocks BEFORE simple `{{VAR}}` replacements or regex won't match
+- **Three-Agent Workflow**: Planner creates plan → Developer implements → Architect reviews, using lifecycle files for state management
+
+---
+
+## Session: Restore Proper Custom Agent Format (January 29, 2026)
+
+**Goal:** Restore proper VS Code custom agent YAML frontmatter format per official documentation
+
+**Problem Identified:**
+- Initially removed YAML frontmatter thinking it wasn't supported
+- VS Code documentation confirms `handoffs`, `tools`, etc. ARE supported in `.agent.md` files
+- Handoff buttons appear after chat responses to guide workflows between agents
+
+**Changes:**
+- [.github/agents/developer.agent.md](.github/agents/developer.agent.md): Restored YAML frontmatter
+  - Added `tools: ['search', 'edit/editFiles', 'edit/createFile']` (corrected namespacing)
+  - Added `model: Claude Sonnet 4` for consistent AI behavior
+  - Added `argument-hint: "Describe the feature to implement or bug to fix"`
+  - Restored `handoffs` with `send: true` for automatic transition to SeniorArchitect
+  - Handoff button appears after Developer completes, auto-submits review request
+  
+- [.github/agents/architect.agent.md](.github/agents/architect.agent.md): Restored YAML frontmatter
+  - Added `tools: ['search', 'edit/editFiles', 'edit/createFile']` (removed invalid `grep`)
+  - Added `model: Claude Sonnet 4` for consistent AI behavior
+  - Added `argument-hint: "Specify files or changes to review"`
+  - Restored `handoffs` with `send: false` for optional transition back to Developer
+  - Handoff button lets user return to Developer for fixes (manual click required)
+  
+- [.github/agents/planner.agent.md](.github/agents/planner.agent.md): Restored YAML frontmatter
+  - Added `tools: ['search', 'edit/editFiles', 'edit/createFile']`
+  - Added `model: Claude Sonnet 4` for consistent AI behavior
+  - Added `argument-hint: "Describe the feature or refactoring task to plan"`
+  - Restored `handoffs` with `send: false` for transition to Developer
+  - Fixed duplicate "Skip planning for:" section (DRY violation)
+  - Updated Step 6 to explain handoff button workflow
+  - Updated example flow to show handoff button interactions
+  
+- [.github/agents/README.md](.github/agents/README.md#L45-L70): Updated usage documentation
+  - Explained handoff button workflow
+  - Clarified difference between `send: true` (auto-submit) and `send: false` (manual)
+  - Removed incorrect statement about no automatic handoffs
+
+**Validation:**
+- ✅ Tests: 228 passed (npm test)
+- ✅ YAML frontmatter follows VS Code custom agent specification
+- ✅ Handoff configuration matches official documentation examples
+- ✅ Architect review: All issues addressed (duplicate removed, model + argument-hint added)
+
+**Key Learning:**
+- VS Code DOES support custom agents with YAML frontmatter (as of v1.106)
+- `.agent.md` files in `.github/agents/` are automatically detected
+- `handoffs` enable guided workflows with button UI after responses
+- `send: true` auto-submits, `send: false` requires user click
+- `tools` list specifies available capabilities for each agent (use `edit/` namespace)
+- `model` field controls which AI model the agent uses
+- `argument-hint` provides helpful UX guidance for users
+- Official docs: https://code.visualstudio.com/docs/copilot/customization/custom-agents
+
+**Reference:**
+- VS Code Custom Agents documentation confirms this format is correct
+- Previously known as "custom chat modes" with `.chatmode.md` extension
+- Handoffs create sequential workflows (Planning → Implementation → Review)
+
+---
+
 ## Session: Async File I/O Conversion + Critical Bug Fix (January 28, 2026)
 
 **Goal:** Convert utils.js to async I/O per Gemini code review recommendation + fix critical init.js bug

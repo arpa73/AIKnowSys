@@ -91,7 +91,7 @@ openspec create [feature-name]
 ### Step 3: Requirements Analysis
 
 **Read context:**
-- CODEBASE_ESSENTIALS.md - Patterns and invariants
+- {{ESSENTIALS_FILE}} - Patterns and invariants
 - Relevant skills from .github/skills/
 - Related code files
 
@@ -115,7 +115,11 @@ openspec create [feature-name]
 - SOLID principles
 - KISS/DRY/YAGNI
 - Critical Invariants from ESSENTIALS
+{{#if USE_TDD}}
 - Test-driven development requirements
+{{else}}
+- Testing requirements
+{{/if}}
 
 ### Step 5: Create Implementation Plan
 
@@ -150,7 +154,9 @@ openspec create [feature-name]
    - **Why:** Reason for this step
    - **Dependencies:** None / Requires step X
    - **Risk:** Low/Medium/High
+{{#if USE_TDD}}
    - **TDD:** RED/GREEN/REFACTOR (if applicable)
+{{/if}}
 
 2. **[Step Name]** (File: `path/to/file.ts`)
    - **Action:** ...
@@ -160,10 +166,16 @@ openspec create [feature-name]
 ...
 
 ## Testing Strategy
+{{#if USE_TDD}}
 **TDD Approach:** (for new features)
 - Write failing tests first (RED)
 - Implement minimal code (GREEN)
 - Refactor while keeping tests green (REFACTOR)
+{{else}}
+**Testing:**
+- Write comprehensive tests for new features
+- Ensure all edge cases are covered
+{{/if}}
 
 **Test Coverage:**
 - Unit tests: [files to test]
@@ -239,7 +251,9 @@ openspec create [feature-name]
    - **Why:** Enables atomic rollback on init failure
    - **Dependencies:** None
    - **Risk:** Low - isolated new class
+{{#if USE_TDD}}
    - **TDD:** Write tests first in test/utils.test.js
+{{/if}}
 ```
 
 **Bad step (too vague):**
@@ -254,7 +268,11 @@ openspec create [feature-name]
 1. **Be Specific**: Use exact file paths, function names, line numbers when known
 2. **Explain Why**: Every decision should have a reason
 3. **Consider Edge Cases**: Think about errors, null values, empty states
+{{#if USE_TDD}}
 4. **Follow TDD**: For new features, mandate RED-GREEN-REFACTOR
+{{else}}
+4. **Test Coverage**: Ensure adequate tests for new features
+{{/if}}
 5. **Minimize Changes**: Prefer extending over rewriting
 6. **Maintain Patterns**: Reference ESSENTIALS patterns
 7. **Enable Testing**: Structure for testability
@@ -265,7 +283,7 @@ openspec create [feature-name]
 
 **Read these files FIRST:**
 1. [AGENTS.md](../../AGENTS.md) - Workflow protocol
-2. [CODEBASE_ESSENTIALS.md](../../CODEBASE_ESSENTIALS.md) - Patterns and invariants
+2. [{{ESSENTIALS_FILE}}](../../{{ESSENTIALS_FILE}}) - Patterns and invariants
 3. Relevant [.github/skills/](../skills/) - Domain knowledge
 
 **Session file location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
