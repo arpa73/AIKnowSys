@@ -142,4 +142,25 @@ describe('migrate command rollback (FileTracker integration)', () => {
       'migrate.js should track CODEBASE_ESSENTIALS.draft.md from scan()'
     );
   });
+
+  it('should show progress indicators for migration phases', async () => {
+    // This test verifies progress indicators are shown during migration
+    // Migration has multiple phases and should show progress
+    
+    const migrateSource = await fs.readFile(
+      path.join(__dirname, '../lib/commands/migrate.js'),
+      'utf-8'
+    );
+    
+    // Should import ora for spinners
+    const hasOraImport = migrateSource.includes("from 'ora'");
+    
+    // Should create spinner
+    const hasSpinner = migrateSource.includes('ora(') || migrateSource.includes('spinner');
+    
+    assert.ok(
+      hasOraImport && hasSpinner,
+      'migrate.js should use ora spinner for progress indicators'
+    );
+  });
 });
