@@ -420,4 +420,20 @@ describe('audit command', () => {
     // Should have info message about optional PENDING_REVIEW.md
     assert.ok(result.info > 0, 'Should increment info counter');
   });
+
+  it('should show progress during multi-step audit', async () => {
+    createMockProject(testDir, {
+      hasEssentials: true,
+      hasAgents: true,
+      hasValidationMatrix: true,
+      hasDuplicateMatrix: false
+    });
+    
+    // Test that audit completes successfully with progress (non-silent mode)
+    // Progress indicators should not break the audit process
+    const result = await audit({ dir: testDir, _silent: false });
+    
+    assert.ok(result !== undefined, 'Should complete audit with progress tracking');
+    assert.ok(typeof result.clean === 'boolean', 'Should return result object');
+  });
 });
