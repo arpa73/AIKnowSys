@@ -1,6 +1,6 @@
 {
   "name": "aiknowsys",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "AI-Powered Development Workflow for Consistent, High-Quality Code",
   "keywords": [
     "ai",
@@ -34,7 +34,9 @@
     "scripts/",
     "AGENTS.template.md",
     "CODEBASE_CHANGELOG.template.md",
-    "CODEBASE_ESSENTIALS.template.md"
+    "CODEBASE_ESSENTIALS.template.md",
+    "SETUP_GUIDE.md",
+    "README.md"
   ],
   "engines": {
     "node": ">=20.0.0"
