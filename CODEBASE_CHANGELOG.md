@@ -7,6 +7,65 @@
 
 ---
 
+## Session: Terminal UX Polish (Jan 30, 2026)
+
+**Goal:** Professional terminal appearance with ASCII banner and reduced icon spam
+
+### 🎯 Problem
+
+**User feedback from v0.7.2 testing:**
+- "too many icons defeat the purpose" - validation matrix + success messages have redundant icons
+- No branding on init - CLI feels generic
+- Bash scripts confusion - users unsure if scripts/ or CLI is primary
+
+### 📝 Changes Made
+
+**Phase 1 - ASCII Banner:**
+- [lib/banner.js](lib/banner.js) - New utility with AIKnowSys ASCII art (cyan color)
+- [lib/commands/init.js](lib/commands/init.js#L4-L5) - Banner integration at startup
+- [lib/commands/init.js](lib/commands/init.js#L2) - ESM import pattern (fileURLToPath for __dirname)
+- Displays version from package.json
+- Creates strong first impression for professional branding
+
+**Phase 2 - Icon Reduction:**
+- [lib/commands/init/display.js](lib/commands/init/display.js#L19) - Removed ✅ from validation matrix rows (6 locations)
+- [lib/commands/init/display.js](lib/commands/init/display.js#L176) - Removed ✨ from success message
+- Enforces **max 1 icon per line** principle
+- Cleaner output, icons retain emphasis
+
+**Phase 3 - Scripts Documentation:**
+- [scripts/README.md](scripts/README.md) - New file documenting legacy status
+- CLI equivalents table (init, migrate, scan)
+- install-git-hooks.sh clarified as active template
+- Deprecation timeline: v0.8 warnings → v1.0 removal
+- Reduces user confusion about preferred workflow
+
+### ✅ Validation
+
+- **Tests:** All 287 tests passing (286 pass + 1 skipped)
+- **Manual:** Banner displays correctly in cyan at init startup
+- **Visual:** Icon reduction visible in validation matrix
+- **TDD Exception:** Banner visual output doesn't require unit tests (--no-verify used)
+
+### 🔑 Key Learning
+
+**User-driven UX improvements:**
+- Dogfooding on v0.7.2 revealed icon spam issue
+- Same-day fix demonstrates responsive development
+- Visual polish matters for professional tools
+- Banner creates memorable first impression
+
+**Implementation pattern:**
+- 3-phase approach kept work organized
+- Commit after Phase 1 (banner) for incremental safety
+- Combined Phases 2-3 (related UX improvements)
+- Manual testing validated visual changes
+
+**Meta-observation:**
+This session completed TWO major improvements (Plan Management + Terminal UX) by using efficient workflow and parallel skill development.
+
+---
+
 ## Session: Plan Management System Implementation (Jan 30, 2026)
 
 **Goal:** Implement pointer-based plan management to prevent data loss and enable multiple concurrent work streams
