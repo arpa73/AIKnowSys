@@ -17,6 +17,7 @@ A structured workflow system consisting of:
 3. **Skills System** - Domain-specific how-to guides for common tasks
 4. **Changelog** - Session-by-session validation and learning history
 5. **Validation Matrix** - Mandatory test running before completion
+6. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 

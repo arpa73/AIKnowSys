@@ -158,6 +158,31 @@ export async function installAgents(options) {
 ### Progress Indicators
 For detailed guidance on progress indicators and spinners, see the [learned skill](.aiknowsys/learned/progress-indicators.md). This project uses ora spinners with three distinct patterns depending on the operation type (file processing, multi-step checks, or sequential phases). Always call `succeed()`, `fail()`, or `info()` to clear spinner state.
 
+### Plan Management Pattern
+**Multiple concurrent plans** enabled via pointer system.
+
+**.aiknowsys/CURRENT_PLAN.md:**
+- Lightweight index file (pointer)
+- Lists all plans with status
+- Indicates active plan
+
+**Individual Plans (.aiknowsys/PLAN_*.md):**
+- Full implementation details
+- Progress tracking
+- Phase/step breakdown
+
+**Workflow:**
+1. Planner creates PLAN_*.md
+2. Updates CURRENT_PLAN.md pointer
+3. Developer follows active plan
+4. Progress tracked in PLAN_*.md
+5. Completed plans stay visible
+
+**Status Lifecycle:**
+📋 PLANNED → 🎯 ACTIVE → 🔄 PAUSED or ✅ COMPLETE or ❌ CANCELLED
+
+See: [AGENTS.md](AGENTS.md#plan-management)
+
 ---
 
 ## 5. Critical Invariants

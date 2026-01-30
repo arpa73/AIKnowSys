@@ -83,15 +83,24 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 ### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
 
-**Before reading ESSENTIALS, check for session continuity:**
+**Before reading ESSENTIALS, check for active plan and session continuity:**
 
 ```
-1. Check .aiknowsys/sessions/ for recent session files
-2. If recent session exists (< 7 days old):
-   - Read the latest session file
-   - Review "Notes for Next Session"
-   - Continue from where previous session ended
-3. Acknowledge continuity: "Continuing from [date] session..."
+1. **Check .aiknowsys/CURRENT_PLAN.md** (pointer file)
+   - Read to find active plan
+   - Open the linked PLAN_*.md file
+   - Review current progress and next steps
+   - Acknowledge: "Continuing with [active plan name]..."
+
+2. Check .aiknowsys/sessions/ for recent session files
+   - If recent session exists (< 7 days old):
+     - Read the latest session file
+     - Review "Notes for Next Session"
+     - Continue from where previous session ended
+
+3. If no active plan and no recent session:
+   - Read CODEBASE_ESSENTIALS.md for context
+   - Wait for user direction
 ```
 
 **Why This Helps:**
@@ -256,7 +265,51 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ---
 
-## 📚 CONTINUOUS LEARNING
+## � PLAN MANAGEMENT
+
+**Multiple plans can coexist.** CURRENT_PLAN.md is just a pointer.
+
+### Creating a New Plan (@Planner)
+
+1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
+2. Update `CURRENT_PLAN.md` table:
+   - Add row for new plan
+   - Set new plan status to ACTIVE (🎯)
+   - Set previous active plan to PAUSED (🔄)
+3. Write plan details in the new PLAN_*.md file
+
+### Switching Plans
+
+1. Update CURRENT_PLAN.md pointer ("Currently Working On")
+2. Change previous ACTIVE → PAUSED in table
+3. Change target plan PAUSED → ACTIVE in table
+4. **Don't delete anything!** Paused plans resume later
+
+### Completing a Plan
+
+1. Mark status COMPLETE (✅) in CURRENT_PLAN.md table
+2. Add completion date
+3. Leave plan file in place (historical record)
+4. Switch to next active plan or wait for new direction
+
+### Plan Status Values
+
+- 🎯 **ACTIVE** - Currently being worked on (only ONE at a time)
+- 🔄 **PAUSED** - Work in progress, temporarily stopped
+- 📋 **PLANNED** - Created but not started yet
+- ✅ **COMPLETE** - Finished and validated
+- ❌ **CANCELLED** - Started but abandoned
+
+### Plan Naming Convention
+
+**Format:** `PLAN_<topic>_<variant>.md`
+- Use lowercase with underscores
+- Be descriptive but concise
+- Examples: `PLAN_terminal_ux.md`, `PLAN_sprint2_quality.md`
+
+---
+
+## �📚 CONTINUOUS LEARNING
 
 **After complex sessions or when discovering patterns:**
 
