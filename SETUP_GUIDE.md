@@ -157,19 +157,65 @@ After:
 
 ### AGENTS.md
 
-**Mostly pre-filled, but customize:**
+**Step 1: Review Validation Matrix**
 
-1. **Validation Matrix** - Copy from your CODEBASE_ESSENTIALS.md
-2. **Project Invariants** - Add project-specific rules
-3. **Skill Mapping** - Add custom skills if you created any
+The validation matrix in AGENTS.md should reference the one in CODEBASE_ESSENTIALS.md. No duplication needed - agents read ESSENTIALS for the actual commands.
 
-Example customization:
+**Step 2: Remove Template Sections** (if present)
+
+If you initialized from template, remove these sections:
+- ✅ Pre-Commit Validation Checklist (with `{{VALIDATION_CMD_1}}` placeholders)
+- 🔍 Troubleshooting Validation Failures (with `{{SINGLE_TEST_CMD}}` placeholders)
+- 📝 Customization Instructions section
+
+These are setup instructions, not runtime agent guidance. Once you've customized ESSENTIALS.md with real commands, AGENTS.md doesn't need placeholder-filled checklists.
+
+**Step 3: Add Custom Skills to Trigger Words Table** (optional)
+
+If you created custom skills in `.github/skills/`, add them to the skill mapping table.
+
+**Replace `{{SKILL_MAPPING}}` with:**
+
 ```markdown
-**Project invariants for YOUR_PROJECT:**
-- All API routes must have try/catch error handling
-- Database queries must use connection pool
-- All user inputs must be validated with Joi
+| Trigger Words | Skill to Read | Why |
+|---------------|---------------|-----|
+| "add command", "new feature", "implement" | `feature-implementation` | Proper command structure |
+| "refactor", "clean up", "simplify" | `code-refactoring` | Test-driven refactoring |
+| "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
+| "update docs", "changelog" | `documentation-management` | AI-optimized docs |
+| "create skill", "new skill" | `skill-creator` | Proper skill format |
+| "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
+| "test fail", "validation error", "build broken" | `validation-troubleshooting` | Debug validation failures |
 ```
+
+Add your custom skills:
+```markdown
+| "deploy", "release" | `deployment-workflow` | Release procedure |
+| "cache", "redis" | `redis-patterns` | Caching best practices |
+```
+
+**Step 4: Verify Best Practices Section**
+
+Ensure the "General Best Practices" section matches your project culture:
+```markdown
+1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md
+2. **Update proactively** - Don't wait for user to ask
+3. **Be concise** - Keep summaries short
+```
+
+**What to keep:**
+- ✅ Session Start Protocol (critical workflow)
+- ✅ Quick Reference Checklist
+- ✅ 6-step workflow
+- ✅ TDD Self-Audit
+- ✅ Continuous Learning protocol
+- ✅ Skills Workflow section
+
+**What to remove:**
+- ❌ Any `{{PLACEHOLDER}}` syntax
+- ❌ "Customization Instructions" section
+- ❌ Pre-commit checklist with placeholders
+- ❌ Troubleshooting section with placeholders
 
 ---
 
