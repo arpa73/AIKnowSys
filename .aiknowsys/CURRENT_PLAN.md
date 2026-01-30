@@ -1,6 +1,6 @@
 # Active Plan Pointer
 
-**Currently Working On:** _No active plan - awaiting direction_  
+**Currently Working On:** [Terminal UX Polish](PLAN_terminal_ux.md)  
 **Last Updated:** 2026-01-30
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -11,8 +11,8 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [Terminal UX Polish](PLAN_terminal_ux.md) | 🎯 ACTIVE | Starting Phase 1 | 2026-01-30 |
 | [Plan Management System](PLAN_plan_management_system.md) | ✅ COMPLETE | All steps done | 2026-01-30 |
-| [Terminal UX Polish](PLAN_terminal_ux.md) | 📋 PLANNED | Ready to implement | 2026-01-30 |
 | [Sprint 2: Quality & Real-World](PLAN_sprint2_quality.md) | 🔄 PAUSED | Task 2.3 at 67% | 2026-01-30 |
 | [Planner Boundaries](PLAN_planner_boundaries.md) | ✅ COMPLETE | Implemented v0.7.2 | 2026-01-29 |
 
