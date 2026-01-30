@@ -34,11 +34,27 @@ If fixing bug:
 
 **Step 4: Proceed with Implementation**
 
+### ⚠️ EMERGENCY HOTFIX PROTOCOL
+
+**"Emergency" does NOT mean "skip the process"!**
+
+Even for production-critical bugs:
+1. ✅ **STILL read CODEBASE_ESSENTIALS.md** (30 seconds - prevents making it worse)
+2. ✅ **STILL create todo list** (1 minute - prevents forgetting steps)
+3. ✅ **STILL follow TDD** (test first = confidence the fix works)
+4. ✅ **STILL request architectural review** (catches side effects)
+5. ✅ **STILL update CODEBASE_CHANGELOG.md** (documents the incident)
+
+**Shortcuts create more emergencies.**
+
+The only acceptable speed-up: Work faster WITHIN the process, not around it.
+
 ### Why This Protocol Exists:
 - Prevents pattern violations
 - Ensures validation happens before claiming work is complete
 - Creates accountability trail for complex changes
 - Catches architectural issues before they become bugs
+- **Emergency pressure makes us skip steps - this protocol prevents that**
 
 ---
 

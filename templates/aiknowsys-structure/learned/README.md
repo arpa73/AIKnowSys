@@ -60,6 +60,19 @@ items.forEach((item: Item) => console.log(item.name));
 - Type inference limitations in callbacks
 ```
 
+## Example: Emergency Hotfix Workflow
+
+For a real-world example of a learned skill, see the aiknowsys repository's
+`.aiknowsys/learned/emergency-hotfix-workflow.md` which captures:
+
+- Pattern discovered during production incident
+- Why rushing under pressure creates MORE emergencies
+- Correct workflow that seems slow but prevents bigger incidents
+- Red flags to watch for when feeling pressure
+- Success metrics for proper emergency response
+
+**Key lesson:** Emergency ≠ skip process. Work faster WITHIN process, not around it.
+
 ## Workflow
 
 1. **Encounter Pattern** - Notice a recurring issue or solution
