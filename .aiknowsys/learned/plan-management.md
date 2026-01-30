@@ -1,6 +1,9 @@
 ---
 name: plan-management
-triggers: multiple plans, pause plan, switch plans, plan pointer, concurrent work
+triggers: multiple plans, pause plan, switch plans, plan pointer, concurrent work, overwrite
+applies_to: [planner, developer]
+related_patterns: [session-continuity, context-preservation]
+problem_solved: plan-overwrites, data-loss, context-switching
 type: project_specific
 confidence: high
 last_validated: 2026-01-30

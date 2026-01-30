@@ -440,6 +440,15 @@ describe('init command', () => {
     assert.ok(learnedReadmeContent.toLowerCase().includes('learned'), 'learned README should mention learned skills');
     assert.ok(learnedReadmeContent.includes('Pattern Types'), 'learned README should document pattern types');
 
+    // Verify plan-management learned skill (universal pattern)
+    const planManagement = path.join(learnedDir, 'plan-management.md');
+    assert.ok(fs.existsSync(planManagement), 'learned/plan-management.md should exist');
+    
+    const planContent = fs.readFileSync(planManagement, 'utf-8');
+    assert.ok(planContent.includes('CURRENT_PLAN.md'), 'plan-management should explain pointer pattern');
+    assert.ok(planContent.includes('PLAN_*.md'), 'plan-management should mention plan files');
+    assert.ok(planContent.includes('pointer'), 'plan-management should describe pointer concept');
+
     // Verify AGENTS.md includes session protocols
     const agentsPath = path.join(testDirSession, 'AGENTS.md');
     const agentsContent = fs.readFileSync(agentsPath, 'utf-8');

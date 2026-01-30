@@ -95,6 +95,7 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
    - Open the linked PLAN_*.md file
    - Review current progress and next steps
    - Acknowledge: "Continuing with [active plan name]..."
+   - See: .aiknowsys/learned/plan-management.md for pattern details
 
 2. Check .aiknowsys/sessions/ for recent session files
    - If recent session exists (< 7 days old):
