@@ -32,11 +32,9 @@
     "lib/",
     "templates/",
     "scripts/",
-    "AGENTS.template.md",
-    "CODEBASE_CHANGELOG.template.md",
-    "CODEBASE_ESSENTIALS.template.md",
     "SETUP_GUIDE.md",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20.0.0"
