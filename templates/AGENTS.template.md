@@ -112,6 +112,13 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 **Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
 
+**VSCode Hooks (Automated):**  
+If VSCode hooks are installed (`.github/hooks/`), session files are automatically created/updated:
+- `sessionStart` hook: Detects recent sessions and reminds you to load context
+- `sessionEnd` hook: Creates/updates today's session file with timestamp
+- Hooks complement manual workflow - you still populate the content
+- If hooks aren't available, manual session management works the same
+
 **Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
 
 ### 1️⃣ START: Read Context (REQUIRED)

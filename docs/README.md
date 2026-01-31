@@ -6,6 +6,21 @@ This folder contains all project documentation organized by category.
 
 ---
 
+## 📚 Core Documentation
+
+### 🆚 [AIKnowSys vs GitHub Copilot Memory](copilot-memory-comparison.md)
+**Why AIKnowSys?** Understand the advantages of explicit, permanent, platform-agnostic knowledge management
+
+- 🔒 **100% Local** - Privacy-first, never leaves your machine
+- ♾️ **Permanent** - Knowledge lasts forever (not 28-day expiration)
+- 🌍 **Any AI Tool** - Works with Claude, ChatGPT, Cursor, etc.
+- 📖 **Human-Readable** - Markdown files you control
+- 🤝 **Team Shareable** - Commit to git, everyone benefits
+
+**[Read full comparison →](copilot-memory-comparison.md)**
+
+---
+
 ## 📚 Directory Structure
 
 ### ⚡ [Agent Skills](../.github/skills/) - Step-by-Step Workflows

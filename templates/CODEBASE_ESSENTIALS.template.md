@@ -175,7 +175,12 @@
 ├── {{BACKEND_DIR}}/           # {{BACKEND_DESCRIPTION}}
 ├── {{FRONTEND_DIR}}/          # {{FRONTEND_DESCRIPTION}}
 ├── {{TEST_DIR}}/              # {{TEST_DESCRIPTION}}
-└── {{CONFIG_DIR}}/            # {{CONFIG_DESCRIPTION}}
+├── {{CONFIG_DIR}}/            # {{CONFIG_DESCRIPTION}}
+└── .github/                   # GitHub configuration (optional)
+    ├── agents/                # AI agent workflows (Planner + Developer + Architect)
+    ├── skills/                # Domain-specific task guides
+    ├── hooks/                 # VSCode session hooks (14 automation hooks)
+    └── workflows/             # CI/CD pipelines
 ```
 
 **Key directories:**
@@ -322,6 +327,28 @@ openspec archive X --yes   # Archive after deployment
 6. **Archive** after deployment
 
 **See:** `openspec/AGENTS.md` for full workflow (if OpenSpec is installed)
+
+---
+
+## VSCode Hooks (Optional)
+
+**What are VSCode hooks?**  
+GitHub Copilot supports hooks that run automatically during session lifecycle. This project includes 14 intelligent hooks for session tracking, validation enforcement, and workflow automation.
+
+**Installed hooks:** (See `.github/hooks/` directory)
+- **Session management** - Auto-load context, save state
+- **Quality enforcement** - Validation reminders, TDD workflow
+- **Skill assistance** - Auto-suggest guides, check prerequisites
+- **Health monitoring** - Workspace checks, code quality
+- **Collaboration** - Concurrent work detection
+- **Performance** - Test regression tracking
+- **Intelligence** - Migration alerts, doc staleness
+
+**Configuration:** `.github/hooks/hooks.json` controls which hooks run when.
+
+**Learn more:** See [docs/vscode-hooks-guide.md](docs/vscode-hooks-guide.md) for complete reference.
+
+**Disable hooks:** Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
 
 ---
 

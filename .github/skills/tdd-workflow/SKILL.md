@@ -13,6 +13,9 @@ Test-Driven Development is a discipline where you:
 2. **GREEN**: Write minimal code to make it pass
 3. **REFACTOR**: Clean up code while keeping tests green
 
+**💡 Automation Available:**  
+If VSCode hooks are installed (`.github/hooks/`), the `tdd-reminder.cjs` hook will remind you to write tests FIRST when editing implementation files. It checks if test files exist and are recent. See [docs/vscode-hooks-guide.md](../../../docs/vscode-hooks-guide.md).
+
 **Benefits:**
 - ✅ Better code design (testable = decoupled)
 - ✅ Fewer bugs (catch issues before implementation)

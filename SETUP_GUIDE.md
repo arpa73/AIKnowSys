@@ -535,6 +535,214 @@ See [learned skill](.aiknowsys/learned/essentials-compression.md) for complete c
 
 ---
 
+## VSCode Hooks (Optional)
+
+**What are VSCode hooks?**  
+GitHub Copilot coding agent supports hooks that run automatically during session lifecycle. AIKnowSys installs hooks for automated session tracking.
+
+**Installed hooks (`.github/hooks/`):**
+
+**Session Management (Phase 1):**
+- `session-start.js` - Auto-detect and load recent sessions
+- `session-end.js` - Auto-create/update today's session file
+
+**Quality Enforcement (Phases 2-3):**
+- `validation-reminder.cjs` (Stop) - Prevent completion without tests
+- `tdd-reminder.cjs` (PreToolUse) - Write tests FIRST reminder
+
+**Skill Assistance (Phase 4):**
+- `skill-detector.cjs` (UserPromptSubmitted) - Auto-suggest relevant skills
+- `skill-prereq-check.cjs` (PreToolUse) - Verify skill prerequisites
+
+**Health Monitoring (Phase 5):**
+- `workspace-health.cjs` (SessionStart) - Disk space, permissions checks
+- `quality-health.cjs` (SessionStart) - Lint, test, type errors detection
+
+**Collaboration (Phase 6):**
+- `collaboration-check.mjs` (SessionStart) - Detect concurrent work
+
+**Performance & Dependencies (Phase 7):**
+- `performance-monitor.cjs` (SessionEnd) - Track test performance, detect regressions
+
+**Advanced Intelligence (Phase 8):**
+- `migration-check.cjs` (SessionStart) - Version mismatch detection
+- `doc-sync.cjs` (SessionStart) - Documentation staleness alerts
+
+**How they work:**
+1. **Session Start**: Hooks load context, check workspace health, detect version mismatches, stale docs, and concurrent work
+2. **User Prompt**: Skill detector suggests relevant guides based on your request
+3. **Before Edits**: TDD reminder checks for tests, skill prereq check verifies requirements
+4. **Session End**: Performance monitor tracks test metrics, session-end updates timestamp
+5. **Before Completion**: Validation reminder ensures tests ran before claiming "done"
+
+**Benefits:**
+- Automatic session file management and context continuity
+- Quality enforcement (validation, TDD workflow)
+- Skill discovery (auto-suggest relevant guides)
+- Health monitoring (workspace issues, code quality)
+- Collaboration safety (detect concurrent work)
+- Performance tracking (test regressions >20% slower)
+- Intelligence (version mismatches, stale documentation)
+
+**Example hook output:**
+
+*Validation Reminder:*
+```
+⚠️  Validation Reminder
+Code changes detected in implementation files, but no validation found.
+Please run validation before claiming work is complete:
+  npm test
+  npm run test
+  node --test test/your-test.test.js
+See validation matrix in CODEBASE_ESSENTIALS.md for required checks.
+```
+
+*TDD Reminder:*
+```
+⚠️  TDD Reminder
+About to edit: lib/commands/new-feature.js
+Expected test: test/new-feature.test.js
+Test file doesn't exist or hasn't been edited recently (10min window).
+Remember: Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR).
+See: .github/skills/tdd-workflow/SKILL.md for TDD patterns.
+```
+
+**Limitations:**
+- Only works with VSCode + GitHub Copilot coding agent
+- Other AI assistants need manual session management
+- Hooks create files, you still populate content
+
+**Troubleshooting:**
+
+| Issue | Solution |
+|-------|----------|
+| Hooks not running | Verify `.github/hooks/hooks.json` exists |
+| "Command not found" | Check Node.js is installed |
+| No session reminders | Check VSCode Output → GitHub Copilot |
+| Hook timeout | Increase `timeoutSec` in hooks.json (current: 2-5s) |
+| False validation warnings | Hook detects edits in `lib/`, `bin/`, `templates/` |
+| TDD reminder too aggressive | Adjust 10-minute window in tdd-reminder.cjs |
+| Performance regression false positives | Adjust threshold in performance-monitor.cjs |
+| Stale doc warnings too aggressive | Adjust STALENESS_THRESHOLD_DAYS in doc-sync.cjs |
+
+**For detailed information:**  
+See [VSCode Hooks Guide](docs/vscode-hooks-guide.md) for complete reference, examples, and customization.
+
+---
+
+### Disabling Hooks
+
+Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
+- Learns from conversation context (e.g., "continue refactoring" → code-refactoring)
+- Tracks skill usage patterns in `.aiknowsys/skill-usage.json`
+
+**How it works:**
+1. **Proactive detection** (`userPromptSubmitted` hook): Analyzes your message for skill keywords
+2. **Reactive enforcement** (`preToolUse` hook): Checks files you're editing for skill requirements
+3. **Multi-strategy matching**: Exact keywords, fuzzy matching, conversation continuity
+
+**Example output:**
+```
+[Skills] 📚 Auto-loaded: code-refactoring
+[Skills] AI will follow these workflows automatically
+[Skills]   - code-refactoring: Test-driven refactoring workflow
+[Skills]     Path: .github/skills/code-refactoring/SKILL.md
+
+[Skills] ⚠️ Skill required: dependency-updates
+[Skills]   Reason: Editing package.json
+[Skills]   Please confirm: @dependency-updates
+```
+
+**How to customize:**
+
+Edit `.github/hooks/config.json` to add/modify skill triggers:
+
+```json
+{
+  "skills": {
+    "my-custom-skill": {
+      "path": "my-custom-skill/SKILL.md",
+      "description": "Deploy to production workflow",
+      "triggers": {
+        "keywords": ["deploy", "release", "production"],
+        "files": ["Dockerfile", "*.yaml", "deploy.sh"]
+      },
+      "autoLoad": true,
+      "priority": "high",
+      "requiresConfirmation": false
+    }
+  },
+  "skillDetection": {
+    "enabled": true,
+    "fuzzyMatchThreshold": 0.7,
+    "contextWindowSize": 5
+  }
+}
+```
+
+**Configuration options:**
+- `autoLoad`: Load skill automatically vs suggest with confirmation
+- `priority`: `high`, `medium`, `low` (affects display order)
+- `requiresConfirmation`: Show `@skill-name` tag for user to approve
+- `fuzzyMatchThreshold`: 0.0-1.0, lower = more lenient matching
+- `contextWindowSize`: How many messages to analyze for continuity
+
+**Pre-configured skills:**
+- `code-refactoring` → Keywords: refactor, clean up, simplify
+- `dependency-updates` → Files: package.json, requirements.txt, Cargo.toml
+- `feature-implementation` → Keywords: add feature, implement, new feature
+- `tdd-workflow` → Keywords: write test, TDD, test first
+- `validation-troubleshooting` → Keywords: test fail, validation error
+- `documentation-management` → Keywords: update docs, changelog
+
+**Analytics:**
+
+Skill usage is tracked in `.aiknowsys/skill-usage.json`:
+```json
+{
+  "code-refactoring": {
+    "count": 12,
+    "lastUsed": "2026-01-31T18:30:00Z",
+    "autoLoaded": 8,
+    "manuallyRequested": 4
+  }
+}
+```
+
+Use this data to:
+- Identify frequently needed skills
+- Optimize trigger keywords
+- Share team patterns
+
+**Disabling skill detection:**
+
+Set `"enabled": false` in config.json, or remove the hooks:
+```json
+{
+  "skillDetection": {
+    "enabled": false
+  }
+}
+```
+
+**Disabling hooks:**  
+Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
+
+**Manual installation (if skipped during init):**
+```bash
+# Copy hook templates
+cp -r node_modules/aiknowsys/templates/hooks/ .github/hooks/
+
+# Or reinstall with hooks
+npx aiknowsys init --yes  # (includes hooks by default)
+```
+
+**See also:**
+- [GitHub Copilot Hooks Documentation](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks)
+- `.aiknowsys/sessions/README.md` - Session file format and usage
+
+---
+
 ## Getting Help
 
 - **Examples**: See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled template

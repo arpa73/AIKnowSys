@@ -1,6 +1,6 @@
 # Active Plan Pointer
 
-**Currently Working On:** ESSENTIALS Compression System  
+**Currently Working On:** [Feature Configuration System](PLAN_feature_configuration.md)  
 **Last Updated:** 2026-01-31
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -11,10 +11,25 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [ESSENTIALS Compression System](PLAN_essentials_compression.md) | 🎯 ACTIVE | Phase 3.3 complete (auto mode extraction) | 2026-01-31 |
+| [Feature Configuration System](PLAN_feature_configuration.md) | 🎯 ACTIVE | Planning complete, ready for implementation | 2026-01-31 |
+| [Learned Patterns Collaboration](PLAN_learned_collaboration.md) | 📋 PLANNED | Solves merge conflicts via personal/shared split | 2026-01-31 |
+| [Sprint 3: Performance & Integration](PLAN_sprint3_performance.md) | 📋 PLANNED | Benchmarks, integration tests, architecture docs | 2026-01-31 |
+| [Hooks Documentation Completion](PLAN_hooks_documentation.md) | ✅ COMPLETE | All 5 phases done, hooks fully documented | 2026-01-31 |
+| [Review Pointer System](PLAN_review_pointer_system.md) | ❌ CANCELLED | Over-engineering; cleanup hook solves this | 2026-01-31 |
+| [VSCode Hooks Phase 2](PLAN_vscode_hooks_phase2.md) | ✅ COMPLETE | All 8 steps done, 347 tests passing | 2026-01-31 |
+| [VSCode Hooks Phase 5](PLAN_vscode_hooks_phase5.md) | ✅ COMPLETE | All steps done, 409 tests passing | 2026-01-31 |
+| [Context7 Integration](PLAN_context7_integration.md) | 📋 PLANNED | Optional MCP integration for current docs | 2026-01-31 |
+| [VSCode Hooks Phase 6](PLAN_vscode_hooks_phase6.md) | ✅ COMPLETE | Collaboration & CI/CD, 422 tests | 2026-01-31 |
+| [VSCode Hooks Phase 7](PLAN_vscode_hooks_phase7.md) | ✅ COMPLETE | Performance & deps, 440 tests | 2026-01-31 |
+| [VSCode Hooks Phase 8](PLAN_vscode_hooks_phase8.md) | ✅ COMPLETE | Advanced intelligence, 460 tests | 2026-01-31 |
+| [VSCode Hooks Phase 3](PLAN_vscode_hooks_phase3.md) | ✅ COMPLETE | All steps done, 365 tests passing | 2026-01-31 |
+| [VSCode Hooks Phase 4](PLAN_vscode_hooks_phase4.md) | ✅ COMPLETE | All steps done, 390 tests passing | 2026-01-31 |
+| [VSCode Hooks Phase 1](PLAN_vscode_hooks_phase1.md) | ✅ COMPLETE | All steps done, 328 tests passing | 2026-01-31 |
+| [ESSENTIALS Compression System](PLAN_essentials_compression.md) | ✅ COMPLETE | All phases done | 2026-01-31 |
+| [VSCode Hooks (Initial)](PLAN_vscode_hooks.md) | ✅ COMPLETE | sessionStart/sessionEnd implemented | 2026-01-31 |
 | [Terminal UX Polish](PLAN_terminal_ux.md) | ✅ COMPLETE | All 3 phases done | 2026-01-30 |
 | [Plan Management System](PLAN_plan_management_system.md) | ✅ COMPLETE | All steps done | 2026-01-30 |
-| [Sprint 2: Quality & Real-World](PLAN_sprint2_quality.md) | 🔄 PAUSED | Task 2.3 at 67% | 2026-01-30 |
+| [Sprint 2: Quality & Real-World](PLAN_sprint2_quality.md) | ✅ COMPLETE | All 3 tasks done, 3/3 projects tested | 2026-01-31 |
 | [Planner Boundaries](PLAN_planner_boundaries.md) | ✅ COMPLETE | Implemented v0.7.2 | 2026-01-29 |
 
 ---
@@ -1089,427 +1104,24 @@ Users now get actionable next steps, not just error codes.
 
 ## Sprint 3: Performance & Integration Testing (Week 4)
 
+**See:** [PLAN_sprint3_performance.md](PLAN_sprint3_performance.md) for full implementation details
+
 **Goal:** Ensure AIKnowSys scales and components work together seamlessly
 
-**Success Criteria:**
-- ✅ Performance benchmarks for large codebases
-- ✅ Integration test suite (multi-command workflows)
-- ✅ No performance regressions on large files
-- ✅ Clean architecture (all integration points tested)
+**Status:** 📋 NOT STARTED
 
----
+**Tasks:**
+- Task 3.1: Performance Benchmarking (2-3 hours)
+- Task 3.2: Integration Test Suite (4-5 hours, TDD)
+- Task 3.3: Architecture Documentation (2 hours)
 
-### Task 3.1: Performance Benchmarking (2-3 hours)
-
-**Why:** Need to know performance limits before hitting them in production  
-**Risk:** Low - Measurement only  
-**TDD Required:** No - but establish baselines
-
-**Benchmarks to Create:**
-
-#### 1. Scan Performance
-**Test:** How long does scan take on N files?  
-**Sizes:** 100, 1K, 10K, 50K files
-
-```javascript
-// benchmark/scan-performance.js
-import { performance } from 'node:perf_hooks';
-import { scanCommand } from '../lib/commands/scan.js';
-
-const sizes = [100, 1000, 10000];
-for (const size of sizes) {
-  const start = performance.now();
-  // Create temp directory with N files
-  await scanCommand({ _silent: true, dir: tempDir });
-  const duration = performance.now() - start;
-  console.log(`${size} files: ${duration.toFixed(2)}ms`);
-}
-```
-
-**Baseline Targets:**
-- 100 files: <100ms
-- 1K files: <1s
-- 10K files: <10s
-- 50K files: <60s (acceptable for large projects)
-
-#### 2. Audit Performance on Large ESSENTIALS
-**Test:** Audit 100KB, 1MB, 5MB ESSENTIALS files
-
-**Baseline Targets:**
-- 100KB: <50ms
-- 1MB: <500ms
-- 5MB: <3s
-
-#### 3. Memory Usage
-**Test:** Track memory during large operations
-
-```javascript
-// Check memory before/after large scan
-const memBefore = process.memoryUsage().heapUsed;
-await scanCommand({ dir: hugeProject });
-const memAfter = process.memoryUsage().heapUsed;
-console.log(`Memory delta: ${(memAfter - memBefore) / 1024 / 1024}MB`);
-```
-
-**Baseline Targets:**
-- No memory leaks (memory returns to baseline)
-- <100MB increase for 10K file scan
-
-**Deliverable:**
-- [benchmark/](benchmark/) - NEW directory with benchmark scripts
-- [benchmark/RESULTS.md](benchmark/RESULTS.md) - Baseline results to track regressions
-- [package.json](package.json) - Add `npm run benchmark` script
-
-**Commit Message:**
-```
-test: Add performance benchmarks for scan, audit, memory
-
-Established baselines:
-- scan: 10K files in ~8.5s
-- audit: 5MB file in ~2.1s  
-- memory: <80MB increase for large scans
-
-Run benchmarks: npm run benchmark
-```
-
----
-
-### Task 3.2: Integration Test Suite (4-5 hours, TDD)
-
-**Why:** Unit tests don't catch workflow integration bugs  
-**Risk:** Medium - Need to think through scenarios  
-**TDD Required:** Yes - write integration scenarios first
-
-**Integration Scenarios:**
-
-#### Scenario 1: Fresh Project Init → Develop → Review
-**Steps:**
-1. Run `aiknowsys init` with all options
-2. Modify CODEBASE_ESSENTIALS.md
-3. Run `aiknowsys check` (should pass)
-4. Run `aiknowsys sync` (should update AGENTS.md)
-5. Run `aiknowsys audit` (should be clean)
-
-**Test:**
-```javascript
-// test/integration/init-workflow.test.js
-test('fresh init → modify → check → sync → audit workflow', async () => {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'integration-'));
-  
-  // Step 1: Init
-  await init({ dir: tmpDir, stack: 'nextjs', _silent: true });
-  
-  // Step 2: Modify ESSENTIALS
-  const essentials = path.join(tmpDir, 'CODEBASE_ESSENTIALS.md');
-  let content = await fs.readFile(essentials, 'utf8');
-  content += '\n## New Section\nCustom content\n';
-  await fs.writeFile(essentials, content);
-  
-  // Step 3: Check should pass
-  const checkResult = await check({ dir: tmpDir, _silent: true });
-  assert.strictEqual(checkResult.valid, true);
-  
-  // Step 4: Sync should update AGENTS.md
-  await sync({ dir: tmpDir, _silent: true });
-  const agents = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
-  assert.match(agents, /New Section/);
-  
-  // Step 5: Audit should be clean
-  const auditResult = await audit({ dir: tmpDir, _silent: true });
-  assert.strictEqual(auditResult.clean, true);
-  
-  await fs.rm(tmpDir, { recursive: true });
-});
-```
-
-#### Scenario 2: Existing Project Migration → Custom Agents → Review
-**Steps:**
-1. Create dummy existing project
-2. Run `aiknowsys migrate`
-3. Install custom agents
-4. Verify agents reference correct ESSENTIALS filename
-
-**Test:**
-```javascript
-// test/integration/migrate-workflow.test.js
-test('migrate existing → install agents → agents work', async () => {
-  // Create existing project structure
-  // Run migrate
-  // Install agents
-  // Verify .github/agents/ files created
-  // Verify USAGE.txt shows correct workflow
-});
-```
-
-#### Scenario 3: Update Workflow (Existing → Latest)
-**Steps:**
-1. Create project with old template version
-2. Run `aiknowsys update`
-3. Verify files updated correctly
-4. Check backward compatibility
-
-**Test:**
-```javascript
-// test/integration/update-workflow.test.js
-test('old template → update → latest version', async () => {
-  // Create project with v0.5.0 template structure
-  // Run update command
-  // Verify new files added
-  // Verify existing customizations preserved
-});
-```
-
-#### Scenario 4: Error Recovery (Init Fails → Rollback → Retry)
-**Steps:**
-1. Trigger init failure mid-way
-2. Verify FileTracker rollback works
-3. Retry init successfully
-4. Verify no artifacts from failed attempt
-
-**Test:**
-```javascript
-// test/integration/error-recovery.test.js
-test('init fails → rollback → retry succeeds', async () => {
-  // Mock failure after 2 files created
-  // Verify rollback deletes those 2 files
-  // Retry init without mock
-  // Verify success and clean state
-});
-```
-
-#### Scenario 5: Large Codebase Scan → Audit → Fix
-**Steps:**
-1. Create project with 5K files
-2. Run scan (generates ESSENTIALS)
-3. Run audit (finds issues)
-4. Fix issues
-5. Re-audit (clean)
-
-**Test:**
-```javascript
-// test/integration/large-codebase.test.js
-test('large codebase → scan → audit → fix → re-audit', async () => {
-  // Generate 5K dummy files
-  // Scan should complete without timeout
-  // Audit generated ESSENTIALS
-  // Simulate fixing placeholder
-  // Re-audit should be clean
-});
-```
-
-**Files to Create:**
-- [test/integration/](test/integration/) - NEW directory
-- [test/integration/init-workflow.test.js](test/integration/init-workflow.test.js)
-- [test/integration/migrate-workflow.test.js](test/integration/migrate-workflow.test.js)
-- [test/integration/update-workflow.test.js](test/integration/update-workflow.test.js)
-- [test/integration/error-recovery.test.js](test/integration/error-recovery.test.js)
-- [test/integration/large-codebase.test.js](test/integration/large-codebase.test.js)
-
-**Validation:**
-```bash
-npm run test:integration  # New script for integration tests only
-npm test  # All tests (unit + integration) passing
-```
-
-**Expected Test Count:** +15 integration tests (286 total)
-
-**Commit Message:**
-```
-test: Add comprehensive integration test suite
-
-5 end-to-end workflow scenarios:
-1. Fresh init → develop → review cycle
-2. Existing project migration → agents
-3. Update workflow (old → latest)
-4. Error recovery (fail → rollback → retry)
-5. Large codebase performance (5K files)
-
-Tests ensure commands work together seamlessly.
-All 286 tests passing (unit + integration)
-```
-
----
-
-### Task 3.3: Architecture Validation & Documentation (2 hours)
-
-**Why:** Document integration points for future contributors  
-**Risk:** Low - Documentation only  
-**TDD Required:** No
-
-**Deliverables:**
-
-#### 1. Architecture Diagram
-Create [docs/architecture.md](docs/architecture.md) showing:
-- Command dependencies (which commands call which utils)
-- File flow (how data moves between commands)
-- Integration points (where commands interact)
-
-```
-┌─────────────────────────────────────────────┐
-│              CLI Entry Point                │
-│              (bin/cli.js)                   │
-└────────────────┬────────────────────────────┘
-                 │
-        ┌────────┴────────┐
-        │   Commands      │
-        │                 │
-   ┌────┴────┐  ┌────┴────┐  ┌────┴────┐
-   │  init   │  │ migrate │  │  scan   │
-   └────┬────┘  └────┬────┘  └────┬────┘
-        │            │             │
-        └────────┬───┴─────────────┘
-                 │
-        ┌────────┴────────┐
-        │   Utilities     │
-        │                 │
-   ┌────┴────┐  ┌────┴────┐  ┌────┴────┐
-   │  utils  │  │ logger  │  │sanitize │
-   │FileTrack│  │         │  │         │
-   └─────────┘  └─────────┘  └─────────┘
-```
-
-#### 2. Integration Points Documentation
-Document in CODEBASE_ESSENTIALS.md:
-- Which commands share FileTracker
-- Where logger is used
-- How sanitization flows through init → prompts
-- Shared configuration patterns
-
-#### 3. Testing Matrix
-Create table showing what's tested:
-
-| Component | Unit Tests | Integration Tests | Manual Tests |
-|-----------|------------|-------------------|--------------|
-| init.js | ✅ 25 | ✅ 3 workflows | ✅ Real projects |
-| migrate.js | ✅ 18 | ✅ 2 workflows | ✅ Legacy code |
-| FileTracker | ✅ 11 | ✅ Error recovery | ✅ Edge cases |
-| ... | ... | ... | ... |
-
-**Files to Update:**
-- [docs/architecture.md](docs/architecture.md) - NEW architecture overview
-- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md) - Add Integration Points section
-- [docs/testing-strategy.md](docs/testing-strategy.md) - NEW testing philosophy
-
-**Commit Message:**
-```
-docs: Add architecture and integration documentation
-
-- Architecture diagram showing command dependencies
-- Integration points section in ESSENTIALS
-- Testing matrix (unit, integration, manual)
-
-Helps contributors understand system design.
-```
-
----
-
-### Sprint 3 Deliverables Summary
-
-**Performance:**
-- ✅ Benchmarks for scan, audit, memory usage
-- ✅ Baseline metrics to track regressions
-- ✅ Performance targets documented
-
-**Integration:**
-- ✅ 5 end-to-end workflow tests
-- ✅ Error recovery validated
-- ✅ Large codebase testing
-
-**Documentation:**
-- ✅ Architecture diagram
-- ✅ Integration points documented
-- ✅ Testing strategy explained
-
-**Test Coverage:**
-- Before: ~271 tests
-- After: ~286 tests (+15 integration tests)
-- Pass rate: 99.6% maintained
-
-**User Impact:**
-- Confidence in scalability
-- System behaves predictably
-- Integration bugs caught before users hit them
+**Expected Outcome:**
+- ✅ Benchmarks for scan, audit, memory (baselines established)
+- ✅ 5 integration test scenarios (+15 tests)
+- ✅ Architecture documentation (diagrams, integration points, testing matrix)
+- ✅ ~286 total tests (unit + integration)
 
 **Time Estimate:** 8-10 hours total (doable in 1 week part-time)
-
----
-
-## Overall 3-Sprint Summary
-
-### Timeline
-- **Sprint 1 (Week 1):** 4-6 hours → Polish & robustness
-- **Sprint 2 (Week 2-3):** 8-12 hours → Edge cases & real-world testing
-- **Sprint 3 (Week 4):** 8-10 hours → Performance & integration
-
-**Total:** 20-28 hours over 4 weeks (5-7 hours/week part-time)
-
-### Test Growth
-- **v0.6.0 baseline:** 246 tests
-- **After Sprint 1:** ~251 tests (+5 migrate rollback)
-- **After Sprint 2:** ~271 tests (+20 edge cases)
-- **After Sprint 3:** ~286 tests (+15 integration)
-
-**Total growth:** +40 tests (+16% increase)
-
-### Quality Improvements
-1. **0 ESLint warnings** (professional polish)
-2. **FileTracker in all file-creating commands** (safety)
-3. **Progress indicators** (better UX at scale)
-4. **Edge case handling** (robustness)
-5. **Helpful error messages** (UX)
-6. **Real-world validation** (3+ projects tested)
-7. **Performance benchmarks** (scalability confidence)
-8. **Integration test suite** (workflow reliability)
-
-### User Impact
-- **Day 1:** Can use on personal project with confidence
-- **Week 2:** Can introduce at day job without embarrassment
-- **Week 4:** Can scale to large codebases
-- **Ongoing:** Clear path for contributions (architecture docs)
-
----
-
-## Success Metrics
-
-**Quality (Primary Goal):**
-- ✅ 286+ tests passing (99%+ pass rate)
-- ✅ 0 ESLint warnings
-- ✅ Performance baselines established
-- ✅ Real-world testing on 3 projects
-- ✅ Integration workflows validated
-
-**Reliability:**
-- ✅ Edge cases handled gracefully
-- ✅ Helpful error messages (not cryptic)
-- ✅ Rollback mechanism in all file operations
-- ✅ No memory leaks
-
-**Professionalism:**
-- ✅ Clean codebase (linting, architecture)
-- ✅ Comprehensive tests (unit + integration)
-- ✅ Documentation (architecture, testing strategy)
-- ✅ Performance benchmarks
-
-**Ready for Production:**
-- ✅ Can use on your projects daily
-- ✅ Can introduce at day job
-- ✅ Can recommend to others without caveats
-
----
-
-## Risks & Mitigations
-
-**Risk:** Real-world testing reveals major bugs  
-**Mitigation:** Sprint 2 is flexible - pause to fix if needed
-
-**Risk:** Integration tests take longer than estimated  
-**Mitigation:** Start with high-value scenarios, defer others to backlog
-
-**Risk:** Performance benchmarks reveal scalability issues  
-**Mitigation:** Document limits, add streaming for large files (future work)
-
-**Risk:** Part-time schedule slips  
-**Mitigation:** Each sprint delivers value independently, can adjust timeline
 
 ---
 

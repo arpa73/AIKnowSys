@@ -115,6 +115,7 @@
 - `{{DIR_1}}` - {{DIR_1_PURPOSE}}
 - `{{DIR_2}}` - {{DIR_2_PURPOSE}}
 - `{{DIR_3}}` - {{DIR_3_PURPOSE}}
+- `.github/hooks/` - VSCode session hooks (optional automation)
 
 ---
 

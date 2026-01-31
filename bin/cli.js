@@ -15,6 +15,12 @@ import { check } from '../lib/commands/check.js';
 import { sync } from '../lib/commands/sync.js';
 import { audit } from '../lib/commands/audit.js';
 import { compressEssentials } from '../lib/commands/compress-essentials.js';
+import { archiveSessions } from '../lib/commands/archive-sessions.js';
+import { archivePlans } from '../lib/commands/archive-plans.js';
+import { clean } from '../lib/commands/clean.js';
+import { qualityCheck } from '../lib/commands/quality-check.js';
+import { ciCheck } from '../lib/commands/ci-check.js';
+import { depsHealth } from '../lib/commands/deps-health.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -113,6 +119,80 @@ program
   .option('--interactive', 'Interactively confirm each extraction')
   .option('--auto', 'Automatically extract all verbose content (>20 lines)')
   .action(compressEssentials);
+
+program
+  .command('archive-sessions')
+  .description('Archive old session files to dated folders')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--threshold <days>', 'Archive sessions older than N days', '30')
+  .option('--dry-run', 'Preview what would be archived without moving files')
+  .action(async (options) => {
+    await archiveSessions({
+      dir: options.dir,
+      threshold: parseInt(options.threshold, 10),
+      dryRun: options.dryRun
+    });
+  });
+
+program
+  .command('archive-plans')
+  .description('Archive completed plans to archive folder')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--threshold <days>', 'Archive completed plans older than N days', '7')
+  .option('--dry-run', 'Preview what would be archived without moving files')
+  .action(async (options) => {
+    await archivePlans({
+      dir: options.dir,
+      threshold: parseInt(options.threshold, 10),
+      dryRun: options.dryRun
+    });
+  });
+
+// Quality check command
+program
+  .command('quality-check')
+  .description('Run code quality and health checks')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(async (options) => {
+    await qualityCheck({
+      dir: options.dir
+    });
+  });
+
+// CI check command
+program
+  .command('ci-check')
+  .description('Validate CI/CD readiness before pushing')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(async (options) => {
+    await ciCheck({
+      dir: options.dir
+    });
+  });
+
+// Clean command
+program
+  .command('clean')
+  .description('Clean workspace: archive old sessions/plans and remove temp files')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--dry-run', 'Preview what would be cleaned without making changes')
+  .action(async (options) => {
+    await clean({
+      dir: options.dir,
+      dryRun: options.dryRun
+    });
+  });
+
+// Dependency health command
+program
+  .command('deps-health')
+  .description('Check dependency health: security advisories and outdated packages')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(async (options) => {
+    await depsHealth({
+      dir: options.dir
+    });
+  });
 
 // Default command - show help with styled banner
 program

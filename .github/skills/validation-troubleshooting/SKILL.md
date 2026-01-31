@@ -7,6 +7,9 @@ description: Universal troubleshooting guide for validation failures (tests, lin
 
 Step-by-step debugging guide for when validation commands fail.
 
+**💡 Automation Available:**  
+If VSCode hooks are installed (`.github/hooks/`), the `validation-reminder.cjs` hook will automatically remind you to run validation when code changes but no tests ran. See [docs/vscode-hooks-guide.md](../../../docs/vscode-hooks-guide.md) for details.
+
 ## When to Use This Skill
 
 Use when:

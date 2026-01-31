@@ -85,6 +85,7 @@ Cargo.lock
 .aiknowsys/sessions/*.md
 !.aiknowsys/sessions/README.md
 .aiknowsys/PENDING_REVIEW.md
+.aiknowsys/performance-history.json
 # Note: .aiknowsys/learned/ IS committed (project-specific patterns)
 
 # workdocs

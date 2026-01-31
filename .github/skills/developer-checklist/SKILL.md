@@ -94,6 +94,9 @@ cd backend && python manage.py test jewelry_portfolio.api_test.JewelryAPIIntegra
 
 ## Pre-Commit Checklist
 
+**💡 Automation Available:**  
+If VSCode hooks are installed (`.github/hooks/`), session start hooks will automatically check for lint errors, type errors, workspace issues, and test failures. See [docs/vscode-hooks-guide.md](../../../docs/vscode-hooks-guide.md).
+
 **Run BEFORE every commit:**
 
 - [ ] Backend tests pass: `cd backend && python manage.py test`

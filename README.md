@@ -20,6 +20,7 @@ A structured workflow system consisting of:
 6. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
 7. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
 8. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
+9. **VSCode Hooks** - 14 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, and migration assistance (optional)
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 
@@ -46,6 +47,34 @@ From production use in gnwebsite:
 | Validation is manual/forgotten | Validation is automatic/mandatory |
 | Patterns exist in tribal knowledge | Patterns documented and enforced |
 | Each session restarts context | Historical context preserved |
+
+### Intelligent Automation with VSCode Hooks
+
+**14 lifecycle hooks** that run automatically during GitHub Copilot sessions:
+
+✅ **Never forget tests** - TDD reminder before editing code  
+✅ **Never skip validation** - Validation reminder before claiming "done"  
+✅ **Auto-detect skills** - Suggests relevant guides based on your prompt  
+✅ **Health monitoring** - Alerts on disk space, lint errors, type issues  
+✅ **Avoid conflicts** - Detects concurrent work on same files  
+✅ **Track performance** - Warns on test regressions (>20% slower)  
+✅ **Stay updated** - Migration alerts for version mismatches  
+✅ **Fresh docs** - Staleness warnings for outdated documentation  
+
+**[Learn more about hooks →](docs/vscode-hooks-guide.md)**
+
+### vs GitHub Copilot Memory
+
+AIKnowSys complements (or replaces) GitHub's Copilot Memory with key advantages:
+
+🔒 **100% Local** - Never leaves your machine (privacy-first)  
+♾️ **Permanent** - Knowledge lasts forever (not 28-day expiration)  
+🌍 **Any AI Tool** - Works with Claude, ChatGPT, Cursor, etc. (not locked to Copilot)  
+📖 **Human-Readable** - Markdown files you can read and edit (not opaque AI format)  
+✍️ **You Control** - Decide what's documented (not AI-decided patterns)  
+🤝 **Team Shareable** - Commit to git, everyone benefits (not subscription-locked)  
+
+**[Read full comparison →](docs/copilot-memory-comparison.md)**
 
 ---
 

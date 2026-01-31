@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "node .github/hooks/skill-detector.cjs",
+        "powershell": "node .github/hooks/skill-detector.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "node .github/hooks/skill-prereq-check.cjs",
+        "powershell": "node .github/hooks/skill-prereq-check.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/tdd-reminder.cjs",
+        "powershell": "node .github/hooks/tdd-reminder.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      }
+    ],
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "node .github/hooks/session-start.js",
+        "powershell": "node .github/hooks/session-start.js",
+        "cwd": ".",
+        "timeoutSec": 5
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/migration-check.cjs",
+        "powershell": "node .github/hooks/migration-check.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/doc-sync.cjs",
+        "powershell": "node .github/hooks/doc-sync.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/collaboration-check.mjs",
+        "powershell": "node .github/hooks/collaboration-check.mjs",
+        "cwd": ".",
+        "timeoutSec": 3
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/workspace-health.cjs",
+        "powershell": "node .github/hooks/workspace-health.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/quality-health.cjs",
+        "powershell": "node .github/hooks/quality-health.cjs",
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "node .github/hooks/performance-monitor.cjs",
+        "powershell": "node .github/hooks/performance-monitor.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": "node .github/hooks/session-end.js",
+        "powershell": "node .github/hooks/session-end.js",
+        "cwd": ".",
+        "timeoutSec": 5
+      }
+    ],
+    "stop": [
+      {
+        "type": "command",
+        "bash": "node .github/hooks/validation-reminder.cjs",
+        "powershell": "node .github/hooks/validation-reminder.cjs",
+        "cwd": ".",
+        "timeoutSec": 2
+      }
+    ]
+  }
+}

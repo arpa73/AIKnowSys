@@ -1,0 +1,73 @@
+#!/bin/bash
+# Enhanced pre-commit hook with AIKnowSys integration
+# This hook runs quality checks before allowing commits
+# 
+# Features:
+# - Runs full test suite (blocks on failure)
+# - Optional quality checks (warns only)
+# - ESSENTIALS size validation (warns if >800 lines)
+#
+# Installation:
+#   chmod +x .git/hooks/pre-commit
+#   ln -s ../../templates/git-hooks/pre-commit-enhanced .git/hooks/pre-commit
+#
+# Or use: node bin/cli.js install-git-hooks
+
+set -e  # Exit on error
+
+echo "🔍 Running pre-commit validation..."
+echo ""
+
+# Check if we're in a git repository
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+  echo "⚠️  Not in a git repository - skipping pre-commit checks"
+  exit 0
+fi
+
+# 1. Run tests (BLOCKING - must pass to commit)
+echo "📋 Step 1/3: Running tests..."
+if npm test > /dev/null 2>&1; then
+  echo "  ✅ All tests passed"
+else
+  echo ""
+  echo "  ❌ Tests failed - commit blocked"
+  echo ""
+  echo "  Fix failing tests before committing."
+  echo "  Run 'npm test' to see failures."
+  echo ""
+  exit 1
+fi
+
+# 2. Run quality checks (WARNING - doesn't block)
+echo "📋 Step 2/3: Quality checks..."
+if command -v node > /dev/null 2>&1 && [ -f "bin/cli.js" ]; then
+  if node bin/cli.js check --silent 2>&1 | grep -q "Issues found"; then
+    echo "  ⚠️  Quality issues detected (review recommended)"
+    echo "  Run 'node bin/cli.js check' for details"
+  else
+    echo "  ✅ Quality checks passed"
+  fi
+else
+  echo "  ⊖ Quality check skipped (CLI not available)"
+fi
+
+# 3. Check ESSENTIALS size (WARNING - doesn't block)
+echo "📋 Step 3/3: ESSENTIALS validation..."
+if [ -f "CODEBASE_ESSENTIALS.md" ]; then
+  LINES=$(wc -l < CODEBASE_ESSENTIALS.md | tr -d ' ')
+  
+  if [ "$LINES" -gt 800 ]; then
+    echo "  ⚠️  ESSENTIALS.md is $LINES lines (target: <800)"
+    echo "  Consider: node bin/cli.js compress-essentials"
+  else
+    echo "  ✅ ESSENTIALS size OK ($LINES lines)"
+  fi
+else
+  echo "  ⊖ ESSENTIALS check skipped (file not found)"
+fi
+
+echo ""
+echo "✅ Pre-commit validation passed"
+echo ""
+
+exit 0

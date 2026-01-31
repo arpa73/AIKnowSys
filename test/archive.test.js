@@ -1,0 +1,399 @@
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert';
+import { promises as fs } from 'fs';
+import path from 'path';
+import { archiveSessions } from '../lib/commands/archive-sessions.js';
+import { archivePlans } from '../lib/commands/archive-plans.js';
+import { clean } from '../lib/commands/clean.js';
+
+const TEST_DIR = path.join(process.cwd(), 'test-archive-temp');
+
+describe('Archive Commands', () => {
+  beforeEach(async () => {
+    // Create clean test directory
+    await fs.mkdir(TEST_DIR, { recursive: true });
+    await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'sessions'), { recursive: true });
+  });
+
+  afterEach(async () => {
+    // Cleanup test directory
+    await fs.rm(TEST_DIR, { recursive: true, force: true });
+  });
+
+  describe('archive-sessions command', () => {
+    it('should detect sessions older than threshold', async () => {
+      // Create old session (60 days ago)
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 60);
+      
+      const oldFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-01-session.md');
+      await fs.writeFile(oldFile, '# Old Session');
+      await fs.utimes(oldFile, oldDate, oldDate);
+      
+      // Create recent session
+      const recentFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2026-01-30-session.md');
+      await fs.writeFile(recentFile, '# Recent Session');
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        dryRun: true,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.dryRun, 1, 'Should find 1 old session');
+      assert.strictEqual(result.kept, 1, 'Should keep 1 recent session');
+    });
+
+    it('should move old sessions to archive/YYYY/MM/', async () => {
+      const oldDate = new Date('2025-12-15');
+      const oldFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-15-session.md');
+      await fs.writeFile(oldFile, '# Old Session');
+      await fs.utimes(oldFile, oldDate, oldDate);
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        dryRun: false,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 1);
+      
+      // Verify file moved
+      const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'sessions', '2025', '12', '2025-12-15-session.md');
+      const exists = await fs.access(archivePath).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true, 'Session should be in archive/2025/12/');
+    });
+
+    it('should preserve recent sessions', async () => {
+      const recentFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2026-01-30-session.md');
+      await fs.writeFile(recentFile, '# Recent Session');
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.kept, 1);
+      
+      // Verify file still in sessions/
+      const exists = await fs.access(recentFile).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true, 'Recent session should remain');
+    });
+
+    it('should create archive directories if missing', async () => {
+      const oldDate = new Date('2024-05-10');
+      const oldFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2024-05-10-session.md');
+      await fs.writeFile(oldFile, '# Old Session');
+      await fs.utimes(oldFile, oldDate, oldDate);
+      
+      await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        _silent: true
+      });
+      
+      const archiveDir = path.join(TEST_DIR, '.aiknowsys', 'archive', 'sessions', '2024', '05');
+      const exists = await fs.access(archiveDir).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true, 'Should create archive/2024/05/ directory');
+    });
+
+    it('should handle --dry-run mode', async () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 60);
+      
+      const oldFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-01-session.md');
+      await fs.writeFile(oldFile, '# Old Session');
+      await fs.utimes(oldFile, oldDate, oldDate);
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        dryRun: true,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0, 'Should not archive in dry-run');
+      assert.strictEqual(result.dryRun, 1, 'Should report would archive 1');
+      
+      // File should still exist in original location
+      const exists = await fs.access(oldFile).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true, 'File should not move in dry-run');
+    });
+
+    it('should respect --threshold flag', async () => {
+      const date45DaysAgo = new Date();
+      date45DaysAgo.setDate(date45DaysAgo.getDate() - 45);
+      
+      const file = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-15-session.md');
+      await fs.writeFile(file, '# Session');
+      await fs.utimes(file, date45DaysAgo, date45DaysAgo);
+      
+      // Threshold 60 days - should keep
+      const result1 = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 60,
+        dryRun: true,
+        _silent: true
+      });
+      assert.strictEqual(result1.kept, 1, 'Should keep with 60-day threshold');
+      
+      // Threshold 30 days - should archive
+      const result2 = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        dryRun: true,
+        _silent: true
+      });
+      assert.strictEqual(result2.dryRun, 1, 'Should archive with 30-day threshold');
+    });
+
+    it('should skip if no old sessions found', async () => {
+      const recentFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2026-01-30-session.md');
+      await fs.writeFile(recentFile, '# Recent Session');
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.kept, 1);
+    });
+
+    it('should handle malformed session files', async () => {
+      // Create files that don't match session pattern
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'sessions', 'README.md'), '# Readme');
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'sessions', 'invalid.md'), '# Invalid');
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.kept, 0);
+    });
+
+    it('should handle missing sessions directory', async () => {
+      await fs.rm(path.join(TEST_DIR, '.aiknowsys', 'sessions'), { recursive: true });
+      
+      const result = await archiveSessions({
+        dir: TEST_DIR,
+        threshold: 30,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.kept, 0);
+    });
+  });
+
+  describe('archive-plans command', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys'), { recursive: true });
+    });
+
+    it('should detect completed plans older than threshold', async () => {
+      // Create CURRENT_PLAN.md with completed plans
+      const currentPlan = `# Active Plan Pointer
+
+| Plan | Status | Progress | Last Updated |
+|------|--------|----------|--------------|
+| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |
+| [Active Plan](PLAN_active.md) | 🎯 ACTIVE | In progress | 2026-01-30 |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      // Create plan files
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 30);
+      
+      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
+      await fs.writeFile(oldPlanFile, '# Old Plan');
+      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      
+      const activePlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md');
+      await fs.writeFile(activePlanFile, '# Active Plan');
+      
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        dryRun: true,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.dryRun, 1, 'Should find 1 completed plan to archive');
+    });
+
+    it('should move completed plans to archive/plans/', async () => {
+      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 30);
+      
+      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
+      await fs.writeFile(oldPlanFile, '# Old Plan');
+      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 1);
+      
+      // Verify file moved
+      const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'plans', 'PLAN_old.md');
+      const exists = await fs.access(archivePath).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true, 'Plan should be in archive/plans/');
+    });
+
+    it('should preserve active and paused plans', async () => {
+      const currentPlan = `| [Active Plan](PLAN_active.md) | 🎯 ACTIVE | Working | 2026-01-30 |
+| [Paused Plan](PLAN_paused.md) | 🔄 PAUSED | On hold | 2026-01-20 |`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), '# Active');
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_paused.md'), '# Paused');
+      
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0, 'Should not archive active/paused plans');
+    });
+
+    it('should update CURRENT_PLAN.md with archive links', async () => {
+      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 30);
+      
+      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
+      await fs.writeFile(oldPlanFile, '# Old Plan');
+      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      
+      await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        _silent: true
+      });
+      
+      const updatedContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), 'utf-8');
+      assert.match(updatedContent, /archive\/plans\/PLAN_old\.md/, 'Should update link to archive location');
+    });
+
+    it('should handle --dry-run mode', async () => {
+      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 30);
+      
+      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
+      await fs.writeFile(oldPlanFile, '# Old Plan');
+      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        dryRun: true,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.dryRun, 1);
+      
+      // File should still exist
+      const exists = await fs.access(oldPlanFile).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true);
+    });
+
+    it('should handle missing CURRENT_PLAN.md', async () => {
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 7,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0);
+      assert.strictEqual(result.kept, 0);
+    });
+  });
+
+  describe('clean command', () => {
+    beforeEach(async () => {
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'sessions'), { recursive: true });
+    });
+
+    it('should archive sessions and plans in one command', async () => {
+      // Create old session
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 60);
+      
+      const sessionFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-01-session.md');
+      await fs.writeFile(sessionFile, '# Old Session');
+      await fs.utimes(sessionFile, oldDate, oldDate);
+      
+      // Create old plan
+      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      
+      const planFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
+      await fs.writeFile(planFile, '# Old Plan');
+      await fs.utimes(planFile, oldDate, oldDate);
+      
+      const result = await clean({
+        dir: TEST_DIR,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.sessionsArchived, 1);
+      assert.strictEqual(result.plansArchived, 1);
+    });
+
+    it('should remove temp files', async () => {
+      await fs.writeFile(path.join(TEST_DIR, 'test-temp.js'), '// temp');
+      await fs.writeFile(path.join(TEST_DIR, 'debug-output.txt'), 'debug');
+      
+      const result = await clean({
+        dir: TEST_DIR,
+        _silent: true
+      });
+      
+      assert.ok(result.tempFilesRemoved >= 0, 'Should report temp files removed');
+    });
+
+    it('should handle --dry-run mode', async () => {
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 60);
+      
+      const sessionFile = path.join(TEST_DIR, '.aiknowsys', 'sessions', '2025-12-01-session.md');
+      await fs.writeFile(sessionFile, '# Old Session');
+      await fs.utimes(sessionFile, oldDate, oldDate);
+      
+      const result = await clean({
+        dir: TEST_DIR,
+        dryRun: true,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.sessionsArchived, 0);
+      
+      // File should still exist
+      const exists = await fs.access(sessionFile).then(() => true).catch(() => false);
+      assert.strictEqual(exists, true);
+    });
+  });
+});

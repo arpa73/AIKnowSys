@@ -61,11 +61,26 @@ aiknowsys/
 │   ├── git-hooks/          # TDD git hooks
 │   ├── scripts/            # TDD install scripts
 │   ├── workflows/          # GitHub Actions workflows
+│   ├── hooks/              # VSCode session hooks (optional)
+│   │   ├── hooks.json      # Hook configuration
+│   │   ├── session-start.js # Auto-load context
+│   │   ├── session-end.js  # Auto-save state
+│   │   ├── validation-reminder.cjs # Stop hook (validation enforcement)
+│   │   ├── tdd-reminder.cjs # PreToolUse hook (TDD reminders)
+│   │   ├── collaboration-check.mjs # Concurrent work detection
+│   │   ├── performance-monitor.cjs # Performance tracking
+│   │   ├── migration-check.cjs # Version mismatch detection
+│   │   └── doc-sync.cjs # Documentation staleness tracking
 │   ├── stacks/             # Stack-specific templates
 │   ├── AGENTS.template.md
 │   ├── CODEBASE_ESSENTIALS.template.md
 │   ├── CODEBASE_ESSENTIALS.minimal.template.md
 │   └── CODEBASE_CHANGELOG.template.md
+├── .aiknowsys/             # AI knowledge system (user workspace)
+│   ├── performance-history.json # Performance tracking (gitignored, last 100 runs)
+│   ├── CURRENT_PLAN.md     # Active plan pointer
+│   ├── learned/            # Project-specific patterns (committed)
+│   └── sessions/           # Session notes (gitignored)
 ├── scripts/                # Bash alternatives (legacy)
 ├── examples/               # Stack-specific examples
 ├── docs/                   # Documentation
@@ -234,6 +249,7 @@ See [learned skill](.aiknowsys/learned/common-gotchas.md) for detailed solutions
 - Path separators (always use `path.join()`, never string concatenation)
 - Import extensions required (must include `.js`)
 - JSON import syntax (use import assertions)
+- **CommonJS in ES module projects**: Use `.cjs` extension when you need CommonJS (require/module.exports) in a project with `"type": "module"` in package.json. Example: VSCode hooks use `.cjs` because stdin JSON parsing is simpler with CommonJS than ES module async imports.
 
 ---
 
@@ -250,6 +266,24 @@ For adding new commands or skills, see [learned skill](.aiknowsys/learned/extend
 - `plan-management.md` - Multi-plan concurrent workflow pattern
 - `essentials-compression.md` - ESSENTIALS bloat detection and compression
 
+### When to Document Where
+
+**Add to CODEBASE_ESSENTIALS.md when:**
+- Core architecture decision (technology choice)
+- Universal pattern (all files of type X follow this)
+- Critical invariant (cannot be violated)
+- Project structure change (new directories, file organization)
+- Core command/feature that ships with aiknowsys
+
+**Add to .aiknowsys/learned/ when:**
+- Project-specific discovery (specific to this codebase)
+- Workaround for library/framework quirk
+- Optional technique that improves quality
+- Pattern that emerged from practice (not designed upfront)
+- Error resolution that might recur
+
+**Why this matters:** Keeps ESSENTIALS focused on architecture while allowing learned skills to capture project evolution. Target: ESSENTIALS <800 lines.
+
 ---
 
 ## 8. Testing Philosophy
@@ -261,6 +295,34 @@ We practice **Test-Driven Development (TDD)** for all new features. See [.github
 2. Watch it fail - Verify test catches the issue
 3. Implement minimal code (GREEN) - Make the test pass  
 4. Refactor - Clean up while tests stay green
+
+**Testing Standards:**
+- **Test Runner:** Node.js built-in (`node:test`) - ZERO external dependencies
+- **Assertion Library:** `node:assert` module
+- **Structure:** `describe()` for test suites, `it()` for individual tests
+- **Assertions:** Use `assert.strictEqual()`, `assert.ok()`, `assert.match()`, etc.
+- **Mocking:** Use `beforeEach()` / `afterEach()` for setup/teardown
+
+**Example test structure:**
+```javascript
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert';
+
+describe('Feature Name', () => {
+  beforeEach(() => {
+    // Setup
+  });
+
+  it('should do something specific', () => {
+    const result = functionUnderTest();
+    assert.strictEqual(result, expectedValue);
+  });
+
+  afterEach(() => {
+    // Cleanup
+  });
+});
+```
 
 **Running tests:**
 ```bash
