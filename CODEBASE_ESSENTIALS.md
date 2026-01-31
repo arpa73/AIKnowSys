@@ -29,6 +29,8 @@
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
+| `node bin/cli.js check` | Validation + bloat detection | ESSENTIALS <800 lines |
+| `node bin/cli.js compress-essentials --analyze` | Preview compression | Shows opportunities |
 | `npm pack --dry-run` | Package contents | Lists correct files |
 
 ---
@@ -243,6 +245,10 @@ For adding new commands or skills, see [learned skill](.aiknowsys/learned/extend
 - Commands: Create `lib/commands/my-command.js`, register in `bin/cli.js`, add tests
 - Skills: Create `templates/skills/my-skill/SKILL.md`, register in `install-skills.js`
 - Follow existing patterns, write tests first (TDD)
+
+**Universal Learned Skills:**
+- `plan-management.md` - Multi-plan concurrent workflow pattern
+- `essentials-compression.md` - ESSENTIALS bloat detection and compression
 
 ---
 

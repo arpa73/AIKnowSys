@@ -211,6 +211,48 @@ Archive changelog entries when:
 
 **Current status**: CODEBASE_CHANGELOG.md has 1879 lines → **Archive needed!**
 
+### ESSENTIALS Compression
+
+**When CODEBASE_ESSENTIALS.md exceeds recommended size:**
+
+| Lines | Status | Action |
+|-------|--------|--------|
+| < 600 | ✅ Optimal | No action needed |
+| 600-800 | ✅ Good | Monitor sections |
+| 800-1500 | ⚠️ Warning | Run compress-essentials --analyze |
+| > 1500 | 🚨 Critical | Compress urgently |
+
+**Compression workflow:**
+
+```bash
+# Check ESSENTIALS size
+npx aiknowsys check
+
+# Preview compression opportunities
+npx aiknowsys compress-essentials --analyze
+
+# Auto-extract verbose sections to docs/
+npx aiknowsys compress-essentials --auto
+
+# Or use interactive mode
+npx aiknowsys compress-essentials --interactive
+```
+
+**What gets extracted:**
+- Verbose code examples (>15 lines) → `docs/patterns/`
+- Historical context → `.aiknowsys/learned/`
+- Stack-specific details → `docs/backend/` or `docs/frontend/`
+
+**What stays in ESSENTIALS:**
+- Core patterns (concise summaries)
+- Critical invariants
+- Validation matrix
+- Links to extracted content
+
+**See:** 
+- [docs/essentials-compression-guide.md](../../../docs/essentials-compression-guide.md) - Comprehensive guide
+- [.aiknowsys/learned/essentials-compression.md](../../../.aiknowsys/learned/essentials-compression.md) - AI agent workflow
+
 ### Archive Structure
 
 ```

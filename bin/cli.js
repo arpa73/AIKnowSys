@@ -14,6 +14,7 @@ import { update } from '../lib/commands/update.js';
 import { check } from '../lib/commands/check.js';
 import { sync } from '../lib/commands/sync.js';
 import { audit } from '../lib/commands/audit.js';
+import { compressEssentials } from '../lib/commands/compress-essentials.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -102,6 +103,16 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(audit);
+
+program
+  .command('compress-essentials')
+  .description('Reduce ESSENTIALS bloat by extracting verbose content to docs/patterns/')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
+  .option('--analyze', 'Analyze and report compression opportunities (dry-run)')
+  .option('--interactive', 'Interactively confirm each extraction')
+  .option('--auto', 'Automatically extract all verbose content (>20 lines)')
+  .action(compressEssentials);
 
 // Default command - show help with styled banner
 program

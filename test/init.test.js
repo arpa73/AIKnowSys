@@ -448,6 +448,14 @@ describe('init command', () => {
     assert.ok(planContent.includes('CURRENT_PLAN.md'), 'plan-management should explain pointer pattern');
     assert.ok(planContent.includes('PLAN_*.md'), 'plan-management should mention plan files');
     assert.ok(planContent.includes('pointer'), 'plan-management should describe pointer concept');
+    
+    // Verify essentials-compression learned skill (universal pattern)
+    const essentialsCompression = path.join(learnedDir, 'essentials-compression.md');
+    assert.ok(fs.existsSync(essentialsCompression), 'learned/essentials-compression.md should exist');
+    
+    const compressionContent = fs.readFileSync(essentialsCompression, 'utf-8');
+    assert.ok(compressionContent.includes('compress-essentials'), 'essentials-compression skill should document compress-essentials command');
+    assert.ok(compressionContent.includes('COMPRESSION_THRESHOLDS'), 'essentials-compression skill should document thresholds');
 
     // Verify AGENTS.md includes session protocols
     const agentsPath = path.join(testDirSession, 'AGENTS.md');

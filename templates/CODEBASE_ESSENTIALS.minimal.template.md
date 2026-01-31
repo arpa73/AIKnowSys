@@ -138,6 +138,8 @@
 | Changed | Command | Required |
 |---------|---------|----------|
 {{VALIDATION_ROWS}}
+| Any | `npx aiknowsys check` | ✅ ESSENTIALS <800 lines |
+| ESSENTIALS bloat | `npx aiknowsys compress-essentials --analyze` | Preview compression opportunities |
 
 **🚨 RULE: Never claim work is complete without running validation!**
 
@@ -181,6 +183,12 @@
 ---
 
 ## Core Patterns
+
+<!-- 
+  AI GUIDANCE: Keep examples under 15 lines
+  Extract verbose details to docs/patterns/*.md
+  ESSENTIALS = patterns, not comprehensive documentation
+-->
 
 ### {{PATTERN_CATEGORY_1}}
 
@@ -230,6 +238,12 @@
 ---
 
 ## Common Gotchas
+
+<!-- 
+  AI GUIDANCE: Keep solutions brief
+  One gotcha = one paragraph + minimal example
+  Link to docs/troubleshooting/ for complex cases
+-->
 
 ### {{GOTCHA_1}}
 

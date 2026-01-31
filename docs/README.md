@@ -18,6 +18,11 @@ This folder contains all project documentation organized by category.
 - **[documentation-management](../.github/skills/documentation-management/SKILL.md)** - AI-optimized docs, changelog archiving
 - **[skill-creator](../.github/skills/skill-creator/SKILL.md)** - Create new skills from guides
 
+### 🚀 [Advanced Workflows](advanced-workflows.md)
+**Powerful patterns for complex scenarios**
+
+- **[OpenSpec + Plan Management Integration](advanced-workflows.md#openspec--plan-management-integration)** - Combine proposal-driven design with fine-grained task tracking for large features
+
 ### 🎓 [guides/](guides/) - How-To Guides & References
 Human-readable guides and detailed documentation
 

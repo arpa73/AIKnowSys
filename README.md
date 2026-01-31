@@ -18,6 +18,8 @@ A structured workflow system consisting of:
 4. **Changelog** - Session-by-session validation and learning history
 5. **Validation Matrix** - Mandatory test running before completion
 6. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
+7. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
+8. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 
@@ -106,6 +108,9 @@ Each stack template includes:
 | `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
 | `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
 | `npx aiknowsys audit` | Find common issues and pattern violations | N/A (analysis) |
+| `npx aiknowsys compress-essentials --analyze` | Preview ESSENTIALS compression opportunities | N/A (analysis) |
+| `npx aiknowsys compress-essentials --auto` | Auto-extract verbose sections to docs/ | N/A (maintenance) |
+| `npx aiknowsys compress-essentials --interactive` | Interactive compression workflow | N/A (maintenance) |
 | `npx aiknowsys install-agents` | Install Planner + Developer + Architect agents | N/A (standalone) |
 | `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 
@@ -241,6 +246,40 @@ npx  audit
 - `check` - Before committing, after setup, or when troubleshooting
 - `sync` - After upgrading from old templates with duplicated validation matrix
 - `audit` - Periodic health checks, before releases, or when reviewing code quality
+
+### 🗜️ Keeping ESSENTIALS Lean
+
+CODEBASE_ESSENTIALS.md should stay focused (600-800 lines recommended). Use compression commands to extract verbose content:
+
+```bash
+# Check if ESSENTIALS is bloated
+npx aiknowsys check
+# ⚠️ ESSENTIALS: 1400 lines (recommended: <800)
+
+# Preview what can be extracted
+npx aiknowsys compress-essentials --analyze
+# Shows verbose sections and where to extract them
+
+# Auto-extract verbose sections to docs/patterns/
+npx aiknowsys compress-essentials --auto
+# Moves code examples, updates references, preserves structure
+
+# Interactive mode for manual control
+npx aiknowsys compress-essentials --interactive
+# Step-by-step compression with previews
+```
+
+**Prevention (built into templates):**
+- Template hints guide AI toward concise examples (<15 lines)
+- Post-init check warns if ESSENTIALS >800 lines after setup
+- Monthly `check` command catches growth early
+
+**Why this matters:**
+- Faster AI context loading (fewer tokens)
+- Easier navigation and maintenance
+- Better signal-to-noise ratio
+
+**See:** [docs/essentials-compression-guide.md](docs/essentials-compression-guide.md) for detailed guide
 
 ---
 

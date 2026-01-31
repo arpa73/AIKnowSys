@@ -2,7 +2,7 @@
 
 > Strategic plan for growing aiknowsys from MVP to ecosystem
 
-**Last Updated:** January 25, 2026  
+**Last Updated:** January 31, 2026  
 **Vision:** Make AI-assisted development reliable, testable, and maintainable
 
 ---
@@ -185,6 +185,92 @@ Platform-agnostic implementation - works with any AI assistant (no hooks require
 - First learned pattern created from real issue discovery
 - Check command enhanced based on learned pattern
 - All 33 tests passing (100% pass rate)
+
+---
+
+### v0.8.0 - ESSENTIALS Compression + Plan Management + UX ✅
+**Status:** ✅ Complete (Jan 31, 2026)  
+**Focus:** Documentation automation, plan management, and UX polish  
+**Sessions:** 13 (Jan 30-31, 2026)
+
+#### Major Features
+
+**ESSENTIALS Compression System (All 6 Phases Complete)**
+- [x] Detection layer - `check` command warns about bloat ✅
+  - Threshold detection (800/1500 lines)
+  - Verbose section identification
+  - Actionable warnings with recommendations
+
+- [x] Analysis layer - `compress-essentials --analyze` ✅
+  - Preview compression opportunities
+  - Section-by-section breakdown
+  - Estimated savings calculation
+
+- [x] Automation layer - `compress-essentials --auto` ✅
+  - Automatic extraction of verbose sections
+  - Organized file creation in docs/patterns/
+  - Reference updating and validation
+
+- [x] Documentation layer ✅
+  - Learned skill (essentials-compression.md)
+  - Comprehensive guide (docs/essentials-compression-guide.md)
+  - Integration with documentation-management skill
+
+- [x] Prevention layer ✅
+  - Template hints (HTML comments guide AI)
+  - Post-init automatic bloat check
+  - Monthly maintenance recommendations
+
+- [x] Integration layer ✅
+  - README documentation
+  - AGENTS.md skill mapping
+  - Workflow integration
+
+**Multi-Plan Management System**
+- [x] Pointer-based plan management (CURRENT_PLAN.md) ✅
+  - Central table tracks all plans
+  - Status indicators (ACTIVE/PAUSED/PLANNED/COMPLETE/CANCELLED)
+  - Prevents data loss from plan switching
+  - Concurrent plan support
+
+**Terminal UX Improvements**
+- [x] ASCII banner for professional branding ✅
+- [x] Icon reduction for cleaner output ✅
+- [x] Scripts folder documentation ✅
+
+**Clipboard Integration**
+- [x] Auto-copy for init command output ✅
+- [x] Graceful fallback when unavailable ✅
+
+**TDD Workflow Enhancements**
+- [x] RED-GREEN-REFACTOR visibility in session files ✅
+- [x] TDD status indicators and tracking ✅
+- [x] Enhanced validation layer ✅
+
+**Additional Improvements**
+- [x] Planner mode boundary strengthening ✅
+- [x] AGENTS.md optimization ✅
+- [x] Process violation discovery and documentation ✅
+- [x] v0.7.1 hotfix (template variable issues) ✅
+
+**Success Metrics: ✅ VALIDATED**
+- ✅ All 302 tests passing (+15 new tests)
+- ✅ 10+ new files created
+- ✅ 25+ files modified
+- ✅ ~2500+ lines of code and docs added
+- ✅ Quality maintained (9.5-10/10 architect reviews)
+- ✅ Zero breaking changes
+
+**Key Achievement:**
+Comprehensive platform enhancement driven by dogfooding - compression system prevents bloat, plan management prevents data loss, UX polish improves professionalism, and workflow improvements increase productivity.
+
+**Validated During:**
+- Dogfooding on gnwebsite (1200→1400 line bloat → compression built)
+- Dogfooding on styleguide (clipboard friction → auto-copy built)
+- Plan data loss experienced → pointer system created
+- 13 sessions of test-driven development
+- Complete documentation (RELEASE_NOTES_v0.8.0.md)
+- Full integration with existing workflows
 
 ---
 

@@ -504,6 +504,35 @@ Now you're ready to build real features:
 3. **Follow the process** - Read ESSENTIALS → Plan → Code → Test → Validate → Document
 4. **Keep iterating** - Each session makes the knowledge system more valuable
 
+### Keeping ESSENTIALS Lean
+
+**⚠️ Important:** CODEBASE_ESSENTIALS.md should stay focused (600-800 lines recommended).
+
+**After customization:**
+```bash
+# Check if ESSENTIALS is bloated
+npx aiknowsys check
+
+# If >800 lines, analyze what can be extracted
+npx aiknowsys compress-essentials --analyze
+
+# Extract verbose sections to docs/patterns/
+npx aiknowsys compress-essentials --auto
+```
+
+**Prevention tips:**
+- Keep code examples under 15 lines
+- Extract detailed guides to `docs/patterns/*.md`
+- Link from ESSENTIALS instead of embedding
+- Run `npx aiknowsys check` monthly to catch bloat early
+
+**Why this matters:**
+- Faster AI context loading
+- Easier to navigate and maintain
+- Better focus on core patterns vs implementation details
+
+See [learned skill](.aiknowsys/learned/essentials-compression.md) for complete compression workflow.
+
 ---
 
 ## Getting Help

@@ -1,7 +1,7 @@
 # Active Plan Pointer
 
-**Currently Working On:** _No active plan - awaiting direction_  
-**Last Updated:** 2026-01-30
+**Currently Working On:** ESSENTIALS Compression System  
+**Last Updated:** 2026-01-31
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
@@ -11,6 +11,7 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [ESSENTIALS Compression System](PLAN_essentials_compression.md) | 🎯 ACTIVE | Phase 3.3 complete (auto mode extraction) | 2026-01-31 |
 | [Terminal UX Polish](PLAN_terminal_ux.md) | ✅ COMPLETE | All 3 phases done | 2026-01-30 |
 | [Plan Management System](PLAN_plan_management_system.md) | ✅ COMPLETE | All steps done | 2026-01-30 |
 | [Sprint 2: Quality & Real-World](PLAN_sprint2_quality.md) | 🔄 PAUSED | Task 2.3 at 67% | 2026-01-30 |

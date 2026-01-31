@@ -138,6 +138,7 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 | "refactor", "clean up", "simplify" | `code-refactoring` | Test-driven refactoring |
 | "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
 | "update docs", "changelog" | `documentation-management` | AI-optimized docs |
+| "ESSENTIALS bloat", "compress essentials", "compress-essentials" | `essentials-compression` (learned) | Compression workflow |
 | "create skill", "new skill" | `skill-creator` | Proper skill format |
 | "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
 | "test fail", "validation error", "build broken" | `validation-troubleshooting` | Debug validation failures |
