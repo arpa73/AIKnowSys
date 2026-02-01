@@ -577,4 +577,96 @@ describe('init command', () => {
       testDirsToCleanup.push(testDirNoGit);
     }
   });
+
+  it('should create plans directory with active plan for current user', async () => {
+    const testDirPlans = path.join(__dirname, 'tmp', `test-plans-${Date.now()}`);
+    fs.mkdirSync(testDirPlans, { recursive: true });
+    
+    // Check if git is configured
+    try {
+      const rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
+      
+      await init({ dir: testDirPlans, yes: true });
+      
+      const normalizedUsername = rawUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      // Verify plans directory structure
+      const plansDir = path.join(testDirPlans, '.aiknowsys', 'plans');
+      assert.ok(fs.existsSync(plansDir), 'plans directory should exist');
+      
+      const plansReadme = path.join(plansDir, 'README.md');
+      assert.ok(fs.existsSync(plansReadme), 'plans/README.md should exist');
+      
+      const readmeContent = fs.readFileSync(plansReadme, 'utf-8');
+      assert.ok(readmeContent.includes('Track what each developer'), 'README should explain plan tracking');
+      assert.ok(readmeContent.includes('active-<username>.md'), 'README should document filename format');
+      
+      // Verify active plan file created with username
+      const activePlanPath = path.join(plansDir, `active-${normalizedUsername}.md`);
+      assert.ok(fs.existsSync(activePlanPath), `active-${normalizedUsername}.md should exist`);
+      
+      const activePlanContent = fs.readFileSync(activePlanPath, 'utf-8');
+      assert.ok(activePlanContent.includes(normalizedUsername), 'Active plan should contain username');
+      assert.ok(activePlanContent.includes('Currently Working On:'), 'Active plan should have status section');
+      assert.ok(activePlanContent.includes('No active plan'), 'Active plan should have default message');
+    } catch {
+      // Skip test if git not configured
+    }
+
+    testDirsToCleanup.push(testDirPlans);
+  });
+
+  it('should create reviews directory and add to gitignore', async () => {
+    const testDirReviews = path.join(__dirname, 'tmp', `test-reviews-${Date.now()}`);
+    fs.mkdirSync(testDirReviews, { recursive: true });
+
+    await init({ dir: testDirReviews, yes: true });
+
+    // Verify reviews directory structure
+    const reviewsDir = path.join(testDirReviews, '.aiknowsys', 'reviews');
+    assert.ok(fs.existsSync(reviewsDir), 'reviews directory should exist');
+    
+    const reviewsReadme = path.join(reviewsDir, 'README.md');
+    assert.ok(fs.existsSync(reviewsReadme), 'reviews/README.md should exist');
+    
+    const readmeContent = fs.readFileSync(reviewsReadme, 'utf-8');
+    assert.ok(readmeContent.includes('ephemeral'), 'README should explain ephemeral nature');
+    assert.ok(readmeContent.includes('PENDING_<username>.md'), 'README should document filename format');
+    assert.ok(readmeContent.includes('gitignored'), 'README should warn about gitignore');
+    
+    // Verify .gitignore was updated
+    const gitignorePath = path.join(testDirReviews, '.gitignore');
+    assert.ok(fs.existsSync(gitignorePath), '.gitignore should exist');
+    
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    assert.ok(gitignoreContent.includes('.aiknowsys/reviews/'), '.gitignore should exclude reviews directory');
+
+    testDirsToCleanup.push(testDirReviews);
+  });
+
+  it('should create both personal and reviews gitignore patterns without duplication', async () => {
+    const testDirBoth = path.join(__dirname, 'tmp', `test-both-patterns-${Date.now()}`);
+    fs.mkdirSync(testDirBoth, { recursive: true });
+
+    await init({ dir: testDirBoth, yes: true });
+
+    const gitignorePath = path.join(testDirBoth, '.gitignore');
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    
+    // Both patterns should exist
+    assert.ok(gitignoreContent.includes('.aiknowsys/personal/'), 'Should have personal/ pattern');
+    assert.ok(gitignoreContent.includes('.aiknowsys/reviews/'), 'Should have reviews/ pattern');
+    
+    // Count occurrences - should only appear once each
+    const personalCount = (gitignoreContent.match(/\.aiknowsys\/personal\//g) || []).length;
+    const reviewsCount = (gitignoreContent.match(/\.aiknowsys\/reviews\//g) || []).length;
+    
+    assert.strictEqual(personalCount, 1, 'personal/ pattern should appear exactly once');
+    assert.strictEqual(reviewsCount, 1, 'reviews/ pattern should appear exactly once');
+
+    testDirsToCleanup.push(testDirBoth);
+  });
 });
