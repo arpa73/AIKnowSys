@@ -1,6 +1,10 @@
+---
+name: vscode-file-operations
+description: Troubleshoot mysterious file operation failures when using AI assistants in VSCode. Detects and resolves VSCode file watcher conflicts that cause 'file doesn't exist' or 'file already exists' errors. VSCode users only.
+---
+
 # VSCode File Operations Troubleshooting
 
-**Skill Type:** `error_resolution`  
 **Environment:** VSCode only  
 **Trigger Words:** "file operation fail", "file doesn't exist", "file already exists", "can't delete file", "git add failed", "no such file or directory"
 
