@@ -104,45 +104,119 @@ Terminal file operations may fail if VSCode has the file open/modified.
 
 ## Implementation Steps
 
-1. **Read Context:**
-   - [AGENTS.md](../../AGENTS.md)
-   - [CONTRIBUTING.md](../../CONTRIBUTING.md)
-   - [.github/skills/skill-creator/SKILL.md](../../.github/skills/skill-creator/SKILL.md)
+### Phase 1: Update AGENTS.md (Documentation-only change)
 
-2. **Update AGENTS.md:**
-   - Add troubleshooting section after changelog section
-   - Include symptom recognition, solution steps, prevention tips
-   - Link to VSCode issue for reference
+**File:** [AGENTS.md](../../AGENTS.md)  
+**Insert after:** Line 347 (after "## 🚫 When NOT to Update Changelog" section)  
+**TDD:** N/A (documentation only)
 
-3. **Update CONTRIBUTING.md:**
-   - Add "Working with AI Assistants" section if doesn't exist
-   - Document file conflict issue and resolution
-   - Include practical tips for developers
+**Action:**
+1. Add new section header: `## 🐛 Common Issues & Workarounds`
+2. Add subsection: `### VSCode File Operation Conflicts`
+3. Insert content from "Documentation Targets > 1. AGENTS.md" above
+4. Verify markdown formatting is correct
 
-4. **Consider Learned Skill:**
-   - Evaluate if this warrants a learned skill
-   - If yes, create `vscode-file-operations.md` in `.aiknowsys/learned/`
-   - Follow skill-creator format
+**Exact insertion point:**
+```markdown
+- Simple bug fixes that don't reveal new patterns
 
-5. **Validate:**
-   - Check that documentation is clear and actionable
-   - Ensure links are valid
-   - Test with sample scenario (simulate the issue)
+---
 
-6. **Update CURRENT_PLAN.md:**
-   - Add this plan to the table
-   - Set status to ACTIVE when starting
+## 🐛 Common Issues & Workarounds
+
+### VSCode File Operation Conflicts
+
+**Symptom:** File operations fail mysteriously:
+...
+
+---
+
+## 📚 Skills Workflow
+```
+
+### Phase 2: Update CONTRIBUTING.md (Documentation-only change)
+
+**File:** [CONTRIBUTING.md](../../CONTRIBUTING.md)  
+**Insert after:** Line 100 (after "Code Contributions" section, before "Getting Help")  
+**TDD:** N/A (documentation only)
+
+**Action:**
+1. Add new section header: `## Working with AI Assistants`
+2. Add subsection: `### File Operation Conflicts with AI Tools`
+3. Insert content from "Documentation Targets > 2. CONTRIBUTING.md" above
+4. Verify markdown formatting is correct
+
+**Exact insertion point:**
+```markdown
+**Documentation**: Update relevant docs
+
+---
+
+## Working with AI Assistants
+
+### File Operation Conflicts with AI Tools
+
+When working with AI coding assistants (Copilot, Claude, etc.) that use terminal operations:
+...
+
+---
+
+## Getting Help
+```
+
+### Phase 3: Decide on Learned Skill (Optional)
+
+**Decision:** Skip learned skill for now - documentation in AGENTS.md is sufficient.
+
+**Reasoning:**
+- Issue is environmental (VSCode-specific), not project-specific pattern
+- AGENTS.md section provides clear troubleshooting steps
+- Learned skills are for reusable coding patterns, not IDE quirks
+- If issue becomes frequent, can revisit and create learned skill later
+
+**Alternative:** If user experiences this frequently and wants deeper troubleshooting:
+- Create `.aiknowsys/learned/vscode-file-operations.md`
+- Follow skill-creator format with trigger words
+- Include detailed examples and edge cases
+
+### Phase 4: Validation (Documentation review)
+
+**Actions:**
+1. **Read updated files:** Verify sections added correctly
+2. **Check links:** Ensure VSCode issue link works
+3. **Verify formatting:** Run markdown linter if available
+4. **Test readability:** Read as if encountering issue for first time
+5. **Update CURRENT_PLAN.md:** Mark plan COMPLETE
+
+**Validation commands:**
+```bash
+# Check markdown formatting (if markdownlint installed)
+npx markdownlint AGENTS.md CONTRIBUTING.md
+
+# Manual checks:
+# 1. VSCode issue link loads: https://github.com/microsoft/vscode/issues/262495
+# 2. Sections are properly nested (## then ###)
+# 3. Code blocks have proper fences (```markdown)
+# 4. No broken internal links
+```
 
 ---
 
 ## Success Criteria
 
-- [ ] AGENTS.md includes troubleshooting section for file operations
-- [ ] CONTRIBUTING.md documents the issue for developers
-- [ ] Documentation includes clear symptoms, solution, and prevention
-- [ ] Links to VSCode issue for reference
-- [ ] Optional: Learned skill created if warranted
-- [ ] Plan marked COMPLETE in CURRENT_PLAN.md
+- [ ] AGENTS.md includes troubleshooting section after "When NOT to Update Changelog" (line ~347)
+- [ ] CONTRIBUTING.md includes "Working with AI Assistants" section before "Getting Help" (line ~100)
+- [ ] Documentation includes clear symptoms, solution steps, and prevention tips
+- [ ] VSCode issue #262495 link is valid and accessible
+- [ ] Markdown formatting is correct (proper headers, code blocks, lists)
+- [ ] Optional: Learned skill created if issue becomes frequent (deferred for now)
+- [ ] CURRENT_PLAN.md updated to mark plan COMPLETE
+
+**Definition of Done:**
+- AI agents will find troubleshooting steps when file operations fail
+- Developers understand why AI reports mysterious file errors
+- Clear resolution path documented (click Keep/Discard in VSCode)
+- No code changes required (documentation-only task)
 
 ---
 
@@ -158,6 +232,38 @@ Terminal file operations may fail if VSCode has the file open/modified.
 - This issue was discovered during architect review workflow implementation
 - Affects all file operations performed by AI agents via terminal
 - May affect custom agents (Developer, Architect, Planner)
+
+**Implementation Complexity:** Low (documentation-only, no code changes)  
+**Estimated Time:** 15-20 minutes  
+**Risk:** Very low - cannot break existing functionality
+
+**Files to Modify:**
+- [AGENTS.md](../../AGENTS.md) - Add section after line 347
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Add section after line 100  
+- [.aiknowsys/CURRENT_PLAN.md](CURRENT_PLAN.md) - Mark complete
+
+**No Testing Required:** Documentation changes verified by reading only
+
+---
+
+## Ready for Development? ✅
+
+**Status:** Plan is complete and ready for implementation.
+
+**What Developer needs:**
+1. Read this plan (you're doing it!)
+2. Follow Phase 1-4 implementation steps
+3. Use exact content from "Documentation Targets" sections
+4. Insert at specified line numbers
+5. Validate markdown formatting
+6. Mark plan COMPLETE
+
+**Handoff Notes:**
+- All insertion points identified (line numbers provided)
+- Exact content templates provided in plan
+- Decided to skip learned skill (not warranted yet)
+- This is a quick documentation task (~15 min)
+- No code changes = no tests needed
 
 ---
 

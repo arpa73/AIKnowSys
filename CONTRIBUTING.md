@@ -177,6 +177,28 @@ Then create a Pull Request on GitHub with:
 
 **Timeline**: Most PRs reviewed within 7 days.
 
+---
+
+## Working with AI Assistants
+
+### File Operation Conflicts with AI Tools
+
+When working with AI coding assistants (Copilot, Claude, etc.) that use terminal operations:
+
+**Known Issue:** [VSCode #262495](https://github.com/microsoft/vscode/issues/262495)  
+Terminal file operations may fail if VSCode has the file open/modified.
+
+**Symptoms:**
+- AI reports "file doesn't exist" but you see it in explorer
+- AI reports "file already exists" but you can't find it
+- Git operations fail on files that appear to exist
+
+**Fix:** Click "Keep" or "Discard" in VSCode's diff/conflict UI, then ask AI to retry.
+
+**Tip:** Close files before asking AI to delete/modify them via terminal.
+
+---
+
 ## Getting Help
 
 - **Questions**: [GitHub Discussions](https://github.com/[YOUR-USERNAME]/aiknowsys/discussions)

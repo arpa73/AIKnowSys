@@ -347,7 +347,28 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ---
 
-## 📚 Skills Workflow
+## � Common Issues & Workarounds
+
+### VSCode File Operation Conflicts
+
+**Symptom:** File operations fail mysteriously:
+- `rm <file>` → "No such file or directory" (but file exists)
+- `create_file` → "File already exists" (but file doesn't appear to exist)
+- Git operations fail on files that appear to exist
+
+**Root Cause:** [VSCode Issue #262495](https://github.com/microsoft/vscode/issues/262495)  
+When VSCode has a file open/modified, terminal operations may fail until user resolves the conflict.
+
+**Solution:**
+1. **Inform user:** "VSCode may be showing a diff/conflict for this file. Please click 'Keep' or 'Discard' in the editor."
+2. **Retry operation** after user confirms conflict resolved
+3. **Alternative:** Use VSCode file API instead of terminal operations (when available)
+
+**Prevention:** Close/save files before terminal operations when possible.
+
+---
+
+## �📚 Skills Workflow
 
 **Skills are located in `.github/skills/` and provide step-by-step workflows.**
 
