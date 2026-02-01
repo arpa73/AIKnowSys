@@ -115,6 +115,43 @@ If you've made changes manually and want a review:
 
 ## Configuration
 
+### Customizing `model` and `tools` (Advanced)
+
+The YAML frontmatter at the top of each agent file controls which AI model and capabilities the agent has access to.
+
+**`model`** - Which AI model the agent uses:
+```yaml
+model: Claude Sonnet 4.5
+```
+- **What it does:** Selects the AI model for that specific agent
+- **Recommendation:** Keep consistent across Developer/Architect unless you have a specific reason
+- **Note:** Your host environment (VS Code, IDE) may override or ignore this setting
+
+**`tools`** - Which capabilities the agent can use:
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile']
+```
+- **What it does:** Defines the agent's permission boundary (what actions it can perform)
+- **Recommendation:** Least privilege principle - only grant necessary tools
+- **Current defaults:**
+  - **Developer:** `['search', 'edit/editFiles', 'edit/createFile']`
+    - Needs edit tools to implement features and write code
+    - Needs search to read ESSENTIALS and existing code
+  - **SeniorArchitect:** `['search', 'edit/editFiles', 'edit/createFile']`
+    - Needs edit tools to write `.aiknowsys/PENDING_REVIEW.md` and update session files
+    - Needs search to read ESSENTIALS and review code changes
+  - **Planner:** `['search', 'edit/editFiles', 'edit/createFile', 'todo', 'agent', 'web']`
+    - Broader set for planning automation, research, and session management
+
+**Tradeoffs:**
+- If you remove `edit` tools from Architect, it can't write the review artifact or update sessions
+- If you remove `search`, agents can't read ESSENTIALS or scan existing code
+- More tools = more capability, but also more potential for unexpected actions
+
+**Where to edit:**
+- **In your installed project:** Edit `.github/agents/developer.agent.md`, `architect.agent.md`, or `planner.agent.md`
+- **In this template repo:** Edit `templates/agents/*.agent.template.md` to change what gets installed by default
+
 ### Customizing Review Criteria
 
 Edit `.github/agents/architect.agent.md`:

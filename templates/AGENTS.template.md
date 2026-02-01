@@ -404,7 +404,7 @@ This project uses Developer + Architect agents for automated code review.
 4. Architect reviews against CODEBASE_ESSENTIALS.md
 5. Architect approves or requests changes
 
-**See:** `.github/agents/README.md` for details
+**See:** `.github/agents/USAGE.txt` for details
 
 ---
 

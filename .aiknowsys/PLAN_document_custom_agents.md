@@ -1,7 +1,8 @@
 # Implementation Plan: Document Custom Agent Model/Tool Customization
 
-**Status:** 📋 PLANNED  
+**Status:** ✅ COMPLETE  
 **Created:** 2026-02-01  
+**Completed:** 2026-02-01  
 **Goal:** Add clear documentation for customizing custom agents’ `model` and `tools` fields (and related frontmatter) without breaking the workflow or creating mismatched examples.
 
 ## Background

@@ -7,6 +7,35 @@
 
 ---
 
+## Session: Custom Agent Model/Tools Documentation (Feb 1, 2026)
+
+**Goal:** Document how to customize agent `model` and `tools` frontmatter fields
+
+**Changes:**
+- [templates/agents/USAGE.txt](templates/agents/USAGE.txt#L115-L155): Added "Customizing `model` and `tools`" section under Configuration
+- [docs/customization-guide.md](docs/customization-guide.md#L541-L593): Added "Frontmatter Fields: `model` and `tools` (Advanced)" subsection
+- [README.md](README.md#L982-L985): Added pointers to model/tools customization docs
+- [templates/AGENTS.template.md](templates/AGENTS.template.md#L407): Fixed stale `.github/agents/README.md` reference → `USAGE.txt`
+- [docs/copilot-memory-comparison.md](docs/copilot-memory-comparison.md#L239): Fixed stale reference → `USAGE.txt`
+
+**Validation:**
+- ✅ Tests: 457/460 passed
+- ✅ CLI: `node bin/cli.js --help` works
+- ✅ No errors in modified files
+
+**Implementation Notes:**
+- Documentation-only changes (no code changes required)
+- Added practical examples matching actual template frontmatter
+- Documented tradeoffs (more tools = more capability but also more risk)
+- Fixed doc inconsistency (some docs pointed to non-existent README.md)
+
+**Key Learning:**
+- YAML frontmatter fields (`model`, `tools`) were undocumented for end users
+- Users needed guidance on least-privilege tool permissions
+- Clear "where to edit" callouts prevent confusion between template vs installed project
+
+---
+
 ## Session: UX Improvements - Clipboard + TDD Visibility (Feb 1, 2026)
 
 **Goal:** Improve init command UX with clipboard auto-copy and visible TDD status

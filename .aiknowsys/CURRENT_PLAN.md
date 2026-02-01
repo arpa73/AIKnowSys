@@ -1,6 +1,6 @@
 # Active Plan Pointer
 
-**Currently Working On:** [UX Improvements (Clipboard + TDD Visibility)](PLAN_clipboard_tdd_visibility.md)  
+**Currently Working On:** [Document Custom Agent Model/Tool Customization](PLAN_document_custom_agents.md)  
 **Last Updated:** 2026-02-01
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -11,6 +11,7 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [Document Custom Agent Model/Tool Customization](PLAN_document_custom_agents.md) | ✅ COMPLETE | Document model/tools frontmatter fields | 2026-02-01 |
 | [UX Improvements (Clipboard + TDD Visibility)](PLAN_clipboard_tdd_visibility.md) | ✅ COMPLETE | Auto-copy prompt, show TDD status | 2026-02-01 |
 | [Remove Deprecated Shell Scripts](PLAN_remove_deprecated_scripts.md) | ✅ COMPLETE | Cleanup legacy bash scripts replaced by CLI | 2026-02-01 |
 | [Feature Configuration System](PLAN_feature_configuration.md) | 🔄 PAUSED | Planning complete, ready for implementation | 2026-01-31 |

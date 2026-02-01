@@ -236,7 +236,7 @@ Back to @Developer if issues found
 - **Complex projects:** Multi-phase work tracked in plans
 - **Accountability:** Clear record of who did what (planning, implementation, review)
 
-See: [.github/agents/README.md](../.github/agents/README.md) for details
+See: [.github/agents/USAGE.txt](../.github/agents/USAGE.txt) for details
 
 ---
 

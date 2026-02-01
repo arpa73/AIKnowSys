@@ -982,6 +982,11 @@ Edit `.github/agents/architect.agent.md`:
 - Errors must use structured logging
 ```
 
+**Advanced:** Customize agent `model` and `tools` frontmatter fields:
+- See `.github/agents/USAGE.txt` section "Customizing `model` and `tools`"
+- Or [docs/customization-guide.md](docs/customization-guide.md) for full field reference
+- Control which AI model each agent uses and what capabilities they have
+
 **3. Create Custom Skills**
 
 Use skill-creator skill:

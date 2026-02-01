@@ -538,6 +538,47 @@ You enforce: KISS, DRY, SOLID, YAGNI principles from {{ESSENTIALS_PATH}}
 You enforce: KISS, DRY, SOLID, YAGNI principles from CODEBASE_ESSENTIALS.md
 ```
 
+#### Frontmatter Fields: `model` and `tools` (Advanced)
+
+The YAML frontmatter controls agent behavior beyond just instructions. Here are the key fields:
+
+| Field | What It Controls | Common Pitfalls |
+|-------|------------------|-----------------|
+| `name` | Agent identifier (must match filename) | Mismatch breaks handoffs |
+| `description` | Agent's role/purpose | Too generic = unclear responsibilities |
+| `argument-hint` | Placeholder text in chat | Not user-facing critical |
+| `tools` | Capabilities (search, edit, etc.) | Too restrictive = can't function; too permissive = unexpected actions |
+| `model` | AI model selection | Host environment may override |
+| `handoffs` | Automated workflow transitions | `send: true` required for auto-handoff |
+
+**Where to edit:**
+- **In your installed project:** Edit `.github/agents/developer.agent.md`, `architect.agent.md`, `planner.agent.md`
+- **In this template repo:** Edit `templates/agents/*.agent.template.md` to change defaults
+
+**`tools` Examples:**
+
+Developer (needs full implementation capabilities):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile']
+```
+
+SeniorArchitect (needs to write review artifacts and update sessions):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile']
+```
+
+Planner (needs broader capabilities for research and planning):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile', 'todo', 'agent', 'web']
+```
+
+**Common Issues:**
+- **Architect can't write `.aiknowsys/PENDING_REVIEW.md`** → Add `'edit/editFiles', 'edit/createFile'` to tools
+- **Agent can't read CODEBASE_ESSENTIALS.md** → Add `'search'` to tools
+- **Auto-handoff doesn't work** → Ensure `send: true` in handoffs configuration
+
+**Tradeoff:** More tools = more capability, but also more potential for unexpected file modifications. Follow least privilege principle.
+
 ---
 
 ## Stack-Specific Guides
