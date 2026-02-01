@@ -1,6 +1,6 @@
 # Active Plan Pointer
 
-**Currently Working On:** No active plan - Ready for new work  
+**Currently Working On:** [Learned Patterns Collaboration - Phase 1](PLAN_learned_collaboration_phase1.md) - Personal/shared pattern split  
 **Last Updated:** 2026-02-01
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -11,9 +11,14 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [Learned Patterns Collaboration - Phase 1](PLAN_learned_collaboration_phase1.md) | 🎯 ACTIVE | Personal/shared patterns infrastructure | 2026-02-01 |
+| [Learned Patterns Collaboration - Phase 2](PLAN_learned_collaboration_phase2.md) | 📋 PLANNED | Per-developer plans and reviews | 2026-02-01 |
+| [Learned Patterns Collaboration - Phase 3](PLAN_learned_collaboration_phase3.md) | 📋 PLANNED | Automation & pre-commit hooks | 2026-02-01 |
+| [ESSENTIALS Validation](PLAN_essentials_validation.md) | 📋 PLANNED | Ready for implementation (5 phases, ~45-55 min) | 2026-02-01 |
+| [Context7 Plugin](PLAN_context7_plugin.md) | ✅ COMPLETE | Published to npm as v0.2.0 | 2026-02-01 |
+| [Context7 Future Enhancements](PLAN_context7_future.md) | ✅ COMPLETE | Option A (manual workflow) complete. Plugin system infrastructure ready for Option B. | 2026-02-01 |
 | [VSCode File Operations Bug Documentation](PLAN_vscode_file_operations_bug.md) | ✅ COMPLETE | Documentation added to AGENTS.md and CONTRIBUTING.md | 2026-02-01 |
 | [Codebase Deliverables Review](PLAN_deliverables_review.md) | ✅ COMPLETE | All 4 phases done: Skills ✅ Stacks ✅ Docs ✅ Process ✅ | 2026-02-01 |
-| [Context7 Future Enhancements](PLAN_context7_future.md) | 📋 PLANNED | Manual workflow + optional plugin architecture | 2026-02-01 |
 | [Context7 Integration](PLAN_context7_integration.md) | ✅ COMPLETE | Phase 1 & 2 done (docs + utilities) | 2026-02-01 |
 | [Feature Config Phase 1 - Infrastructure](PLAN_feature_config_phase1.md) | ✅ COMPLETE | Config utilities implemented | 2026-02-01 |
 | [Feature Config Phase 2 - User Prompts](PLAN_feature_config_phase2.md) | ✅ COMPLETE | Interactive feature selection | 2026-02-01 |

@@ -76,6 +76,37 @@ AIKnowSys complements (or replaces) GitHub's Copilot Memory with key advantages:
 
 **[Read full comparison →](docs/copilot-memory-comparison.md)**
 
+### Plugin Ecosystem
+
+Extend aiknowsys with optional plugins for additional capabilities:
+
+**🔌 Available Plugins:**
+
+- **[aiknowsys-plugin-context7](https://www.npmjs.com/package/aiknowsys-plugin-context7)** - Context7 MCP integration
+  - Validate skills/stacks against current library documentation
+  - Query up-to-date framework docs (Next.js, Vue, React, etc.)
+  - Detect framework updates and breaking changes
+  - Generate validation reports for monthly reviews
+  - CI/CD integration for automated quality checks
+
+**Installation:**
+```bash
+npm install aiknowsys-plugin-context7
+
+# Plugin discovered automatically
+npx aiknowsys --help
+# Shows: validate-deliverables, query-docs commands
+```
+
+**Plugin Architecture:**
+- 🔌 Zero impact on core (optional dependencies)
+- 🎯 Auto-discovered via package.json
+- 📦 Separate npm packages
+- 🧪 Independent testing
+- 📖 Full documentation
+
+**[See plugin development guide →](docs/plugin-architecture.md)**
+
 ---
 
 ## Quick Start

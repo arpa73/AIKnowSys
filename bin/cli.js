@@ -22,6 +22,8 @@ import { qualityCheck } from '../lib/commands/quality-check.js';
 import { ciCheck } from '../lib/commands/ci-check.js';
 import { depsHealth } from '../lib/commands/deps-health.js';
 import { enableFeature, disableFeature, uninstall } from '../lib/commands/config.js';
+import { listPlugins } from '../lib/commands/plugins.js';
+import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -195,6 +197,14 @@ program
     });
   });
 
+// Plugin management command
+program
+  .command('plugins')
+  .description('List installed plugins')
+  .action(async (options) => {
+    await listPlugins(options);
+  });
+
 // Config management commands
 program
   .command('enable <feature>')
@@ -235,5 +245,8 @@ program
     console.log('');
     program.outputHelp();
   });
+
+// Load plugins (adds additional commands from installed plugins)
+await loadPlugins(program);
 
 program.parse();

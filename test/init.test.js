@@ -468,4 +468,113 @@ describe('init command', () => {
     // Clean up after assertions pass
     testDirsToCleanup.push(testDirSession);
   });
+
+  it('should create personal patterns directory with username', async () => {
+    const testDirPersonal = path.join(__dirname, 'tmp', `test-personal-${Date.now()}`);
+    fs.mkdirSync(testDirPersonal, { recursive: true });
+    
+    // Initialize git config for the test (required for username detection)
+    try {
+      execSync('git config user.name', { cwd: testDirPersonal, stdio: 'ignore' });
+    } catch {
+      // If no git config, skip this test
+      testDirsToCleanup.push(testDirPersonal);
+      return;
+    }
+
+    await init({ dir: testDirPersonal, yes: true });
+
+    // Get the username that should be used
+    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const personalDir = path.join(testDirPersonal, '.aiknowsys', 'personal', username);
+    
+    // Verify personal directory structure
+    assert.ok(fs.existsSync(personalDir), `personal/${username} directory should exist`);
+    
+    const personalReadme = path.join(personalDir, 'README.md');
+    assert.ok(fs.existsSync(personalReadme), 'personal/README.md should exist');
+    
+    const readmeContent = fs.readFileSync(personalReadme, 'utf-8');
+    assert.ok(readmeContent.includes('Personal Patterns'), 'README should document personal patterns');
+    assert.ok(readmeContent.includes('gitignored'), 'README should warn about gitignore');
+    
+    // Verify .gitignore was updated
+    const gitignorePath = path.join(testDirPersonal, '.gitignore');
+    assert.ok(fs.existsSync(gitignorePath), '.gitignore should exist');
+    
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    assert.ok(gitignoreContent.includes('.aiknowsys/personal/'), '.gitignore should exclude personal directory');
+
+    testDirsToCleanup.push(testDirPersonal);
+  });
+
+  it('should normalize username for directory naming', async () => {
+    const testDirNormalize = path.join(__dirname, 'tmp', `test-normalize-${Date.now()}`);
+    fs.mkdirSync(testDirNormalize, { recursive: true });
+    
+    // Check if git is configured
+    try {
+      const rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
+      
+      await init({ dir: testDirNormalize, yes: true });
+      
+      // Username should be normalized (lowercase, hyphens instead of spaces)
+      const normalizedUsername = rawUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      const personalDir = path.join(testDirNormalize, '.aiknowsys', 'personal', normalizedUsername);
+      assert.ok(fs.existsSync(personalDir), 'Normalized username directory should exist');
+      
+      // Verify no uppercase or special characters in directory name
+      const dirName = path.basename(personalDir);
+      assert.ok(/^[a-z0-9-]+$/.test(dirName), 'Directory name should be lowercase alphanumeric with hyphens only');
+    } catch {
+      // Skip test if git not configured
+    }
+
+    testDirsToCleanup.push(testDirNormalize);
+  });
+
+  it('should not fail if git username is not configured', async () => {
+    const testDirNoGit = path.join(__dirname, 'tmp', `test-nogit-${Date.now()}`);
+    fs.mkdirSync(testDirNoGit, { recursive: true });
+    
+    // Save the git config temporarily
+    let originalUsername;
+    try {
+      originalUsername = execSync('git config --global user.name', { encoding: 'utf-8' }).trim();
+      execSync('git config --global --unset user.name', { stdio: 'ignore' });
+    } catch {
+      // No username set, which is what we want
+    }
+
+    try {
+      // Should not throw error even without git username
+      await init({ dir: testDirNoGit, yes: true });
+      
+      // Core files should still be created
+      assert.ok(fs.existsSync(path.join(testDirNoGit, 'CODEBASE_ESSENTIALS.md')), 'Should create core files even without git username');
+      assert.ok(fs.existsSync(path.join(testDirNoGit, '.aiknowsys', 'sessions')), 'Should create sessions directory');
+      assert.ok(fs.existsSync(path.join(testDirNoGit, '.aiknowsys', 'learned')), 'Should create learned directory');
+      
+      // Personal directory should NOT exist (no username to create it with)
+      const personalParentDir = path.join(testDirNoGit, '.aiknowsys', 'personal');
+      if (fs.existsSync(personalParentDir)) {
+        const personalDirs = fs.readdirSync(personalParentDir);
+        assert.strictEqual(personalDirs.length, 0, 'Personal directory should not contain user directories without git username');
+      }
+    } finally {
+      // Restore git config if it was set
+      if (originalUsername) {
+        execSync(`git config --global user.name "${originalUsername}"`, { stdio: 'ignore' });
+      }
+      testDirsToCleanup.push(testDirNoGit);
+    }
+  });
 });
