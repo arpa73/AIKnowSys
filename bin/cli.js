@@ -23,6 +23,8 @@ import { ciCheck } from '../lib/commands/ci-check.js';
 import { depsHealth } from '../lib/commands/deps-health.js';
 import { enableFeature, disableFeature, uninstall } from '../lib/commands/config.js';
 import { listPlugins } from '../lib/commands/plugins.js';
+import { listPatterns, extractPattern, autoCreateSkills } from '../lib/commands/learn.js';
+import { sharePattern } from '../lib/commands/share-pattern.js';
 import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
@@ -112,6 +114,37 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(audit);
+
+// Learn command - Pattern management
+program
+  .command('learn')
+  .description('Manage learned patterns and skills')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--list', 'List all detected patterns')
+  .option('--extract <pattern>', 'Extract specific pattern to skill file')
+  .option('--auto', 'Auto-create skills for high-frequency patterns')
+  .option('--threshold <number>', 'Minimum pattern frequency for auto-create', '3')
+  .option('--shared', 'Save to shared learned/ directory (default: personal)')
+  .action(async (options) => {
+    if (options.list) {
+      await listPatterns(options);
+    } else if (options.extract) {
+      await extractPattern({ ...options, pattern: options.extract });
+    } else if (options.auto) {
+      await autoCreateSkills({ ...options, threshold: parseInt(options.threshold, 10) });
+    } else {
+      console.log('Use --list, --extract, or --auto. See --help for details.');
+    }
+  });
+
+// Share pattern command
+program
+  .command('share-pattern <name>')
+  .description('Share a personal pattern with the team (move to learned/)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(async (name, options) => {
+    await sharePattern(name, options);
+  });
 
 program
   .command('compress-essentials')
