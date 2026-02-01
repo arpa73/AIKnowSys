@@ -630,6 +630,68 @@ See [VSCode Hooks Guide](docs/vscode-hooks-guide.md) for complete reference, exa
 
 ---
 
+### Context7 MCP Integration (Optional)
+
+**What is Context7?**  
+Context7 is an MCP (Model Context Protocol) server that provides up-to-date library and framework documentation to AI assistants, preventing outdated code and hallucinated APIs.
+
+**Benefits with AIKnowSys:**
+- ✅ Validates learned skills against current library versions
+- ✅ Prevents deprecated patterns in scaffolding
+- ✅ Version-specific documentation during planning
+- ✅ Auto-detects API drift in learned patterns
+
+**Quick Setup:**
+
+1. **Install Context7 MCP** (for Claude Desktop/Cursor):
+   ```bash
+   npm install -g @context7/mcp-server
+   ```
+
+2. **Configure your AI client:**
+   ```json
+   {
+     "mcpServers": {
+       "context7": {
+         "command": "npx",
+         "args": ["-y", "@context7/mcp-server"]
+       }
+     }
+   }
+   ```
+
+3. **Verify:**
+   Ask your AI: "Use Context7 to check Next.js 15 documentation"
+
+**Usage Examples:**
+
+*Validating learned skills:*
+```
+Review .github/skills/nextjs-middleware/SKILL.md
+Use Context7 to check if referenced APIs are still current.
+```
+
+*Planning with current docs:*
+```
+@Planner Plan authentication for Next.js 15
+Use Context7 for current middleware and route handler patterns.
+```
+
+*Scaffolding verification:*
+```
+After npx aiknowsys init --stack nextjs
+"Use Context7 to verify template uses current conventions"
+```
+
+**Installed Skills:**
+- `context7-usage` - When and how to use Context7 with AIKnowSys
+- `skill-validation` - Validate learned skills against current docs
+
+**For complete guide:**  
+See [Context7 Integration Guide](docs/context7-integration.md) for detailed setup, workflows, and best practices.
+
+---
+
 ### Disabling Hooks
 
 Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
