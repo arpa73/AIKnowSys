@@ -39,6 +39,71 @@ AIKnowSys helps you build and maintain project knowledge. Context7 ensures that 
 
 ---
 
+## Architecture
+
+Context7 integration in AIKnowSys follows a **detection + guidance** pattern:
+
+### How It Works
+
+```
+┌─────────────────┐
+│   AI Assistant  │  (Claude Desktop, Cursor, etc.)
+│   with Context7 │
+└────────┬────────┘
+         │ 1. AI reads AIKnowSys docs/skills
+         │ 2. Triggers context7-usage skill
+         │ 3. AI calls Context7 MCP directly
+         │
+         ▼
+┌─────────────────┐
+│  Context7 MCP   │  (Installed separately by user)
+│     Server      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Library Docs   │  (Next.js, React, etc.)
+│   (Live fetch)  │
+└─────────────────┘
+```
+
+**Key Points:**
+
+1. **No Direct CLI Integration**  
+   AIKnowSys CLI doesn't call Context7 directly. Instead, it provides:
+   - Detection utilities (`lib/context7/index.js`) to check if Context7 is available
+   - AI skills (`.github/skills/context7-usage/`) that guide the AI assistant
+   - VSCode hooks that remind AI when Context7 can be used
+
+2. **AI-Driven Workflow**  
+   Context7 queries happen through your AI client, not through `npx aiknowsys` commands:
+   - AI reads trigger words ("check current Next.js patterns")
+   - AI loads `context7-usage` skill for guidance
+   - AI directly calls Context7 MCP using client's MCP protocol
+   - AI receives docs and applies to current task
+
+3. **Graceful Degradation**  
+   If Context7 isn't installed:
+   - Detection returns `{ available: false }`
+   - VSCode hooks skip Context7 reminders
+   - AI skills work with existing knowledge
+   - No errors or warnings to user
+
+4. **Future CLI Integration**  
+   Potential future features that would require MCP client library:
+   - `npx aiknowsys validate-skills --context7` (auto-check all skills)
+   - Direct library documentation fetching from CLI
+   - These would be added as optional dependencies when implemented
+
+**Why This Approach?**
+
+- ✅ Zero coupling: AIKnowSys doesn't bundle MCP client code
+- ✅ Users control their AI environment (client + MCP setup)
+- ✅ Simple detection: Just check config files, no network calls
+- ✅ Clear separation: CLI does filesystem work, AI does doc queries
+
+---
+
 ## Installation
 
 ### Prerequisites

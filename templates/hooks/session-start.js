@@ -5,6 +5,7 @@
  * 
  * Executed when GitHub Copilot coding agent session starts.
  * Checks for recent session files and notifies user/AI to load context.
+ * Also checks if Context7 MCP is available for enhanced library documentation.
  */
 
 import fs from 'fs';
@@ -13,6 +14,15 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Import Context7 detection if available
+let isContext7Available = null;
+try {
+  const context7Module = await import('../../lib/context7/index.js');
+  isContext7Available = context7Module.isContext7Available;
+} catch (err) {
+  // Context7 utilities not available - skip detection
+}
 
 // Get sessions directory (allow override via environment variable for testing)
 const projectRoot = process.env.SESSIONS_DIR 
@@ -46,6 +56,15 @@ try {
     console.error(`[SessionStart] Found recent session: ${mostRecent.file}`);
     console.error(`[SessionStart] Read it to load context from previous work`);
     console.error(`[SessionStart] Path: ${mostRecent.path}`);
+  }
+
+  // Check if Context7 MCP is available
+  if (isContext7Available) {
+    const context7Status = await isContext7Available();
+    if (context7Status.available) {
+      console.error(`[SessionStart] Context7 MCP detected (${context7Status.source})`);
+      console.error(`[SessionStart] Use @context7-usage skill for up-to-date library documentation`);
+    }
   }
 
   process.exit(0);
