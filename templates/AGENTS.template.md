@@ -361,7 +361,20 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ---
 
-## 📚 Skills Workflow
+## � Common Issues & Workarounds
+
+### VSCode File Operation Conflicts (VSCode users only)
+
+**If working in VSCode** and file operations fail mysteriously, see:  
+**[.aiknowsys/learned/vscode-file-operations.md](.aiknowsys/learned/vscode-file-operations.md)**
+
+**Quick fix:** Click "Keep" or "Discard" in VSCode's diff/conflict UI, then retry the operation.
+
+**Trigger words for full guide:** "file doesn't exist", "file already exists", "can't delete file", "git add failed"
+
+---
+
+## �📚 Skills Workflow
 
 **Skills are located in `.github/skills/` and provide step-by-step workflows.**
 
