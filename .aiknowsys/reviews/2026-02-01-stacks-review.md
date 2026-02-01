@@ -226,8 +226,8 @@ const userAgent = headersList.get('user-agent')
 **Recommended actions:**
 
 ### High Priority
-- [ ] Update nextjs template: Add async `headers()`/`cookies()` note
-- [ ] Update nextjs template: Show `generateMetadata` example
+- [x] Update nextjs template: Add async `headers()`/`cookies()` note ✅ (commit 87e30b3)
+- [x] Update nextjs template: Show `generateMetadata` example ✅ (already exists in template)
 - [ ] Decide on nextjs-api template: Deprecate or mark as legacy?
 
 ### Medium Priority
