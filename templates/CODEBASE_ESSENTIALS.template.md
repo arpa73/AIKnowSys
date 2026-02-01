@@ -352,6 +352,73 @@ GitHub Copilot supports hooks that run automatically during session lifecycle. T
 
 ---
 
+## Feature Configuration
+
+**What is feature configuration?**  
+AIKnowSys supports optional configuration for feature preferences. Core features are enabled by default if no config file exists (backward compatible).
+
+**Configuration file:** `.aiknowsys.config.json` (created manually or via commands)
+
+**Core features (enabled by default):**
+- `agents` - Custom agents (@Developer, @Planner, @SeniorArchitect)
+- `skills` - Universal skills library (.github/skills/)
+- `vscodeHooks` - GitHub Copilot hooks (.github/hooks/)
+- `sessionPersistence` - Session tracking (.aiknowsys/sessions/)
+- `tddEnforcement` - Test-Driven Development workflow reminders
+
+**Optional features (disabled by default):**
+- `openspec` - Change proposal system (openspec/)
+- `context7` - External documentation queries
+
+**Example configuration:**
+```json
+{
+  "version": "1.0",
+  "features": {
+    "agents": true,
+    "skills": true,
+    "vscodeHooks": true,
+    "sessionPersistence": true,
+    "tddEnforcement": true,
+    "openspec": false,
+    "context7": false
+  },
+  "preferences": {
+    "templateType": "full",
+    "stackName": null
+  }
+}
+```
+
+**Commands:**
+```bash
+# View status
+npx aiknowsys check  # Shows enabled/disabled features
+
+# Enable a feature (installs if missing)
+npx aiknowsys enable skills
+npx aiknowsys enable vscodeHooks
+
+# Disable a feature (keeps files by default)
+npx aiknowsys disable openspec
+
+# Disable and remove files
+npx aiknowsys disable skills --remove-files
+
+# Remove AIKnowSys completely
+npx aiknowsys uninstall  # Safety prompts, option to keep user data
+```
+
+**Behavior:**
+- Missing config file → Core features enabled, optional features disabled (backward compatible)
+- Invalid config → Falls back to defaults with warning
+- Feature disabled → Components still installed but won't be referenced in prompts
+- Enable command → Installs missing files and updates config
+- Disable command → Updates config, optionally removes files
+- Uninstall → Removes all AIKnowSys files with safety checks
+
+---
+
 ## Development Workflow
 
 ### Setting Up Local Environment

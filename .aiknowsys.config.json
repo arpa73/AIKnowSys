@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "features": {
+    "agents": true,
+    "skills": true,
+    "vscodeHooks": true,
+    "sessionPersistence": true,
+    "tddEnforcement": true,
+    "openspec": false,
+    "context7": false
+  },
+  "preferences": {
+    "templateType": "full",
+    "stackName": null
+  }
+}

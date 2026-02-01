@@ -2,6 +2,7 @@
 
 **Status:** 🎯 ACTIVE  
 **Created:** 2026-01-31  
+**Resumed:** 2026-02-01  
 **Goal:** Add user-configurable options for optional features (OpenSpec, VSCode Hooks, TDD enforcement, session persistence, etc.)
 
 ---

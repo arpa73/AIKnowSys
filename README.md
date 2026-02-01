@@ -142,6 +142,9 @@ Each stack template includes:
 | `npx aiknowsys compress-essentials --interactive` | Interactive compression workflow | N/A (maintenance) |
 | `npx aiknowsys install-agents` | Install Planner + Developer + Architect agents | N/A (standalone) |
 | `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
+| `npx aiknowsys enable <feature>` | Enable and install a specific feature | N/A (feature management) |
+| `npx aiknowsys disable <feature>` | Disable a feature (optionally remove files) | N/A (feature management) |
+| `npx aiknowsys uninstall` | Remove AIKnowSys completely from project | N/A (cleanup) |
 
 **🤔 `init` vs `migrate` - Which Should I Use?**
 
@@ -297,6 +300,43 @@ npx aiknowsys compress-essentials --auto
 npx aiknowsys compress-essentials --interactive
 # Step-by-step compression with previews
 ```
+
+### 🔧 Feature Management
+
+Manage features after initial setup:
+
+```bash
+# Enable a feature that was skipped during init
+npx aiknowsys enable skills
+npx aiknowsys enable vscodeHooks
+npx aiknowsys enable tddEnforcement
+
+# Disable a feature (keeps files by default)
+npx aiknowsys disable openspec
+
+# Disable and remove files
+npx aiknowsys disable skills --remove-files
+
+# Remove AIKnowSys completely
+npx aiknowsys uninstall
+# ⚠️ Removes all AIKnowSys files with safety prompts
+# Option to keep user data (.aiknowsys/learned, sessions)
+```
+
+**Available features:**
+- `agents` - Developer + Architect + Planner custom agents
+- `skills` - Universal skills library (.github/skills/)
+- `vscodeHooks` - VS Code session hooks for auto-context loading
+- `sessionPersistence` - Session tracking (.aiknowsys/sessions/)
+- `tddEnforcement` - TDD git hooks and GitHub Actions
+- `openspec` - OpenSpec integration for change proposals
+- `context7` - Context7 MCP integration (reserved for future)
+
+**When to use:**
+- Skip optional features during init, add them later
+- Experiment with features without reinstalling
+- Clean up unused features to reduce repository size
+- Complete removal when migrating away from AIKnowSys
 
 **Prevention (built into templates):**
 - Template hints guide AI toward concise examples (<15 lines)

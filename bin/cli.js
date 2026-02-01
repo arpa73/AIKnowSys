@@ -21,6 +21,7 @@ import { clean } from '../lib/commands/clean.js';
 import { qualityCheck } from '../lib/commands/quality-check.js';
 import { ciCheck } from '../lib/commands/ci-check.js';
 import { depsHealth } from '../lib/commands/deps-health.js';
+import { enableFeature, disableFeature, uninstall } from '../lib/commands/config.js';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -192,6 +193,35 @@ program
     await depsHealth({
       dir: options.dir
     });
+  });
+
+// Config management commands
+program
+  .command('enable <feature>')
+  .description('Enable a feature (agents, skills, vscodeHooks, sessionPersistence, tddEnforcement, openspec, context7)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
+  .action(async (feature, options) => {
+    await enableFeature(feature, options);
+  });
+
+program
+  .command('disable <feature>')
+  .description('Disable a feature')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--keep-files', 'Keep files when disabling (only update config)')
+  .option('--remove-files', 'Remove files when disabling')
+  .action(async (feature, options) => {
+    await disableFeature(feature, options);
+  });
+
+program
+  .command('uninstall')
+  .description('Completely uninstall AIKnowSys from project')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-y, --yes', 'Skip confirmation prompts')
+  .action(async (options) => {
+    await uninstall(options);
   });
 
 // Default command - show help with styled banner
