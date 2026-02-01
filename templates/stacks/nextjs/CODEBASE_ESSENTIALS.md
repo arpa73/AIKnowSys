@@ -193,10 +193,11 @@ export async function GET(request) {
 
 ### Next.js App Router Rules
 
-1. **Metadata exports** - Use `generateMetadata` for dynamic SEO
-2. **Loading states** - Use `loading.tsx` for Suspense boundaries
-3. **Error boundaries** - Use `error.tsx` for error handling
-4. **Route handlers** - Always in `route.ts` files, never `page.ts`
+1. **Metadata exports** - Use `generateMetadata` for dynamic SEO (see Dynamic Metadata section)
+2. **Async headers/cookies** - MUST await `headers()` and `cookies()` in Next.js 15+ (see pattern below)
+3. **Loading states** - Use `loading.tsx` for Suspense boundaries
+4. **Error boundaries** - Use `error.tsx` for error handling
+5. **Route handlers** - Always in `route.ts` files, never `page.ts`
 
 ### Database Access
 
@@ -413,6 +414,52 @@ const posts = await db.post.findMany({
     }
   }
 });
+```
+
+### Accessing Request Headers and Cookies (Next.js 15+)
+
+**⚠️ Breaking Change in Next.js 15: headers() and cookies() are now async**
+
+```typescript
+// Next.js 15+ - MUST use await
+import { headers, cookies } from 'next/headers';
+
+export default async function Page() {
+  // ✅ CORRECT: Await both functions
+  const headersList = await headers();
+  const cookieStore = await cookies();
+  
+  const userAgent = headersList.get('user-agent');
+  const theme = cookieStore.get('theme');
+  
+  return <div>User Agent: {userAgent}</div>;
+}
+
+// ❌ WRONG: Not awaiting (Next.js 15+)
+import { headers } from 'next/headers';
+
+export default function Page() {
+  const headersList = headers(); // TypeError! Must await
+  return <div>...</div>;
+}
+```
+
+**Setting Cookies in Server Actions**
+
+```typescript
+// app/actions.ts
+'use server';
+
+import { cookies } from 'next/headers';
+
+export async function setTheme(theme: 'light' | 'dark') {
+  const cookieStore = await cookies();
+  cookieStore.set('theme', theme, {
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+    path: '/',
+    sameSite: 'strict',
+  });
+}
 ```
 
 ### Authentication with NextAuth.js
