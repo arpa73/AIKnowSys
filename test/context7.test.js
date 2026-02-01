@@ -111,7 +111,7 @@ describe('Context7 Utilities', () => {
     });
 
     it('should ignore relative imports', () => {
-      const content = `import { helper } from './utils';`;
+      const content = 'import { helper } from \'./utils\';';
       const refs = extractLibraryReferences(content);
       
       assert.ok(!refs.some(r => r.name.startsWith('./')));

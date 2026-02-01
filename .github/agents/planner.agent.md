@@ -2,7 +2,7 @@
 name: Planner
 description: Expert planning specialist for complex features and refactoring. Creates detailed implementation plans, manages sessions, and integrates with OpenSpec.
 argument-hint: "Describe the feature or refactoring task to plan"
-model: GPT-5.2 (copilot)
+model: Claude Sonnet 4.5
 handoffs:
   - label: "Send to Developer"
     agent: Developer
