@@ -1,14 +1,36 @@
 #!/bin/bash
 #
-# Pre-commit Git Hook - TDD Compliance Check
+# Pre-commit Git Hook - TDD Compliance & Linting Check
 #
-# Ensures that changes to lib/ directory include corresponding test changes
-# Helps prevent violating Critical Invariant #7 (Test-Driven Development)
+# 1. Runs ESLint on staged files
+# 2. Ensures that changes to lib/ directory include corresponding test changes
 #
 # Installation:
 #   chmod +x .git/hooks/pre-commit
 #   (This file should be copied to .git/hooks/pre-commit)
 #
+
+# Run linter on staged files
+echo "🔍 Running ESLint on staged files..."
+
+# Get staged .js files
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep "\.js$" || true)
+
+if [ -n "$STAGED_JS" ]; then
+    echo "📝 Linting staged JavaScript files..."
+    
+    # Run eslint on staged files
+    if ! npx eslint $STAGED_JS; then
+        echo ""
+        echo "❌ ESLint failed!"
+        echo "💡 Fix linting errors or run: npm run lint:fix"
+        echo ""
+        exit 1
+    fi
+    
+    echo "✅ ESLint passed!"
+    echo ""
+fi
 
 echo "🔍 Running TDD compliance check..."
 

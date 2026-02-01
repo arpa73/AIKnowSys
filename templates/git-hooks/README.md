@@ -1,15 +1,15 @@
-# Git Hooks for TDD Enforcement
+# Git Hooks for TDD Enforcement & Code Quality
 
-This directory contains Git hooks to help enforce Test-Driven Development practices.
+This directory contains Git hooks to help enforce Test-Driven Development practices and code quality standards.
 
 ## Available Hooks
 
-### `pre-commit` - TDD Compliance Check
+### `pre-commit` - TDD Compliance & Linting Check
 
 **What it does:**
-- Checks if you're staging changes to `lib/` without corresponding `test/` changes
-- Prompts you to confirm if you want to proceed without tests
-- Helps prevent violating Critical Invariant #7 (TDD requirement)
+1. **Runs ESLint** on all staged JavaScript files
+2. **Checks TDD compliance** - if you're staging changes to `lib/` without corresponding `test/` changes
+3. **Blocks commit** if linting fails or tests are missing
 
 **Installation:**
 
