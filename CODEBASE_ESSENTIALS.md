@@ -205,8 +205,11 @@ See: [AGENTS.md](AGENTS.md#plan-management)
 ## 5. Critical Invariants
 
 1. **ES Modules Only**
-   - All files use `import`/`export`, never `require()`
+   - All **internal** files use `import`/`export`, never `require()`
    - package.json has `"type": "module"`
+   - **Exception:** Templates distributed to user projects may use `.cjs` for compatibility
+     - Example: VSCode hooks, git hook installer
+     - Reason: User projects may not use ES modules
 
 2. **Absolute Paths Required**
    - Always use `path.resolve()` for user-provided paths

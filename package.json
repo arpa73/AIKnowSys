@@ -45,6 +45,7 @@
     "test:cli": "node bin/cli.js --help",
     "lint": "eslint lib/ bin/ test/",
     "lint:fix": "eslint lib/ bin/ test/ --fix",
+    "install-hooks": "node templates/scripts/install-git-hooks.cjs",
     "prepublishOnly": "npm run lint && npm run test:cli && npm pack --dry-run",
     "postversion": "git push && git push --tags"
   },

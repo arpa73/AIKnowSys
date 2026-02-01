@@ -1,7 +1,7 @@
 # Active Plan Pointer
 
-**Currently Working On:** [Feature Configuration System](PLAN_feature_configuration.md)  
-**Last Updated:** 2026-01-31
+**Currently Working On:** [UX Improvements (Clipboard + TDD Visibility)](PLAN_clipboard_tdd_visibility.md)  
+**Last Updated:** 2026-02-01
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
@@ -11,7 +11,9 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [Feature Configuration System](PLAN_feature_configuration.md) | 🎯 ACTIVE | Planning complete, ready for implementation | 2026-01-31 |
+| [UX Improvements (Clipboard + TDD Visibility)](PLAN_clipboard_tdd_visibility.md) | ✅ COMPLETE | Auto-copy prompt, show TDD status | 2026-02-01 |
+| [Remove Deprecated Shell Scripts](PLAN_remove_deprecated_scripts.md) | ✅ COMPLETE | Cleanup legacy bash scripts replaced by CLI | 2026-02-01 |
+| [Feature Configuration System](PLAN_feature_configuration.md) | 🔄 PAUSED | Planning complete, ready for implementation | 2026-01-31 |
 | [Learned Patterns Collaboration](PLAN_learned_collaboration.md) | 📋 PLANNED | Solves merge conflicts via personal/shared split | 2026-01-31 |
 | [Sprint 3: Performance & Integration](PLAN_sprint3_performance.md) | 📋 PLANNED | Benchmarks, integration tests, architecture docs | 2026-01-31 |
 | [Hooks Documentation Completion](PLAN_hooks_documentation.md) | ✅ COMPLETE | All 5 phases done, hooks fully documented | 2026-01-31 |

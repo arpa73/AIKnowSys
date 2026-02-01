@@ -1,71 +1,48 @@
 # Scripts Directory
 
-## Status: LEGACY / MIGRATION PATH
+## Status: DEPRECATED SCRIPTS REMOVED
 
-This directory contains bash scripts that were the original setup method. They are now **superseded by the CLI** but kept for:
-
-1. **Migration path** for users who bookmarked old documentation
-2. **Cross-reference** for testing CLI feature parity  
-3. **Examples** of bash-based setup patterns
+The bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have been removed as of v0.9.0. They were fully replaced by CLI commands.
 
 ---
 
-## Recommended Approach
+## ✅ Use the CLI Instead
 
-✅ **Use the CLI:**
 ```bash
-npx aiknowsys init         # New projects
-npx aiknowsys migrate      # Existing projects
-npx aiknowsys scan         # Scan codebase
-```
-
-❌ **Old bash scripts:**
-```bash
-./scripts/setup.sh              # → Use: npx aiknowsys init
-./scripts/migrate-existing.sh   # → Use: npx aiknowsys migrate
-./scripts/scan-codebase.sh      # → Use: npx aiknowsys scan
+npx aiknowsys init         # New projects (was: setup.sh)
+npx aiknowsys migrate      # Existing projects (was: migrate-existing.sh)
+npx aiknowsys scan         # Scan codebase (was: scan-codebase.sh)
 ```
 
 ---
 
-## What About install-git-hooks.sh?
+## What About install-git-hooks Scripts?  
 
-✅ **STILL ACTIVE** - This one is different!
+✅ **STILL ACTIVE** - These are templates, not setup scripts!
 
-- Copied from `templates/scripts/install-git-hooks.sh` during init
-- Runs in USER's project (not aiknowsys itself)
+- **Node.js version (recommended):** `templates/scripts/install-git-hooks.cjs` - Cross-platform
+- **Bash version (legacy):** `templates/scripts/install-git-hooks.sh` - Unix-like systems
+- Copied to user projects during `npx aiknowsys init --tdd-enforcement`
 - Installs git hooks for TDD enforcement
-- Part of the template system, not a setup script
+- Run in YOUR project (not aiknowsys itself)
 
-**Usage:**
+**Usage in your project:**
 ```bash
-# After running: npx aiknowsys init --yes
+# After running: npx aiknowsys init --tdd-enforcement
 cd your-project
-./scripts/install-git-hooks.sh  # Enable pre-commit TDD checks
+
+# Cross-platform (recommended)
+node scripts/install-git-hooks.cjs
+# Or: npm run install-hooks
+
+# Legacy bash version (Unix-like systems only)
+./scripts/install-git-hooks.sh  
 ```
 
 ---
 
-## Should Scripts Be Removed?
+## History
 
-**Not yet.** They serve as:
-- Documentation of original design
-- Bash implementation reference
-- Fallback for environments without Node.js (rare)
+Bash scripts were the original setup method (v0.1.0 - v0.2.0). CLI replaced them in v0.2.0+. Scripts were kept for migration path but removed in v0.9.0 after sufficient adoption time.
 
-**Future:** Mark deprecated in v0.8.x, remove in v1.0.0
-
----
-
-## Script Inventory
-
-| Script | Status | CLI Equivalent |
-|--------|--------|----------------|
-| setup.sh | ❌ DEPRECATED | `npx aiknowsys init` |
-| migrate-existing.sh | ❌ DEPRECATED | `npx aiknowsys migrate` |
-| scan-codebase.sh | ❌ DEPRECATED | `npx aiknowsys scan` |
-| install-git-hooks.sh | ✅ TEMPLATE | Copied to user projects during init |
-
----
-
-*For CLI documentation, see [../README.md](../README.md)*
+For CLI documentation, see [../README.md](../README.md).

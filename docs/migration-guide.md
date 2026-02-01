@@ -124,22 +124,17 @@ The knowledge system consists of:
 
 ### Step 1: Automated Codebase Scan
 
-Use the migration script to auto-detect your stack:
+Use the CLI migration command to auto-detect your stack:
 
 ```bash
-# 1. Clone the template repository
-git clone https://github.com/your-org/aiknowsys.git /tmp/aiknowsys-template
-
-# 2. Copy migration tools to your project
+# Navigate to your existing project
 cd /path/to/your/project
-cp -r /tmp/aiknowsys-template/scripts ./
-cp -r /tmp/aiknowsys-template/templates ./
 
-# 3. Run the migration script
-bash scripts/migrate-existing.sh
+# Run the migration command
+npx aiknowsys migrate
 ```
 
-**What the script does:**
+**What the command does:**
 
 1. **Scans for tech stack:**
    - Checks `package.json` for frontend framework
@@ -171,18 +166,15 @@ your-project/
 ├── CODEBASE_ESSENTIALS.draft.md  ← Review and complete
 ├── AGENTS.md                      ← Workflow configured
 ├── CODEBASE_CHANGELOG.md          ← Session template
-├── .github/
-│   ├── agents/
-│   │   ├── developer.agent.md
-│   │   └── architect.agent.md
-│   └── skills/
-│       ├── dependency-updates/
-│       ├── documentation-management/
-│       ├── code-refactoring/
-│       └── skill-creator/
-└── scripts/
-    ├── scan-codebase.sh
-    └── migrate-existing.sh
+└── .github/
+    ├── agents/
+    │   ├── developer.agent.md
+    │   └── architect.agent.md
+    └── skills/
+        ├── dependency-updates/
+        ├── documentation-management/
+        ├── code-refactoring/
+        └── skill-creator/
 ```
 
 ### Step 2: Complete the Draft

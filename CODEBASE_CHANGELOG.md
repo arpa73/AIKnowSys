@@ -7,6 +7,37 @@
 
 ---
 
+## Session: UX Improvements - Clipboard + TDD Visibility (Feb 1, 2026)
+
+**Goal:** Improve init command UX with clipboard auto-copy and visible TDD status
+
+**Changes:**
+- [lib/utils.js](lib/utils.js#L237): Show conditional success message when clipboard copy succeeds
+- [lib/commands/init.js](lib/commands/init.js#L437-L439): TDD status already visible in --yes mode
+- [lib/commands/init.js](lib/commands/init.js#L482): Added await for async displayAIBootstrapPrompt
+- [lib/commands/init/display.js](lib/commands/init/display.js#L178): Removed duplicate clipboard message at end
+
+**Validation:**
+- ✅ Tests: 457/460 passed (3 platform-specific skipped)
+- ✅ CLI: `node bin/cli.js --help` works
+- ✅ Init: `node bin/cli.js init --help` works
+
+**Implementation Notes:**
+- clipboardy dependency already installed
+- displayAIPrompt already had clipboard logic
+- displayAIBootstrapPrompt already async
+- Most changes were already implemented, just needed:
+  1. Conditional message in utils.js
+  2. await in init.js
+  3. Remove duplicate message
+
+**Key Learning:**
+- Plan validation revealed most work was already done
+- Cross-platform clipboard support (clipboardy) handles WSL/Docker gracefully
+- Showing success message right after header (not at end) is better UX
+
+---
+
 ## Session: Hooks Documentation Completion (Jan 31, 2026)
 
 **Goal:** Document all 14 VSCode hooks in user-facing deliverables

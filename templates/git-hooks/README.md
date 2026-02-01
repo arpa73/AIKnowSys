@@ -21,11 +21,14 @@ chmod +x .git-hooks/pre-commit
 cp .git-hooks/pre-commit .git/hooks/pre-commit
 ```
 
-**Or use a script to install all hooks:**
+**Or use the installer script (cross-platform):**
 
 ```bash
-# From project root
-./scripts/install-git-hooks.sh
+# From project root (works on Windows, macOS, Linux)
+node scripts/install-git-hooks.cjs
+
+# Or using npm
+npm run install-hooks
 ```
 
 ## Workflow Integration
@@ -76,8 +79,11 @@ git commit --no-verify -m "WIP: work in progress"
 To update hooks after pulling changes:
 
 ```bash
-# Re-install hooks to get latest version
-./scripts/install-git-hooks.sh
+# Re-install hooks to get latest version (cross-platform)
+node scripts/install-git-hooks.cjs
+
+# Or using npm
+npm run install-hooks
 ```
 
 To disable a hook temporarily:

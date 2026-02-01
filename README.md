@@ -431,8 +431,9 @@ If NO to any: Document violation in CODEBASE_CHANGELOG.md
 Pre-commit hook checks for test changes:
 
 ```bash
-# Install git hooks
-./scripts/install-git-hooks.sh
+# Install git hooks (cross-platform)
+node scripts/install-git-hooks.cjs
+# Or: npm run install-hooks
 
 # Now when you commit lib/ without test/ changes:
 ⚠️  WARNING: Staging lib/ changes without test/ changes
@@ -523,51 +524,6 @@ These features **only work in VS Code with GitHub Copilot Chat**:
 - **Universal agent format** - Tool-agnostic agent definitions
 
 Stay tuned for updates!
-
----
-
-### Alternative: Manual Setup
-
-<details>
-<summary>Click to expand manual setup instructions</summary>
-
-#### For New Projects
-
-```bash
-# Clone the template
-git clone https://github.com/YOUR_ORG/.git
-cd 
-
-# Run interactive setup
-./scripts/setup.sh
-
-# Follow prompts to customize for your tech stack
-# Files will be generated with your configuration
-```
-
-#### For Existing Projects
-
-```bash
-# Clone into your project
-git clone https://github.com/YOUR_ORG/.git temp-template
-cp -r temp-template/scripts ./
-cp -r temp-template/templates ./
-
-# Run migration workflow
-./scripts/migrate-existing.sh
-
-# Scanner will:
-# 1. Detect your tech stack automatically
-# 2. Generate draft CODEBASE_ESSENTIALS.md (70% complete)
-# 3. Install custom agents
-# 4. Set up universal skills
-# 5. Initialize changelog
-
-# Complete TODO sections in CODEBASE_ESSENTIALS.md
-# Start using: @Developer <your request>
-```
-
-</details>
 
 ---
 
@@ -959,58 +915,23 @@ Confirm docs updated
 
 ---
 
-## Installation Options
+## Deprecated Installation Methods
 
-### Option 1: Interactive Setup (New Projects)
+<details>
+<summary>⚠️ Old bash scripts (removed in v0.9.0) - Click for migration path</summary>
 
-```bash
-./scripts/setup.sh
-```
-
-**Prompts for:**
-- Primary language (TypeScript/Python/Rust/Go)
-- Framework (Vue/React/Django/FastAPI/etc)
-- Testing tools (Vitest/Jest/pytest/cargo test)
-- Package manager (npm/pip/cargo/go mod)
-
-**Generates:**
-- CODEBASE_ESSENTIALS.md with validation commands
-- AGENTS.md with workflow instructions
-- Custom agents configured for your stack
-- Universal skills installed
-
-### Option 2: Codebase Scanner (Existing Projects)
+The original bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have been removed. They are fully replaced by CLI commands:
 
 ```bash
-./scripts/migrate-existing.sh
+# Old (removed)                   →  New (use this)
+./scripts/setup.sh               →  npx aiknowsys init
+./scripts/migrate-existing.sh    →  npx aiknowsys migrate  
+./scripts/scan-codebase.sh       →  npx aiknowsys scan
 ```
 
-**Automatically detects:**
-- Tech stack from package files
-- Test commands from package.json/Makefile/CI
-- Project structure
-- Key dependencies
+See [scripts/README.md](scripts/README.md) for full details.
 
-**Generates:**
-- Draft CODEBASE_ESSENTIALS.md (70% complete)
-- TODO sections for manual patterns
-- Validation matrix
-- Changelog initialized
-
-**Time saved:** ~3-4 hours of manual documentation
-
-### Option 3: Manual Setup
-
-```bash
-# Copy templates
-cp templates/CODEBASE_ESSENTIALS.template.md CODEBASE_ESSENTIALS.md
-cp templates/AGENTS.template.md AGENTS.md
-cp -r templates/agents/ .github/agents/
-
-# Customize for your project
-# Fill in {{PLACEHOLDERS}}
-# Add your patterns and conventions
-```
+</details>
 
 ---
 

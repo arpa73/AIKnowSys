@@ -2,8 +2,7 @@
 name: SeniorArchitect
 description: Senior Architect focusing on KISS, DRY, SOLID, YAGNI, and Project Essentials.
 argument-hint: "Specify files or changes to review"
-tools: ['search', 'edit/editFiles', 'edit/createFile']
-model: Claude Sonnet 4.5
+model: Gemini 3 Pro (Preview) (copilot)
 handoffs:
   - label: "Fix Issues (Developer)"
     agent: Developer

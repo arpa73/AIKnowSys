@@ -30,8 +30,8 @@ The knowledge system template includes **placeholders** that you must fill in ba
 ### Decision Points
 
 **1. Starting from scratch or migrating existing project?**
-- **New project:** Use `scripts/setup.sh` (interactive prompts)
-- **Existing project:** Use `scripts/migrate-existing.sh` (auto-detection)
+- **New project:** Use `npx aiknowsys init` (interactive prompts)
+- **Existing project:** Use `npx aiknowsys migrate` (auto-detection)
 
 **2. What's your primary tech stack?**
 - Determines which validation commands to use
@@ -52,20 +52,18 @@ The knowledge system template includes **placeholders** that you must fill in ba
 **When to use:** Starting a greenfield project.
 
 ```bash
-# 1. Clone or download aiknowsys
-git clone https://github.com/your-org/aiknowsys.git
-
-# 2. Copy template files to your project
-cp -r aiknowsys/templates/* /path/to/your/project/
-cp -r aiknowsys/scripts /path/to/your/project/
-cp -r aiknowsys/.github /path/to/your/project/
-
-# 3. Run interactive setup
+# Navigate to your project directory
 cd /path/to/your/project
-bash scripts/setup.sh
+
+# Run interactive setup
+npx aiknowsys init
+
+# Or with options
+npx aiknowsys init --stack nextjs  # Use pre-built stack template
+npx aiknowsys init --template minimal  # Use minimal template
 ```
 
-**What setup.sh does:**
+**What `init` does:**
 1. Detects existing code (if any)
 2. Prompts for language (TypeScript/Python/Rust/Go/Other)
 3. Prompts for framework (Vue/React/Django/Actix/etc.)
@@ -88,19 +86,17 @@ bash scripts/setup.sh
 **When to use:** Adding knowledge system to established codebase.
 
 ```bash
-# 1. Clone or download aiknowsys
-git clone https://github.com/your-org/aiknowsys.git
-
-# 2. Copy files to your project
-cp -r aiknowsys/scripts /path/to/your/project/
-cp -r aiknowsys/templates /path/to/your/project/
-
-# 3. Run migration workflow
+# Navigate to your existing project
 cd /path/to/your/project
-bash scripts/migrate-existing.sh
+
+# Run migration workflow
+npx aiknowsys migrate
+
+# Or scan only (no agent/skill installation)
+npx aiknowsys scan
 ```
 
-**What migrate-existing.sh does:**
+**What `migrate` does:**
 1. Scans your codebase (`package.json`, `pyproject.toml`, etc.)
 2. Detects tech stack automatically
 3. Discovers test commands from package.json/Makefile/CI
