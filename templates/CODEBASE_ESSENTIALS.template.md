@@ -176,6 +176,11 @@
 ├── {{FRONTEND_DIR}}/          # {{FRONTEND_DESCRIPTION}}
 ├── {{TEST_DIR}}/              # {{TEST_DESCRIPTION}}
 ├── {{CONFIG_DIR}}/            # {{CONFIG_DESCRIPTION}}
+├── .aiknowsys/                # AI knowledge system (see below)
+│   ├── learned/               # Team-validated patterns (committed)
+│   ├── personal/              # Personal discoveries (gitignored)
+│   │   └── <username>/        # Your personal patterns
+│   └── sessions/              # Session notes (gitignored)
 └── .github/                   # GitHub configuration (optional)
     ├── agents/                # AI agent workflows (Planner + Developer + Architect)
     ├── skills/                # Domain-specific task guides
@@ -187,6 +192,11 @@
 - `{{SOURCE_DIR}}` - {{SOURCE_DESCRIPTION}}
 - `{{TEST_DIR}}` - {{TEST_DESCRIPTION}}
 - `{{BUILD_DIR}}` - {{BUILD_DESCRIPTION}}
+
+**AI Knowledge System (.aiknowsys/):**
+- `learned/` - Team-validated patterns (committed to git, shared with team)
+- `personal/<username>/` - Personal pattern discoveries (gitignored, prevents merge conflicts)
+- `sessions/` - Session notes and context (gitignored)
 
 ---
 
@@ -243,6 +253,38 @@
    - What: {{INVARIANT_2_DESCRIPTION}}
    - Why: {{INVARIANT_2_RATIONALE}}
    - Example: {{INVARIANT_2_EXAMPLE}}
+
+---
+
+## Learned Patterns (Multi-Developer)
+
+**Workflow for AI-discovered patterns:**
+
+1. **AI discovers pattern** → Saves to `.aiknowsys/personal/<username>/`
+2. **Review patterns:** `npx aiknowsys list-patterns`
+3. **Share with team:** `npx aiknowsys share-pattern <pattern-name>`
+4. **Team benefits:** Patterns available after `git pull`
+
+**Why personal/ is gitignored:**
+- ✅ Prevents merge conflicts when multiple developers work simultaneously
+- ✅ Allows experimentation without affecting team
+- ✅ Sharing is deliberate (acts as review gate)
+- ✅ You control what knowledge becomes team standard
+
+**Pattern commands:**
+```bash
+# List all patterns (personal + team)
+npx aiknowsys list-patterns
+
+# Share a personal pattern with team
+npx aiknowsys share-pattern my-pattern
+
+# AI learns automatically (saves to personal/)
+# Use --shared flag to save directly to team
+npx aiknowsys learn --extract my-pattern --shared
+```
+
+**⚠️ Important:** Personal patterns are NOT backed up to git. Share valuable patterns regularly so they benefit the team and survive local machine changes.
 
 ---
 

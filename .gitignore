@@ -90,3 +90,5 @@ Cargo.lock
 
 # workdocs
 workdocs/
+# Personal learned patterns (not shared with team)
+.aiknowsys/personal/

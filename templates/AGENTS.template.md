@@ -331,11 +331,14 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 - Debugging technique that works well
 
 **Do this:**
-1. Create learned skill in `.aiknowsys/learned/`
+1. Create learned skill in `.aiknowsys/personal/<username>/`
 2. Use skill format with clear trigger words
 3. Document the pattern for future reuse
+4. **For team sharing:** User runs `npx aiknowsys share-pattern <pattern-name>`
 
 **See `.github/skills/skill-creator/SKILL.md` for detailed format and examples.**
+
+**Note:** Patterns save to `personal/` by default (prevents merge conflicts). Team sees patterns only after explicit sharing via `share-pattern` command.
 
 **Pattern Types:**
 - `error_resolution` - How specific errors were fixed
@@ -348,7 +351,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 - System gets smarter over time
 - Reduces repeated explanations
 - Captures project-specific knowledge
-- Team can share discoveries
+- Team can share discoveries (when ready)
 
 ---
 

@@ -23,8 +23,9 @@ import { ciCheck } from '../lib/commands/ci-check.js';
 import { depsHealth } from '../lib/commands/deps-health.js';
 import { enableFeature, disableFeature, uninstall } from '../lib/commands/config.js';
 import { listPlugins } from '../lib/commands/plugins.js';
-import { listPatterns, extractPattern, autoCreateSkills } from '../lib/commands/learn.js';
+import { listPatterns as learnListPatterns, extractPattern, autoCreateSkills } from '../lib/commands/learn.js';
 import { sharePattern } from '../lib/commands/share-pattern.js';
+import { listPatterns } from '../lib/commands/list-patterns.js';
 import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
@@ -127,7 +128,7 @@ program
   .option('--shared', 'Save to shared learned/ directory (default: personal)')
   .action(async (options) => {
     if (options.list) {
-      await listPatterns(options);
+      await learnListPatterns(options);
     } else if (options.extract) {
       await extractPattern({ ...options, pattern: options.extract });
     } else if (options.auto) {
@@ -144,6 +145,15 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .action(async (name, options) => {
     await sharePattern(name, options);
+  });
+
+// List patterns command
+program
+  .command('list-patterns')
+  .description('List all learned patterns (personal and team)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(async (options) => {
+    await listPatterns(options);
   });
 
 program
