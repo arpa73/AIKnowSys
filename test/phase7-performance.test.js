@@ -20,7 +20,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
   afterEach(async () => {
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Cleanup errors can be ignored
+    }
   });
 
   describe('Performance History Database', () => {
@@ -126,9 +128,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
 
       const result = await depsHealth({ dir: testDir, _silent: true });
       
-      assert.ok(result.hasOwnProperty('securityAdvisories'));
-      assert.ok(result.hasOwnProperty('outdated'));
-      assert.ok(result.hasOwnProperty('totalDependencies'));
+      assert.ok(Object.hasOwn(result, 'securityAdvisories'));
+      assert.ok(Object.hasOwn(result, 'outdated'));
+      assert.ok(Object.hasOwn(result, 'totalDependencies'));
     });
 
     it('should count total dependencies correctly', async () => {

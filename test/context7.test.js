@@ -48,9 +48,9 @@ describe('Context7 Utilities', () => {
       // For now, test the return structure
       const result = await isContext7Available();
       
-      assert.ok(result.hasOwnProperty('available'));
-      assert.ok(result.hasOwnProperty('configPath'));
-      assert.ok(result.hasOwnProperty('source'));
+      assert.ok(Object.hasOwn(result, 'available'));
+      assert.ok(Object.hasOwn(result, 'configPath'));
+      assert.ok(Object.hasOwn(result, 'source'));
     });
   });
 

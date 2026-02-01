@@ -17,7 +17,9 @@ describe('Phase 8: Advanced Intelligence', () => {
   afterEach(async () => {
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Cleanup errors can be ignored
+    }
   });
 
   describe('Migration Check Hook', () => {
