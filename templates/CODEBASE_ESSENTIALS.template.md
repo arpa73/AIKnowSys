@@ -177,6 +177,14 @@
 ├── {{TEST_DIR}}/              # {{TEST_DESCRIPTION}}
 ├── {{CONFIG_DIR}}/            # {{CONFIG_DESCRIPTION}}
 ├── .aiknowsys/                # AI knowledge system (see below)
+│   ├── CURRENT_PLAN.md        # Active plan pointer (single-dev) or team index (multi-dev)
+│   ├── PLAN_*.md              # Implementation plans
+│   ├── plans/                 # Multi-developer plan tracking (committed)
+│   │   ├── README.md          # Workflow explanation
+│   │   └── active-<username>.md  # Per-developer active plan pointer
+│   ├── reviews/               # Multi-developer reviews (gitignored)
+│   │   ├── README.md          # Workflow explanation (committed)
+│   │   └── PENDING_<username>.md  # Per-developer review files
 │   ├── learned/               # Team-validated patterns (committed)
 │   ├── personal/              # Personal discoveries (gitignored)
 │   │   └── <username>/        # Your personal patterns
@@ -237,6 +245,54 @@
 ```{{LANGUAGE}}
 {{PATTERN_EXAMPLE_2}}
 ```
+
+---
+
+### Plan Management Pattern
+
+**Multiple concurrent plans** enabled via pointer system.
+
+**Auto-Detection Logic:**
+System automatically detects single vs multi-developer mode:
+- **Trigger:** Presence of `.aiknowsys/plans/` directory
+- **Multi-dev mode:** Uses `plans/active-<username>.md` and `reviews/PENDING_<username>.md`
+- **Single-dev mode:** Uses `CURRENT_PLAN.md` and `PENDING_REVIEW.md` (legacy)
+- **Username:** Extracted from `git config user.name`, normalized (lowercase, spaces → hyphens)
+- **Migration:** Running migration script creates `plans/` directory, triggers multi-dev mode
+
+**Single-Developer Workflow:**
+- **CURRENT_PLAN.md:** Lightweight pointer to active plan
+- **PLAN_*.md:** Full implementation details
+- Developer updates CURRENT_PLAN.md to switch plans
+
+**Multi-Developer Workflow (Phase 2):**
+- **plans/active-<username>.md:** Per-developer active plan pointer (committed)
+- **CURRENT_PLAN.md:** Team index aggregating all developers' plans (auto-generated)
+- **Command:** `npx aiknowsys sync-plans` to regenerate team index
+- **Benefit:** No merge conflicts on plan tracking
+
+**Individual Plans (.aiknowsys/PLAN_*.md):**
+- Full implementation details
+- Progress tracking
+- Phase/step breakdown
+
+**Workflow:**
+1. Planner creates PLAN_*.md
+2. Developer updates their plan pointer:
+   - **Single-dev:** Edit CURRENT_PLAN.md
+   - **Multi-dev:** Edit plans/active-<username>.md, run `sync-plans`
+3. Developer follows active plan
+4. Progress tracked in PLAN_*.md
+5. Completed plans stay visible
+
+**Status Lifecycle:**
+📋 PLANNED → 🎯 ACTIVE → 🔄 PAUSED or ✅ COMPLETE or ❌ CANCELLED
+
+**Migration:**
+- Existing projects: `npx aiknowsys migrate-patterns` auto-creates structure
+- New projects: `npx aiknowsys init` includes multi-dev support by default
+
+See: [AGENTS.md](AGENTS.md#plan-management)
 
 ---
 
