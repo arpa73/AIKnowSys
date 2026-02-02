@@ -26,6 +26,7 @@ import { listPlugins } from '../lib/commands/plugins.js';
 import { listPatterns as learnListPatterns, extractPattern, autoCreateSkills } from '../lib/commands/learn.js';
 import { sharePattern } from '../lib/commands/share-pattern.js';
 import { listPatterns } from '../lib/commands/list-patterns.js';
+import { syncPlans } from '../lib/commands/sync-plans.js';
 import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
@@ -108,6 +109,12 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(sync);
+
+program
+  .command('sync-plans')
+  .description('Sync individual developer plans into team index (CURRENT_PLAN.md)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(syncPlans);
 
 program
   .command('audit')
