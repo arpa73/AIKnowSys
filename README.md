@@ -17,10 +17,11 @@ A structured workflow system consisting of:
 3. **Skills System** - Domain-specific how-to guides for common tasks
 4. **Changelog** - Session-by-session validation and learning history
 5. **Validation Matrix** - Mandatory test running before completion
-6. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
-7. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
-8. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
-9. **VSCode Hooks** - 14 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, and migration assistance (optional)
+6. **Multi-Developer Collaboration** - Per-developer plan tracking and reviews prevent merge conflicts (Phase 2)
+7. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
+8. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
+9. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
+10. **VSCode Hooks** - 14 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, and migration assistance (optional)
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 

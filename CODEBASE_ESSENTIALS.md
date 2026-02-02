@@ -78,8 +78,17 @@ aiknowsys/
 │   └── CODEBASE_CHANGELOG.template.md
 ├── .aiknowsys/             # AI knowledge system (user workspace)
 │   ├── performance-history.json # Performance tracking (gitignored, last 100 runs)
-│   ├── CURRENT_PLAN.md     # Active plan pointer
+│   ├── CURRENT_PLAN.md     # Active plan pointer (single-dev) or team index (multi-dev)
+│   ├── PLAN_*.md           # Implementation plans
+│   ├── plans/              # Multi-developer plan tracking (committed)
+│   │   ├── README.md       # Workflow explanation
+│   │   └── active-<username>.md  # Per-developer active plan pointer
+│   ├── reviews/            # Multi-developer reviews (gitignored)
+│   │   ├── README.md       # Workflow explanation (committed)
+│   │   └── PENDING_<username>.md  # Per-developer review files
 │   ├── learned/            # Project-specific patterns (committed)
+│   ├── personal/           # Personal patterns (gitignored)
+│   │   └── <username>/     # Per-developer personal patterns
 │   └── sessions/           # Session notes (gitignored)
 ├── scripts/                # Bash alternatives (legacy)
 ├── examples/               # Stack-specific examples
@@ -178,10 +187,16 @@ For detailed guidance on progress indicators and spinners, see the [learned skil
 ### Plan Management Pattern
 **Multiple concurrent plans** enabled via pointer system.
 
-**.aiknowsys/CURRENT_PLAN.md:**
-- Lightweight index file (pointer)
-- Lists all plans with status
-- Indicates active plan
+**Single-Developer Workflow:**
+- **CURRENT_PLAN.md:** Lightweight pointer to active plan
+- **PLAN_*.md:** Full implementation details
+- Developer updates CURRENT_PLAN.md to switch plans
+
+**Multi-Developer Workflow (Phase 2):**
+- **plans/active-<username>.md:** Per-developer active plan pointer (committed)
+- **CURRENT_PLAN.md:** Team index aggregating all developers' plans (auto-generated)
+- **Command:** `npx aiknowsys sync-plans` to regenerate team index
+- **Benefit:** No merge conflicts on plan tracking
 
 **Individual Plans (.aiknowsys/PLAN_*.md):**
 - Full implementation details
@@ -190,13 +205,19 @@ For detailed guidance on progress indicators and spinners, see the [learned skil
 
 **Workflow:**
 1. Planner creates PLAN_*.md
-2. Updates CURRENT_PLAN.md pointer
+2. Developer updates their plan pointer:
+   - **Single-dev:** Edit CURRENT_PLAN.md
+   - **Multi-dev:** Edit plans/active-<username>.md, run `sync-plans`
 3. Developer follows active plan
 4. Progress tracked in PLAN_*.md
 5. Completed plans stay visible
 
 **Status Lifecycle:**
 📋 PLANNED → 🎯 ACTIVE → 🔄 PAUSED or ✅ COMPLETE or ❌ CANCELLED
+
+**Migration:**
+- Existing projects: `node scripts/migrate-learned-patterns.js` auto-creates structure
+- New projects: `npx aiknowsys init` includes multi-dev support by default
 
 See: [AGENTS.md](AGENTS.md#plan-management)
 

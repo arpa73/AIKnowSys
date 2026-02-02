@@ -80,6 +80,8 @@ For scripts or automation:
 
 ## Development Workflow
 
+### Single Developer
+
 1. **Fork the repository**
 
 ```bash
@@ -96,6 +98,51 @@ git checkout -b example/tech-stack-name
 ```
 
 3. **Make your changes**
+
+Follow existing patterns:
+
+### Multi-Developer Teams
+
+**If collaborating with others on AIKnowSys development:**
+
+1. **Set up per-developer plan tracking:**
+
+```bash
+# Run migration script (creates plans/ and reviews/ directories)
+node scripts/migrate-learned-patterns.js
+```
+
+2. **Create your plan:**
+
+```bash
+# Create plan file
+echo "# Feature: Your Feature Name" > .aiknowsys/PLAN_your_feature.md
+
+# Update your plan pointer
+echo "**Currently Working On:** PLAN_your_feature.md" > .aiknowsys/plans/active-<your-username>.md
+```
+
+3. **Sync team index:**
+
+```bash
+# Regenerate team index from all developer plans
+npx aiknowsys sync-plans
+```
+
+4. **Work independently:**
+- Your plan: `.aiknowsys/plans/active-<username>.md` (no conflicts!)
+- Your reviews: `.aiknowsys/reviews/PENDING_<username>.md` (gitignored)
+- Team index: `.aiknowsys/CURRENT_PLAN.md` (auto-generated, shows all active work)
+
+**Benefits:**
+- ✅ No merge conflicts on plan files
+- ✅ Clear visibility of who's working on what
+- ✅ Independent architect reviews per developer
+- ✅ Automatic team index generation
+
+**See:** [Advanced Workflows](docs/advanced-workflows.md) for detailed multi-developer patterns
+
+### Making Changes
 
 Follow existing patterns:
 - Examples go in `examples/[tech-stack-name]/`
