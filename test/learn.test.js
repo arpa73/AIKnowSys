@@ -42,10 +42,15 @@ describe('learn command', () => {
     testDirsToCleanup.push(testPersonalDefault);
 
     // Create .aiknowsys structure
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
     
     const personalDir = path.join(testPersonalDefault, '.aiknowsys', 'personal', username);
     fs.mkdirSync(personalDir, { recursive: true });
@@ -63,10 +68,15 @@ describe('learn command', () => {
     testDirsToCleanup.push(testPersonalExplicit);
 
     // Create .aiknowsys structure with personal directory
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
     
     const personalDir = path.join(testPersonalExplicit, '.aiknowsys', 'personal', username);
     fs.mkdirSync(personalDir, { recursive: true });
@@ -98,10 +108,15 @@ describe('learn command', () => {
     fs.mkdirSync(testSearchBoth, { recursive: true });
     testDirsToCleanup.push(testSearchBoth);
 
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testSearchBoth, '.aiknowsys', 'personal', username);
     const learnedDir = path.join(testSearchBoth, '.aiknowsys', 'learned');

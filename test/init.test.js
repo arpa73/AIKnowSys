@@ -485,10 +485,15 @@ describe('init command', () => {
     await init({ dir: testDirPersonal, yes: true });
 
     // Get the username that should be used
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testDirPersonal, '.aiknowsys', 'personal', username);
     
@@ -517,13 +522,15 @@ describe('init command', () => {
     fs.mkdirSync(testDirNormalize, { recursive: true });
     
     // Check if git is configured
+    let rawUsername;
+    let normalizedUsername;
     try {
-      const rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
+      rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
       
       await init({ dir: testDirNormalize, yes: true });
       
       // Username should be normalized (lowercase, hyphens instead of spaces)
-      const normalizedUsername = rawUsername
+      normalizedUsername = rawUsername
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
@@ -583,12 +590,14 @@ describe('init command', () => {
     fs.mkdirSync(testDirPlans, { recursive: true });
     
     // Check if git is configured
+    let rawUsername;
+    let normalizedUsername;
     try {
-      const rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
+      rawUsername = execSync('git config user.name', { encoding: 'utf-8' }).trim();
       
       await init({ dir: testDirPlans, yes: true });
       
-      const normalizedUsername = rawUsername
+      normalizedUsername = rawUsername
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');

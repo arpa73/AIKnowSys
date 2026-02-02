@@ -38,10 +38,15 @@ describe('share-pattern command', () => {
     testDirsToCleanup.push(testShareMove);
 
     // Setup directories
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
     
     const personalDir = path.join(testShareMove, '.aiknowsys', 'personal', username);
     const learnedDir = path.join(testShareMove, '.aiknowsys', 'learned');
@@ -73,10 +78,15 @@ describe('share-pattern command', () => {
     fs.mkdirSync(testDuplicate, { recursive: true });
     testDirsToCleanup.push(testDuplicate);
 
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testDuplicate, '.aiknowsys', 'personal', username);
     const learnedDir = path.join(testDuplicate, '.aiknowsys', 'learned');
@@ -104,10 +114,15 @@ describe('share-pattern command', () => {
     fs.mkdirSync(testSimilar, { recursive: true });
     testDirsToCleanup.push(testSimilar);
 
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testSimilar, '.aiknowsys', 'personal', username);
     const learnedDir = path.join(testSimilar, '.aiknowsys', 'learned');
@@ -137,10 +152,15 @@ describe('share-pattern command', () => {
     fs.mkdirSync(testMissing, { recursive: true });
     testDirsToCleanup.push(testMissing);
 
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testMissing, '.aiknowsys', 'personal', username);
     fs.mkdirSync(personalDir, { recursive: true });
@@ -157,10 +177,15 @@ describe('share-pattern command', () => {
     fs.mkdirSync(testNoKeywords, { recursive: true });
     testDirsToCleanup.push(testNoKeywords);
 
-    const username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    let username;
+    try {
+      username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    } catch {
+      username = 'test-user'; // Fallback for environments without git config
+    }
 
     const personalDir = path.join(testNoKeywords, '.aiknowsys', 'personal', username);
     const learnedDir = path.join(testNoKeywords, '.aiknowsys', 'learned');

@@ -50,7 +50,7 @@ describe('Plugin System', () => {
 		program.command('test-command').action(() => {});
 
 		// Load plugins (should return empty array, not crash)
-		const plugins = await loadPlugins(program);
+		const plugins = await loadPlugins(program, testDir);
 
 		assert.strictEqual(plugins.length, 0, 'Should return empty array when no plugins');
 		assert.strictEqual(program.commands.length, 1, 'Should only have core command');
@@ -72,7 +72,7 @@ describe('Plugin System', () => {
 
 		process.chdir(testDir);
 
-		const installed = await listInstalledPlugins();
+		const installed = await listInstalledPlugins(testDir);
 		
 		assert.strictEqual(installed.length, 2, 'Should find 2 plugins');
 		assert.ok(installed.includes('aiknowsys-plugin-test'), 'Should include test plugin');
@@ -127,7 +127,7 @@ describe('Plugin System', () => {
 		const program = new Command();
 
 		// Should not throw, just return empty array
-		const plugins = await loadPlugins(program);
+		const plugins = await loadPlugins(program, emptyDir);
 
 		assert.strictEqual(plugins.length, 0);
 
@@ -148,7 +148,7 @@ describe('Plugin System', () => {
 
 		process.chdir(testDir);
 
-		const installed = await listInstalledPlugins();
+		const installed = await listInstalledPlugins(testDir);
 
 		assert.strictEqual(installed.length, 1);
 		assert.strictEqual(installed[0], 'aiknowsys-plugin-valid');
