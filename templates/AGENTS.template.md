@@ -86,8 +86,9 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 **Before reading ESSENTIALS, check for active plan and session continuity:**
 
 ```
-1. **Check .aiknowsys/CURRENT_PLAN.md** (pointer file)
-   - Read to find active plan
+1. **Check your active plan** (per-developer tracking)
+   - Single-developer: Read `.aiknowsys/CURRENT_PLAN.md` (traditional pointer)
+   - Multi-developer: Read `.aiknowsys/plans/active-<username>.md` (per-developer pointer)
    - Open the linked PLAN_*.md file
    - Review current progress and next steps
    - Acknowledge: "Continuing with [active plan name]..."
@@ -240,7 +241,8 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
    ```
 
 1. **Check for Pending Reviews:**
-   - If `.aiknowsys/PENDING_REVIEW.md` exists, read it FIRST
+   - Single-developer: Check `.aiknowsys/PENDING_REVIEW.md` (legacy)
+   - Multi-developer: Check `.aiknowsys/reviews/PENDING_<username>.md` (per-developer)
    - Architect reviews are written here, not in session file
    - Address all issues before continuing
 
@@ -263,7 +265,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
      ### Notes for Next Session
      - [Future work]
      ```
-   - Delete PENDING_REVIEW.md after addressing all issues
+   - Delete PENDING_REVIEW.md (or PENDING_<username>.md) after addressing all issues
 
 3. **Confirm to user:**
    - What you fixed/built
@@ -275,12 +277,25 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ## � PLAN MANAGEMENT
 
-**Multiple plans can coexist.** CURRENT_PLAN.md is just a pointer.
+**Multiple plans can coexist.** Plan pointers track active work.
+
+### Single vs Multi-Developer Workflow
+
+**Single-developer projects:**
+- Use `.aiknowsys/CURRENT_PLAN.md` (traditional pointer system)
+- One developer, one active plan pointer
+
+**Multi-developer projects:**
+- Each developer: `.aiknowsys/plans/active-<username>.md`
+- Team index: `.aiknowsys/CURRENT_PLAN.md` (aggregates all active plans)
+- No merge conflicts (separate files per developer)
 
 ### Creating a New Plan (@Planner)
 
 1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
-2. Update `CURRENT_PLAN.md` table:
+2. Update plan pointer:
+   - **Single-dev:** Update `CURRENT_PLAN.md` table
+   - **Multi-dev:** Update `plans/active-<username>.md` for requesting developer
    - Add row for new plan
    - Set new plan status to ACTIVE (🎯)
    - Set previous active plan to PAUSED (🔄)
@@ -288,14 +303,18 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ### Switching Plans
 
-1. Update CURRENT_PLAN.md pointer ("Currently Working On")
+1. Update your plan pointer:
+   - **Single-dev:** Update CURRENT_PLAN.md ("Currently Working On")
+   - **Multi-dev:** Update `plans/active-<username>.md`
 2. Change previous ACTIVE → PAUSED in table
 3. Change target plan PAUSED → ACTIVE in table
 4. **Don't delete anything!** Paused plans resume later
 
 ### Completing a Plan
 
-1. Mark status COMPLETE (✅) in CURRENT_PLAN.md table
+1. Mark status COMPLETE (✅) in your plan pointer:
+   - **Single-dev:** Update CURRENT_PLAN.md table
+   - **Multi-dev:** Update `plans/active-<username>.md`
 2. Add completion date
 3. Leave plan file in place (historical record)
 4. Switch to next active plan or wait for new direction

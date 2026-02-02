@@ -1,7 +1,7 @@
 # Active Plan Pointer
 
-**Currently Working On:** [Learned Patterns Collaboration - Phase 1](PLAN_learned_collaboration_phase1.md) - Personal/shared pattern split  
-**Last Updated:** 2026-02-01
+**Currently Working On:** [Learned Patterns Collaboration - Phase 2](PLAN_learned_collaboration_phase2.md) - Per-developer plans and reviews  
+**Last Updated:** 2026-02-02
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
@@ -11,7 +11,9 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [Learned Patterns Collaboration - Phase 1](PLAN_learned_collaboration_phase1.md) | 🎯 ACTIVE | Personal/shared patterns infrastructure | 2026-02-01 |
+| [Learned Patterns Collaboration - Phase 2](PLAN_learned_collaboration_phase2.md) | 🎯 ACTIVE | Per-developer plans and reviews | 2026-02-02 |
+| [Skill Audit & Cleanup](PLAN_skill_audit_cleanup.md) | 🔄 PAUSED | Planning complete, ready when needed | 2026-02-02 |
+| [Learned Patterns Collaboration - Phase 1](PLAN_learned_collaboration_phase1.md) | ✅ COMPLETE | Personal/shared patterns infrastructure | 2026-02-01 |
 | [Learned Patterns Collaboration - Phase 2](PLAN_learned_collaboration_phase2.md) | 📋 PLANNED | Per-developer plans and reviews | 2026-02-01 |
 | [Learned Patterns Collaboration - Phase 3](PLAN_learned_collaboration_phase3.md) | 📋 PLANNED | Automation & pre-commit hooks | 2026-02-01 |
 | [ESSENTIALS Validation](PLAN_essentials_validation.md) | 📋 PLANNED | Ready for implementation (5 phases, ~45-55 min) | 2026-02-01 |
