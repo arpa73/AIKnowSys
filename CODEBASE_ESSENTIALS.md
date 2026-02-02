@@ -187,6 +187,14 @@ For detailed guidance on progress indicators and spinners, see the [learned skil
 ### Plan Management Pattern
 **Multiple concurrent plans** enabled via pointer system.
 
+**Auto-Detection Logic:**
+System automatically detects single vs multi-developer mode:
+- **Trigger:** Presence of `.aiknowsys/plans/` directory
+- **Multi-dev mode:** Uses `plans/active-<username>.md` and `reviews/PENDING_<username>.md`
+- **Single-dev mode:** Uses `CURRENT_PLAN.md` and `PENDING_REVIEW.md` (legacy)
+- **Username:** Extracted from `git config user.name`, normalized (lowercase, spaces → hyphens)
+- **Migration:** Running migration script creates `plans/` directory, triggers multi-dev mode
+
 **Single-Developer Workflow:**
 - **CURRENT_PLAN.md:** Lightweight pointer to active plan
 - **PLAN_*.md:** Full implementation details
