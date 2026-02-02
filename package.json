@@ -40,8 +40,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.js",
-    "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
+    "test": "node --test test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
     "test:cli": "node bin/cli.js --help",
     "lint": "eslint lib/ bin/ test/",
     "lint:fix": "eslint lib/ bin/ test/ --fix",

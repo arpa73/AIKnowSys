@@ -21,7 +21,7 @@ A structured workflow system consisting of:
 7. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
 8. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
 9. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
-10. **VSCode Hooks** - 14 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, and migration assistance (optional)
+10. **VSCode Hooks** - 17 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, migration assistance, and git collaboration reminders (optional)
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 
@@ -51,7 +51,7 @@ From production use in gnwebsite:
 
 ### Intelligent Automation with VSCode Hooks
 
-**14 lifecycle hooks** that run automatically during GitHub Copilot sessions:
+**17 lifecycle hooks** that run automatically during GitHub Copilot sessions:
 
 ✅ **Never forget tests** - TDD reminder before editing code  
 ✅ **Never skip validation** - Validation reminder before claiming "done"  
@@ -61,6 +61,7 @@ From production use in gnwebsite:
 ✅ **Track performance** - Warns on test regressions (>20% slower)  
 ✅ **Stay updated** - Migration alerts for version mismatches  
 ✅ **Fresh docs** - Staleness warnings for outdated documentation  
+✅ **Team collaboration** - Remind to share patterns, show teammates' active plans (git hooks)  
 
 **[Learn more about hooks →](docs/vscode-hooks-guide.md)**
 

@@ -568,12 +568,19 @@ GitHub Copilot coding agent supports hooks that run automatically during session
 - `migration-check.cjs` (SessionStart) - Version mismatch detection
 - `doc-sync.cjs` (SessionStart) - Documentation staleness alerts
 
+**Git Collaboration Hooks (For Multi-Developer Teams):**
+- `learned-reminder.cjs` (pre-commit) - Remind to share valuable personal patterns
+- `plan-reminder.cjs` (pre-commit) - Show teammates' active plans
+- `sync-plans.cjs` (post-merge) - Auto-update CURRENT_PLAN.md team index
+
 **How they work:**
 1. **Session Start**: Hooks load context, check workspace health, detect version mismatches, stale docs, and concurrent work
 2. **User Prompt**: Skill detector suggests relevant guides based on your request
 3. **Before Edits**: TDD reminder checks for tests, skill prereq check verifies requirements
 4. **Session End**: Performance monitor tracks test metrics, session-end updates timestamp
 5. **Before Completion**: Validation reminder ensures tests ran before claiming "done"
+6. **Git Pre-Commit**: Learned-reminder prompts sharing valuable patterns, plan-reminder shows teammates' work
+7. **Git Post-Merge**: Sync-plans auto-updates CURRENT_PLAN.md team index after pulls
 
 **Benefits:**
 - Automatic session file management and context continuity
@@ -607,10 +614,42 @@ Remember: Write test FIRST (RED), then implement (GREEN), then refactor (REFACTO
 See: .github/skills/tdd-workflow/SKILL.md for TDD patterns.
 ```
 
+*Learned Reminder (pre-commit):*
+```
+📚 Learned Patterns Reminder
+──────────────────────────────────────────────────
+
+💡 You have 5 unshared personal patterns:
+   • api-retry-pattern
+   • vue-composable-best-practices
+   • django-filter-optimization
+   • sql-join-patterns
+   • error-handling-conventions
+
+⭐ High-value patterns worth sharing:
+   • api-retry-pattern (used 8 times)
+   • vue-composable-best-practices (used 6 times)
+
+Share with team: npx aiknowsys share-pattern <name>
+List patterns: npx aiknowsys list-patterns
+```
+
+*Plan Reminder (pre-commit):*
+```
+👥 Your Teammates Are Working On:
+──────────────────────────────────────────────────
+• alice-smith: Implementing OAuth authentication
+• bob-jones: Refactoring user profile components
+• carol-chen: Adding search functionality
+
+Avoid duplicate work - coordinate before starting similar tasks!
+```
+
 **Limitations:**
 - Only works with VSCode + GitHub Copilot coding agent
 - Other AI assistants need manual session management
 - Hooks create files, you still populate content
+- Git hooks require manual setup: `git config core.hooksPath .github/hooks`
 
 **Troubleshooting:**
 
@@ -624,6 +663,10 @@ See: .github/skills/tdd-workflow/SKILL.md for TDD patterns.
 | TDD reminder too aggressive | Adjust 10-minute window in tdd-reminder.cjs |
 | Performance regression false positives | Adjust threshold in performance-monitor.cjs |
 | Stale doc warnings too aggressive | Adjust STALENESS_THRESHOLD_DAYS in doc-sync.cjs |
+| Git hooks not running | Run `git config core.hooksPath .github/hooks` |
+| Learned-reminder not showing | Check `.aiknowsys/personal/<username>/` exists |
+| Plan-reminder not showing | Requires Phase 2 (multi-developer plans) |
+| Sync-plans not running | Verify `.aiknowsys/plans/` directory exists |
 
 **For detailed information:**  
 See [VSCode Hooks Guide](docs/vscode-hooks-guide.md) for complete reference, examples, and customization.
