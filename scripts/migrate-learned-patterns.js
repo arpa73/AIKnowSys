@@ -25,7 +25,6 @@
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 import { createLogger } from '../lib/logger.js';
 import { getGitUsername } from '../lib/utils/git-username.js';
 

@@ -90,12 +90,11 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 **Before reading ESSENTIALS, check for active plan and session continuity:**
 
 ```
-1. **Check .aiknowsys/CURRENT_PLAN.md** (pointer file)
-   - Read to find active plan
+1. **Check .aiknowsys/plans/active-<username>.md** (personal plan pointer)
+   - Read to find your active plan
    - Open the linked PLAN_*.md file
    - Review current progress and next steps
    - Acknowledge: "Continuing with [active plan name]..."
-   - See: .aiknowsys/learned/plan-management.md for pattern details
 
 2. Check .aiknowsys/sessions/ for recent session files
    - If recent session exists (< 7 days old):
@@ -226,7 +225,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Before ending your turn:**
 
 1. **Check for Pending Reviews:**
-   - If `.aiknowsys/PENDING_REVIEW.md` exists, read it FIRST
+   - Check `.aiknowsys/reviews/PENDING_<username>.md` (if exists)
    - Architect reviews are written here, not in session file
    - Address all issues before continuing
 
@@ -249,7 +248,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
      ### Notes for Next Session
      - [Future work]
      ```
-   - Delete PENDING_REVIEW.md after addressing all issues
+   - Delete `.aiknowsys/reviews/PENDING_<username>.md` after addressing all issues
 
 4. **Confirm to user:**
    - What you fixed/built
@@ -261,30 +260,45 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ## � PLAN MANAGEMENT
 
-**Multiple plans can coexist.** CURRENT_PLAN.md is just a pointer.
+**Multi-Developer Plan Workflow (Mandatory v0.9.0+)**
+
+### Plan File Locations
+
+- **`.aiknowsys/plans/active-<username>.md`** - Your personal active plan pointer (committed)
+- **`.aiknowsys/CURRENT_PLAN.md`** - Team index (auto-generated, DO NOT EDIT)
+- **`.aiknowsys/PLAN_*.md`** - Full plan details (committed)
 
 ### Creating a New Plan (@Planner)
 
 1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
-2. Update `CURRENT_PLAN.md` table:
-   - Add row for new plan
-   - Set new plan status to ACTIVE (🎯)
-   - Set previous active plan to PAUSED (🔄)
-3. Write plan details in the new PLAN_*.md file
+2. Update your plan pointer:
+   ```bash
+   # Edit .aiknowsys/plans/active-<username>.md
+   # Point to new plan, set status to ACTIVE (🎯)
+   # Set previous plan to PAUSED (🔄) if switching
+   ```
+3. Regenerate team index:
+   ```bash
+   npx aiknowsys sync-plans
+   ```
+4. Write plan details in the new PLAN_*.md file
 
 ### Switching Plans
 
-1. Update CURRENT_PLAN.md pointer ("Currently Working On")
-2. Change previous ACTIVE → PAUSED in table
-3. Change target plan PAUSED → ACTIVE in table
-4. **Don't delete anything!** Paused plans resume later
+1. Edit your plan pointer: `.aiknowsys/plans/active-<username>.md`
+   - Change previous ACTIVE → PAUSED
+   - Change target plan PAUSED → ACTIVE
+2. Run `npx aiknowsys sync-plans` to update team index
+3. **Don't delete anything!** Paused plans resume later
 
 ### Completing a Plan
 
-1. Mark status COMPLETE (✅) in CURRENT_PLAN.md table
-2. Add completion date
+1. Edit your plan pointer: `.aiknowsys/plans/active-<username>.md`
+   - Mark status COMPLETE (✅)
+   - Add completion date
+2. Run `npx aiknowsys sync-plans` to update team index
 3. Leave plan file in place (historical record)
-4. Switch to next active plan or wait for new direction
+4. Point to next active plan or wait for new direction
 
 ### Plan Status Values
 

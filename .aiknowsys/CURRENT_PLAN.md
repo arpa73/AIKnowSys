@@ -1,6 +1,6 @@
 # Active Plan Pointer
 
-**Currently Working On:** [No active plan - Phase 3 complete]  
+**Currently Working On:** [Mandatory Multi-Dev Migration (v0.9.0)](PLAN_mandatory_multidev_migration.md) - Breaking change for simpler architecture  
 **Last Updated:** 2026-02-02
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -11,8 +11,8 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [Mandatory Multi-Dev Migration](PLAN_mandatory_multidev_migration.md) | 🎯 ACTIVE | v0.9.0 breaking change implementation | 2026-02-02 |
 | [Learned Patterns Collaboration - Phase 3](PLAN_learned_collaboration_phase3.md) | ✅ COMPLETE | Automation & pre-commit hooks | 2026-02-02 |
-| [Mandatory Multi-Dev Migration](PLAN_mandatory_multidev_migration.md) | 📋 PLANNED | v0.9.0 breaking change (after Phase 3) | 2026-02-02 |
 | [Fix All CI Test Failures](PLAN_fix_plugin_tests_ci.md) | ✅ COMPLETE | All 566 tests passing | 2026-02-02 |
 | [Learned Patterns Collaboration - Phase 2](PLAN_learned_collaboration_phase2.md) | ✅ COMPLETE | Per-developer plans and reviews | 2026-02-02 |
 | [Skill Audit & Cleanup](PLAN_skill_audit_cleanup.md) | 🔄 PAUSED | Planning complete, ready when needed | 2026-02-02 |

@@ -27,6 +27,7 @@ import { listPatterns as learnListPatterns, extractPattern, autoCreateSkills } f
 import { sharePattern } from '../lib/commands/share-pattern.js';
 import { listPatterns } from '../lib/commands/list-patterns.js';
 import { syncPlans } from '../lib/commands/sync-plans.js';
+import { migrateToMultidev } from '../lib/commands/migrate-to-multidev.js';
 import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
@@ -115,6 +116,12 @@ program
   .description('Sync individual developer plans into team index (CURRENT_PLAN.md)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .action(syncPlans);
+
+program
+  .command('migrate-to-multidev')
+  .description('Migrate from single-dev to multi-dev pattern (v0.9.0)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .action(migrateToMultidev);
 
 program
   .command('audit')

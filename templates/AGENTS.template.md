@@ -87,9 +87,9 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 ```
 1. **Check your active plan** (per-developer tracking)
-   - Single-developer: Read `.aiknowsys/CURRENT_PLAN.md` (traditional pointer)
-   - Multi-developer: Read `.aiknowsys/plans/active-<username>.md` (per-developer pointer)
-   - Open the linked PLAN_*.md file
+   - Read `.aiknowsys/plans/active-<username>.md` (your personal plan pointer)
+   - Team overview: `.aiknowsys/CURRENT_PLAN.md` (auto-generated index, read-only)
+   - Open the linked PLAN_*.md file from your active plan
    - Review current progress and next steps
    - Acknowledge: "Continuing with [active plan name]..."
    - See: .aiknowsys/learned/plan-management.md for pattern details
@@ -241,8 +241,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
    ```
 
 1. **Check for Pending Reviews:**
-   - Single-developer: Check `.aiknowsys/PENDING_REVIEW.md` (legacy)
-   - Multi-developer: Check `.aiknowsys/reviews/PENDING_<username>.md` (per-developer)
+   - Read `.aiknowsys/reviews/PENDING_<username>.md` (your personal review file)
    - Architect reviews are written here, not in session file
    - Address all issues before continuing
 
@@ -265,7 +264,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
      ### Notes for Next Session
      - [Future work]
      ```
-   - Delete PENDING_REVIEW.md (or PENDING_<username>.md) after addressing all issues
+   - Delete `.aiknowsys/reviews/PENDING_<username>.md` after addressing all issues
 
 3. **Confirm to user:**
    - What you fixed/built
@@ -279,44 +278,41 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 **Multiple plans can coexist.** Plan pointers track active work.
 
-### Single vs Multi-Developer Workflow
+### Multi-Developer Plan Workflow
 
-**Single-developer projects:**
-- Use `.aiknowsys/CURRENT_PLAN.md` (traditional pointer system)
-- One developer, one active plan pointer
-
-**Multi-developer projects:**
-- Each developer: `.aiknowsys/plans/active-<username>.md`
-- Team index: `.aiknowsys/CURRENT_PLAN.md` (aggregates all active plans)
+**How it works:**
+- Each developer has their own plan pointer: `.aiknowsys/plans/active-<username>.md`
+- Team overview is auto-generated: `.aiknowsys/CURRENT_PLAN.md` (read-only)
+- Solo developers: Same pattern, just one file (you + AI = multi-dev!)
 - No merge conflicts (separate files per developer)
+- Run `npx aiknowsys sync-plans` to update team index
 
 ### Creating a New Plan (@Planner)
 
 1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
-2. Update plan pointer:
-   - **Single-dev:** Update `CURRENT_PLAN.md` table
-   - **Multi-dev:** Update `plans/active-<username>.md` for requesting developer
-   - Add row for new plan
+2. Update `plans/active-<username>.md` for the requesting developer:
+   - Update "Currently Working On" with link to new PLAN_*.md
    - Set new plan status to ACTIVE (🎯)
    - Set previous active plan to PAUSED (🔄)
 3. Write plan details in the new PLAN_*.md file
+4. Run `npx aiknowsys sync-plans` to update team index
 
 ### Switching Plans
 
-1. Update your plan pointer:
-   - **Single-dev:** Update CURRENT_PLAN.md ("Currently Working On")
-   - **Multi-dev:** Update `plans/active-<username>.md`
-2. Change previous ACTIVE → PAUSED in table
-3. Change target plan PAUSED → ACTIVE in table
-4. **Don't delete anything!** Paused plans resume later
+1. Update your plan pointer: `plans/active-<username>.md`
+   - Update "Currently Working On" to point to different PLAN_*.md
+   - Change previous plan status: ACTIVE → PAUSED
+   - Change target plan status: PAUSED → ACTIVE
+2. Run `npx aiknowsys sync-plans` to update team index
+3. **Don't delete anything!** Paused plans resume later
 
 ### Completing a Plan
 
-1. Mark status COMPLETE (✅) in your plan pointer:
-   - **Single-dev:** Update CURRENT_PLAN.md table
-   - **Multi-dev:** Update `plans/active-<username>.md`
-2. Add completion date
-3. Leave plan file in place (historical record)
+1. Update your plan pointer: `plans/active-<username>.md`
+   - Mark current plan status: COMPLETE (✅)
+   - Add completion date
+2. Run `npx aiknowsys sync-plans` to update team index
+3. Leave PLAN_*.md file in place (historical record)
 4. Switch to next active plan or wait for new direction
 
 ### Plan Status Values
