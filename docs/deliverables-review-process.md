@@ -253,8 +253,9 @@ A successful quarterly review:
 
 Outside of quarterly schedule, trigger review if:
 
-- **Major framework release** (Next.js 16, Vue 4, etc.)
-- **Breaking library changes** (npm 11, pytest 10, etc.)
+- **Major version bump** (semver MAJOR: Next.js 15 → 16, Vue 3 → 4)
+- **Minor with breaking changes** (deprecations, significant API changes)
+- **Security advisories** affecting documented patterns
 - **User reports outdated pattern** (GitHub issue)
 - **Context7 update** (new library coverage)
 
@@ -266,7 +267,8 @@ This review process integrates with:
 
 1. **Session Hooks** - `session-start.js` already detects Context7 availability
 2. **CHANGELOG** - Review findings can be added to CODEBASE_CHANGELOG.md
-3. **CURRENT_PLAN.md** - Create review plan as active plan during review
+3. **Plan Management** - Create pointer to review plan in `plans/active-<username>.md` during review
+   - Run `npx aiknowsys sync-plans` to update team index
 4. **Skills** - Use dependency-updates skill pattern (Context7 reminder)
 
 ---

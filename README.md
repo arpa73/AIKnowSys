@@ -611,13 +611,22 @@ When you run `init`, AIKnowSys creates a `.aiknowsys/` directory that enables AI
 **Directory Structure:**
 ```
 .aiknowsys/
+├── CURRENT_PLAN.md  # ✅ Committed - Team index (auto-generated)
+├── PLAN_*.md        # ✅ Committed - Implementation plans
+├── plans/           # ✅ Committed - Per-developer plan pointers
+│   ├── README.md    # ✅ Committed - Workflow explanation
+│   └── active-<username>.md  # ✅ Committed - Your active plan
+├── reviews/         # 🚫 Gitignored - Per-developer reviews
+│   ├── README.md    # ✅ Committed - Workflow explanation
+│   └── PENDING_<username>.md # 🚫 Temporary architect reviews
 ├── sessions/        # 🚫 Gitignored - Temporary session working memory
 │   ├── README.md    # ✅ Committed - Explains purpose
 │   └── YYYY-MM-DD-session.md  # 🚫 Daily session notes (not committed)
 ├── learned/         # ✅ Committed - Permanent project-specific patterns
 │   ├── README.md    # ✅ Committed - Explains pattern format
 │   └── *.md         # ✅ Committed - Discovered patterns
-└── PENDING_REVIEW.md # 🚫 Gitignored - Temporary architect reviews
+└── personal/        # 🚫 Gitignored - Personal patterns
+    └── <username>/  # 🚫 Your personal patterns
 ```
 
 #### Session Files (Temporary)
@@ -659,14 +668,15 @@ When you run `init`, AIKnowSys creates a `.aiknowsys/` directory that enables AI
 
 **What they are:**
 - Detailed code reviews created by Architect agent
+- Scoped per developer (no conflicts in team environments)
 - Deleted after Developer addresses issues
 - Temporary handoff mechanism between agents
 
 **Example workflow:**
 1. Developer implements feature
-2. Architect writes review to `PENDING_REVIEW.md`
+2. Architect writes review to `reviews/PENDING_<username>.md`
 3. Developer reads review and fixes issues
-4. Developer deletes `PENDING_REVIEW.md`
+4. Developer deletes `reviews/PENDING_<username>.md`
 
 #### Gitignore Configuration
 
@@ -676,8 +686,11 @@ The init command automatically adds:
 # Session-specific AI memory (temporary, not committed)
 .aiknowsys/sessions/*.md
 !.aiknowsys/sessions/README.md
-.aiknowsys/PENDING_REVIEW.md
+.aiknowsys/reviews/
+!.aiknowsys/reviews/README.md
+.aiknowsys/personal/
 # Note: .aiknowsys/learned/ IS committed (project-specific patterns)
+# Note: .aiknowsys/plans/ IS committed (team plan tracking)
 ```
 
 **Validation:** Run `npx aiknowsys audit` to check if gitignore is configured correctly.
@@ -708,19 +721,20 @@ The init command automatically adds:
 
 **Workflow:**
 ```
-User → @Planner → Creates implementation plan → Writes to .aiknowsys/CURRENT_PLAN.md →
-  @Developer → Reads plan → Implements feature → Auto-handoff →
-    @SeniorArchitect → Reviews against ESSENTIALS → Writes to .aiknowsys/PENDING_REVIEW.md → ✅ Approve or 🔄 Refactor
+User → @Planner → Creates implementation plan → Writes to PLAN_*.md →
+  @Developer → Updates plans/active-<username>.md → Implements feature → Auto-handoff →
+    @SeniorArchitect → Reviews against ESSENTIALS → Writes to reviews/PENDING_<username>.md → ✅ Approve or 🔄 Refactor
 ```
 
 **What Planner does:**
 - Breaks down complex features into actionable steps
 - Identifies architectural concerns and dependencies
-- Documents implementation plan in `.aiknowsys/CURRENT_PLAN.md`
+- Documents implementation plan in `PLAN_*.md`
+- Updates developer's plan pointer in `plans/active-<username>.md`
 - Ensures proper sequencing and risk mitigation
 
 **What Developer does:**
-- Reads implementation plan from `.aiknowsys/CURRENT_PLAN.md`
+- Reads implementation plan from `plans/active-<username>.md` pointer
 - Implements features following project patterns
 - Writes tests (TDD if enabled, coverage testing otherwise)
 - Validates all changes before handoff

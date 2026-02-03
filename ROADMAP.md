@@ -120,6 +120,12 @@ AI agents produce code without understanding project context, breaking invariant
   - Installation stats
   - User ratings/reviews
 
+#### Maintenance & Quality (Ongoing)
+- [x] Quarterly deliverables review process established
+  - See [docs/deliverables-review-process.md](docs/deliverables-review-process.md)
+  - Skills, stack templates, and documentation stay current
+  - Next review: Q2 2026 (May 1)
+
 **Success Metrics:**
 - 1,000+ npm downloads/month
 - 3+ community-contributed skills

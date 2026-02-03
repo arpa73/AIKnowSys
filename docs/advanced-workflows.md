@@ -150,7 +150,8 @@ $ openspec create add-api-auth
 
 # Pause plan while waiting for review
 # Update PLAN_api_authentication.md: Phase 1 → waiting for review
-# Switch CURRENT_PLAN.md to different work
+# Edit plans/active-<username>.md to switch to different work
+# Run: npx aiknowsys sync-plans (to update team index)
 ```
 
 **Week 2 - Review & Approval:**
@@ -174,6 +175,8 @@ $ openspec create add-api-auth
 # Follow approved spec for implementation
 # Each task references specific spec sections
 
+# Resume by editing plans/active-<username>.md back to auth plan
+# Run: npx aiknowsys sync-plans
 # Complete Phase 2 (backend)
 # Run validation: pytest backend/tests/test_auth.py
 # Mark Phase 2 complete ✅
@@ -202,13 +205,15 @@ $ openspec create add-api-auth
 Plans can be **paused and resumed**:
 
 ```markdown
-# CURRENT_PLAN.md
+# plans/active-<username>.md
 
 | Plan | Status | Progress |
 |------|--------|----------|
 | API Auth | 🔄 PAUSED | Waiting for OpenSpec approval |
 | Bug Fixes | 🎯 ACTIVE | 80% complete |
 ```
+
+Run `npx aiknowsys sync-plans` after editing to update team index.
 
 Work on bug fixes while waiting for auth review, then resume auth when approval comes.
 
@@ -256,7 +261,7 @@ When resuming work after a week:
 @Developer please continue with the API authentication plan
 
 # AI reads:
-# 1. .aiknowsys/CURRENT_PLAN.md → finds API Auth plan
+# 1. .aiknowsys/plans/active-<username>.md → finds API Auth plan pointer
 # 2. .aiknowsys/PLAN_api_authentication.md → sees Phase 2.4 in progress
 # 3. specs/add-api-auth.md → understands approved design
 # 4. Resumes exactly where you left off ✅

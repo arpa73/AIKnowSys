@@ -339,7 +339,7 @@ describe('audit command', () => {
     fs.writeFileSync(gitignorePath, `
 .aiknowsys/sessions/*.md
 !.aiknowsys/sessions/README.md
-.aiknowsys/PENDING_REVIEW.md
+.aiknowsys/reviews/
 `);
     
     const result = await audit({ dir: testDir, _silent: true });
@@ -405,10 +405,10 @@ describe('audit command', () => {
     assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when .aiknowsys does not exist');
   });
 
-  it('should increment info counter for optional PENDING_REVIEW.md message', async () => {
+  it('should warn when reviews/ directory not gitignored', async () => {
     createMockProject(testDir, { hasEssentials: true });
     
-    // Create .aiknowsys with sessions ignored but not PENDING_REVIEW.md
+    // Create .aiknowsys with sessions ignored but not reviews/
     const aiknowsysDir = path.join(testDir, '.aiknowsys');
     fs.mkdirSync(aiknowsysDir, { recursive: true });
     
@@ -417,8 +417,12 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    // Should have info message about optional PENDING_REVIEW.md
-    assert.ok(result.info > 0, 'Should increment info counter');
+    // Should have warning about reviews/ directory
+    const reviewsIssue = result.issues.find(i => 
+      i.message && i.message.includes('reviews/')
+    );
+    assert.ok(reviewsIssue, 'Should warn when reviews/ not gitignored');
+    assert.strictEqual(result.warnings > 0, true, 'Should increment warning counter');
   });
 
   it('should show progress during multi-step audit', async () => {

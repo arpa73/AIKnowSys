@@ -369,7 +369,7 @@ User: [Handoff auto-submits to SeniorArchitect]
 
 SeniorArchitect:
 1. Reviews code against ESSENTIALS
-2. Writes review to .aiknowsys/PENDING_REVIEW.md
+2. Writes review to .aiknowsys/reviews/PENDING_<username>.md
 3. Updates session with review marker
 4. Ends response → "Fix Issues (Developer)" handoff button appears if issues found
 ```

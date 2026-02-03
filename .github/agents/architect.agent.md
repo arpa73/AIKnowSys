@@ -34,8 +34,7 @@ To ensure your review feedback is preserved and actionable:
 **2. Detect developer and write review to appropriate file:**
    - Get git username: `git config user.name`
    - Check if multi-developer setup: `.aiknowsys/plans/` directory exists
-   - **Multi-developer:** Write to `.aiknowsys/reviews/PENDING_<username>.md`
-   - **Single-developer:** Write to `.aiknowsys/PENDING_REVIEW.md` (legacy)
+   - Write to `.aiknowsys/reviews/PENDING_<username>.md`
    - Normalize username: lowercase, replace spaces with hyphens
 
 **3. Review file format:**
@@ -91,7 +90,7 @@ To ensure your review feedback is preserved and actionable:
 
    ## ⚠️ Architect Review Pending (HH:MM)
    **Topic:** [Brief description]  
-   **See:** `.aiknowsys/reviews/PENDING_<username>.md` (or `PENDING_REVIEW.md`) for details
+   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
 
    **Goal**: [Infer from files reviewed - e.g., "Implement feature X", "Refactor Y for clarity", "Fix Z bug in production"]
 
@@ -102,12 +101,11 @@ To ensure your review feedback is preserved and actionable:
    ```markdown
    ## ⚠️ Architect Review Pending (HH:MM)
    **Topic:** [Brief description]  
-   **See:** `.aiknowsys/reviews/PENDING_<username>.md` (or `PENDING_REVIEW.md`) for details
+   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
    ```
 
 **5. Why this workflow:**
    - Multi-dev: `.aiknowsys/reviews/PENDING_<username>.md` (gitignored, no conflicts)
-   - Single-dev: `.aiknowsys/PENDING_REVIEW.md` (legacy, for backwards compatibility)
    - Session file = lightweight timeline marker
    - Developer deletes review file after addressing issues
    - Session file gets brief completion status (not full review text)
@@ -152,7 +150,7 @@ When recommending where to document patterns during your review, use this decisi
 
 ### Additional Reminders to Developer:
 After completing your review, remind the developer to:
-- **Read review file:** "Detailed review written to `.aiknowsys/reviews/PENDING_<username>.md`" (or PENDING_REVIEW.md for single-dev)
+- **Read review file:** "Detailed review written to `.aiknowsys/reviews/PENDING_<username>.md`"
 - **Address all issues:** Check off each item in the "Required Actions" section
 - **Update session file:** Replace pending marker with brief completion status
 - **Delete review file:** After addressing all issues and updating session
@@ -162,7 +160,7 @@ After completing your review, remind the developer to:
 ### Review Output:
 - If perfect: Respond with "LGTM - Architect Approved ✅" (write to review file anyway for audit trail).
 - If issues found: Provide summary and point to review file for details.
-- **Always tell Developer:** "Review details written to `.aiknowsys/reviews/PENDING_<username>.md`" (or PENDING_REVIEW.md for single-dev)
+- **Always tell Developer:** "Review details written to `.aiknowsys/reviews/PENDING_<username>.md`"
 
 ---
 

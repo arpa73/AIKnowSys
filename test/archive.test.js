@@ -196,19 +196,19 @@ describe('Archive Commands', () => {
 
   describe('archive-plans command', () => {
     beforeEach(async () => {
-      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys'), { recursive: true });
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
     });
 
     it('should detect completed plans older than threshold', async () => {
-      // Create CURRENT_PLAN.md with completed plans
-      const currentPlan = `# Active Plan Pointer
+      // Create plan pointer file (v0.9.0 multi-dev structure)
+      const planPointer = `# test-user's Active Plan
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |
-| [Active Plan](PLAN_active.md) | 🎯 ACTIVE | In progress | 2026-01-30 |
+| [Old Plan](../PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |
+| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | In progress | 2026-01-30 |
 `;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       // Create plan files
       const oldDate = new Date();
@@ -232,8 +232,13 @@ describe('Archive Commands', () => {
     });
 
     it('should move completed plans to archive/plans/', async () => {
-      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      const planPointer = `# test-user's Active Plan
+
+| Plan | Status |
+|------|--------|
+| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 30);
@@ -249,17 +254,27 @@ describe('Archive Commands', () => {
       });
       
       assert.strictEqual(result.archived, 1);
+      assert.strictEqual(result.updated, 1, 'Should update 1 plan pointer');
       
       // Verify file moved
       const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'plans', 'PLAN_old.md');
       const exists = await fs.access(archivePath).then(() => true).catch(() => false);
       assert.strictEqual(exists, true, 'Plan should be in archive/plans/');
+      
+      // Verify pointer file updated
+      const pointerContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
+      assert.strictEqual(pointerContent.includes('../archive/plans/PLAN_old.md'), true, 'Pointer should reference archive path');
     });
 
     it('should preserve active and paused plans', async () => {
-      const currentPlan = `| [Active Plan](PLAN_active.md) | 🎯 ACTIVE | Working | 2026-01-30 |
-| [Paused Plan](PLAN_paused.md) | 🔄 PAUSED | On hold | 2026-01-20 |`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      const planPointer = `# test-user's Active Plan
+
+| Plan | Status |
+|------|--------|
+| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE |
+| [Paused Plan](../PLAN_paused.md) | 🔄 PAUSED |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), '# Active');
       await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_paused.md'), '# Paused');
@@ -273,9 +288,14 @@ describe('Archive Commands', () => {
       assert.strictEqual(result.archived, 0, 'Should not archive active/paused plans');
     });
 
-    it('should update CURRENT_PLAN.md with archive links', async () => {
-      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+    it('should update plan pointer with archive links', async () => {
+      const planPointer = `# test-user's Active Plan
+
+| Plan | Status |
+|------|--------|
+| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 30);
@@ -290,13 +310,18 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      const updatedContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), 'utf-8');
-      assert.match(updatedContent, /archive\/plans\/PLAN_old\.md/, 'Should update link to archive location');
+      const updatedContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
+      assert.match(updatedContent, /\.\.\/archive\/plans\/PLAN_old\.md/, 'Should update link to archive location');
     });
 
     it('should handle --dry-run mode', async () => {
-      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      const planPointer = `# test-user's Active Plan
+
+| Plan | Status |
+|------|--------|
+| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       const oldDate = new Date();
       oldDate.setDate(oldDate.getDate() - 30);
@@ -320,7 +345,10 @@ describe('Archive Commands', () => {
       assert.strictEqual(exists, true);
     });
 
-    it('should handle missing CURRENT_PLAN.md', async () => {
+    it('should handle missing plans/ directory', async () => {
+      // Remove plans directory
+      await fs.rm(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true, force: true });
+      
       const result = await archivePlans({
         dir: TEST_DIR,
         threshold: 7,
@@ -335,6 +363,7 @@ describe('Archive Commands', () => {
   describe('clean command', () => {
     beforeEach(async () => {
       await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'sessions'), { recursive: true });
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
     });
 
     it('should archive sessions and plans in one command', async () => {
@@ -346,9 +375,14 @@ describe('Archive Commands', () => {
       await fs.writeFile(sessionFile, '# Old Session');
       await fs.utimes(sessionFile, oldDate, oldDate);
       
-      // Create old plan
-      const currentPlan = '| [Old Plan](PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |';
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'CURRENT_PLAN.md'), currentPlan);
+      // Create old plan with multi-dev structure
+      const planPointer = `# test-user's Active Plan
+
+| Plan | Status |
+|------|--------|
+| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
+`;
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
       
       const planFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
       await fs.writeFile(planFile, '# Old Plan');

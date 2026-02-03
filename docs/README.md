@@ -38,6 +38,11 @@ This folder contains all project documentation organized by category.
 
 - **[OpenSpec + Plan Management Integration](advanced-workflows.md#openspec--plan-management-integration)** - Combine proposal-driven design with fine-grained task tracking for large features
 
+### 🔄 [Processes & Maintenance](deliverables-review-process.md)
+**Keeping AIKnowSys deliverables current**
+
+- **[Quarterly Deliverables Review](deliverables-review-process.md)** - Process for reviewing skills, stack templates, and documentation against current framework versions using Context7
+
 ### 🎓 [guides/](guides/) - How-To Guides & References
 Human-readable guides and detailed documentation
 
