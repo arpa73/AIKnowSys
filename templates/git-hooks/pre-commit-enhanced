@@ -4,6 +4,12 @@
 # 
 # Features:
 # - Runs full test suite (blocks on failure)
+# - Deliverables validation (blocks if templates/ changed)
+#   * Only runs when templates/ directory files are staged
+#   * Validates templates match non-template equivalents
+#   * Prevents shipping broken templates to users
+#   * Auto-fix available: npx aiknowsys validate-deliverables --fix
+#   * Can bypass with: git commit --no-verify (not recommended)
 # - Optional quality checks (warns only)
 # - ESSENTIALS size validation (warns if >800 lines)
 #
@@ -25,7 +31,7 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
 fi
 
 # 1. Run tests (BLOCKING - must pass to commit)
-echo "📋 Step 1/3: Running tests..."
+echo "📋 Step 1/4: Running tests..."
 if npm test > /dev/null 2>&1; then
   echo "  ✅ All tests passed"
 else
@@ -38,8 +44,34 @@ else
   exit 1
 fi
 
-# 2. Run quality checks (WARNING - doesn't block)
-echo "📋 Step 2/3: Quality checks..."
+# 2. Deliverables validation (BLOCKING if templates/ changed)
+echo "📋 Step 2/4: Deliverables validation..."
+if git diff --cached --name-only | grep -q '^templates/'; then
+  echo "  📝 Templates changed - validating deliverables..."
+  
+  if command -v node > /dev/null 2>&1 && [ -f "bin/cli.js" ]; then
+    if node bin/cli.js validate-deliverables --silent; then
+      echo "  ✅ Deliverables validation passed"
+    else
+      echo ""
+      echo "  ❌ Deliverables validation failed - commit blocked"
+      echo ""
+      echo "  Templates must match non-template equivalents."
+      echo "  Run: npx aiknowsys validate-deliverables"
+      echo "  Fix: npx aiknowsys validate-deliverables --fix"
+      echo "  Or skip: git commit --no-verify (not recommended)"
+      echo ""
+      exit 1
+    fi
+  else
+    echo "  ⊖ Deliverables check skipped (CLI not available)"
+  fi
+else
+  echo "  ⊖ No template changes detected"
+fi
+
+# 3. Run quality checks (WARNING - doesn't block)
+echo "📋 Step 3/4: Quality checks..."
 if command -v node > /dev/null 2>&1 && [ -f "bin/cli.js" ]; then
   if node bin/cli.js check --silent 2>&1 | grep -q "Issues found"; then
     echo "  ⚠️  Quality issues detected (review recommended)"
@@ -51,8 +83,8 @@ else
   echo "  ⊖ Quality check skipped (CLI not available)"
 fi
 
-# 3. Check ESSENTIALS size (WARNING - doesn't block)
-echo "📋 Step 3/3: ESSENTIALS validation..."
+# 4. Check ESSENTIALS size (WARNING - doesn't block)
+echo "📋 Step 4/4: ESSENTIALS validation..."
 if [ -f "CODEBASE_ESSENTIALS.md" ]; then
   LINES=$(wc -l < CODEBASE_ESSENTIALS.md | tr -d ' ')
   
@@ -71,3 +103,4 @@ echo "✅ Pre-commit validation passed"
 echo ""
 
 exit 0
+

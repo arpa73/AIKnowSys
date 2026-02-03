@@ -75,11 +75,18 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 |---------|----------|----------|
 | Any JS file | `node bin/cli.js --help` | ✅ MANDATORY |
 | CLI commands | `node bin/cli.js <command> --help` | ✅ MANDATORY |
+| Templates | `npx aiknowsys validate-deliverables` | ✅ MANDATORY |
 | Templates | Verify no broken `{{VARIABLE}}` refs | ✅ MANDATORY |
 | README | Links valid, examples accurate | ✅ MANDATORY |
 | Package | `npm pack --dry-run` | ✅ Before publish |
 
 **🚨 RULE: Never claim work is complete without running validation!**
+
+**🚨 DELIVERABLES CHECK:** If you change templates/, you MUST:
+- Run `npx aiknowsys validate-deliverables` before committing
+- Verify templates match non-template equivalents
+- Pre-commit hook will block broken templates automatically
+- Use `--fix` flag to auto-fix simple pattern issues
 
 ---
 
@@ -141,9 +148,9 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 | Trigger Words | Skill to Read | Why |
 |---------------|---------------|-----|
 | "add command", "new feature", "implement" | `feature-implementation` | Proper command structure |
-| "refactor", "clean up", "simplify" | `code-refactoring` | Test-driven refactoring |
-| "update deps", "upgrade packages" | `dependency-updates` | Safe upgrade procedures |
-| "update docs", "changelog" | `documentation-management` | AI-optimized docs |
+| "refactor", "clean up", "simplify" | `refactoring-workflow` | Test-driven refactoring |
+| "update deps", "upgrade packages" | `dependency-management` | Safe upgrade procedures |
+| "update docs", "changelog" | `ai-friendly-documentation` | AI-optimized docs |
 | "ESSENTIALS bloat", "compress essentials", "compress-essentials" | `essentials-compression` (learned) | Compression workflow |
 | "create skill", "new skill" | `skill-creator` | Proper skill format |
 | "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
@@ -377,12 +384,15 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Skills are located in `.github/skills/` and provide step-by-step workflows.**
 
 **Universal skills included:**
-- `dependency-updates` - Safe upgrade procedures
-- `documentation-management` - Changelog archiving
-- `code-refactoring` - Test-driven refactoring
-- `testing-best-practices` - Framework-agnostic testing
+- `refactoring-workflow` - Test-driven refactoring patterns
+- `ai-friendly-documentation` - AI-optimized docs and changelog archiving
+- `dependency-management` - Safe upgrade procedures (npm, pip, cargo, go mod)
+- `feature-implementation` - Step-by-step feature planning and implementation
 - `skill-creator` - How to create new skills
 - `tdd-workflow` - Test-driven development (mandatory for features)
+- `validation-troubleshooting` - Debug validation failures
+- `context7-usage` - Query framework documentation with Context7 MCP
+- `skill-validation` - Validate skill format and content
 
 **To use a skill:**
 1. AI detects trigger words

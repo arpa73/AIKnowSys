@@ -7,6 +7,243 @@
 
 ---
 
+## Session: Skill Audit & Universal Rewrite (Feb 3, 2026)
+
+**Goal:** Clean up gnwebsite-inherited skills, convert high-value skills to framework-agnostic versions
+
+**Context:** AIKnowSys inherited 12 skills from gnwebsite (Django/Vue project). Most were tech-specific. Audit revealed 3 skills with universal patterns (code-refactoring had 425 uses in 3 days!). Rewrote to framework-agnostic, deleted gnwebsite-only skills.
+
+**Implementation: 8 Phases (2.5 hours)**
+
+### Phase 1: Skill Inventory & Classification (30 min)
+
+**Audited 12 skills:**
+- ✅ **Keep as-is** (7): Universal from creation
+  - context7-usage, feature-implementation, skill-creator, skill-validation, tdd-workflow, validation-troubleshooting, deliverable-review
+  
+- 🔄 **Rewrite to universal** (3): High-value but gnwebsite-specific
+  - code-refactoring → refactoring-workflow (425 uses - top skill!)
+  - documentation-management → ai-friendly-documentation
+  - dependency-updates → dependency-management
+  
+- ❌ **Delete** (3): Entirely gnwebsite-specific
+  - developer-checklist (Django/Vitest/API filters)
+  - frontend-component-refactoring (Vue/Tailwind)
+  - deliverable-review (maintainer-only tool, moved to docs)
+
+**Result:** 10 framework-agnostic skills (down from 12)
+
+### Phase 2-4: Universal Skill Creation (90 min)
+
+**Created:**
+- [.github/skills/refactoring-workflow/SKILL.md](.github/skills/refactoring-workflow/SKILL.md): Universal code refactoring (550+ lines)
+  - Test-driven refactoring (RED-GREEN-REFACTOR for refactoring)
+  - Extract function, eliminate duplication patterns
+  - Framework-agnostic examples: TypeScript, Python, Rust, Go
+  - Emergency rollback procedures
+  - Incremental change workflow
+
+- [.github/skills/ai-friendly-documentation/SKILL.md](.github/skills/ai-friendly-documentation/SKILL.md): AI-optimized docs (550+ lines)
+  - RAG principles (Retrieval-Augmented Generation)
+  - Self-contained sections, explicit terminology
+  - Changelog archiving (>1500 lines trigger)
+  - Framework-agnostic examples: Python, JavaScript, Rust
+  - Semantic structure for LLM retrieval
+
+- [.github/skills/dependency-management/SKILL.md](.github/skills/dependency-management/SKILL.md): Universal dependency updates (360+ lines)
+  - Security-first approach (patch vulnerabilities immediately)
+  - Incremental updates (prod → dev → tooling)
+  - Semantic versioning strategy (patch/minor/major)
+  - Examples: npm, pip, cargo, go mod, bundler
+  - Rollback procedures
+
+### Phase 5-6: Cleanup & Registration (40 min)
+
+**Deleted:**
+- Removed 6 skill directories from `.github/skills/`
+- Removed 3 old templates from `templates/skills/`
+- Old skills: code-refactoring, documentation-management, dependency-updates, developer-checklist, frontend-component-refactoring, deliverable-review
+
+**Updated:**
+- [lib/commands/install-skills.js](lib/commands/install-skills.js#L8): Updated AVAILABLE_SKILLS array
+  - 9 skills now registered (was 7 with old names)
+  - New: refactoring-workflow, ai-friendly-documentation, dependency-management
+  - Added: context7-usage, feature-implementation, skill-validation, validation-troubleshooting
+
+- [templates/skills/](templates/skills/): Synced with `.github/skills/`
+  - Copied 6 skills to templates for distribution
+  - Ensures users get framework-agnostic skills
+
+### Phase 7: Validation (30 min)
+
+**Tests:**
+- Fixed 4 skill count tests: Changed from 5 → 9 expected skills
+- Updated skill name references: code-refactoring → refactoring-workflow, etc.
+- Result: **594 tests passing, 0 failures** ✅
+
+**Manual validation:**
+```bash
+npm test                      # 594 passed ✅
+npm pack --dry-run            # Package build successful ✅
+ls .github/skills/            # 10 skills present ✅
+ls templates/skills/          # 9 skills present ✅
+```
+
+### Phase 8: Documentation (This Entry)
+
+**Key Learning:**
+- **High-value patterns transcend tech stacks:** code-refactoring had 425 uses because refactoring workflow is universal
+- **Usage data drives preservation:** skill-usage.json revealed code-refactoring was top skill
+- **Framework-agnostic examples increase adoption:** Python, JS, Rust, Go examples make skills reusable
+- **Template sync is critical:** templates/skills/ must match .github/skills/ for users
+- **Test updates follow skill changes:** Skill count and names must match in tests
+
+**Validation:**
+- ✅ Tests: 594 passed, 0 failed
+- ✅ Build: Package builds successfully
+- ✅ Skills: 10 universal skills (all framework-agnostic)
+- ✅ Templates: 9 skills distributed to users
+
+---
+
+## Session: Deliverables Validation Protocol (Feb 3, 2026)
+
+**Goal:** Implement comprehensive deliverables validation to prevent shipping broken templates
+
+**Context:** v0.9.0 pre-release verification discovered templates were not updated with multi-dev pattern. This would have broken user experience. Need systematic validation to prevent this class of errors.
+
+**Implementation: 7 Phases (4.5 hours)**
+
+### Phase 1: Core Validation Command (60 min)
+
+**New Command:**
+- [lib/commands/validate-deliverables.js](lib/commands/validate-deliverables.js): Deliverables validation (541 lines)
+  - 6 validation checks: Template Schema, Pattern Consistency, Legacy Patterns, Placeholders, Template Execution (stub), Fresh Init (stub)
+  - Returns structured result: `{passed, checks, summary, exitCode, metrics, fixed (optional), fix (optional)}`
+  - Template schema validation: Ensures required `{{PLACEHOLDERS}}` exist, detects forbidden patterns
+  - Pattern consistency: Maps templates to non-templates (e.g., `templates/agents/*.md` → `.github/agents/*.md`)
+  - Legacy pattern detection: Greps for 5 anti-patterns from v0.8.x (PENDING_REVIEW.md, etc.)
+  - Unresolved placeholder detection: Finds `{{VARIABLES}}` in non-template files
+  - Smart filtering: Skips `.template.md`, `learned/`, `stacks/`, `.minimal.md`
+  - Auto-fix mode: `--fix` flag fixes simple pattern replacements
+  - Metrics logging: Saves runs to `.aiknowsys/validation-history.json`
+  - Silent mode: `_silent` option for programmatic use
+  - configurable projectRoot for edge cases
+
+**Tests:**
+- [test/commands/validate-deliverables.test.js](test/commands/validate-deliverables.test.js): Comprehensive test suite (232 lines)
+  - Uses node:test + node:assert (no external dependencies)
+  - 15+ test cases covering all validation checks
+  - Tests auto-fix behavior, metrics, edge cases
+  - TDD workflow: Tests written first (RED-GREEN-REFACTOR)
+
+**CLI Integration:**
+- [bin/cli.js](bin/cli.js#L32): Registered validate-deliverables command
+  - Options: `--full`, `--fix`, `--metrics`
+  - Command available: `npx aiknowsys validate-deliverables`
+
+**Architect Review:** APPROVED after fixing CRITICAL test framework issue (Vitest → node:test)
+
+### Phase 2: quality-check Integration (35 min)
+
+**Updated Command:**
+- [lib/commands/quality-check.js](lib/commands/quality-check.js#L8): Added deliverables import
+- [lib/commands/quality-check.js](lib/commands/quality-check.js#L32-L37): Added deliverables check with `full: true`
+  - Always runs comprehensive validation (all 6 checks including stubs)
+  - Integrated into pre-release validation matrix
+- [lib/commands/quality-check.js](lib/commands/quality-check.js#L142-L162): Added deliverables display section
+  - Shows metrics: templates checked, duration
+  - Displays fix suggestion when validation fails
+- [lib/commands/validate-deliverables.js](lib/commands/validate-deliverables.js#L158-L161): Added fix property
+  - Shows: "Run npx aiknowsys validate-deliverables --fix to auto-fix simple patterns"
+  - Only displayed when validation fails (!allPassed)
+
+**Tests:**
+- [test/quality-check.test.js](test/quality-check.test.js#L238-L252): Added 3 integration tests
+  - Verifies deliverables check exists
+  - Tests legacy pattern detection
+  - Tests full mode validation (Template Execution + Fresh Init run)
+
+**Architect Review:** APPROVED (5/5 stars, 2 optional enhancements implemented)
+
+### Phase 3: Git Pre-Commit Hook (35 min)
+
+**Updated Hook:**
+- [templates/git-hooks/pre-commit-enhanced](templates/git-hooks/pre-commit-enhanced): Added deliverables validation (Step 2/4)
+  - Only runs when `templates/` files are staged (performance)
+  - Blocks commit if validation fails
+  - Clear error messages with actionable guidance
+  - Documents --no-verify escape hatch
+  - Graceful degradation if CLI not available
+
+**Tests:**
+- [test/git-hooks/pre-commit-deliverables.test.js](test/git-hooks/pre-commit-deliverables.test.js): Hook behavior tests (215 lines)
+  - Tests skip validation when no templates staged
+  - Tests run validation when templates staged
+  - Tests helpful error messages on failure
+  - Tests --no-verify bypass
+  - **Integration test:** Executes actual validate-deliverables command
+
+**Architect Review:** APPROVED (4.5/5 stars initially, 5/5 after enhancements)
+
+### Phase 4: Documentation Updates (40 min)
+
+**Updated Files:**
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L27-L28): Added validate-deliverables to validation matrix
+  - Added: `node bin/cli.js validate-deliverables` command
+  - Added: `node bin/cli.js validate-deliverables --full` for comprehensive checks
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L260-L269): Added Critical Invariant #8
+  - "Deliverables Consistency" - Templates must match non-template files
+  - Documents validation approaches (pre-commit hook, quality-check, standalone)
+  - Critical rule: Shipping broken templates breaks user experience
+- [AGENTS.md](AGENTS.md#L70-L77): Updated validation matrix
+  - Added deliverables check row: `npx aiknowsys validate-deliverables` MANDATORY for templates
+  - Added DELIVERABLES CHECK section with workflow guidance
+- [templates/git-hooks/README.md](templates/git-hooks/README.md#L7-L18): Documented pre-commit-enhanced
+  - Added comprehensive description of deliverables validation
+  - Documents when it runs, what it checks, how to bypass
+
+### Phase 5: Learned Skill Creation (30 min)
+
+**New Skill:**
+- [.aiknowsys/learned/deliverables-validation.md](.aiknowsys/learned/deliverables-validation.md): Comprehensive pattern guide (320 lines)
+  - Trigger words: "breaking change", "template update", "release prep", "validate deliverables"
+  - Documents all 3 validation approaches (hook, quality-check, standalone)
+  - Explains all 6 validation checks with examples
+  - Common issues & solutions section
+  - Example workflow: Breaking change implementation
+  - Links to Critical Invariant #8 and implementation
+
+### Phase 6: Manual Validation (15 min)
+
+**Verified:**
+- ✅ `npx aiknowsys validate-deliverables` works (4/4 checks passed)
+- ✅ `npx aiknowsys validate-deliverables --full` works (6/6 checks passed)
+- ✅ quality-check shows deliverables validation section
+- ✅ All 594 tests passing (597 total, 3 skipped)
+
+### Phase 7: Documentation & Release Prep
+
+**This changelog entry!**
+
+---
+
+**Key Learning:**
+- **Templates are first-class deliverables** - Must be validated like any other code
+- **Architectural patterns must be reflected in templates** - Breaking changes require template updates
+- **TDD prevented major issues** - Test framework mismatch caught by Architect review
+- **Integration tests provide confidence** - Actually running validate-deliverables in hook test verified end-to-end workflow
+- **Documentation is critical** - Clear error messages and fix suggestions improve developer experience
+
+**Validation:**
+- ✅ All 594 tests passing
+- ✅ Pre-commit hook blocks broken templates
+- ✅ quality-check includes deliverables validation
+- ✅ Standalone command works with all flags
+- ✅ Documentation complete (ESSENTIALS, AGENTS, git hooks README, learned skill)
+
+---
+
 ## Session: v0.9.0 - Mandatory Multi-Dev Migration (Feb 2, 2026)
 
 **Goal:** Simplify architecture by making multi-dev pattern mandatory (breaking change)

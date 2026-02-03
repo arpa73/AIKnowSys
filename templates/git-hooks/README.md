@@ -4,12 +4,19 @@ This directory contains Git hooks to help enforce Test-Driven Development practi
 
 ## Available Hooks
 
-### `pre-commit` - TDD Compliance & Linting Check
+### `pre-commit` - Basic TDD Compliance & Linting
 
 **What it does:**
 1. **Runs ESLint** on all staged JavaScript files
 2. **Checks TDD compliance** - if you're staging changes to `lib/` without corresponding `test/` changes
 3. **Blocks commit** if linting fails or tests are missing
+
+### `pre-commit-enhanced` - Comprehensive Validation (Recommended)
+
+**What it does:**
+1. **Runs full test suite** (BLOCKING - must pass)
+2. **Quality checks** (WARNING - doesn't block)
+3. **ESSENTIALS size check** (WARNING - recommends compression if >800 lines)
 
 **Installation:**
 

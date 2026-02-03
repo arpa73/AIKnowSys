@@ -51,18 +51,22 @@ describe('install-skills command', () => {
   // DEFAULT SKILLS INSTALLATION TESTS
   // ========================================
 
-  it('should install all 5 default universal skills', async () => {
+  it('should install all 9 default universal skills (excluding maintainer-only)', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
     const skillsDir = path.join(testDir, '.github', 'skills');
     
-    // Verify all 5 default skills are installed
+    // Verify all 9 default skills are installed
     const expectedSkills = [
-      'code-refactoring',
-      'dependency-updates',
-      'documentation-management',
+      'ai-friendly-documentation',
+      'context7-usage',
+      'dependency-management',
+      'feature-implementation',
+      'refactoring-workflow',
       'skill-creator',
-      'tdd-workflow'
+      'skill-validation',
+      'tdd-workflow',
+      'validation-troubleshooting'
     ];
     
     for (const skill of expectedSkills) {
@@ -77,7 +81,7 @@ describe('install-skills command', () => {
     const skillsDir = path.join(testDir, '.github', 'skills');
     
     // Check that each skill has a SKILL.md file
-    const skills = ['code-refactoring', 'dependency-updates', 'tdd-workflow'];
+    const skills = ['ai-friendly-documentation', 'dependency-management', 'tdd-workflow'];
     
     for (const skill of skills) {
       const skillMdPath = path.join(skillsDir, skill, 'SKILL.md');
@@ -103,25 +107,25 @@ describe('install-skills command', () => {
   it('should install only selected skills when --skills option provided', async () => {
     await installSkills({ 
       dir: testDir,
-      skills: ['code-refactoring', 'tdd-workflow'],
+      skills: ['refactoring-workflow', 'tdd-workflow'],
       _silent: true
     });
     
     const skillsDir = path.join(testDir, '.github', 'skills');
     
     // Should have selected skills
-    assertFileExists(path.join(skillsDir, 'code-refactoring'));
+    assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     assertFileExists(path.join(skillsDir, 'tdd-workflow'));
     
     // Should NOT have other skills
-    assertFileNotExists(path.join(skillsDir, 'dependency-updates'));
-    assertFileNotExists(path.join(skillsDir, 'documentation-management'));
+    assertFileNotExists(path.join(skillsDir, 'dependency-management'));
+    assertFileNotExists(path.join(skillsDir, 'ai-friendly-documentation'));
     assertFileNotExists(path.join(skillsDir, 'skill-creator'));
   });
 
   it('should handle comma-separated skills string', async () => {
     // CLI might pass skills as a comma-separated string
-    const skillsString = 'code-refactoring,tdd-workflow';
+    const skillsString = 'refactoring-workflow,tdd-workflow';
     const skillsArray = skillsString.split(',');
     
     await installSkills({
@@ -132,7 +136,7 @@ describe('install-skills command', () => {
     
     const skillsDir = path.join(testDir, '.github', 'skills');
     
-    assertFileExists(path.join(skillsDir, 'code-refactoring'));
+    assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     assertFileExists(path.join(skillsDir, 'tdd-workflow'));
   });
 
@@ -145,7 +149,7 @@ describe('install-skills command', () => {
     await assert.doesNotReject(
       async () => await installSkills({
         dir: testDir,
-        skills: ['code-refactoring', 'nonexistent-skill', 'tdd-workflow'],
+        skills: ['refactoring-workflow', 'nonexistent-skill', 'tdd-workflow'],
         _silent: true
       }),
       'Should not throw when skill not found'
@@ -154,7 +158,7 @@ describe('install-skills command', () => {
     const skillsDir = path.join(testDir, '.github', 'skills');
     
     // Valid skills should still be installed
-    assertFileExists(path.join(skillsDir, 'code-refactoring'));
+    assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     assertFileExists(path.join(skillsDir, 'tdd-workflow'));
     
     // Invalid skill should not exist
@@ -212,7 +216,7 @@ describe('install-skills command', () => {
       
       const skillsDir = path.join(customDir, '.github', 'skills');
       assertFileExists(skillsDir);
-      assertFileExists(path.join(skillsDir, 'code-refactoring'));
+      assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     } finally {
       cleanupTestDir(customDir);
     }
@@ -260,10 +264,10 @@ describe('install-skills command', () => {
     const skillsDir = path.join(testDir, '.github', 'skills');
     const installedSkills = fs.readdirSync(skillsDir);
     
-    // Should have 5 skills
+    // Should have 9 skills
     assert.strictEqual(
       installedSkills.length,
-      5,
+      9,
       'Should install exactly 5 default skills'
     );
   });
@@ -272,7 +276,7 @@ describe('install-skills command', () => {
     // Test with mix of valid and invalid skills
     await installSkills({
       dir: testDir,
-      skills: ['code-refactoring', 'invalid1', 'tdd-workflow', 'invalid2'],
+      skills: ['refactoring-workflow', 'invalid1', 'tdd-workflow', 'invalid2'],
       _silent: true
     });
     

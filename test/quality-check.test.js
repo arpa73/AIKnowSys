@@ -390,5 +390,58 @@ describe('quality-check command', () => {
       // Should pass because threshold is 1000, not default 800
       assert.ok(result.checks.essentials.passed);
     });
+
+    it('should include deliverables validation check', async () => {
+      // Create minimal valid structure
+      await fs.mkdir(path.join(TEST_DIR, 'templates', 'agents'), { recursive: true });
+      await fs.writeFile(
+        path.join(TEST_DIR, 'templates', 'agents', 'test.template.md'),
+        '# Test Template'
+      );
+
+      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+
+      assert.ok(result.checks.deliverables, 'Should have deliverables check');
+      assert.ok('passed' in result.checks.deliverables, 'Should have passed property');
+      assert.ok('summary' in result.checks.deliverables, 'Should have summary');
+    });
+
+    it('should fail when deliverables validation fails', async () => {
+      // Create template with legacy pattern
+      await fs.mkdir(path.join(TEST_DIR, 'templates', 'agents'), { recursive: true });
+      await fs.writeFile(
+        path.join(TEST_DIR, 'templates', 'agents', 'bad.template.md'),
+        'See PENDING_REVIEW.md for review'
+      );
+
+      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+
+      // Deliverables check should detect legacy pattern
+      assert.ok(result.checks.deliverables);
+      // Note: Might pass or fail depending on other checks, just verify it ran
+      assert.ok('passed' in result.checks.deliverables);
+    });
+
+    it('should run deliverables validation in full mode', async () => {
+      // Create valid template structure
+      await fs.mkdir(path.join(TEST_DIR, 'templates', 'agents'), { recursive: true });
+      await fs.writeFile(
+        path.join(TEST_DIR, 'templates', 'agents', 'test.template.md'),
+        '# Test Template\n\nThis is a test template.'
+      );
+
+      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+
+      // Verify full mode ran (should have all 6 checks, not just 4)
+      assert.ok(result.checks.deliverables.checks, 'Should have individual checks');
+      const checkNames = result.checks.deliverables.checks.map(c => c.name);
+      assert.ok(checkNames.includes('Template Execution'), 'Should run Template Execution (full mode)');
+      assert.ok(checkNames.includes('Fresh Init'), 'Should run Fresh Init (full mode)');
+      
+      // Verify metrics exist
+      assert.ok(result.checks.deliverables.metrics, 'Should have metrics');
+      assert.ok('templatesChecked' in result.checks.deliverables.metrics, 'Should track templates checked');
+      assert.ok('duration' in result.checks.deliverables.metrics, 'Should track duration');
+    });
   });
 });

@@ -30,6 +30,8 @@
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
 | `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
 | `node bin/cli.js check` | Validation + bloat detection | ESSENTIALS <800 lines |
+| `node bin/cli.js validate-deliverables` | Deliverables validation | All checks pass |
+| `node bin/cli.js validate-deliverables --full` | Comprehensive validation | All checks pass (includes fresh init) |
 | `node bin/cli.js compress-essentials --analyze` | Preview compression | Shows opportunities |
 | `npm pack --dry-run` | Package contents | Lists correct files |
 
@@ -259,6 +261,19 @@ See: [AGENTS.md](AGENTS.md#plan-management)
    - Keep tests fast and focused
    - **Exception:** Configuration-only changes (e.g., adding properties to const objects) don't require new tests if existing tests already cover the logic using that configuration
    - See `.github/skills/tdd-workflow/SKILL.md` for detailed guidance
+
+8. **Deliverables Consistency**
+   - Templates (`templates/` directory) are **deliverables** distributed to users
+   - ANY change to core functionality MUST update corresponding templates
+   - Templates must match non-template equivalents (agents, workflows, docs)
+   - Breaking changes MUST be reflected in all deliverables before release
+   - **Validation:**
+     - Run `npx aiknowsys validate-deliverables` before commits/releases
+     - Pre-commit hook automatically validates when templates/ changed
+     - quality-check command includes deliverables validation
+     - Use `--fix` flag to auto-fix simple pattern issues
+   - **Critical:** Shipping broken templates breaks user experience
+   - See [.aiknowsys/learned/deliverables-validation.md](.aiknowsys/learned/deliverables-validation.md) for patterns
 
 ---
 
