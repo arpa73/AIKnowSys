@@ -32,8 +32,13 @@ To ensure your review feedback is preserved and actionable:
    - Read previous reviews to avoid duplicate work
    - **If no session file exists, create it** (any work warranting a review needs session tracking)
 
-**2. Write your review to `.aiknowsys/PENDING_REVIEW.md`:**
-   Create or overwrite this file with your detailed review:
+**2. Detect developer and write review to appropriate file:**
+   - Get git username: `git config user.name`
+   - Normalize username: lowercase, replace spaces with hyphens
+   - Write to `.aiknowsys/reviews/PENDING_<username>.md`
+
+**3. Review file format:**
+   Create or overwrite with your detailed review:
 
    ```markdown
    # ⚠️ Architect Review Pending
@@ -82,7 +87,7 @@ To ensure your review feedback is preserved and actionable:
    - [ ] Run validation
    ```
 
-**3. Create or update session file:**
+**4. Create or update session file:**
    
    **If session file `.aiknowsys/sessions/YYYY-MM-DD-session.md` doesn't exist, create it:**
    ```markdown
@@ -90,7 +95,7 @@ To ensure your review feedback is preserved and actionable:
 
    ## ⚠️ Architect Review Pending (HH:MM)
    **Topic:** [Brief description]  
-   **See:** `.aiknowsys/PENDING_REVIEW.md` for details
+   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
 
    **Goal**: [Infer from files reviewed - e.g., "Implement feature X", "Refactor Y for clarity", "Fix Z bug in production"]
 
@@ -101,13 +106,13 @@ To ensure your review feedback is preserved and actionable:
    ```markdown
    ## ⚠️ Architect Review Pending (HH:MM)
    **Topic:** [Brief description]  
-   **See:** `.aiknowsys/PENDING_REVIEW.md` for details
+   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
    ```
 
-**4. Why this workflow:**
-   - PENDING_REVIEW.md = detailed, actionable review (temporary)
+**5. Why this workflow:**
+   - Multi-dev: `.aiknowsys/reviews/PENDING_<username>.md` (gitignored, no conflicts)
    - Session file = lightweight timeline marker
-   - Developer deletes PENDING_REVIEW.md after addressing issues
+   - Developer deletes review file after addressing issues
    - Session file gets brief completion status (not full review text)
 
 ### Documentation Location Guidance (Read Before Reviewing!):
@@ -150,17 +155,17 @@ When recommending where to document patterns during your review, use this decisi
 
 ### Additional Reminders to Developer:
 After completing your review, remind the developer to:
-- **Read PENDING_REVIEW.md:** "Detailed review written to `.aiknowsys/PENDING_REVIEW.md`"
+- **Read review file:** "Detailed review written to `.aiknowsys/reviews/PENDING_<username>.md`"
 - **Address all issues:** Check off each item in the "Required Actions" section
 - **Update session file:** Replace pending marker with brief completion status
-- **Delete PENDING_REVIEW.md:** After addressing all issues and updating session
+- **Delete review file:** After addressing all issues (`.aiknowsys/reviews/PENDING_<username>.md`)
 - **Update CODEBASE_CHANGELOG.md:** For significant changes (architectural changes, new features, bug fixes that reveal design issues)
 - **Document learned patterns?** If you notice reusable patterns, suggest documenting in `.aiknowsys/learned/`
 
 ### Review Output:
-- If perfect: Respond with "LGTM - Architect Approved ✅" (write to PENDING_REVIEW.md anyway for audit trail).
-- If issues found: Provide summary and point to PENDING_REVIEW.md for details.
-- **Always tell Developer:** "Review details written to `.aiknowsys/PENDING_REVIEW.md`"
+- If perfect: Respond with "LGTM - Architect Approved ✅" (write to review file anyway for audit trail).
+- If issues found: Provide summary and point to review file for details.
+- **Always tell Developer:** "Review details written to `.aiknowsys/reviews/PENDING_<username>.md`"
 
 ---
 

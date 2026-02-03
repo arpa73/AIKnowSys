@@ -92,7 +92,104 @@ Options:
 
 ---
 
-## 🔄 Updated Behavior
+## � Pre-Release Compatibility Updates
+
+**Status:** ✅ All v0.9.0 compatibility issues resolved  
+**Date:** February 3, 2026
+
+During pre-release preparation, comprehensive review identified files referencing legacy single-dev patterns. All issues fixed and validated.
+
+### Commands Updated
+
+**`archive-plans` command:**
+- ✅ Already updated to read `plans/active-*.md` pointers (not `CURRENT_PLAN.md`)
+- ✅ Parses plan status from personal plan pointers
+- ✅ Aggregates completed plans across all developers
+- ✅ Updates plan pointers with archive links after moving files
+
+**`audit` command:**
+- ✅ Already updated to check `reviews/` directory gitignore (not `PENDING_REVIEW.md`)
+- ✅ Warns if `reviews/` not gitignored (was optional, now recommended)
+- ✅ All gitignore validation tests updated and passing
+
+### Documentation Updated
+
+**`docs/advanced-workflows.md`:**
+- ✅ Already updated - uses `plans/active-<username>.md` pattern
+- ✅ All workflow examples reference personal plan pointers
+- ✅ Includes "run sync-plans" reminders after editing pointers
+
+**`docs/deliverables-review-process.md`:**
+- ✅ Already updated - references `plans/active-<username>.md` for review plans
+- ✅ Documents multi-dev workflow integration
+
+### Agent Files Updated
+
+**`.github/agents/architect.agent.md`:**
+- ✅ Already cleaned - zero `PENDING_REVIEW.md` references
+- ✅ Always writes to `reviews/PENDING_<username>.md`
+- ✅ No legacy single-dev fallback logic
+
+**`.github/agents/developer.agent.md`:**
+- ✅ Already updated - reads `reviews/PENDING_<username>.md`
+- ✅ Multi-dev pattern exclusively documented
+- ✅ References team index correctly
+
+**`.github/agents/planner.agent.md`:**
+- ✅ Already updated - example workflow uses multi-dev pattern
+
+### Template Files (Already Correct)
+
+**`templates/AGENTS.template.md`:**
+- ✅ Already documents multi-dev workflow correctly
+- ✅ Uses `plans/active-<username>.md` in all examples
+
+**`templates/CODEBASE_ESSENTIALS.template.md`:**
+- ✅ Already shows `CURRENT_PLAN.md` as auto-generated team index
+- ✅ Documents multi-dev structure correctly
+
+### Agent Template Files (CRITICAL FIX)
+
+**❌ Issue Found:** Agent templates still used old single-dev pattern  
+**✅ Fixed:** All 3 agent template files updated to multi-dev pattern
+
+**Impact:** HIGH - These templates get distributed to users via `npx aiknowsys init`
+
+**Files Updated:**
+
+**`templates/agents/architect.agent.template.md`:**
+- ✅ Updated review file location: `reviews/PENDING_<username>.md` (not `PENDING_REVIEW.md`)
+- ✅ Added git username detection logic
+- ✅ Updated session file workflow instructions
+- ✅ Fixed all "Reminders to Developer" section
+
+**`templates/agents/developer.agent.template.md`:**
+- ✅ Updated integration section to reference `reviews/PENDING_<username>.md`
+- ✅ Updated CURRENT_PLAN.md description (team index, not manual plan)
+
+**`templates/agents/planner.agent.template.md`:**
+- ✅ Updated example workflow to show multi-dev pattern
+
+**Changes:** 14 references updated across 3 files  
+**Credit:** Issue discovered during pre-release review
+
+**Result:** Zero legacy references remain, all code and documentation fully v0.9.0 compatible.
+
+### Validation
+
+**Test Suite:**
+- ✅ 591/591 tests passing (including updated archive-plans and audit tests)
+- ✅ Zero failures after compatibility updates
+- ✅ Full validation matrix passed
+
+**Manual Testing:**
+- ✅ archive-plans works with multi-dev structure
+- ✅ audit correctly checks reviews/ directory
+- ✅ All agent workflows functional
+
+---
+
+## �🔄 Updated Behavior
 
 ### Init Command
 

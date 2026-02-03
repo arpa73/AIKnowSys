@@ -379,7 +379,7 @@ Planner:
 User: [Clicks "Send to Developer" handoff button]
 
 Developer:
-1. Reads CURRENT_PLAN.md
+1. Reads CURRENT_PLAN.md (team index) or plans/active-<username>.md (personal pointer)
 2. Follows steps in order
 3. Updates session with progress
 4. Ends response → "Send to Architect" handoff button appears (send: true)
@@ -388,7 +388,7 @@ User: [Handoff auto-submits to SeniorArchitect]
 
 SeniorArchitect:
 1. Reviews code against ESSENTIALS
-2. Writes review to .aiknowsys/PENDING_REVIEW.md
+2. Writes review to .aiknowsys/reviews/PENDING_<username>.md
 3. Updates session with review marker
 4. Ends response → "Fix Issues (Developer)" handoff button appears if issues found
 ```

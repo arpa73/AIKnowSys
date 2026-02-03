@@ -1,0 +1,650 @@
+# Implementation Plan: TypeScript Migration & Type-Safe Architecture
+
+**Status:** 📋 PLANNED  
+**Created:** 2026-02-03 (Feb 3, 2026)  
+**Goal:** Migrate AIKnowSys codebase to TypeScript for type safety, better IDE support, and improved maintainability
+
+## Overview
+
+This project is growing rapidly, and TypeScript will provide:
+- **Type-safe interfaces** for templates, schemas, validation rules
+- **Compile-time error detection** (catch bugs before runtime)
+- **Better IDE support** (autocomplete, refactoring, navigation)
+- **Self-documenting code** (types serve as inline documentation)
+- **Easier onboarding** (types make API contracts explicit)
+- **Improved maintenance** (breaking changes caught at compile time)
+
+This is NOT overkill - it's essential infrastructure for sustainable growth.
+
+## Requirements
+
+### Functional Requirements
+- Migrate all JavaScript to TypeScript (lib/, bin/, scripts/)
+- Define type-safe interfaces for core concepts (templates, schemas, configs)
+- Maintain backward compatibility (users shouldn't notice)
+- Keep Node.js runtime (compile TypeScript → JavaScript for distribution)
+- Support ESM (ES Modules, not CommonJS)
+
+### Non-Functional Requirements
+- **Performance:** No runtime overhead (TypeScript compiles away)
+- **Developer Experience:** Improved with types and autocomplete
+- **Maintenance:** Easier refactoring with type checking
+- **Quality:** Catch more bugs at compile time
+- **Documentation:** Types replace verbose JSDoc comments
+
+## Architecture Changes
+
+### Core Type Definitions
+
+**New file: `lib/types/index.ts`**
+```typescript
+// Core domain types
+export interface TemplateFile {
+  path: string;
+  content: string;
+  placeholders: string[];
+  requiredPlaceholders: string[];
+  forbiddenPatterns: string[];
+}
+
+export interface TemplateMapping {
+  template: string;
+  nonTemplates: string[];
+}
+
+export interface ValidationPattern {
+  legacy: string;
+  correct: string;
+  context?: string;
+  files: string[];
+}
+
+export interface ValidationResult {
+  passed: boolean;
+  checks: ValidationCheck[];
+  summary: string;
+  exitCode: number;
+  metrics?: ValidationMetrics;
+}
+
+export interface ValidationCheck {
+  name: string;
+  passed: boolean;
+  issues: string[];
+}
+
+export interface ValidationMetrics {
+  templatesChecked: number;
+  patternsValidated: number;
+  duration: number;
+}
+
+export interface PlanFile {
+  path: string;
+  status: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
+  developer: string;
+  title: string;
+  created: Date;
+  updated: Date;
+}
+
+export interface SessionEntry {
+  timestamp: Date;
+  type: 'planning' | 'implementation' | 'review' | 'testing';
+  title: string;
+  status: 'IN_PROGRESS' | 'COMPLETE' | 'BLOCKED';
+  notes: string[];
+}
+
+export interface CommandOptions {
+  _silent?: boolean;
+  full?: boolean;
+  fix?: boolean;
+  metrics?: boolean;
+  [key: string]: unknown;
+}
+
+export interface InitOptions {
+  force?: boolean;
+  template?: string;
+  yes?: boolean;
+}
+
+export interface QualityCheckResult {
+  passed: boolean;
+  checks: Array<{
+    name: string;
+    passed: boolean;
+    details?: string;
+  }>;
+  timestamp: Date;
+}
+```
+
+**New file: `lib/types/schemas.ts`**
+```typescript
+// JSON schema types for validation
+export interface TemplateSchema {
+  [templatePath: string]: {
+    requiredPlaceholders: string[];
+    forbiddenPatterns: string[];
+    mappedTo?: string[];
+  };
+}
+
+export const TEMPLATE_SCHEMA: TemplateSchema = {
+  'templates/agents/architect.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md', 'Edit CURRENT_PLAN.md'],
+    mappedTo: ['.github/agents/architect.agent.md']
+  },
+  'templates/agents/developer.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md', 'Delete CURRENT_PLAN.md'],
+    mappedTo: ['.github/agents/developer.agent.md']
+  },
+  'templates/agents/planner.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md'],
+    mappedTo: ['.github/agents/planner.agent.md']
+  },
+  'templates/AGENTS.template.md': {
+    requiredPlaceholders: ['{{SESSION_FILE}}', '{{PLAN_FILE}}'],
+    forbiddenPatterns: ['CURRENT_PLAN.md', 'PENDING_REVIEW.md'],
+    mappedTo: ['AGENTS.md']
+  }
+};
+```
+
+### Build Configuration
+
+**New file: `tsconfig.json`**
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "types": ["node"],
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "lib/**/*",
+    "bin/**/*",
+    "scripts/**/*",
+    "test/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "templates",
+    "examples"
+  ]
+}
+```
+
+**Update `package.json`:**
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build && npm test",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.10.0"
+  },
+  "main": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "files": [
+    "dist",
+    "templates",
+    "bin"
+  ]
+}
+```
+
+## Implementation Steps
+
+### Phase 1: Project Setup (TDD Foundation)
+**Goal:** Configure TypeScript infrastructure without breaking existing functionality
+
+#### Step 1: Install Dependencies
+**Action:** Add TypeScript tooling
+```bash
+npm install --save-dev typescript @types/node
+```
+**TDD:** N/A (infrastructure)
+**Risk:** Low
+
+#### Step 2: Create tsconfig.json
+**Action:** Copy configuration above
+**TDD:** N/A (configuration)
+**Risk:** Low
+
+#### Step 3: Update package.json
+**Action:** Add build scripts, update entry points
+**TDD:** Verify `npm run build` produces valid output
+**Risk:** Low
+
+#### Step 4: Update .gitignore
+**Action:** Add `dist/` directory
+```
+# TypeScript build output
+dist/
+```
+**TDD:** N/A (configuration)
+**Risk:** Low
+
+### Phase 2: Core Type Definitions (Design First)
+**Goal:** Define comprehensive type system before migration
+
+#### Step 5: Create lib/types/index.ts
+**File:** `lib/types/index.ts`
+**Action:** Define core domain types (see Architecture Changes above)
+**TDD:** Create type tests (validates types compile correctly)
+```typescript
+// test/types/index.test.ts
+import type { ValidationResult, TemplateFile } from '../../lib/types/index.js';
+
+const validResult: ValidationResult = {
+  passed: true,
+  checks: [],
+  summary: 'All passed',
+  exitCode: 0
+};
+```
+**Risk:** Low - types don't affect runtime
+
+#### Step 6: Create lib/types/schemas.ts
+**File:** `lib/types/schemas.ts`
+**Action:** Define template schemas with type safety
+**TDD:** Validate schema structure compiles
+**Risk:** Low
+
+### Phase 3: Incremental Migration (File by File)
+**Goal:** Migrate codebase incrementally, maintaining green tests
+
+**Strategy:** Bottom-up migration (dependencies first)
+1. Utilities (lib/utils/)
+2. Core modules (lib/commands/)
+3. Entry points (bin/cli.js)
+4. Tests (test/)
+
+#### Step 7: Migrate lib/logger.js → lib/logger.ts
+**File:** `lib/logger.js`
+**Action:** Rename, add types
+```typescript
+// Before (lib/logger.js)
+export function log(message) {
+  console.log(message);
+}
+
+// After (lib/logger.ts)
+export function log(message: string): void {
+  console.log(message);
+}
+```
+**TDD:** 
+- ✅ Existing tests pass (validate behavior unchanged)
+- ✅ Type check passes (no type errors)
+**Risk:** Low - simple utility
+
+#### Step 8: Migrate lib/error-helpers.js → lib/error-helpers.ts
+**File:** `lib/error-helpers.js`
+**Action:** Add error types
+```typescript
+export class AIKnowSysError extends Error {
+  constructor(
+    message: string,
+    public readonly code?: string,
+    public readonly details?: unknown
+  ) {
+    super(message);
+    this.name = 'AIKnowSysError';
+  }
+}
+```
+**TDD:** Existing error tests pass
+**Risk:** Low
+
+#### Step 9: Migrate lib/config.js → lib/config.ts
+**File:** `lib/config.js`
+**Action:** Add config interface
+```typescript
+export interface Config {
+  projectRoot: string;
+  aiknowsysDir: string;
+  templatesDir: string;
+  version: string;
+}
+
+export function loadConfig(): Config {
+  // Implementation
+}
+```
+**TDD:** Config tests pass
+**Risk:** Low
+
+#### Step 10: Migrate lib/commands/validate-deliverables.js → .ts
+**File:** `lib/commands/validate-deliverables.js`
+**Action:** Use ValidationResult type
+```typescript
+import type { ValidationResult, CommandOptions } from '../types/index.js';
+
+export async function validateDeliverables(
+  options: CommandOptions
+): Promise<ValidationResult> {
+  // Implementation with type safety
+}
+```
+**TDD:** All validate-deliverables tests pass
+**Risk:** Medium - complex logic
+
+#### Step 11-18: Migrate Remaining Commands
+**Files:** All lib/commands/*.js
+**Action:** Convert each to TypeScript
+**TDD:** Respective test suites pass
+**Risk:** Medium per file
+
+#### Step 19: Migrate bin/cli.js → bin/cli.ts
+**File:** `bin/cli.js`
+**Action:** Add types to Commander usage
+```typescript
+import { program } from 'commander';
+import type { CommandOptions } from '../lib/types/index.js';
+
+program
+  .command('validate-deliverables')
+  .description('Validate deliverable files')
+  .option('--full', 'Run comprehensive checks')
+  .action(async (options: CommandOptions) => {
+    const { validateDeliverables } = await import('../lib/commands/validate-deliverables.js');
+    await validateDeliverables(options);
+  });
+```
+**TDD:** CLI integration tests pass
+**Risk:** Medium - user-facing
+
+### Phase 4: Test Migration
+**Goal:** Migrate test suite to TypeScript for type safety
+
+#### Step 20: Migrate Test Files
+**Files:** `test/**/*.test.js`
+**Action:** Convert to TypeScript
+```typescript
+import { describe, it, expect } from 'vitest'; // or chosen test framework
+import { validateDeliverables } from '../lib/commands/validate-deliverables.js';
+
+describe('validate-deliverables', () => {
+  it('should detect legacy patterns', async () => {
+    const result = await validateDeliverables({ _silent: true });
+    expect(result.passed).toBe(true);
+  });
+});
+```
+**TDD:** All tests pass
+**Risk:** Medium - test coverage must remain
+
+### Phase 5: Build Integration
+**Goal:** Integrate TypeScript build into development workflow
+
+#### Step 21: Update npm Scripts
+**File:** `package.json`
+**Action:** Ensure build runs before test/publish
+```json
+{
+  "scripts": {
+    "pretest": "npm run build",
+    "prepublishOnly": "npm run build && npm test"
+  }
+}
+```
+**TDD:** `npm test` runs build first
+**Risk:** Low
+
+#### Step 22: Update Git Hooks
+**File:** `templates/git-hooks/pre-commit`
+**Action:** Add type-check before commit
+```bash
+# Type check
+npm run type-check || exit 1
+```
+**TDD:** Pre-commit hook tests type errors
+**Risk:** Low
+
+### Phase 6: Documentation Updates
+**Goal:** Document TypeScript usage for contributors
+
+#### Step 23: Update CONTRIBUTING.md
+**File:** `CONTRIBUTING.md`
+**Action:** Add TypeScript development guide
+```markdown
+## TypeScript Development
+
+### Building
+```bash
+npm run build         # Compile TypeScript to JavaScript
+npm run build:watch   # Watch mode for development
+npm run type-check    # Check types without building
+```
+
+### Type Definitions
+Core types are in `lib/types/`. When adding new features:
+1. Define types FIRST in `lib/types/index.ts`
+2. Write tests using the types
+3. Implement with type safety
+```
+**TDD:** N/A (documentation)
+**Risk:** Low
+
+#### Step 24: Update CODEBASE_ESSENTIALS.md
+**File:** `CODEBASE_ESSENTIALS.md`
+**Action:** Add TypeScript patterns and conventions
+```markdown
+## TypeScript Patterns
+
+**Critical Invariant:** All new code must be TypeScript (not JavaScript)
+
+**Type Safety:**
+- Use `interface` for public APIs
+- Use `type` for unions and primitives
+- Avoid `any` (use `unknown` if truly dynamic)
+- Enable strict mode (already configured)
+
+**Imports:**
+```typescript
+// Prefer named imports
+import { validateDeliverables } from './lib/commands/validate-deliverables.js';
+
+// Type-only imports
+import type { ValidationResult } from './lib/types/index.js';
+```
+**TDD:** N/A (documentation)
+**Risk:** Low
+
+### Phase 7: Template Schema Enforcement
+**Goal:** Use TypeScript to enforce template schemas at compile time
+
+#### Step 25: Implement Schema Validation with Types
+**File:** `lib/commands/validate-deliverables.ts`
+**Action:** Use TEMPLATE_SCHEMA constant
+```typescript
+import { TEMPLATE_SCHEMA } from '../types/schemas.js';
+
+// Type-safe schema validation
+for (const [templatePath, schema] of Object.entries(TEMPLATE_SCHEMA)) {
+  // TypeScript knows schema.requiredPlaceholders is string[]
+  for (const placeholder of schema.requiredPlaceholders) {
+    // Type-safe placeholder checking
+  }
+}
+```
+**TDD:** Schema validation tests pass with types
+**Risk:** Medium
+
+## Testing Strategy
+
+### TDD Approach
+**Migration is refactoring - tests must pass throughout:**
+1. ✅ Migrate file to TypeScript
+2. ✅ Run `npm run build` (compiles without errors)
+3. ✅ Run `npm test` (all tests still pass)
+4. ✅ Run `npm run type-check` (no type errors)
+5. ✅ Commit (incremental progress)
+
+**New features (template schema, etc.):**
+- Write tests FIRST (RED)
+- Implement with TypeScript (GREEN)
+- Refactor with type safety (REFACTOR)
+
+### Test Coverage
+**Unit Tests:**
+- Type definitions compile correctly
+- Each migrated file maintains behavior
+- Schema validation uses correct types
+
+**Integration Tests:**
+- CLI commands work with compiled JavaScript
+- Build process produces valid output
+- Type checking catches real errors
+
+**Manual Validation:**
+1. Fresh install: `npm pack`, extract, `npm install`, `node bin/cli.js --help`
+2. Type errors: Intentionally introduce type error, verify caught
+3. IDE support: Verify autocomplete and type hints work
+4. Performance: No runtime overhead from types
+
+## Risks & Mitigations
+
+**Risk:** Breaking changes during migration
+- **Likelihood:** Medium
+- **Impact:** High
+- **Mitigation:** Incremental migration, keep tests green, use feature flags if needed
+
+**Risk:** TypeScript learning curve for contributors
+- **Likelihood:** Medium
+- **Impact:** Medium
+- **Mitigation:** Comprehensive docs, examples, gradual adoption
+
+**Risk:** Build step adds complexity
+- **Likelihood:** Low
+- **Impact:** Low
+- **Mitigation:** Automated in npm scripts, documented in CONTRIBUTING.md
+
+**Risk:** Type definitions out of sync with runtime
+- **Likelihood:** Low
+- **Impact:** Medium
+- **Mitigation:** Tests validate type accuracy, runtime validation where needed
+
+## Success Criteria
+
+- [ ] All files migrated to TypeScript (.ts extension)
+- [ ] Zero JavaScript files in lib/, bin/, scripts/ (except templates)
+- [ ] All tests passing (591/591)
+- [ ] Build process produces valid JavaScript in dist/
+- [ ] npm pack → install → run works (end-to-end)
+- [ ] Type checking enabled in CI (npm run type-check)
+- [ ] Pre-commit hook runs type check
+- [ ] IDE autocomplete works for core types
+- [ ] TEMPLATE_SCHEMA enforced at compile time
+- [ ] Documentation updated (CONTRIBUTING, ESSENTIALS)
+- [ ] No `any` types (use `unknown` where truly dynamic)
+- [ ] Backward compatible (users see no breaking changes)
+- [ ] CHANGELOG documents migration
+- [ ] Performance unchanged (types compile away)
+
+## Future Enhancements (Post-Migration)
+
+**Once TypeScript foundation is stable:**
+
+1. **Template Versioning (Type-Safe)**
+   ```typescript
+   interface TemplateVersion {
+     version: string;
+     requiredPlaceholders: string[];
+     breaking: boolean;
+   }
+   ```
+
+2. **Smart Pattern Detection (ML-based)**
+   - Use types to define pattern definitions
+   - Type-safe pattern matching algorithms
+
+3. **Cross-Project Validation**
+   ```typescript
+   interface CrossProjectConfig {
+     projects: Array<{
+       path: string;
+       templates: string[];
+     }>;
+   }
+   ```
+
+4. **Plugin System (Type-Safe)**
+   ```typescript
+   interface Plugin {
+     name: string;
+     version: string;
+     commands: PluginCommand[];
+     hooks: PluginHook[];
+   }
+   ```
+
+5. **Advanced IDE Features**
+   - Custom language server for .aiknowsys files
+   - Inline validation of AGENTS.md patterns
+   - Type-aware template editing
+
+## Notes for Developer
+
+**This is a large refactoring - take it slow:**
+- One file at a time
+- Keep tests green
+- Commit often
+- Ask questions if types unclear
+
+**TypeScript Benefits:**
+- Catches bugs at compile time (before users see them)
+- Self-documenting (types explain parameters)
+- Better refactoring (rename safely across files)
+- Improved IDE support (autocomplete, go-to-definition)
+
+**TypeScript Gotchas:**
+- ES Modules: Use `.js` extension in imports (TypeScript quirk)
+- Strict mode: Catch more bugs but requires explicit types
+- Build step: Must run `npm run build` to test changes
+- Type-only imports: Use `import type` for performance
+
+**Estimated Time:** 400-500 minutes total
+- Phase 1 (Setup): 40-60 min
+- Phase 2 (Types): 60-80 min
+- Phase 3 (Migration): 180-240 min (incremental, ~10 min per file)
+- Phase 4 (Tests): 60-80 min
+- Phase 5 (Build): 20-30 min
+- Phase 6 (Docs): 30-40 min
+- Phase 7 (Schema): 40-60 min
+
+**This work enables sustainable growth. Worth the investment.**
+
+---
+
+*Part of AIKnowSys v1.0.0+ roadmap. Foundational work for future type-safe features.*

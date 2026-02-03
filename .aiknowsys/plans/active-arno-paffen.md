@@ -6,9 +6,9 @@
 
 # Active Plan Pointer
 
-**Currently Working On:** [v0.9.0 Pre-Release Updates](../PLAN_v0.9.0_pre_release_updates.md)  
+**Currently Working On:** [Deliverables Validation Protocol](../PLAN_deliverables_validation_protocol.md)  
 **Status:** 🎯 ACTIVE  
-**Last Updated:** 2026-02-02 23:30
+**Last Updated:** 2026-02-03 17:45
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
@@ -18,7 +18,9 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [v0.9.0 Pre-Release Updates](../PLAN_v0.9.0_pre_release_updates.md) | 🎯 ACTIVE | Planning complete, ready for implementation | 2026-02-02 |
+| [Deliverables Validation Protocol](../PLAN_deliverables_validation_protocol.md) | 🎯 ACTIVE | Enhanced with all architectural recommendations | 2026-02-03 |
+| [TypeScript Migration & Type-Safe Architecture](../PLAN_typescript_migration.md) | 📋 PLANNED | Foundation for sustainable growth (7 phases, ~400-500 min) | 2026-02-03 |
+| [v0.9.0 Pre-Release Updates](../PLAN_v0.9.0_pre_release_updates.md) | ✅ COMPLETE | All compatibility issues resolved, templates fixed | 2026-02-03 |
 | [v0.9.0 Release Notes Validation](../PLAN_v0.9.0_release_notes_validation.md) | 📋 PLANNED | Validate all functionality documented before release | 2026-02-03 |
 | [Pattern Sharing Skill](../PLAN_pattern_sharing_skill.md) | 📋 PLANNED | AI-assisted pattern sharing (not CLI commands) | 2026-02-03 |
 | [Mandatory Multi-Dev Migration](../PLAN_mandatory_multidev_migration.md) | ✅ COMPLETE | v0.9.0 released | 2026-02-02 |

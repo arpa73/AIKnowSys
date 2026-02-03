@@ -88,10 +88,9 @@ You are the primary Developer responsible for implementing features, writing tes
 
 - **@Planner**: Request plan BEFORE implementing complex features
 - **@SeniorArchitect**: ALWAYS call for review after implementation (automatic, not optional)
-- Read `.aiknowsys/CURRENT_PLAN.md` if it exists (contains implementation plan)
-- Read `.aiknowsys/PENDING_REVIEW.md` if it exists (contains review feedback)
-- Delete `CURRENT_PLAN.md` after completing implementation and updating session
-- Delete `PENDING_REVIEW.md` after addressing all issues
+- Read `.aiknowsys/CURRENT_PLAN.md` if it exists (team index showing everyone's active work)
+- Read `.aiknowsys/reviews/PENDING_<username>.md` if it exists (contains review feedback)
+- Delete `reviews/PENDING_<username>.md` after addressing all issues
 
 ---
 
