@@ -210,6 +210,92 @@ describe('validate-deliverables', () => {
     });
   });
 
+  describe('Maintainer Skill Boundary Check', () => {
+    const testGithubSkills = path.join(testDir, '.github', 'skills');
+    const testTemplateSkills = path.join(testDir, 'templates', 'skills');
+
+    it('should pass when maintainer skill only in .github/skills/', async () => {
+      // Setup: maintainer skill only in .github/skills/
+      await fs.mkdir(path.join(testGithubSkills, 'test-maintainer'), {recursive: true});
+      await fs.writeFile(
+        path.join(testGithubSkills, 'test-maintainer', 'SKILL.md'),
+        '---\nname: test-maintainer\nmaintainer: true\n---\n# Test'
+      );
+
+      const result = await validateDeliverables({
+        _silent: true,
+        projectRoot: testDir
+      });
+
+      const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
+      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
+      assert.strictEqual(boundaryCheck.passed, true, 'Should pass when maintainer skill not in templates');
+      assert.strictEqual(boundaryCheck.issues.length, 0, 'Should have no issues');
+
+      // Cleanup
+      await fs.rm(testDir, {recursive: true, force: true});
+    });
+
+    it('should fail when maintainer skill also in templates/skills/', async () => {
+      // Setup: maintainer skill in BOTH locations
+      await fs.mkdir(path.join(testGithubSkills, 'test-maintainer'), {recursive: true});
+      await fs.writeFile(
+        path.join(testGithubSkills, 'test-maintainer', 'SKILL.md'),
+        '---\nname: test-maintainer\nmaintainer: true\n---\n# Test'
+      );
+      
+      await fs.mkdir(path.join(testTemplateSkills, 'test-maintainer'), {recursive: true});
+      await fs.writeFile(
+        path.join(testTemplateSkills, 'test-maintainer', 'SKILL.md'),
+        '---\nname: test-maintainer\nmaintainer: true\n---\n# Test'
+      );
+
+      const result = await validateDeliverables({
+        _silent: true,
+        projectRoot: testDir
+      });
+
+      const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
+      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
+      assert.strictEqual(boundaryCheck.passed, false, 'Should fail when maintainer skill in templates');
+      assert.ok(
+        boundaryCheck.issues.some(i => i.includes('test-maintainer')),
+        'Should report which maintainer skill violated boundary'
+      );
+
+      // Cleanup
+      await fs.rm(testDir, {recursive: true, force: true});
+    });
+
+    it('should pass when regular skill in both locations', async () => {
+      // Setup: regular skill (no maintainer: true) in both locations
+      await fs.mkdir(path.join(testGithubSkills, 'test-regular'), {recursive: true});
+      await fs.writeFile(
+        path.join(testGithubSkills, 'test-regular', 'SKILL.md'),
+        '---\nname: test-regular\ndescription: Regular skill\n---\n# Test'
+      );
+      
+      await fs.mkdir(path.join(testTemplateSkills, 'test-regular'), {recursive: true});
+      await fs.writeFile(
+        path.join(testTemplateSkills, 'test-regular', 'SKILL.md'),
+        '---\nname: test-regular\ndescription: Regular skill\n---\n# Test'
+      );
+
+      const result = await validateDeliverables({
+        _silent: true,
+        projectRoot: testDir
+      });
+
+      const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
+      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
+      assert.strictEqual(boundaryCheck.passed, true, 'Should pass when regular skill in both locations');
+      assert.strictEqual(boundaryCheck.issues.length, 0, 'Should have no issues');
+
+      // Cleanup
+      await fs.rm(testDir, {recursive: true, force: true});
+    });
+  });
+
   describe('Return Format', () => {
     it('should return expected structure', async () => {
       const result = await validateDeliverables({_silent: true});

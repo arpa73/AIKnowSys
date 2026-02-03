@@ -1,5 +1,6 @@
 ---
 name: deliverable-review
+maintainer: true
 description: Review AIKnowSys deliverables (skills, stack templates, documentation) using Context7 MCP for current framework documentation. Use for monthly quality reviews, pre-release validation, or when frameworks release major versions.
 ---
 

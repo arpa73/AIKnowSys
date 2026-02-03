@@ -379,7 +379,16 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 **Trigger words for full guide:** "file doesn't exist", "file already exists", "can't delete file", "git add failed"
 
-## �📚 Skills Workflow
+## Maintainer Content
+
+Skills with `maintainer: true` frontmatter are for AIKnowSys development only.
+Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
+
+**Current maintainer skills:** `deliverable-review`, `_skill-template`
+
+---
+
+## 📚 Skills Workflow
 
 **Skills are located in `.github/skills/` and provide step-by-step workflows.**
 

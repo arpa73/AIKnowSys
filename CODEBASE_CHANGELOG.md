@@ -7,6 +7,47 @@
 
 ---
 
+## Session: Deliverables Clarity Architecture (Feb 3, 2026)
+
+**Goal:** Prevent AI confusion between maintainer-only and user-deliverable content
+
+**Problem:** AI agents deleting deliverable-review skill thinking it should be in templates/, confusing .git-hooks/ vs templates/git-hooks/ documentation.
+
+**Solution: Option E (Documentation + Frontmatter)**
+- Simple solution over complex architecture (rejected config files, directory restructures)
+- Added `maintainer: true` frontmatter to 2 skills
+- Documented convention in CODEBASE_ESSENTIALS.md + AGENTS.md
+- Added validation check to prevent future violations
+
+**Changes:**
+- [.github/skills/deliverable-review/SKILL.md](.github/skills/deliverable-review/SKILL.md#L3): Added `maintainer: true`
+- [.github/skills/_skill-template/SKILL.md](.github/skills/_skill-template/SKILL.md#L1-L4): Added frontmatter with `maintainer: true`
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L76-L80): Added "Maintainer vs User Content" section
+- [AGENTS.md](AGENTS.md#L382-L390): Added maintainer content warning
+- [lib/commands/validate-deliverables.js](lib/commands/validate-deliverables.js#L186-L239): Added `checkMaintainerSkillBoundary()` function
+- [test/commands/validate-deliverables.test.js](test/commands/validate-deliverables.test.js#L213-L297): Added 3 test cases (retroactive TDD)
+- Deleted: `templates/skills/deliverable-review/` (was incorrectly distributed)
+
+**Validation:**
+- ✅ All 5 deliverables checks passed
+- ✅ 594/594 tests passing (no regressions)
+- ✅ Validation correctly catches maintainer skills in templates/
+
+**TDD Violation:**
+- ⚠️ Validation function added without test-first approach
+- **Reason:** Manual testing felt sufficient for simple regex check
+- **Mitigation:** Retroactive test added covering all 3 cases (pass/fail/pass)
+- **Learning:** Even simple validation deserves test-first for regression confidence
+- **Impact:** Low risk - validation logic simple, manual testing confirmed functionality
+
+**Key Learning:**
+- "Start with simplest solution" - documentation over architecture when problem is clarity
+- Rejected over-engineering (Options A-D: config files, directory restructures)
+- Option E proves: Tell AI what's maintainer-only IN THE FILE (frontmatter) vs separate config
+- Implementation: 25 minutes (under 30-minute estimate)
+
+---
+
 ## Session: Skill Audit & Universal Rewrite (Feb 3, 2026)
 
 **Goal:** Clean up gnwebsite-inherited skills, convert high-value skills to framework-agnostic versions
