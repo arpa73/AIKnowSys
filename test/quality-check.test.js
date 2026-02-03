@@ -319,6 +319,47 @@ describe('quality-check command', () => {
       const hasViolations = result.violations && result.violations.length > 0;
       assert.strictEqual(hasViolations, false);
     });
+
+    it('should not flag error messages containing require()', async () => {
+      // Self-reference edge case: pattern-scanner.js contains require() in error message
+      await fs.writeFile(
+        path.join(TEST_DIR, 'package.json'),
+        JSON.stringify({ type: 'module' })
+      );
+      await fs.writeFile(
+        path.join(TEST_DIR, 'checker.js'),
+        'const errorMsg = "Use import instead of require() in ES module project";'
+      );
+
+      const result = await scanPatterns(TEST_DIR);
+
+      // Should not flag require() when it's in a string
+      const hasRequireViolation = result.violations?.some(v => 
+        v.rule === 'no-require-in-esm' && v.file.includes('checker.js')
+      );
+      assert.strictEqual(hasRequireViolation, false);
+    });
+
+    it('should allow require() in test files', async () => {
+      // Test files often use require() for mocking/fixtures
+      await fs.writeFile(
+        path.join(TEST_DIR, 'package.json'),
+        JSON.stringify({ type: 'module' })
+      );
+      await fs.mkdir(path.join(TEST_DIR, 'test'), { recursive: true });
+      await fs.writeFile(
+        path.join(TEST_DIR, 'test', 'feature.test.js'),
+        'const mock = require("./fixtures/mock.json");'
+      );
+
+      const result = await scanPatterns(TEST_DIR);
+
+      // Should not flag require() in test files
+      const hasRequireViolation = result.violations?.some(v => 
+        v.rule === 'no-require-in-esm' && v.file.includes('test')
+      );
+      assert.strictEqual(hasRequireViolation, false);
+    });
   });
 
   describe('quality-check command (integration)', () => {

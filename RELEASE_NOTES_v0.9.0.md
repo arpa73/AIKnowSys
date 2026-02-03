@@ -92,7 +92,252 @@ Options:
 
 ---
 
-## � Pre-Release Compatibility Updates
+## 🛠️ Additional Commands (v0.9.0)
+
+v0.9.0 adds **14 new commands** for pattern management, quality assurance, and workflow automation.
+
+### Plan & Team Management
+
+**`sync-plans`** - Regenerate team index from plan pointers
+```bash
+npx aiknowsys sync-plans
+```
+- Updates `CURRENT_PLAN.md` team index from `plans/active-*.md`
+- Run after editing plan pointers
+- Validates plan references and status consistency
+- Shows which developer is working on what
+
+**`archive-plans [days]`** - Archive completed plans
+```bash
+npx aiknowsys archive-plans --days 90
+```
+- Moves completed plans to `archived/plans/YYYY-QX/`
+- Updates plan pointers with archive links
+- Default: 90 days after completion
+- Keeps workspace clean while preserving history
+
+### Pattern Management
+
+**`learn [type]`** - Create learned patterns and skills
+```bash
+npx aiknowsys learn
+npx aiknowsys learn error_resolution
+```
+- Interactive wizard for pattern creation
+- Types: error_resolution, debugging, workarounds, project_specific
+- Auto-formats with YAML frontmatter
+- Saves to `personal/<username>/` or `learned/` based on choice
+
+**`share-pattern <name>`** - Promote personal → learned pattern
+```bash
+npx aiknowsys share-pattern my-debugging-technique
+```
+- Moves pattern from `personal/<username>/` to `learned/`
+- Team-wide knowledge sharing workflow
+- Validates pattern exists before sharing
+- Updates frontmatter with shared_by metadata
+
+**`list-patterns`** - Browse learned and personal patterns
+```bash
+npx aiknowsys list-patterns
+npx aiknowsys list-patterns --type personal
+```
+- Shows all patterns with metadata (type, author, date)
+- Filters by type (learned/personal)
+- Quick discovery of team knowledge
+- Sorted by creation date
+
+### Quality Assurance
+
+**`compress-essentials`** - Extract bloat from ESSENTIALS.md
+```bash
+npx aiknowsys compress-essentials --analyze
+npx aiknowsys compress-essentials --extract
+```
+- Analyze mode: Detect compression opportunities
+- Extract mode: Move sections to learned skills
+- Keeps ESSENTIALS lean (600-800 line target)
+- Preserves all content (nothing lost)
+
+**`archive-sessions <days>`** - Archive old session files
+```bash
+npx aiknowsys archive-sessions --days 30
+```
+- Moves sessions older than X days to `archive/YYYY/MM/`
+- Keeps workspace clean
+- Default: 30 days
+- Gitignored (safe to run locally)
+
+**`quality-check`** - Run full validation suite
+```bash
+npx aiknowsys quality-check
+npx aiknowsys quality-check --full
+```
+- Tests + lint + deliverables validation
+- Comprehensive pre-commit quality gate
+- --full includes expensive checks (fresh init test)
+- Exit code for CI/CD integration
+
+**`ci-check`** - CI-optimized validation
+```bash
+npx aiknowsys ci-check
+```
+- Faster subset of quality-check
+- Designed for CI/CD pipelines
+- No interactive prompts
+- Validates critical invariants only
+
+**`clean`** - Remove generated files
+```bash
+npx aiknowsys clean
+```
+- Regenerates `CURRENT_PLAN.md` from plan pointers
+- Removes temporary/corrupted files
+- Safe reset for invalid state
+- Idempotent (safe to run multiple times)
+
+**`deps-health`** - Dependency health check
+```bash
+npx aiknowsys deps-health
+```
+- Checks for outdated packages
+- Security vulnerability scan (via npm audit)
+- Suggests safe updates
+- Shows dependency tree issues
+
+### Plugin Management
+
+**`plugins [action]`** - Manage plugins
+```bash
+npx aiknowsys plugins list
+npx aiknowsys plugins info <name>
+```
+- List installed plugins
+- Show plugin info (version, commands, description)
+- Plugin discovery and diagnostics
+- Supports Context7 MCP integration
+
+**`query-docs <library> <query>`** - Query framework documentation (Context7 plugin)
+```bash
+npx aiknowsys query-docs nextjs "how to use server components"
+```
+- Queries up-to-date library documentation via Context7 MCP
+- Requires aiknowsys-plugin-context7 installation
+- See [docs/context7-integration.md](docs/context7-integration.md)
+
+**`validate [--type]`** - Validate skills/ESSENTIALS/stacks (Context7 plugin)
+```bash
+npx aiknowsys validate --type essentials
+npx aiknowsys validate --type skills
+```
+- Validates against current library documentation
+- Detects outdated patterns in your tech stack
+- Requires aiknowsys-plugin-context7 installation
+- See [docs/context7-integration.md](docs/context7-integration.md)
+
+---
+
+## ✨ Additional Features (v0.9.0)
+
+### Personal Patterns Directory
+
+**`.aiknowsys/personal/<username>/`** - Per-developer private patterns
+
+Gitignored directory for personal discoveries and experiments:
+- Save patterns privately before sharing with team
+- Test and refine without polluting `learned/`
+- Discoverable with `list-patterns` command
+- Promote to team with `share-pattern` command
+
+**Workflow:**
+1. Discover pattern during work → save to `personal/<your-name>/`
+2. Test and refine privately
+3. When confident → `npx aiknowsys share-pattern <name>`
+4. Pattern moves to `learned/` (committed to git)
+
+### Git Username Normalization
+
+**Automatic handling of username variations:**
+
+System now normalizes git usernames for consistent file naming:
+- Converts uppercase → lowercase ("John" → "john")
+- Replaces spaces with hyphens ("John Doe" → "john-doe")
+- Prevents file naming conflicts across platforms
+- Consistent: `plans/active-john-doe.md` (not `plans/active-John Doe.md`)
+
+**Affected files:**
+- `plans/active-<username>.md`
+- `reviews/PENDING_<username>.md`
+- `personal/<username>/`
+
+### Workflow README Files
+
+**Auto-generated documentation in directories:**
+
+Migration creates helpful README files:
+- `plans/README.md` - Explains plan pointer workflow
+- `reviews/README.md` - Explains review file workflow
+- Helps new team members understand structure
+- Created by `migrate-to-multidev` command
+- Committed to git (team documentation)
+
+### Clipboard Auto-Copy
+
+**AI prompt automatically copied after init:**
+
+`npx aiknowsys init` now:
+- Copies welcome prompt to clipboard automatically
+- Ready to paste into Claude/ChatGPT/Cursor
+- No manual copy/paste needed
+- Shows clipboard confirmation message
+
+UX improvement from dogfooding (users kept manually copying).
+
+### Context7 Plugin Support
+
+**Optional MCP plugin integration:**
+
+Install separately for enhanced documentation features:
+```bash
+npm install aiknowsys-plugin-context7
+```
+
+**Features:**
+- Auto-discovery (no config needed)
+- New commands: `validate`, `query-docs`
+- Query up-to-date framework documentation
+- Validate skills/ESSENTIALS against current library versions
+- Detect outdated patterns in your tech stack
+
+See [docs/context7-integration.md](docs/context7-integration.md) for setup.
+
+### Terminal UX Polish
+
+**Better command-line experience:**
+- ASCII banner in `init` command (AIKnowSys logo)
+- Consistent color coding (cyan = info, green = success, yellow = warning)
+- Spinner animations for long operations (ora)
+- Progress indicators during file processing
+- Better formatting for large outputs (tables, lists)
+- Clearer success/error messages
+
+### Edge Case Hardening
+
+**Robust input handling across all commands:**
+
+100+ edge case tests added covering:
+- Null/undefined checks throughout codebase
+- Graceful degradation for missing files
+- Better handling of corrupted states
+- Input validation on all user-provided paths
+- Safe handling of special characters in filenames
+- Git username extraction edge cases (missing config, empty values)
+
+**Result:** More reliable, harder to break with unexpected input.
+
+---
+
+## 🔧 Pre-Release Compatibility Updates
 
 **Status:** ✅ All v0.9.0 compatibility issues resolved  
 **Date:** February 3, 2026
@@ -605,6 +850,53 @@ mv .aiknowsys.backup .aiknowsys
 - Confidence in changes
 
 **Thanks to early adopters for understanding this migration.**
+
+---
+
+## 🧪 Testing & Validation (v0.9.0)
+
+**All validation passing:**
+
+- ✅ **594/594 core tests passing** (97.5% coverage)
+- ✅ **5/5 deliverable validation checks** (templates match source)
+- ✅ **100+ edge case tests** (null checks, corrupted states, special chars)
+- ✅ **Fresh init test** (dry run from scratch works)
+- ✅ **Migration tested** (single → multi-dev in 30 test cases)
+- ✅ **Plugin system tested** (Context7 integration verified)
+
+**Key test suites:**
+
+| Suite | Tests | Focus |
+|-------|-------|-------|
+| `migrate-to-multidev` | 30 | Idempotency, validation, edge cases |
+| `sync-plans` | 18 | Team index generation, validation |
+| `pattern-management` | 22 | Learn/share/list workflow |
+| `quality-checks` | 14 | CI checks, quality gates |
+| `cli-validation` | 28 | All commands have tests |
+| `deliverables` | 5 | Template sync verification |
+
+**Validation commands:**
+```bash
+# Run full test suite
+npm test
+
+# Validate deliverables sync
+npx aiknowsys validate-deliverables
+
+# Quality gate (pre-commit)
+npx aiknowsys quality-check
+
+# CI/CD gate
+npx aiknowsys ci-check
+```
+
+**Pre-Release Validation Results:**
+- No failing tests
+- No console warnings
+- No deprecation notices
+- All examples tested (filled-simple-api validated)
+- Documentation links verified
+- Install from NPM tested (dry run successful)
 
 ---
 
