@@ -116,7 +116,7 @@ aiknowsys/
 Skills with `maintainer: true` in frontmatter are for AIKnowSys development only.
 They stay in `.github/skills/` but are NOT synced to `templates/skills/`.
 
-**User skills (9):** Distributed via `npx aiknowsys init`  
+**User skills (10):** Distributed via `npx aiknowsys init`  
 **Maintainer skills (2):** `deliverable-review`, `_skill-template`
 
 ---
@@ -241,6 +241,36 @@ For detailed guidance on progress indicators and spinners, see the [learned skil
 - **New projects:** Run `npx aiknowsys init` (creates multi-dev structure by default)
 
 See: [AGENTS.md](AGENTS.md#plan-management)
+
+### Pattern Sharing Workflow
+
+**Personal vs Learned Patterns:**
+- **personal/<username>/** - Private patterns (gitignored, individual discoveries)
+- **learned/** - Team patterns (committed, shared knowledge)
+
+**Sharing Mechanism:**
+- AI agents suggest sharing valuable personal patterns
+- Pattern files move from personal/ → learned/ with updated frontmatter
+- Duplicate detection prevents redundant patterns
+- Merge workflow combines similar patterns intelligently
+
+**Trigger words:** "share pattern", "share with team", "what patterns can I share"
+
+**Automated workflow:**
+1. Agent detects valuable pattern (high usage, solves recurring problem)
+2. Checks learned/ for duplicates (title, keywords, content overlap)
+3. If unique: Moves to learned/, updates frontmatter (adds shared_by, shared_date)
+4. If duplicate: Offers merge or keep separate
+5. Updates session notes, suggests commit
+
+**Benefits:**
+- Knowledge captured naturally during development
+- No manual "learn" command needed (AI-assisted)
+- Duplicate prevention reduces pattern bloat
+- Merge intelligence combines related discoveries
+- Team collaboration without meetings
+
+See: [.github/skills/pattern-sharing/SKILL.md](.github/skills/pattern-sharing/SKILL.md)
 
 ---
 

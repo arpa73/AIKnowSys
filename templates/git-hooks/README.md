@@ -15,8 +15,13 @@ This directory contains Git hooks to help enforce Test-Driven Development practi
 
 **What it does:**
 1. **Runs full test suite** (BLOCKING - must pass)
-2. **Quality checks** (WARNING - doesn't block)
-3. **ESSENTIALS size check** (WARNING - recommends compression if >800 lines)
+2. **Deliverables validation** (BLOCKING if templates/ changed)
+   - Only runs when `templates/` files are staged
+   - Validates templates match non-template equivalents
+   - Prevents shipping broken templates to users
+   - Auto-fix available: `npx aiknowsys validate-deliverables --fix`
+3. **Quality checks** (WARNING - doesn't block)
+4. **ESSENTIALS size check** (WARNING - recommends compression if >800 lines)
 
 **Installation:**
 
