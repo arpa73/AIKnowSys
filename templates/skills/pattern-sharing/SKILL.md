@@ -21,6 +21,19 @@ description: AI-assisted workflow for sharing personal patterns with the team. D
 - Session ending and user has valuable unshared patterns
 - User mentions team collaboration on patterns
 
+**Relationship to `aiknowsys learn` command:**
+- `learn` command: Create new patterns (personal or learned)
+- pattern-sharing skill: Share existing personal patterns with team
+- Use together: `learn` creates patterns, skill shares them later
+- Think of it as: `learn` = capture knowledge, pattern-sharing = distribute knowledge
+
+**When NOT to use this skill:**
+- Don't share WIP patterns (incomplete, experimental)
+- Don't share personal notes (not meant for team)
+- Don't share temporary debugging notes (session-specific)
+- Don't share patterns with project secrets (use .env patterns instead)
+- Don't share patterns that duplicate existing team patterns (check first)
+
 ---
 
 ## Prerequisites
@@ -249,7 +262,9 @@ Would you like me to create a session note about this?"
 
 **Optional: Update session file**
 
-If session file exists (`.aiknowsys/sessions/<date>-session.md`):
+Session files track work across multiple tasks (see AGENTS.md for details).
+
+If session file exists (`.aiknowsys/sessions/YYYY-MM-DD-session.md`):
 
 ```markdown
 ## Pattern Sharing (HH:MM)
@@ -263,6 +278,9 @@ If session file exists (`.aiknowsys/sessions/<date>-session.md`):
 - Team members pull to see pattern
 - Consider adding to docs if widely applicable
 ```
+
+If no session file exists, consider creating one for complex multi-task work.
+See: [AGENTS.md](../../AGENTS.md#session-workflow)
 
 ---
 
