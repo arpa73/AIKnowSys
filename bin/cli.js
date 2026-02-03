@@ -28,6 +28,7 @@ import { sharePattern } from '../lib/commands/share-pattern.js';
 import { listPatterns } from '../lib/commands/list-patterns.js';
 import { syncPlans } from '../lib/commands/sync-plans.js';
 import { migrateToMultidev } from '../lib/commands/migrate-to-multidev.js';
+import { validateDeliverables } from '../lib/commands/validate-deliverables.js';
 import { loadPlugins } from '../lib/plugins/loader.js';
 
 // Get version from package.json
@@ -217,6 +218,18 @@ program
     await qualityCheck({
       dir: options.dir
     });
+  });
+
+// Validate deliverables command
+program
+  .command('validate-deliverables')
+  .description('Validate all deliverable files (templates)')
+  .option('--full', 'Run expensive checks (template execution + fresh init)')
+  .option('--fix', 'Attempt to auto-fix simple pattern issues')
+  .option('--metrics', 'Show validation metrics and history')
+  .action(async (options) => {
+    const result = await validateDeliverables(options);
+    process.exit(result.exitCode);
   });
 
 // CI check command
