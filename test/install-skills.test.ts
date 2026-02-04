@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
+import assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { installSkills } from '../lib/commands/install-skills.js';
 import {
   createTestDir,
@@ -11,7 +11,7 @@ import {
 } from './helpers/testUtils.js';
 
 describe('install-skills command', () => {
-  let testDir;
+  let testDir: string;
 
   beforeEach(() => {
     testDir = createTestDir();
@@ -26,7 +26,7 @@ describe('install-skills command', () => {
   // ========================================
 
   it('should create .github/skills directory', async () => {
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     assertFileNotExists(skillsDir);
     
@@ -36,7 +36,7 @@ describe('install-skills command', () => {
   });
 
   it('should not fail if .github/skills directory already exists', async () => {
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     fs.mkdirSync(skillsDir, { recursive: true });
     
     assertFileExists(skillsDir);
@@ -54,10 +54,10 @@ describe('install-skills command', () => {
   it('should install all 10 default universal skills (excluding maintainer-only)', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     // Verify all 10 default skills are installed
-    const expectedSkills = [
+    const expectedSkills: string[] = [
       'ai-friendly-documentation',
       'context7-usage',
       'dependency-management',
@@ -71,7 +71,7 @@ describe('install-skills command', () => {
     ];
     
     for (const skill of expectedSkills) {
-      const skillPath = path.join(skillsDir, skill);
+      const skillPath: string = path.join(skillsDir, skill);
       assertFileExists(skillPath, `Skill ${skill} should be installed`);
     }
   });
@@ -79,13 +79,13 @@ describe('install-skills command', () => {
   it('should copy SKILL.md file for each skill', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     // Check that each skill has a SKILL.md file
-    const skills = ['ai-friendly-documentation', 'dependency-management', 'tdd-workflow'];
+    const skills: string[] = ['ai-friendly-documentation', 'dependency-management', 'tdd-workflow'];
     
     for (const skill of skills) {
-      const skillMdPath = path.join(skillsDir, skill, 'SKILL.md');
+      const skillMdPath: string = path.join(skillsDir, skill, 'SKILL.md');
       assertFileExists(skillMdPath, `${skill}/SKILL.md should exist`);
     }
   });
@@ -93,10 +93,10 @@ describe('install-skills command', () => {
   it('should copy all files in skill directory including subdirectories', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     // skill-creator has both SKILL.md and template.md
-    const skillCreatorDir = path.join(skillsDir, 'skill-creator');
+    const skillCreatorDir: string = path.join(skillsDir, 'skill-creator');
     assertFileExists(path.join(skillCreatorDir, 'SKILL.md'));
     assertFileExists(path.join(skillCreatorDir, 'template.md'));
   });
@@ -112,7 +112,7 @@ describe('install-skills command', () => {
       _silent: true
     });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     // Should have selected skills
     assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
@@ -126,8 +126,8 @@ describe('install-skills command', () => {
 
   it('should handle comma-separated skills string', async () => {
     // CLI might pass skills as a comma-separated string
-    const skillsString = 'refactoring-workflow,tdd-workflow';
-    const skillsArray = skillsString.split(',');
+    const skillsString: string = 'refactoring-workflow,tdd-workflow';
+    const skillsArray: string[] = skillsString.split(',');
     
     await installSkills({
       dir: testDir,
@@ -135,7 +135,7 @@ describe('install-skills command', () => {
       _silent: true
     });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     assertFileExists(path.join(skillsDir, 'tdd-workflow'));
@@ -156,7 +156,7 @@ describe('install-skills command', () => {
       'Should not throw when skill not found'
     );
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
     
     // Valid skills should still be installed
     assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
@@ -171,16 +171,16 @@ describe('install-skills command', () => {
   // ========================================
 
   it('should not show console output in silent mode', async () => {
-    const logs = [];
+    const logs: any[] = [];
     const originalLog = console.log;
-    console.log = (...args) => logs.push(args);
+    console.log = (...args: any[]) => logs.push(args);
     
     try {
       await installSkills({ dir: testDir, _silent: true });
       
       // Should have minimal/no output in silent mode
       assert.ok(
-        logs.length === 0 || logs.every(log => !log.join('').includes('Installing')),
+        logs.length === 0 || logs.every((log: any[]) => !log.join('').includes('Installing')),
         'Should not show "Installing" messages in silent mode'
       );
     } finally {
@@ -189,14 +189,14 @@ describe('install-skills command', () => {
   });
 
   it('should show console output in normal mode', async () => {
-    const logs = [];
+    const logs: any[] = [];
     const originalLog = console.log;
-    console.log = (...args) => logs.push(args);
+    console.log = (...args: any[]) => logs.push(args);
     
     try {
       await installSkills({ dir: testDir, _silent: false });
       
-      const hasOutput = logs.some(log =>
+      const hasOutput: boolean = logs.some((log: any[]) =>
         log.join('').includes('Installing') || log.join('').includes('Skills')
       );
       assert.ok(hasOutput, 'Should show console output in normal mode');
@@ -210,12 +210,12 @@ describe('install-skills command', () => {
   // ========================================
 
   it('should work with --dir option to target different directory', async () => {
-    const customDir = createTestDir();
+    const customDir: string = createTestDir();
     
     try {
       await installSkills({ dir: customDir, _silent: true });
       
-      const skillsDir = path.join(customDir, '.github', 'skills');
+      const skillsDir: string = path.join(customDir, '.github', 'skills');
       assertFileExists(skillsDir);
       assertFileExists(path.join(skillsDir, 'refactoring-workflow'));
     } finally {
@@ -230,10 +230,10 @@ describe('install-skills command', () => {
   it('should preserve SKILL.md format in copied files', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
-    const skillMdPath = path.join(testDir, '.github', 'skills', 'tdd-workflow', 'SKILL.md');
+    const skillMdPath: string = path.join(testDir, '.github', 'skills', 'tdd-workflow', 'SKILL.md');
     assertFileExists(skillMdPath);
     
-    const content = fs.readFileSync(skillMdPath, 'utf-8');
+    const content: string = fs.readFileSync(skillMdPath, 'utf-8');
     
     // Verify structure is preserved
     assert.ok(content.includes('# TDD Workflow Skill'), 'Should have title');
@@ -247,7 +247,7 @@ describe('install-skills command', () => {
       _silent: true
     });
     
-    const skillCreatorDir = path.join(testDir, '.github', 'skills', 'skill-creator');
+    const skillCreatorDir: string = path.join(testDir, '.github', 'skills', 'skill-creator');
     
     // Verify all files in the skill directory are copied
     assertFileExists(path.join(skillCreatorDir, 'SKILL.md'));
@@ -262,8 +262,8 @@ describe('install-skills command', () => {
     // Install all default skills
     await installSkills({ dir: testDir, _silent: true });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
-    const installedSkills = fs.readdirSync(skillsDir);
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
+    const installedSkills: string[] = fs.readdirSync(skillsDir);
     
     // Should have 10 skills
     assert.strictEqual(
@@ -281,8 +281,8 @@ describe('install-skills command', () => {
       _silent: true
     });
     
-    const skillsDir = path.join(testDir, '.github', 'skills');
-    const installedSkills = fs.readdirSync(skillsDir);
+    const skillsDir: string = path.join(testDir, '.github', 'skills');
+    const installedSkills: string[] = fs.readdirSync(skillsDir);
     
     // Should have 2 valid skills installed
     assert.strictEqual(

@@ -1,19 +1,18 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
+import assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { sync } from '../lib/commands/sync.js';
 import {
   createTestDir,
   cleanupTestDir,
   createMockProject,
-  assertFileExists,
   assertFileContains,
   assertFileNotContains
 } from './helpers/testUtils.js';
 
 describe('sync command', () => {
-  let testDir;
+  let testDir: string;
 
   beforeEach(() => {
     testDir = createTestDir();
@@ -87,7 +86,7 @@ describe('sync command', () => {
       hasDuplicateMatrix: true // Matrix in both files
     });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
     
     // Before sync - matrix exists in AGENTS
     assertFileContains(agentsPath, /\|\s*Command\s*\|/);
@@ -106,10 +105,10 @@ describe('sync command', () => {
       hasDuplicateMatrix: true
     });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
     
     // AGENTS has other content we want to keep
-    let agentsContent = fs.readFileSync(agentsPath, 'utf-8');
+    let agentsContent: string = fs.readFileSync(agentsPath, 'utf-8');
     agentsContent += '\n\n## Important Section\n\nKeep this content.\n';
     fs.writeFileSync(agentsPath, agentsContent);
     
@@ -130,7 +129,7 @@ describe('sync command', () => {
     
     await sync({ dir: testDir, _silent: true });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
     
     // Should add text like "See CODEBASE_ESSENTIALS.md for validation matrix"
     // or reference the ESSENTIALS file
@@ -144,8 +143,8 @@ describe('sync command', () => {
   it('should detect matrix with "## 2. Validation Matrix" heading', async () => {
     createMockProject(testDir, { hasEssentials: true, hasAgents: true });
     
-    const essentialsPath = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
-    let content = fs.readFileSync(essentialsPath, 'utf-8');
+    const essentialsPath: string = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
+    let content: string = fs.readFileSync(essentialsPath, 'utf-8');
     
     // Ensure numbered heading format
     if (!content.includes('## 2. Validation Matrix')) {
@@ -163,8 +162,8 @@ describe('sync command', () => {
   it('should detect matrix with "## Validation Matrix" heading', async () => {
     createMockProject(testDir, { hasEssentials: true, hasAgents: true });
     
-    const essentialsPath = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
-    let content = fs.readFileSync(essentialsPath, 'utf-8');
+    const essentialsPath: string = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
+    let content: string = fs.readFileSync(essentialsPath, 'utf-8');
     
     // Ensure non-numbered heading
     content = content.replace(/## \d+\.\s*Validation Matrix/, '## Validation Matrix');
@@ -184,12 +183,12 @@ describe('sync command', () => {
       hasDuplicateMatrix: true
     });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
-    const content = fs.readFileSync(agentsPath, 'utf-8');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
+    const content: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // Verify the matrix pattern exists before sync
-    const hasCommandColumn = /\|\s*Command\s*\|/i.test(content);
-    const hasTestCommand = /npm test/i.test(content);
+    const hasCommandColumn: boolean = /\|\s*Command\s*\|/i.test(content);
+    const hasTestCommand: boolean = /npm test/i.test(content);
     
     assert.ok(
       hasCommandColumn && hasTestCommand,
@@ -202,7 +201,7 @@ describe('sync command', () => {
   // ========================================
 
   it('should work with --dir option', async () => {
-    const customDir = createTestDir();
+    const customDir: string = createTestDir();
     
     try {
       createMockProject(customDir, {
@@ -231,15 +230,15 @@ describe('sync command', () => {
       hasDuplicateMatrix: true
     });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
     
     // Run sync once
     await sync({ dir: testDir, _silent: true });
-    const contentAfterFirst = fs.readFileSync(agentsPath, 'utf-8');
+    const contentAfterFirst: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // Run sync again
     await sync({ dir: testDir, _silent: true });
-    const contentAfterSecond = fs.readFileSync(agentsPath, 'utf-8');
+    const contentAfterSecond: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // Content should be the same (idempotent)
     assert.strictEqual(
@@ -257,12 +256,12 @@ describe('sync command', () => {
       hasDuplicateMatrix: false // Already correct (no duplicate)
     });
     
-    const agentsPath = path.join(testDir, 'AGENTS.md');
-    const contentBefore = fs.readFileSync(agentsPath, 'utf-8');
+    const agentsPath: string = path.join(testDir, 'AGENTS.md');
+    const contentBefore: string = fs.readFileSync(agentsPath, 'utf-8');
     
     await sync({ dir: testDir, _silent: true });
     
-    const contentAfter = fs.readFileSync(agentsPath, 'utf-8');
+    const contentAfter: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // If already synced, should not change
     assert.strictEqual(
