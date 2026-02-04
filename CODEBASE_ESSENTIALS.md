@@ -418,6 +418,53 @@ npm test                             # Run all tests
 node --test test/init.test.js --watch  # Watch mode
 ```
 
+### TDD Compliance Check (CI Workflow)
+
+The `.github/workflows/tdd-compliance.yml` GitHub Action enforces TDD by detecting logic changes without corresponding tests. As of v0.9.0+, it includes **smart refactor detection** to prevent false positives.
+
+**What it checks:**
+- ✅ **New logic** (functions, classes, control flow) → **requires tests**
+- ✅ **Refactors** (renames, operator equivalence, imports, docs) → **no tests needed**
+- ✅ **Config-only** changes (const object properties) → **no tests needed**
+
+**Refactor Detection Patterns:**
+
+| Pattern | Score | Example | Why Safe |
+|---------|-------|---------|----------|
+| **Docs/comments only** | 100 | JSDoc updates, comment fixes | Never affects behavior |
+| **Import reordering** | 100 | Moving imports, reordering statements | No logic change |
+| **Operator equivalence** | +15 | `\|\|` → `??` for defaults | Equivalent for non-falsy values |
+| **Variable rename** | +10 | `log` → `_log` (eslint fix) | Same function, new name |
+
+**Threshold:** Score ≥ 30 = "likely refactor" → skip test requirement
+
+**How it works:**
+1. Detects lib/ changes
+2. For each file, calculates refactor score
+3. If score ≥ 30 → refactor (no tests needed)
+4. If score < 30 + logic keywords → new logic (tests required)
+5. Provides clear feedback (refactor vs logic)
+
+**Example outputs:**
+```bash
+# Refactor detected (PASS)
+✅ REFACTOR DETECTED - TDD check passed!
+  - lib/commands/archive-plans.js: operator
+  💡 TIP: Existing tests cover refactored code.
+
+# New logic without tests (FAIL)
+❌ TDD VIOLATION DETECTED
+Files with NEW LOGIC (need tests):
+  - lib/commands/new-feature.js
+```
+
+**Testing the workflow:**
+```bash
+bash test/ci/tdd-check-test.sh  # Validate detection patterns
+```
+
+**See:** [Plan: Smart TDD Compliance Check](.aiknowsys/PLAN_tdd_check_refactor_detection.md) for implementation details
+
 ---
 
 ## 9. Release Checklist

@@ -39,15 +39,76 @@ jobs:
             # Analyze the nature of changes
             REQUIRES_TESTS=false
             CONFIG_ONLY=true
+            REFACTOR_FILES=""
             
             for file in $LIB_CHANGED; do
               # Get the diff for this file
               DIFF=$(git diff HEAD^..HEAD -- "$file")
+              REFACTOR_SCORE=0
+              REFACTOR_TYPES=""
+              
+              # === REFACTOR DETECTION PATTERNS ===
+              
+              # 1. Detect comment/JSDoc changes only (highest priority)
+              COMMENT_LINES=$(echo "$DIFF" | grep -E "^[\+\-]\s*(//|/\*|\*)" | wc -l)
+              TOTAL_LINES=$(echo "$DIFF" | grep -E "^[\+\-]" | grep -v "^[\+\-]\s*$" | wc -l)
+              
+              if [ "$TOTAL_LINES" -gt 0 ] && [ "$COMMENT_LINES" -eq "$TOTAL_LINES" ]; then
+                echo "  📝 $file: Documentation-only changes"
+                REFACTOR_SCORE=100
+                REFACTOR_TYPES="docs"
+                REFACTOR_FILES="$REFACTOR_FILES$file|$REFACTOR_TYPES "
+                continue
+              fi
+              
+              # 2. Detect import statement changes only
+              IMPORT_ONLY=$(echo "$DIFF" | grep -E "^[\+\-]\s*import " | wc -l)
+              if [ "$IMPORT_ONLY" -gt 0 ] && [ "$IMPORT_ONLY" -eq "$TOTAL_LINES" ]; then
+                echo "  🔄 $file: Import reordering only (refactor)"
+                REFACTOR_SCORE=100
+                REFACTOR_TYPES="import-reorder"
+                REFACTOR_FILES="$REFACTOR_FILES$file|$REFACTOR_TYPES "
+                continue
+              fi
+              
+              # 3. Detect variable renames (eslint unused param fixes: x → _x)
+              if echo "$DIFF" | grep -E "^\-.*\b([a-zA-Z_][a-zA-Z0-9_]*)\b" > /dev/null; then
+                # Extract variable names from removed lines and check if they appear prefixed with _ in added lines
+                RENAMED_VARS=$(echo "$DIFF" | grep -E "^\-" | grep -oE '\b[a-zA-Z_][a-zA-Z0-9_]*\b' | sort -u)
+                for var in $RENAMED_VARS; do
+                  if echo "$DIFF" | grep -E "^\+.*\b_$var\b" > /dev/null 2>&1; then
+                    echo "  🔄 $file: Variable rename detected ($var → _$var)"
+                    REFACTOR_SCORE=$((REFACTOR_SCORE + 10))
+                    REFACTOR_TYPES="${REFACTOR_TYPES:+$REFACTOR_TYPES,}rename"
+                    break
+                  fi
+                done
+              fi
+              
+              # 4. Detect || to ?? operator changes (nullish coalescing refactor)
+              if echo "$DIFF" | grep -E "^\-.*\|\|" > /dev/null && echo "$DIFF" | grep -E "^\+.*\?\?" > /dev/null; then
+                # Check if it's a default value pattern
+                if echo "$DIFF" | grep -E "(const|let|var) .* = .* (\?\?|\|\|) " > /dev/null; then
+                  echo "  🔄 $file: Operator equivalence (|| → ??) detected (refactor)"
+                  REFACTOR_SCORE=$((REFACTOR_SCORE + 15))
+                  REFACTOR_TYPES="${REFACTOR_TYPES:+$REFACTOR_TYPES,}operator"
+                fi
+              fi
+              
+              # === LOGIC CHANGE DETECTION ===
+              
+              # Determine if refactor vs new logic based on score
+              if [ "$REFACTOR_SCORE" -ge 30 ]; then
+                echo "  ✅ $file: Likely refactor (score: $REFACTOR_SCORE, types: $REFACTOR_TYPES)"
+                REFACTOR_FILES="$REFACTOR_FILES$file|$REFACTOR_TYPES "
+                CONFIG_ONLY=false
+                continue
+              fi
               
               # Check if diff contains logic changes (not just const/config)
               # Logic indicators: new functions, if/else, loops, class methods
               if echo "$DIFF" | grep -E "^\+.*(function |class |if \(|for \(|while \(|switch \(|async |await |=>)" > /dev/null; then
-                echo "  📝 $file: Logic changes detected"
+                echo "  📝 $file: Logic changes detected (refactor score: $REFACTOR_SCORE)"
                 REQUIRES_TESTS=true
                 CONFIG_ONLY=false
               # Check for new exports (might be new functions)
@@ -62,7 +123,7 @@ jobs:
               else
                 # Default: assume it needs tests unless it's clearly just comments/docs
                 if echo "$DIFF" | grep -E "^\+.*[^/]" | grep -v "^\+\s*//" | grep -v "^\+\s*\*" > /dev/null; then
-                  echo "  ⚠️  $file: Changes detected (assuming logic change)"
+                  echo "  ⚠️  $file: Changes detected (score: $REFACTOR_SCORE - assuming logic change)"
                   REQUIRES_TESTS=true
                   CONFIG_ONLY=false
                 fi
@@ -82,8 +143,22 @@ jobs:
               echo "→ Write tests BEFORE implementation for new features"
               echo "→ Follow RED-GREEN-REFACTOR cycle"
               echo ""
-              echo "Changed files in lib/:"
-              echo "$LIB_CHANGED"
+              echo "Files with NEW LOGIC (need tests):"
+              for file in $LIB_CHANGED; do
+                # Check if this file is not in refactor list
+                if ! echo "$REFACTOR_FILES" | grep -q "$file|"; then
+                  echo "  - $file"
+                fi
+              done
+              
+              if [ -n "$REFACTOR_FILES" ]; then
+                echo ""
+                echo "Files with REFACTORS (no tests needed):"
+                echo "$REFACTOR_FILES" | tr ' ' '\n' | while IFS='|' read -r fname ftype; do
+                  [ -n "$fname" ] && echo "  - $fname ($ftype)"
+                done
+              fi
+              
               echo ""
               echo "Expected: Changes in test/ directory"
               echo "Found: No test changes"
@@ -97,6 +172,17 @@ jobs:
               echo "   No new tests required (existing tests cover config usage)"
               echo ""
               echo "💡 TIP: Verify existing tests still pass with new config values"
+            elif [ -n "$REFACTOR_FILES" ] && [ -z "$TEST_CHANGED" ]; then
+              echo ""
+              echo "✅ REFACTOR DETECTED - TDD check passed!"
+              echo ""
+              echo "Detected refactor patterns:"
+              echo "$REFACTOR_FILES" | tr ' ' '\n' | while IFS='|' read -r fname ftype; do
+                [ -n "$fname" ] && echo "  - $fname: $ftype"
+              done
+              echo ""
+              echo "💡 TIP: Existing tests cover refactored code."
+              echo "   Run 'npm test' to verify no regressions."
             elif [ -n "$TEST_CHANGED" ]; then
               echo "✓ Found corresponding test changes:"
               echo "$TEST_CHANGED"
