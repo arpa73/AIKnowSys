@@ -7,6 +7,29 @@
 
 ---
 
+## Session: Remove Misleading Context7 Config Setting (Feb 5, 2026)
+
+**Goal:** Eliminate confusing `features.context7` config flag that was never implemented
+
+**Context:** The `features.context7` setting was originally planned for CLI integration but was never implemented. Context7 integration works correctly via plugin architecture (aiknowsys-plugin-context7), not the config system. The unused feature flag created false expectations that users could "enable context7" via CLI.
+
+**Changes:**
+- [lib/config.js](lib/config.js#L21): Removed `context7: false` from default config
+- [lib/commands/config.js](lib/commands/config.js#L127-L141): Removed context7 case handler that showed "not yet implemented" message
+- [bin/cli.js](bin/cli.js#L282): Updated enable command description to remove context7 from feature list
+- [README.md](README.md#L366): Removed context7 from core features list
+- [test/config.test.js](test/config.test.js#L47,L79,L247): Removed context7 from test assertions
+
+**Validation:**
+- ✅ Tests: 598/601 passing (3 skipped)
+- ✅ CLI: `enable context7` correctly fails with "Unknown feature" error
+- ✅ Plugin: Context7 plugin still works independently (aiknowsys-plugin-context7)
+- ✅ Documentation: No references to context7 as core feature
+
+**Key Learning:** Plugin architecture proved to be the correct approach for Context7 integration. Removing unused feature flags improves UX by eliminating confusion about what can/can't be enabled via CLI.
+
+---
+
 ## Session: Smart TDD Compliance Check (Feb 4, 2026)
 
 **Goal:** Eliminate CI false positives for refactors while maintaining TDD enforcement

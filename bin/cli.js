@@ -280,7 +280,7 @@ program
 // Config management commands
 program
   .command('enable <feature>')
-  .description('Enable a feature (agents, skills, vscodeHooks, sessionPersistence, tddEnforcement, openspec, context7)')
+  .description('Enable a feature (agents, skills, vscodeHooks, sessionPersistence, tddEnforcement, openspec)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(async (feature, options) => {

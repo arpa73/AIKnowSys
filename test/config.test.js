@@ -44,7 +44,6 @@ describe('Config Utilities', () => {
       assert.strictEqual(config.features.sessionPersistence, true, 'Session persistence should be enabled by default');
       assert.strictEqual(config.features.tddEnforcement, true, 'TDD enforcement should be enabled by default');
       assert.strictEqual(config.features.openspec, false, 'OpenSpec should be disabled by default');
-      assert.strictEqual(config.features.context7, false, 'Context7 should be disabled by default');
     });
 
     it('should return new object each time (not shared reference)', () => {
@@ -75,8 +74,7 @@ describe('Config Utilities', () => {
           vscodeHooks: false,
           sessionPersistence: true,
           tddEnforcement: true,
-          openspec: true,
-          context7: false
+          openspec: true
         },
         preferences: {
           templateType: 'minimal',
@@ -243,8 +241,7 @@ describe('Config Utilities', () => {
         vscodeHooks: false,
         sessionPersistence: false,
         tddEnforcement: false,
-        openspec: false,
-        context7: false
+        openspec: false
       };
       await saveConfig(tempDir, config);
     });

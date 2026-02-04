@@ -363,7 +363,6 @@ npx aiknowsys uninstall
 - `sessionPersistence` - Session tracking (.aiknowsys/sessions/)
 - `tddEnforcement` - TDD git hooks and GitHub Actions
 - `openspec` - OpenSpec integration for change proposals
-- `context7` - Context7 MCP integration (reserved for future)
 
 **When to use:**
 - Skip optional features during init, add them later
