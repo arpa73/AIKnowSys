@@ -5,16 +5,16 @@
  */
 
 import { describe, test, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import { writeFile, mkdir, rm } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
+import assert from 'node:assert/strict';
+import { writeFile, mkdir, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { Command } from 'commander';
 import { loadPlugins, listInstalledPlugins, getPluginInfo } from '../lib/plugins/loader.js';
 
 describe('Plugin System', () => {
-	let testDir;
-	let originalCwd;
+	let testDir: string;
+	let originalCwd: string;
 
 	beforeEach(async () => {
 		// Create temp directory for test
@@ -35,7 +35,7 @@ describe('Plugin System', () => {
 
 	test('Works without plugins installed', async () => {
 		// Create minimal package.json without plugins
-		const pkgPath = join(testDir, 'package.json');
+		const pkgPath: string = join(testDir, 'package.json');
 		await writeFile(pkgPath, JSON.stringify({
 			name: 'test-project',
 			version: '1.0.0',
@@ -46,18 +46,18 @@ describe('Plugin System', () => {
 
 		process.chdir(testDir);
 
-		const program = new Command();
+		const program: Command = new Command();
 		program.command('test-command').action(() => {});
 
 		// Load plugins (should return empty array, not crash)
-		const plugins = await loadPlugins(program, testDir);
+		const plugins: any[] = await loadPlugins(program, testDir);
 
 		assert.strictEqual(plugins.length, 0, 'Should return empty array when no plugins');
 		assert.strictEqual(program.commands.length, 1, 'Should only have core command');
 	});
 
 	test('Discovers plugin packages', async () => {
-		const pkgPath = join(testDir, 'package.json');
+		const pkgPath: string = join(testDir, 'package.json');
 		await writeFile(pkgPath, JSON.stringify({
 			name: 'test-project',
 			version: '1.0.0',
@@ -72,7 +72,7 @@ describe('Plugin System', () => {
 
 		process.chdir(testDir);
 
-		const installed = await listInstalledPlugins(testDir);
+		const installed: string[] = await listInstalledPlugins(testDir);
 		
 		assert.strictEqual(installed.length, 2, 'Should find 2 plugins');
 		assert.ok(installed.includes('aiknowsys-plugin-test'), 'Should include test plugin');
@@ -80,7 +80,7 @@ describe('Plugin System', () => {
 	});
 
 	test('Plugin exports metadata correctly', () => {
-		const mockPlugin = {
+		const mockPlugin: any = {
 			name: 'test-plugin',
 			version: '1.0.0',
 			description: 'Test plugin',
@@ -93,7 +93,7 @@ describe('Plugin System', () => {
 			]
 		};
 
-		const info = getPluginInfo([mockPlugin]);
+		const info: any[] = getPluginInfo([mockPlugin]);
 
 		assert.strictEqual(info.length, 1);
 		assert.strictEqual(info[0].name, 'test-plugin');
@@ -102,7 +102,7 @@ describe('Plugin System', () => {
 	});
 
 	test('Multiple commands in plugin metadata', () => {
-		const mockPlugin = {
+		const mockPlugin: any = {
 			name: 'multi-cmd-plugin',
 			version: '2.0.0',
 			commands: [
@@ -112,22 +112,22 @@ describe('Plugin System', () => {
 			]
 		};
 
-		const info = getPluginInfo([mockPlugin]);
+		const info: any[] = getPluginInfo([mockPlugin]);
 
 		assert.strictEqual(info[0].commands, 'cmd1, cmd2, cmd3');
 	});
 
 	test('Handles package.json not found gracefully', async () => {
 		// Create temp dir without package.json
-		const emptyDir = join(tmpdir(), `aiknowsys-plugin-empty-${Date.now()}`);
+		const emptyDir: string = join(tmpdir(), `aiknowsys-plugin-empty-${Date.now()}`);
 		await mkdir(emptyDir, { recursive: true });
 
 		process.chdir(emptyDir);
 
-		const program = new Command();
+		const program: Command = new Command();
 
 		// Should not throw, just return empty array
-		const plugins = await loadPlugins(program, emptyDir);
+		const plugins: any[] = await loadPlugins(program, emptyDir);
 
 		assert.strictEqual(plugins.length, 0);
 
@@ -135,7 +135,7 @@ describe('Plugin System', () => {
 	});
 
 	test('Filters non-plugin dependencies', async () => {
-		const pkgPath = join(testDir, 'package.json');
+		const pkgPath: string = join(testDir, 'package.json');
 		await writeFile(pkgPath, JSON.stringify({
 			name: 'test-project',
 			dependencies: {
@@ -148,33 +148,33 @@ describe('Plugin System', () => {
 
 		process.chdir(testDir);
 
-		const installed = await listInstalledPlugins(testDir);
+		const installed: string[] = await listInstalledPlugins(testDir);
 
 		assert.strictEqual(installed.length, 1);
 		assert.strictEqual(installed[0], 'aiknowsys-plugin-valid');
 	});
 
 	test('Plugin info handles missing version', () => {
-		const mockPlugin = {
+		const mockPlugin: any = {
 			name: 'no-version-plugin',
 			commands: [
 				{ name: 'cmd', action: async () => {} }
 			]
 		};
 
-		const info = getPluginInfo([mockPlugin]);
+		const info: any[] = getPluginInfo([mockPlugin]);
 
 		assert.strictEqual(info[0].version, 'unknown');
 	});
 
 	test('Plugin info handles missing description', () => {
-		const mockPlugin = {
+		const mockPlugin: any = {
 			name: 'no-desc-plugin',
 			version: '1.0.0',
 			commands: []
 		};
 
-		const info = getPluginInfo([mockPlugin]);
+		const info: any[] = getPluginInfo([mockPlugin]);
 
 		assert.strictEqual(info[0].description, 'No description');
 	});
@@ -182,13 +182,13 @@ describe('Plugin System', () => {
 
 describe('CLI Integration', () => {
 	test('loadPlugins integrates with Commander without errors', async () => {
-		const program = new Command();
+		const program: Command = new Command();
 		
 		// Add a core command
 		program.command('test-command').action(() => {});
 		
 		// Load plugins (should not throw even with no plugins)
-		const plugins = await loadPlugins(program);
+		const plugins: any[] = await loadPlugins(program);
 		
 		// Verify no errors and plugins array returned
 		assert.ok(Array.isArray(plugins), 'Should return array');
@@ -202,7 +202,7 @@ describe('Plugin Validation (Error Cases)', () => {
 		// (since we can't easily mock ES module imports in tests)
 
 		// Test plugin validation logic
-		const validatePlugin = (plugin, name) => {
+		const validatePlugin = (plugin: any, name: string): void => {
 			if (!plugin || typeof plugin !== 'object') {
 				throw new Error('Plugin must export default object');
 			}
@@ -259,7 +259,7 @@ describe('Plugin Validation (Error Cases)', () => {
 	});
 
 	test('Command validation logic', () => {
-		const validateCommand = (cmd, pluginName) => {
+		const validateCommand = (cmd: any, pluginName: string): void => {
 			if (!cmd.name || typeof cmd.name !== 'string') {
 				throw new Error(`Command missing "name" property in plugin "${pluginName}"`);
 			}
