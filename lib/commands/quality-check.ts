@@ -100,16 +100,32 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
   const qualityConfig = config?.qualityChecks || {};
 
   // Run all checks
+  const deliverablesResult = await validateDeliverables({
+    fix: false,
+    _silent: true
+  });
+  
   const checks: QualityChecks = {
     essentials: await checkEssentialsBloat(targetDir, qualityConfig),
     templates: await validateTemplates(targetDir, qualityConfig),
     links: await validateLinks(targetDir, qualityConfig),
     patterns: await scanPatterns(targetDir, qualityConfig),
-    deliverables: await validateDeliverables({
-      projectRoot: targetDir,
-      _silent: true,
-      full: true  // quality-check always runs comprehensive validation
-    })
+    deliverables: {
+      passed: deliverablesResult.success,
+      violations: deliverablesResult.totalIssues > 0 ? 
+        deliverablesResult.checks.schema.issues.concat(
+          deliverablesResult.checks.patterns.issues,
+          deliverablesResult.checks.maintainer.issues,
+          deliverablesResult.checks.legacy.issues,
+          deliverablesResult.checks.placeholders.issues,
+          deliverablesResult.checks.templateExecution.issues,
+          deliverablesResult.checks.freshInit.issues
+        ).map(issue => ({
+          file: issue.file,
+          line: issue.line,
+          message: issue.message
+        })) : []
+    }
   };
 
   // Calculate overall status
