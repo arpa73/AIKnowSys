@@ -70,6 +70,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Run migration (will fail in RED phase)
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       await migratePersonalPatterns({ _username: username, _silent: true });
       
@@ -91,6 +92,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Run migration
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       await migratePersonalPatterns({ _username: username, _silent: true });
       
@@ -119,6 +121,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Run migration
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       await migratePersonalPatterns({ _username: username, _silent: true });
       
@@ -148,6 +151,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Run migration
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       await migratePersonalPatterns({ _username: username, _silent: true });
       
@@ -164,6 +168,7 @@ describe('Personal Pattern Directory Migration', () => {
       // RED: Migration script doesn't exist yet
       
       // Don't provide username (simulate git config failure)
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       
       const result: any = await migratePersonalPatterns({ _username: null, _silent: true });
@@ -193,6 +198,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Run migration
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       const result: any = await migratePersonalPatterns({ _username: username, _silent: true });
       
@@ -223,6 +229,7 @@ describe('Personal Pattern Directory Migration', () => {
       await fs.rm(path.join(testDir, '.gitignore'));
       
       // Run migration
+      // @ts-expect-error - Not yet migrated to TypeScript
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       await migratePersonalPatterns({ _username: username, _silent: true });
       

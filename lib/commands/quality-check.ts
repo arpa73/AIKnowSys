@@ -111,20 +111,14 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
     links: await validateLinks(targetDir, qualityConfig),
     patterns: await scanPatterns(targetDir, qualityConfig),
     deliverables: {
-      passed: deliverablesResult.success,
-      violations: deliverablesResult.totalIssues > 0 ? 
-        deliverablesResult.checks.schema.issues.concat(
-          deliverablesResult.checks.patterns.issues,
-          deliverablesResult.checks.maintainer.issues,
-          deliverablesResult.checks.legacy.issues,
-          deliverablesResult.checks.placeholders.issues,
-          deliverablesResult.checks.templateExecution.issues,
-          deliverablesResult.checks.freshInit.issues
-        ).map(issue => ({
-          file: issue.file,
-          line: issue.line,
-          message: issue.message
-        })) : []
+      passed: deliverablesResult.passed,
+      violations: deliverablesResult.checks.flatMap(check => 
+        check.issues.map((issue: string) => ({
+          file: 'deliverables',
+          line: 0,
+          message: issue
+        }))
+      )
     }
   };
 

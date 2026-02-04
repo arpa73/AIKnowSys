@@ -89,3 +89,36 @@ export interface QualityCheckResult {
   }>;
   timestamp: Date;
 }
+
+// Template schema types (Phase 7: Type-safe schema validation)
+export interface TemplateSchema {
+  requiredPlaceholders: string[];
+  forbiddenPatterns: string[];
+  mappedTo: string[];
+}
+
+export interface TemplateSchemaMap {
+  [templatePath: string]: TemplateSchema;
+}
+
+export interface LegacyPattern {
+  pattern: RegExp;
+  name: string;
+}
+
+export interface AutoFixPattern {
+  find: RegExp;
+  replace: string;
+}
+
+export interface DeliverableValidationOptions extends CommandOptions {
+  projectRoot?: string;
+  _testMode?: boolean;
+  _preCommit?: boolean;
+}
+
+export interface DeliverableValidationResult extends ValidationResult {
+  fixed?: string[];
+  fix?: string;
+  error?: string;
+}

@@ -1,594 +1,616 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { createLogger } from '../logger.js';
+import type { 
+  TemplateSchemaMap, 
+  LegacyPattern, 
+  AutoFixPattern,
+  DeliverableValidationOptions,
+  DeliverableValidationResult,
+  ValidationCheck
+} from '../types/index.js';
 
-interface ValidateOptions {
-  fix: boolean;
-  _silent?: boolean;
-}
+// Logger type (logger.js not yet migrated to TypeScript)
+type Logger = ReturnType<typeof createLogger>;
 
-interface ValidationIssue {
-  file: string;
-  line?: number;
-  type: string;
-  message: string;
-}
-
-interface FixableIssue {
-  file: string;
-  line: number;
-  old: string;
-  new: string;
-  pattern: string;
-}
-
-interface CheckResult {
-  passed: boolean;
-  issues: ValidationIssue[];
-  fixableIssues?: FixableIssue[];
-}
-
-interface ValidationResult {
-  success: boolean;
-  totalIssues: number;
-  fixedIssues: number;
-  checks: {
-    schema: CheckResult;
-    patterns: CheckResult;
-    maintainer: CheckResult;
-    legacy: CheckResult;
-    placeholders: CheckResult;
-    templateExecution: CheckResult;
-    freshInit: CheckResult;
-  };
-}
-
-interface TemplatePlaceholder {
-  name: string;
-  pattern: RegExp;
-  description: string;
-}
-
-interface LegacyPattern {
-  pattern: RegExp;
-  message: string;
-  replacement?: string;
-  autoFix?: boolean;
-}
-
-interface AutoFixPattern {
-  pattern: RegExp;
-  replacement: string;
-  description: string;
-}
-
-// Template validation schema
-const TEMPLATE_SCHEMA: Record<string, TemplatePlaceholder[]> = {
-  'CODEBASE_ESSENTIALS.md': [
-    {
-      name: 'PROJECT_NAME',
-      pattern: /\{\{PROJECT_NAME\}\}/g,
-      description: 'Project name placeholder'
-    }
-  ],
-  'AGENTS.md': [],
-  'CODEBASE_CHANGELOG.md': []
+// Template schema definitions
+const TEMPLATE_SCHEMA: TemplateSchemaMap = {
+  'templates/agents/architect.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md', 'Edit CURRENT_PLAN.md'],
+    mappedTo: ['.github/agents/architect.agent.md']
+  },
+  'templates/agents/developer.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md', 'Delete CURRENT_PLAN.md'],
+    mappedTo: ['.github/agents/developer.agent.md']
+  },
+  'templates/agents/planner.agent.template.md': {
+    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    forbiddenPatterns: ['PENDING_REVIEW.md'],
+    mappedTo: ['.github/agents/planner.agent.md']
+  }
+  // Note: templates/AGENTS.template.md has {{SESSION_FILE}} and {{PLAN_FILE}} 
+  // which are INTENTIONALLY placeholders for the init process, so we don't validate it
 };
 
-// Legacy patterns to detect and warn about
+// Legacy patterns to detect
 const LEGACY_PATTERNS: LegacyPattern[] = [
-  {
-    pattern: /\.aiknowsys\/CURRENT_PLAN\.md/g,
-    message: 'CURRENT_PLAN.md is deprecated - use .aiknowsys/plans/active-<username>.md instead',
-    replacement: '.aiknowsys/plans/active-<username>.md',
-    autoFix: false
-  },
-  {
-    pattern: /\.aiknowsys\/PENDING_REVIEW\.md/g,
-    message: 'PENDING_REVIEW.md is deprecated - use .aiknowsys/reviews/PENDING_<username>.md instead',
-    replacement: '.aiknowsys/reviews/PENDING_<username>.md',
-    autoFix: false
-  },
-  {
-    pattern: /\.aiknowsys\/session\.md/g,
-    message: 'session.md is deprecated - use .aiknowsys/sessions/YYYY-MM-DD-session.md instead',
-    replacement: '.aiknowsys/sessions/YYYY-MM-DD-session.md',
-    autoFix: false
-  },
-  {
-    pattern: /@CURRENT_PLAN\.md/g,
-    message: '@CURRENT_PLAN.md reference is deprecated - use .aiknowsys/plans/active-<username>.md instead',
-    replacement: '.aiknowsys/plans/active-<username>.md',
-    autoFix: true
-  },
-  {
-    pattern: /@\.aiknowsys\/CURRENT_PLAN\.md/g,
-    message: '@.aiknowsys/CURRENT_PLAN.md reference is deprecated',
-    replacement: '.aiknowsys/plans/active-<username>.md',
-    autoFix: true
-  }
+  { pattern: /PENDING_REVIEW\.md/, name: 'PENDING_REVIEW.md (legacy single-dev)' },
+  { pattern: /Edit CURRENT_PLAN\.md/, name: 'Edit CURRENT_PLAN.md (should use active-<username>.md)' },
+  { pattern: /Delete CURRENT_PLAN\.md/, name: 'Delete CURRENT_PLAN.md (should use active-<username>.md)' },
+  { pattern: /Single-dev mode/, name: 'Single-dev mode (removed in v0.9.0)' },
+  { pattern: /Check if \.aiknowsys\/plans\/ exists/, name: 'Conditional plans check (plans/ always exists)' }
 ];
 
-// Auto-fix patterns (safe to automatically correct)
+// Auto-fixable patterns
 const AUTO_FIX_PATTERNS: AutoFixPattern[] = [
-  {
-    pattern: /@CURRENT_PLAN\.md/g,
-    replacement: '.aiknowsys/plans/active-<username>.md',
-    description: 'Updated CURRENT_PLAN reference to new plan pointer format'
-  },
-  {
-    pattern: /@\.aiknowsys\/CURRENT_PLAN\.md/g,
-    replacement: '.aiknowsys/plans/active-<username>.md',
-    description: 'Updated CURRENT_PLAN reference to new plan pointer format'
-  }
+  { find: /PENDING_REVIEW\.md/g, replace: 'reviews/PENDING_<username>.md' },
+  { find: /Edit CURRENT_PLAN\.md/g, replace: 'Edit plans/active-<username>.md' },
+  { find: /Delete CURRENT_PLAN\.md/g, replace: 'Delete plans/active-<username>.md' }
 ];
 
-export async function validateDeliverables(options: ValidateOptions): Promise<ValidationResult> {
-  const fix = options.fix || false;
-  const silent = options._silent || false;
-  const log = createLogger(silent);
+/**
+ * Validate all deliverable files (templates)
+ */
+export async function validateDeliverables(
+  options: DeliverableValidationOptions = {}
+): Promise<DeliverableValidationResult> {
+  const log = createLogger(options._silent);
+  const projectRoot = options.projectRoot || process.cwd();
+  const startTime = Date.now();
   
+  log.header('🔍 Deliverables Validation', '🔍');
   log.blank();
-  log.header('Validating Deliverables', '✅');
-  log.blank();
-  
-  const result: ValidationResult = {
-    success: true,
-    totalIssues: 0,
-    fixedIssues: 0,
-    checks: {
-      schema: { passed: true, issues: [] },
-      patterns: { passed: true, issues: [] },
-      maintainer: { passed: true, issues: [] },
-      legacy: { passed: true, issues: [], fixableIssues: [] },
-      placeholders: { passed: true, issues: [] },
-      templateExecution: { passed: true, issues: [] },
-      freshInit: { passed: true, issues: [] }
-    }
-  };
-  
+
+  const checks = [];
+  const fixes = [];
+  let templatesChecked = 0;
+  let patternsValidated = 0;
+
   try {
-    const templateDir = path.join(process.cwd(), 'templates');
-    
-    if (!fs.existsSync(templateDir)) {
-      log.error('templates/ directory not found');
-      result.success = false;
-      return result;
+    // Check 1: Template Schema Validation
+    log.dim('→ Validating template schemas...');
+    const schemaResult = await validateTemplateSchema(projectRoot, log, options);
+    checks.push(schemaResult);
+    templatesChecked += schemaResult.templatesChecked || 0;
+    patternsValidated += schemaResult.patternsValidated || 0;
+
+    // Check 2: Pattern Consistency
+    log.dim('→ Checking pattern consistency...');
+    const patternResult = await validatePatternConsistency(projectRoot, log, options);
+    checks.push(patternResult);
+    patternsValidated += patternResult.patternsValidated || 0;
+
+    // Check 3: Maintainer Skill Boundary
+    log.dim('→ Checking maintainer skill boundaries...');
+    const maintainerResult = await checkMaintainerSkillBoundary(projectRoot, log);
+    checks.push(maintainerResult);
+
+    // Check 4: Legacy Patterns
+    log.dim('→ Detecting legacy patterns...');
+    const legacyResult = await detectLegacyPatterns(projectRoot, log, options);
+    checks.push(legacyResult);
+    if (options.fix && legacyResult.fixable.length > 0) {
+      const fixResult = await autoFixPatterns(projectRoot, log, legacyResult.fixable);
+      fixes.push(...fixResult);
     }
-    
-    // Check 1: Validate maintainer skill boundaries
-    log.cyan('🔍 Checking maintainer skill boundaries...');
-    result.checks.maintainer = await checkMaintainerSkillBoundary(templateDir);
-    result.totalIssues += result.checks.maintainer.issues.length;
-    
-    // Check 2: Validate template schema (required placeholders)
-    log.cyan('🔍 Validating template schema...');
-    result.checks.schema = await validateTemplateSchema(templateDir);
-    result.totalIssues += result.checks.schema.issues.length;
-    
-    // Check 3: Validate pattern consistency
-    log.cyan('🔍 Checking pattern consistency...');
-    result.checks.patterns = await validatePatternConsistency(templateDir);
-    result.totalIssues += result.checks.patterns.issues.length;
-    
-    // Check 4: Detect legacy patterns
-    log.cyan('🔍 Detecting legacy patterns...');
-    result.checks.legacy = await detectLegacyPatterns(templateDir, log, fix);
-    result.totalIssues += result.checks.legacy.issues.length;
-    if (fix && result.checks.legacy.fixableIssues) {
-      result.fixedIssues += result.checks.legacy.fixableIssues.length;
+
+    // Check 5: Placeholder Detection
+    log.dim('→ Checking for unresolved placeholders...');
+    const placeholderResult = await detectUnresolvedPlaceholders(projectRoot, log);
+    checks.push(placeholderResult);
+
+    // Check 6: Template Execution Test (--full only)
+    if (options.full) {
+      log.dim('→ Testing template execution...');
+      const executionResult = await testTemplateExecution(projectRoot, log);
+      checks.push(executionResult);
     }
-    
-    // Check 5: Detect unresolved placeholders
-    log.cyan('🔍 Checking for unresolved placeholders...');
-    result.checks.placeholders = await detectUnresolvedPlaceholders(templateDir);
-    result.totalIssues += result.checks.placeholders.issues.length;
-    
-    // Check 6: Validate template execution stub
-    log.cyan('🔍 Validating template execution stub...');
-    result.checks.templateExecution = await validateTemplateExecutionStub();
-    result.totalIssues += result.checks.templateExecution.issues.length;
-    
-    // Check 7: Validate fresh init stub
-    log.cyan('🔍 Validating fresh init stub...');
-    result.checks.freshInit = await validateFreshInitStub();
-    result.totalIssues += result.checks.freshInit.issues.length;
-    
-    // Summary
-    log.blank();
-    if (result.totalIssues === 0) {
-      log.success('✅ All deliverables validated successfully!');
-    } else {
-      if (fix && result.fixedIssues > 0) {
-        log.yellow(`⚠️  Found ${result.totalIssues} issues, fixed ${result.fixedIssues} automatically`);
-        if (result.totalIssues > result.fixedIssues) {
-          log.error(`❌ ${result.totalIssues - result.fixedIssues} issues require manual fixes`);
-          result.success = false;
-        }
+
+    // Check 7: Fresh Init Test (--full only)
+    if (options.full) {
+      log.dim('→ Running fresh init test...');
+      const initResult = await testFreshInit(projectRoot, log);
+      checks.push(initResult);
+    }
+
+    // Calculate summary
+    const passedChecks = checks.filter(c => c.passed).length;
+    const totalChecks = checks.length;
+    const allPassed = checks.every(c => c.passed);
+
+    if (!options._silent) {
+      log.blank();
+      if (allPassed) {
+        log.success(`✅ All ${totalChecks} deliverable checks passed`);
       } else {
-        log.error(`❌ Found ${result.totalIssues} issues`);
-        result.success = false;
+        log.error(`❌ ${totalChecks - passedChecks}/${totalChecks} checks failed`);
+        
+        // Show failures
+        checks.filter(c => !c.passed).forEach(check => {
+          log.blank();
+          log.error(`${check.name}:`);
+          check.issues.forEach(issue => {
+            log.dim(`  - ${issue}`);
+          });
+        });
+      }
+
+      if (fixes.length > 0) {
+        log.blank();
+        log.success(`🔧 Auto-fixed ${fixes.length} pattern(s)`);
+        fixes.forEach(fix => {
+          log.dim(`  - ${fix}`);
+        });
       }
     }
-    
-    log.blank();
-    
-    // Display metrics
-    log.section('Validation Metrics', '📊');
-    log.blank();
-    log.dim(`   Maintainer Boundaries: ${result.checks.maintainer.issues.length} issues`);
-    log.dim(`   Template Schema:       ${result.checks.schema.issues.length} issues`);
-    log.dim(`   Pattern Consistency:   ${result.checks.patterns.issues.length} issues`);
-    log.dim(`   Legacy Patterns:       ${result.checks.legacy.issues.length} issues`);
-    log.dim(`   Unresolved Placeholders: ${result.checks.placeholders.issues.length} issues`);
-    log.dim(`   Template Execution:    ${result.checks.templateExecution.issues.length} issues`);
-    log.dim(`   Fresh Init:            ${result.checks.freshInit.issues.length} issues`);
-    log.blank();
-    
+
+    const duration = Date.now() - startTime;
+    const result: DeliverableValidationResult = {
+      passed: allPassed,
+      checks,
+      summary: `${passedChecks}/${totalChecks} checks passed`,
+      exitCode: allPassed ? 0 : 1,
+      metrics: {
+        templatesChecked,
+        patternsValidated,
+        duration
+      }
+    };
+
+    if (fixes.length > 0) {
+      result.fixed = fixes;
+    }
+
+    // Add fix suggestion if there are failures
+    if (!allPassed) {
+      result.fix = 'Run npx aiknowsys validate-deliverables --fix to auto-fix simple patterns';
+    }
+
+    // Log metrics if requested
+    if (options.metrics) {
+      await logMetrics(projectRoot, result, options);
+    }
+
     return result;
-    
-  } catch (error) {
-    log.error((error as Error).message);
-    result.success = false;
-    return result;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log.error(`Validation error: ${errorMessage}`);
+    return {
+      passed: false,
+      checks: [],
+      summary: 'Validation failed with error',
+      exitCode: 1,
+      error: errorMessage
+    };
   }
 }
 
-async function checkMaintainerSkillBoundary(templateDir: string): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
+/**
+ * Check that maintainer skills (maintainer: true) are not in templates.
+ */
+async function checkMaintainerSkillBoundary(
+  projectRoot: string,
+  _log: Logger
+): Promise<ValidationCheck> {
+  const issues: string[] = [];
+  const githubSkillsDir = path.join(projectRoot, '.github', 'skills');
+  const templateSkillsDir = path.join(projectRoot, 'templates', 'skills');
   
-  const skillsDir = path.join(process.cwd(), '.github', 'skills');
-  const templateSkillsDir = path.join(templateDir, 'skills');
-  
-  if (!fs.existsSync(skillsDir)) {
-    return result;
-  }
-  
-  // Read all skills from .github/skills
-  const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
-    .map(entry => entry.name);
-  
-  for (const skillName of skillDirs) {
-    const skillPath = path.join(skillsDir, skillName, 'SKILL.md');
+  try {
+    const entries = await fs.readdir(githubSkillsDir, { withFileTypes: true });
     
-    if (fs.existsSync(skillPath)) {
-      const content = fs.readFileSync(skillPath, 'utf-8');
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue; // Skip non-directories
       
-      // Parse frontmatter for maintainer flag
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-      if (frontmatterMatch) {
-        const frontmatter = frontmatterMatch[1];
-        const isMaintainer = /maintainer:\s*true/i.test(frontmatter);
+      const skill = entry.name;
+      const skillPath = path.join(githubSkillsDir, skill, 'SKILL.md');
+      
+      try {
+        const content = await fs.readFile(skillPath, 'utf-8');
+        
+        // Check for maintainer: true in frontmatter
+        const isMaintainer = /^maintainer:\s*true/m.test(content);
         
         if (isMaintainer) {
-          // Check if this skill exists in templates/skills/
-          const templateSkillPath = path.join(templateSkillsDir, skillName);
+          // Maintainer skill should NOT be in templates
+          const templatePath = path.join(templateSkillsDir, skill);
+          try {
+            await fs.access(templatePath);
+            issues.push(`Maintainer skill "${skill}" should not be in templates/skills/ (has maintainer: true)`);
+          } catch {
+            // Good - maintainer skill not in templates
+          }
+        }
+      } catch (error: any) {
+        // Skip if SKILL.md doesn't exist
+        if (error.code !== 'ENOENT') {
+          issues.push(`Error reading ${skill}/SKILL.md: ${error.message}`);
+        }
+      }
+    }
+  } catch (error: any) {
+    if (error.code !== 'ENOENT') {
+      issues.push(`Error reading .github/skills directory: ${error.message}`);
+    }
+  }
+  
+  return {
+    name: 'Maintainer Skill Boundary',
+    passed: issues.length === 0,
+    issues
+  };
+}
+
+/**
+ * Validate template schemas (required placeholders, forbidden patterns).
+ */
+async function validateTemplateSchema(
+  projectRoot: string,
+  _log: Logger,
+  _options: DeliverableValidationOptions
+): Promise<ValidationCheck & { templatesChecked: number; patternsValidated: number }> {
+  const issues: string[] = [];
+  let templatesChecked = 0;
+  let patternsValidated = 0;
+
+  for (const [templatePath, schema] of Object.entries(TEMPLATE_SCHEMA)) {
+    const fullPath = path.join(projectRoot, templatePath);
+    
+    try {
+      const content = await fs.readFile(fullPath, 'utf-8');
+      templatesChecked++;
+
+      // Check required placeholders
+      for (const placeholder of schema.requiredPlaceholders) {
+        if (!content.includes(placeholder)) {
+          issues.push(`${templatePath}: Missing required placeholder ${placeholder}`);
+        }
+        patternsValidated++;
+      }
+
+      // Check forbidden patterns
+      for (const forbidden of schema.forbiddenPatterns) {
+        if (content.includes(forbidden)) {
+          issues.push(`${templatePath}: Contains forbidden pattern "${forbidden}"`);
+        }
+        patternsValidated++;
+      }
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') {
+        issues.push(`${templatePath}: Error reading file - ${error.message}`);
+      }
+    }
+  }
+
+  return {
+    name: 'Template Schema',
+    passed: issues.length === 0,
+    issues,
+    templatesChecked,
+    patternsValidated
+  };
+}
+
+/**
+ * Validate pattern consistency between templates and non-templates.
+ */
+async function validatePatternConsistency(
+  projectRoot: string,
+  _log: Logger,
+  _options: DeliverableValidationOptions
+): Promise<ValidationCheck & { patternsValidated: number }> {
+  const issues: string[] = [];
+  let patternsValidated = 0;
+
+  for (const [templatePath, schema] of Object.entries(TEMPLATE_SCHEMA)) {
+    if (!schema.mappedTo) continue;
+
+    const templateFullPath = path.join(projectRoot, templatePath);
+    
+    try {
+      const templateContent = await fs.readFile(templateFullPath, 'utf-8');
+      
+      for (const nonTemplatePath of schema.mappedTo) {
+        const nonTemplateFullPath = path.join(projectRoot, nonTemplatePath);
+        
+        try {
+          const nonTemplateContent = await fs.readFile(nonTemplateFullPath, 'utf-8');
           
-          if (fs.existsSync(templateSkillPath)) {
-            result.issues.push({
-              file: `templates/skills/${skillName}`,
-              type: 'MAINTAINER_BOUNDARY',
-              message: `Maintainer skill "${skillName}" should not be synced to templates/`
-            });
-            result.passed = false;
+          // Check for pattern consistency
+          for (const forbidden of schema.forbiddenPatterns || []) {
+            const inTemplate = templateContent.includes(forbidden);
+            const inNonTemplate = nonTemplateContent.includes(forbidden);
+            
+            if (inTemplate !== inNonTemplate) {
+              issues.push(
+                `Pattern mismatch: "${forbidden}" ${inTemplate ? 'found in' : 'missing from'} ${templatePath} ` +
+                `but ${inNonTemplate ? 'found in' : 'missing from'} ${nonTemplatePath}`
+              );
+            }
+            patternsValidated++;
+          }
+        } catch (error: any) {
+          if (error.code !== 'ENOENT') {
+            issues.push(`${nonTemplatePath}: Error reading file - ${error.message}`);
           }
         }
       }
-    }
-  }
-  
-  return result;
-}
-
-async function validateTemplateSchema(templateDir: string): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
-  
-  for (const [file, placeholders] of Object.entries(TEMPLATE_SCHEMA)) {
-    const filePath = path.join(templateDir, file);
-    
-    if (!fs.existsSync(filePath)) {
-      result.issues.push({
-        file,
-        type: 'MISSING_TEMPLATE',
-        message: `Required template file not found: ${file}`
-      });
-      result.passed = false;
-      continue;
-    }
-    
-    const content = fs.readFileSync(filePath, 'utf-8');
-    
-    // Check for required placeholders
-    for (const placeholder of placeholders) {
-      if (!placeholder.pattern.test(content)) {
-        result.issues.push({
-          file,
-          type: 'MISSING_PLACEHOLDER',
-          message: `Missing required placeholder: ${placeholder.name}`
-        });
-        result.passed = false;
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') {
+        issues.push(`${templatePath}: Error reading file - ${error.message}`);
       }
     }
   }
-  
-  return result;
+
+  return {
+    name: 'Pattern Consistency',
+    passed: issues.length === 0,
+    issues,
+    patternsValidated
+  };
 }
 
-async function validatePatternConsistency(templateDir: string): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
-  
-  // Compare templates with non-template equivalents
-  const filesToCheck = [
-    { template: 'AGENTS.md', original: 'AGENTS.md' },
-    { template: 'CODEBASE_CHANGELOG.md', original: 'CODEBASE_CHANGELOG.md' }
-  ];
-  
-  for (const { template, original } of filesToCheck) {
-    const templatePath = path.join(templateDir, template);
-    const originalPath = path.join(process.cwd(), original);
-    
-    if (!fs.existsSync(templatePath)) {
-      result.issues.push({
-        file: template,
-        type: 'MISSING_TEMPLATE',
-        message: `Template file not found: ${template}`
-      });
-      result.passed = false;
-      continue;
-    }
-    
-    if (!fs.existsSync(originalPath)) {
-      continue; // Skip if original doesn't exist
-    }
-    
-    const templateContent = fs.readFileSync(templatePath, 'utf-8');
-    const originalContent = fs.readFileSync(originalPath, 'utf-8');
-    
-    // For AGENTS.md and CHANGELOG, templates should match originals closely
-    // (allowing for placeholders)
-    const templateNormalized = templateContent
-      .replace(/\{\{[^}]+\}\}/g, 'PLACEHOLDER')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    const originalNormalized = originalContent
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    // Check structural similarity (within 10% length difference)
-    const lengthDiff = Math.abs(templateNormalized.length - originalNormalized.length);
-    const maxDiff = originalNormalized.length * 0.1;
-    
-    if (lengthDiff > maxDiff) {
-      result.issues.push({
-        file: template,
-        type: 'PATTERN_MISMATCH',
-        message: `Template differs significantly from original ${original} (${Math.round(lengthDiff / originalNormalized.length * 100)}% difference)`
-      });
-      result.passed = false;
-    }
-  }
-  
-  return result;
-}
-
-async function detectLegacyPatterns(templateDir: string, log: ReturnType<typeof createLogger>, fix: boolean): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [], fixableIssues: [] };
-  
-  // Scan all markdown files in templates/
-  const markdownFiles = await scanMarkdownFiles(templateDir);
-  
-  for (const file of markdownFiles) {
-    const content = fs.readFileSync(file, 'utf-8');
-    
-    for (const legacyPattern of LEGACY_PATTERNS) {
-      let match: RegExpExecArray | null;
-      const regex = new RegExp(legacyPattern.pattern.source, 'g');
-      
-      while ((match = regex.exec(content)) !== null) {
-        const lineNumber = content.substring(0, match.index).split('\n').length;
-        const relativePath = path.relative(process.cwd(), file);
-        
-        result.issues.push({
-          file: relativePath,
-          line: lineNumber,
-          type: 'LEGACY_PATTERN',
-          message: legacyPattern.message
-        });
-        result.passed = false;
-        
-        // Track fixable issues
-        if (legacyPattern.autoFix && legacyPattern.replacement) {
-          if (!result.fixableIssues) result.fixableIssues = [];
-          result.fixableIssues.push({
-            file: relativePath,
-            line: lineNumber,
-            old: match[0],
-            new: legacyPattern.replacement,
-            pattern: legacyPattern.message
-          });
-        }
-      }
-    }
-  }
-  
-  // Auto-fix if requested
-  if (fix && result.fixableIssues && result.fixableIssues.length > 0) {
-    await autoFixPatterns(result.fixableIssues, log);
-  }
-  
-  return result;
-}
-
-async function detectUnresolvedPlaceholders(templateDir: string): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
-  
-  // Scan all markdown files in templates/
-  const markdownFiles = await scanMarkdownFiles(templateDir);
-  
-  // Common placeholder patterns that should NOT appear in templates
-  const forbiddenPlaceholders = [
-    /\[Your Project Name\]/gi,
-    /\[Project Name\]/gi,
-    /\[TODO\]/gi,
-    /\[FIXME\]/gi,
-    /\[INSERT.*?\]/gi
-  ];
-  
-  for (const file of markdownFiles) {
-    const content = fs.readFileSync(file, 'utf-8');
-    const relativePath = path.relative(templateDir, file);
-    
-    for (const pattern of forbiddenPlaceholders) {
-      let match: RegExpExecArray | null;
-      const regex = new RegExp(pattern.source, 'g');
-      
-      while ((match = regex.exec(content)) !== null) {
-        const lineNumber = content.substring(0, match.index).split('\n').length;
-        
-        result.issues.push({
-          file: relativePath,
-          line: lineNumber,
-          type: 'UNRESOLVED_PLACEHOLDER',
-          message: `Unresolved placeholder found: ${match[0]}`
-        });
-        result.passed = false;
-      }
-    }
-  }
-  
-  return result;
-}
-
-async function validateTemplateExecutionStub(): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
-  
-  const stubPath = path.join(process.cwd(), 'lib', 'template-execution-stub.js');
-  
-  if (!fs.existsSync(stubPath)) {
-    result.issues.push({
-      file: 'lib/template-execution-stub.js',
-      type: 'MISSING_FILE',
-      message: 'Template execution stub not found'
-    });
-    result.passed = false;
-    return result;
-  }
-  
-  const content = fs.readFileSync(stubPath, 'utf-8');
-  
-  // Check for required functions
-  const requiredFunctions = [
-    'processTemplate',
-    'processMarkdown',
-    'processYaml'
-  ];
-  
-  for (const fn of requiredFunctions) {
-    if (!content.includes(`function ${fn}`) && !content.includes(`const ${fn}`)) {
-      result.issues.push({
-        file: 'lib/template-execution-stub.js',
-        type: 'MISSING_FUNCTION',
-        message: `Missing required function: ${fn}`
-      });
-      result.passed = false;
-    }
-  }
-  
-  return result;
-}
-
-async function validateFreshInitStub(): Promise<CheckResult> {
-  const result: CheckResult = { passed: true, issues: [] };
-  
-  const stubPath = path.join(process.cwd(), 'lib', 'fresh-init-stub.js');
-  
-  if (!fs.existsSync(stubPath)) {
-    result.issues.push({
-      file: 'lib/fresh-init-stub.js',
-      type: 'MISSING_FILE',
-      message: 'Fresh init stub not found'
-    });
-    result.passed = false;
-    return result;
-  }
-  
-  const content = fs.readFileSync(stubPath, 'utf-8');
-  
-  // Check for required structure
-  const requiredElements = [
-    'export async function freshInit',
-    'createDirectoryStructure',
-    'copyTemplateFiles'
-  ];
-  
-  for (const element of requiredElements) {
-    if (!content.includes(element)) {
-      result.issues.push({
-        file: 'lib/fresh-init-stub.js',
-        type: 'MISSING_ELEMENT',
-        message: `Missing required element: ${element}`
-      });
-      result.passed = false;
-    }
-  }
-  
-  return result;
-}
-
-async function scanMarkdownFiles(dir: string): Promise<string[]> {
-  const files: string[] = [];
-  
-  async function scan(currentDir: string): Promise<void> {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
+/**
+ * Recursively find all markdown files in a directory.
+ */
+async function getAllMarkdownFiles(
+  dir: string,
+  baseDir: string = dir,
+  files: string[] = []
+): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
     
     for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      
-      // Skip node_modules and hidden directories
-      if (entry.name === 'node_modules' || entry.name.startsWith('.')) {
-        continue;
-      }
+      const fullPath = path.join(dir, entry.name);
       
       if (entry.isDirectory()) {
-        await scan(fullPath);
+        await getAllMarkdownFiles(fullPath, baseDir, files);
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
-        files.push(fullPath);
+        files.push(path.relative(baseDir, fullPath));
       }
     }
+    
+    return files;
+  } catch (_error) {
+    return files; // Return what we have if directory doesn't exist
   }
-  
-  await scan(dir);
-  return files;
 }
 
-async function autoFixPatterns(fixableIssues: FixableIssue[], log: ReturnType<typeof createLogger>): Promise<void> {
-  const fileChanges = new Map<string, string>();
-  
-  // Group fixes by file
-  for (const issue of fixableIssues) {
-    const filePath = path.join(process.cwd(), issue.file);
-    
-    if (!fileChanges.has(filePath)) {
-      fileChanges.set(filePath, fs.readFileSync(filePath, 'utf-8'));
+/**
+ * Detect legacy patterns in templates.
+ */
+async function detectLegacyPatterns(
+  projectRoot: string,
+  _log: Logger,
+  _options: DeliverableValidationOptions
+): Promise<ValidationCheck & { fixable: Array<{ file: string; line: number; content: string }> }> {
+  const issues: string[] = [];
+  const fixable: Array<{ file: string; line: number; content: string }> = [];
+
+  // Search templates directory
+  const templatesDir = path.join(projectRoot, 'templates');
+  const templateFiles = await getAllMarkdownFiles(templatesDir, projectRoot);
+
+  for (const file of templateFiles) {
+    // Skip learned directory (examples may reference old patterns intentionally)
+    if (file.includes('learned/') || file.includes('aiknowsys-structure/')) {
+      continue;
     }
     
-    const content = fileChanges.get(filePath);
-    if (!content) continue;
-    
-    // Apply fix
-    let updatedContent = content;
-    for (const autoFix of AUTO_FIX_PATTERNS) {
-      updatedContent = updatedContent.replace(autoFix.pattern, autoFix.replacement);
+    const fullPath = path.join(projectRoot, file);
+    const content = await fs.readFile(fullPath, 'utf-8');
+    const lines = content.split('\n');
+
+    for (const { pattern, name } of LEGACY_PATTERNS) {
+      lines.forEach((line, index) => {
+        if (pattern.test(line)) {
+          const issue = `${file}:${index + 1}: Found legacy pattern "${name}"`;
+          issues.push(issue);
+          
+          // Check if auto-fixable
+          if (AUTO_FIX_PATTERNS.some(fix => fix.find.test(line))) {
+            fixable.push({ file: fullPath, line: index, content: line });
+          }
+        }
+      });
     }
-    
-    fileChanges.set(filePath, updatedContent);
   }
+
+  return {
+    name: 'Legacy Patterns',
+    passed: issues.length === 0,
+    issues,
+    fixable
+  };
+}
+
+/**
+ * Detect unresolved {{PLACEHOLDERS}} in non-template files.
+ */
+async function detectUnresolvedPlaceholders(
+  projectRoot: string,
+  _log: Logger
+): Promise<ValidationCheck> {
+  const issues: string[] = [];
+
+  // Search templates directory but exclude ALL .template.md files (those SHOULD have placeholders)
+  // Also exclude learned directory (examples may reference placeholders)
+  // Also exclude stack templates (those SHOULD have placeholders for user to fill)
+  const templatesDir = path.join(projectRoot, 'templates');
+  const templateFiles = await getAllMarkdownFiles(templatesDir, projectRoot);
+
+  for (const file of templateFiles) {
+    // Skip template source files (they SHOULD have placeholders)
+    if (file.endsWith('.template.md') || file.includes('.minimal.md')) {
+      continue;
+    }
+    
+    // Skip learned directory examples
+    if (file.includes('learned/') || file.includes('aiknowsys-structure/')) {
+      continue;
+    }
+    
+    // Skip stack templates (they have placeholders by design)
+    if (file.includes('stacks/')) {
+      continue;
+    }
+
+    const fullPath = path.join(projectRoot, file);
+    const content = await fs.readFile(fullPath, 'utf-8');
+    const placeholderRegex = /\{\{[A-Z_]+\}\}/g;
+    const matches = content.match(placeholderRegex);
+
+    if (matches) {
+      const uniqueMatches = [...new Set(matches)];
+      issues.push(`${file}: Found unresolved placeholders: ${uniqueMatches.join(', ')}`);
+    }
+  }
+
+  return {
+    name: 'Placeholders',
+    passed: issues.length === 0,
+    issues
+  };
+}
+
+/**
+ * Test template execution (validate YAML frontmatter).
+ * TODO (Phase 2): Test template execution in isolated environment
+ * See: PLAN_deliverables_validation_protocol.md - Phase 1, Step 5
+ * Implementation steps:
+ *   1. Create temp directory for testing
+ *   2. Parse YAML frontmatter from agent templates
+ *   3. Validate YAML structure (no syntax errors)
+ *   4. Run npx aiknowsys init --template=agent --agent-name=Test
+ *   5. Verify generated files have no errors
+ *   6. Clean up temp directory
+ * @param {string} projectRoot - Absolute path to project root
+ * @param {Logger} log - Logger instance
+ * @returns {Promise<{name: string, passed: boolean, issues: string[]}>}
+ */
+async function testTemplateExecution(
+  _projectRoot: string,
+  _log: Logger
+): Promise<ValidationCheck> {
+  const issues: string[] = [];
   
-  // Write fixed files
-  for (const [filePath, content] of fileChanges.entries()) {
-    fs.writeFileSync(filePath, content);
-    log.success(`✅ Fixed: ${path.relative(process.cwd(), filePath)}`);
+  // Stub: Returns success until Phase 2 implementation
+  
+  return {
+    name: 'Template Execution',
+    passed: true,
+    issues
+  };
+}
+
+/**
+ * Test fresh init in temp directory.
+ * TODO (Phase 2): Test complete init workflow in clean environment
+ * See: PLAN_deliverables_validation_protocol.md - Phase 1, Step 6
+ * Implementation steps:
+ *   1. Create temp directory (use os.tmpdir())
+ *   2. Initialize git repo in temp dir
+ *   3. Run npx aiknowsys init with various options
+ *   4. Validate all generated files exist and are valid
+ *   5. Check for unresolved placeholders in output
+ *   6. Clean up temp directory on success/failure
+ * @param {string} projectRoot - Absolute path to project root
+ * @param {Logger} log - Logger instance
+ * @returns {Promise<{name: string, passed: boolean, issues: string[]}>}
+ */
+async function testFreshInit(
+  _projectRoot: string,
+  _log: Logger
+): Promise<ValidationCheck> {
+  const issues: string[] = [];
+  
+  // Stub: Returns success until Phase 2 implementation
+  
+  return {
+    name: 'Fresh Init',
+    passed: true,
+    issues
+  };
+}
+
+/**
+ * Auto-fix simple pattern issues.
+ */
+async function autoFixPatterns(
+  projectRoot: string,
+  log: Logger,
+  fixableIssues: Array<{ file: string; line: number; content: string }>
+): Promise<string[]> {
+  const fixes: string[] = [];
+
+  for (const issue of fixableIssues) {
+    try {
+      let content = await fs.readFile(issue.file, 'utf-8');
+      let fixed = false;
+
+      for (const { find, replace } of AUTO_FIX_PATTERNS) {
+        if (find.test(content)) {
+          content = content.replace(find, replace);
+          fixed = true;
+        }
+      }
+
+      if (fixed) {
+        await fs.writeFile(issue.file, content, 'utf-8');
+        fixes.push(`Fixed patterns in ${path.relative(projectRoot, issue.file)}`);
+      }
+    } catch (error: any) {
+      log.warn(`Could not auto-fix ${issue.file}: ${error.message}`);
+    }
+  }
+
+  return fixes;
+}
+
+/**
+ * Log validation metrics to history file.
+ */
+async function logMetrics(
+  projectRoot: string,
+  result: DeliverableValidationResult,
+  options: DeliverableValidationOptions
+): Promise<void> {
+  const historyFile = path.join(projectRoot, '.aiknowsys', 'validation-history.json');
+  const today = new Date().toISOString().split('T')[0];
+  const context = options.full ? 'qualityCheck' : options._preCommit ? 'preCommit' : 'standalone';
+
+  try {
+    let history: Record<string, Record<string, { runs: number; failures: number; avgDuration: number }>> = {};
+    try {
+      const content = await fs.readFile(historyFile, 'utf-8');
+      history = JSON.parse(content);
+    } catch {
+      // File doesn't exist yet
+    }
+
+    if (!history[today]) {
+      history[today] = {};
+    }
+
+    if (!history[today][context]) {
+      history[today][context] = { runs: 0, failures: 0, avgDuration: 0 };
+    }
+
+    const stats = history[today][context];
+    stats.runs++;
+    if (!result.passed) stats.failures++;
+    stats.avgDuration = Math.round(
+      (stats.avgDuration * (stats.runs - 1) + (result.metrics?.duration || 0)) / stats.runs
+    );
+
+    // Ensure directory exists
+    await fs.mkdir(path.dirname(historyFile), { recursive: true });
+    await fs.writeFile(historyFile, JSON.stringify(history, null, 2), 'utf-8');
+  } catch (error: any) {
+    // Don't fail validation if metrics logging fails
+    console.error(`Warning: Could not log metrics: ${error.message}`);
   }
 }

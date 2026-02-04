@@ -10,6 +10,7 @@ import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Command } from 'commander';
+// @ts-expect-error - Not yet migrated to TypeScript
 import { loadPlugins, listInstalledPlugins, getPluginInfo } from '../lib/plugins/loader.js';
 
 describe('Plugin System', () => {
@@ -202,7 +203,7 @@ describe('Plugin Validation (Error Cases)', () => {
 		// (since we can't easily mock ES module imports in tests)
 
 		// Test plugin validation logic
-		const validatePlugin = (plugin: any, name: string): void => {
+		const validatePlugin = (plugin: any, _name: string): void => {
 			if (!plugin || typeof plugin !== 'object') {
 				throw new Error('Plugin must export default object');
 			}
