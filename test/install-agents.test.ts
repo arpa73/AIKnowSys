@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { installAgents } from '../lib/commands/install-agents.js';
 import {
   createTestDir,
@@ -14,7 +14,7 @@ import {
 } from './helpers/testUtils.js';
 
 describe('install-agents command', () => {
-  let testDir;
+  let testDir: string;
 
   beforeEach(() => {
     testDir = createTestDir();
@@ -138,9 +138,9 @@ describe('install-agents command', () => {
 
   it('should not show console output in silent mode', async () => {
     // Capture console.log calls
-    const logs = [];
+    const logs: any[] = [];
     const originalLog = console.log;
-    console.log = (...args) => logs.push(args);
+    console.log = (...args: any[]) => logs.push(args);
     
     try {
       await installAgents({ dir: testDir, _silent: true });
@@ -157,9 +157,9 @@ describe('install-agents command', () => {
 
   it('should show console output in normal mode', async () => {
     // Capture console.log calls
-    const logs = [];
+    const logs: any[] = [];
     const originalLog = console.log;
-    console.log = (...args) => logs.push(args);
+    console.log = (...args: any[]) => logs.push(args);
     
     try {
       await installAgents({ dir: testDir, _silent: false, yes: true });

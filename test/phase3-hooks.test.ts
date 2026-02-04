@@ -1,15 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { TEMPLATE_PATHS } from '../lib/commands/init/constants.js';
 import { getPackageDir } from '../lib/utils.js';
-import { setupHooks } from '../lib/commands/init/templates.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const setupHooksModule = await import('../lib/commands/init/templates.js');
+const { setupHooks } = setupHooksModule as any;
 
 describe('Phase 3 collaboration hooks', () => {
   const packageDir = getPackageDir();

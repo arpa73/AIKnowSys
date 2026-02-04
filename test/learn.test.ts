@@ -1,21 +1,16 @@
 import { describe, it, before, after, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import * as fs from 'fs';
+import * as path from 'path';
 import { execSync } from 'child_process';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const projectRoot = path.join(__dirname, '..');
-
 describe('learn command', () => {
-  let testDir;
-  let testDirsToCleanup = [];
+  let testDir: string;
+  let testDirsToCleanup: string[] = [];
 
   before(() => {
     // Create base temporary test directory
-    testDir = path.join(__dirname, 'tmp', `test-learn-${Date.now()}`);
+    testDir = path.join(import.meta.dirname, 'tmp', `test-learn-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
@@ -37,12 +32,12 @@ describe('learn command', () => {
   });
 
   it('should default to personal directory when no flags provided', async () => {
-    const testPersonalDefault = path.join(__dirname, 'tmp', `personal-default-${Date.now()}`);
+    const testPersonalDefault = path.join(import.meta.dirname, 'tmp', `personal-default-${Date.now()}`);
     fs.mkdirSync(testPersonalDefault, { recursive: true });
     testDirsToCleanup.push(testPersonalDefault);
 
     // Create .aiknowsys structure
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -63,12 +58,12 @@ describe('learn command', () => {
   });
 
   it('should use personal directory with explicit --personal flag', async () => {
-    const testPersonalExplicit = path.join(__dirname, 'tmp', `personal-explicit-${Date.now()}`);
+    const testPersonalExplicit = path.join(import.meta.dirname, 'tmp', `personal-explicit-${Date.now()}`);
     fs.mkdirSync(testPersonalExplicit, { recursive: true });
     testDirsToCleanup.push(testPersonalExplicit);
 
     // Create .aiknowsys structure with personal directory
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -89,7 +84,7 @@ describe('learn command', () => {
   });
 
   it('should use learned directory with --shared flag', async () => {
-    const testShared = path.join(__dirname, 'tmp', `shared-flag-${Date.now()}`);
+    const testShared = path.join(import.meta.dirname, 'tmp', `shared-flag-${Date.now()}`);
     fs.mkdirSync(testShared, { recursive: true });
     testDirsToCleanup.push(testShared);
 
@@ -104,11 +99,11 @@ describe('learn command', () => {
   });
 
   it('should search both personal and learned directories for patterns', async () => {
-    const testSearchBoth = path.join(__dirname, 'tmp', `search-both-${Date.now()}`);
+    const testSearchBoth = path.join(import.meta.dirname, 'tmp', `search-both-${Date.now()}`);
     fs.mkdirSync(testSearchBoth, { recursive: true });
     testDirsToCleanup.push(testSearchBoth);
 
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -134,7 +129,7 @@ describe('learn command', () => {
   });
 
   it('should handle missing personal directory gracefully', async () => {
-    const testNoPersonal = path.join(__dirname, 'tmp', `no-personal-${Date.now()}`);
+    const testNoPersonal = path.join(import.meta.dirname, 'tmp', `no-personal-${Date.now()}`);
     fs.mkdirSync(testNoPersonal, { recursive: true });
     testDirsToCleanup.push(testNoPersonal);
 
@@ -147,7 +142,7 @@ describe('learn command', () => {
   });
 
   it('should handle missing git username gracefully', async () => {
-    const testNoGit = path.join(__dirname, 'tmp', `no-git-${Date.now()}`);
+    const testNoGit = path.join(import.meta.dirname, 'tmp', `no-git-${Date.now()}`);
     fs.mkdirSync(testNoGit, { recursive: true });
     testDirsToCleanup.push(testNoGit);
 
@@ -160,7 +155,7 @@ describe('learn command', () => {
   });
 
   it('should validate pattern file format', async () => {
-    const testValidate = path.join(__dirname, 'tmp', `validate-pattern-${Date.now()}`);
+    const testValidate = path.join(import.meta.dirname, 'tmp', `validate-pattern-${Date.now()}`);
     fs.mkdirSync(testValidate, { recursive: true });
     testDirsToCleanup.push(testValidate);
 

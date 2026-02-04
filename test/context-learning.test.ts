@@ -321,7 +321,7 @@ describe('Context Learning - Learn Command', () => {
     const { extractPattern } = learnCommand;
     
     // Create skill first time
-    const first = await extractPattern({ dir: tmpDir, pattern: 'chalk', _silent: true });
+    await extractPattern({ dir: tmpDir, pattern: 'chalk', _silent: true });
     
     // Try to create again
     const result = await extractPattern({ dir: tmpDir, pattern: 'chalk', _silent: true });
