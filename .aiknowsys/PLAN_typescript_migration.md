@@ -959,70 +959,74 @@ All foundational phases finished. Project now has:
 - lib/context7/index.js
 - lib/plugins/loader.js
 
-**Migration Strategy (Bottom-Up):**
+**Migration Strategy (Revised - Dependency-First):**
 
-**Batch 1: Core Utilities (PRIORITY - others depend on these)**
-1. lib/logger.js → lib/logger.ts (delete .js coexistence)
-2. lib/error-helpers.js → lib/error-helpers.ts (delete .js coexistence)  
-3. lib/config.js → lib/config.ts (delete .js coexistence)
-4. lib/utils.js → lib/utils.ts
-5. lib/utils/git-username.js → lib/utils/git-username.ts
-6. lib/banner.js → lib/banner.ts
-7. lib/sanitize.js → lib/sanitize.ts
-8. lib/parse-essentials.js → lib/parse-essentials.ts
-9. lib/skill-mapping.js → lib/skill-mapping.ts
+**⚠️ CRITICAL FINDING:** Initial bottom-up strategy was flawed. Core utilities (logger, config, error-helpers, utils) are imported by 30+ JavaScript files. Cannot delete utilities until ALL dependents migrated.
 
-**Batch 2: Quality Checkers**
-10. lib/quality-checkers/common.js → .ts
-11. lib/quality-checkers/essentials-bloat.js → .ts
-12. lib/quality-checkers/link-validator.js → .ts
-13. lib/quality-checkers/pattern-scanner.js → .ts
-14. lib/quality-checkers/template-validator.js → .ts
-15. lib/commands/quality-check.js → delete (already have .ts)
+**Revised Strategy:** Migrate leaf nodes first (commands, quality checkers), utilities last.
+
+**Batch 1: Leaf Utilities (no dependencies)** ✅ **2/3 COMPLETE**
+1. ✅ lib/banner.js → lib/banner.ts (commit a195aff)
+2. ✅ lib/utils/git-username.js → lib/utils/git-username.ts (commit a195aff)
+3. lib/sanitize.js → lib/sanitize.ts
+
+**Batch 2: Quality Checkers (depends on utils, not commands)**
+4. lib/quality-checkers/common.js → .ts
+5. lib/quality-checkers/essentials-bloat.js → .ts
+6. lib/quality-checkers/link-validator.js → .ts
+7. lib/quality-checkers/pattern-scanner.js → .ts
+8. lib/quality-checkers/template-validator.js → .ts
+9. lib/commands/quality-check.js → delete (already have .ts)
 
 **Batch 3: Context Learning System**
-16. lib/context/pattern-detector.js → .ts
-17. lib/context/pattern-tracker.js → .ts
-18. lib/context/session-summarizer.js → .ts
-19. lib/context/skill-creator.js → .ts
+10. lib/context/pattern-detector.js → .ts
+11. lib/context/pattern-tracker.js → .ts
+12. lib/context/session-summarizer.js → .ts
+13. lib/context/skill-creator.js → .ts
 
 **Batch 4: Init Command Subsystem**
-20. lib/commands/init/constants.js → .ts
-21. lib/commands/init/prompts.js → .ts
-22. lib/commands/init/display.js → .ts (already exists as .ts - delete .js)
-23. lib/commands/init/templates.js → .ts
-24. lib/commands/init/openspec.js → .ts
-25. lib/commands/init/index.js → .ts
-26. lib/commands/init.js → .ts
+14. lib/commands/init/constants.js → .ts
+15. lib/commands/init/prompts.js → .ts
+16. lib/commands/init/display.js → delete (already have .ts)
+17. lib/commands/init/templates.js → .ts
+18. lib/commands/init/openspec.js → .ts
+19. lib/commands/init/index.js → .ts
+20. lib/commands/init.js → .ts
 
 **Batch 5: Simple Commands (low dependency)**
-27. lib/commands/archive-plans.js → .ts
-28. lib/commands/archive-sessions.js → .ts
-29. lib/commands/list-patterns.js → .ts
-30. lib/commands/sync-plans.js → .ts
-31. lib/commands/share-pattern.js → .ts
-32. lib/commands/sync.js → .ts
-33. lib/commands/clean.js → .ts
+21. lib/commands/archive-plans.js → .ts
+22. lib/commands/archive-sessions.js → .ts
+23. lib/commands/list-patterns.js → .ts
+24. lib/commands/sync-plans.js → .ts
+25. lib/commands/share-pattern.js → .ts
+26. lib/commands/sync.js → .ts
+27. lib/commands/clean.js → .ts
 
 **Batch 6: Complex Commands**
-34. lib/commands/audit.js → .ts
-35. lib/commands/check.js → .ts
-36. lib/commands/ci-check.js → .ts
-37. lib/commands/compress-essentials.js → .ts
-38. lib/commands/deps-health.js → .ts
-39. lib/commands/config.js → .ts
-40. lib/commands/install-agents.js → .ts
-41. lib/commands/install-skills.js → .ts
-42. lib/commands/learn.js → .ts
-43. lib/commands/migrate.js → .ts
-44. lib/commands/migrate-to-multidev.js → .ts
-45. lib/commands/plugins.js → .ts
-46. lib/commands/scan.js → .ts
-47. lib/commands/update.js → .ts
+28. lib/commands/audit.js → .ts
+29. lib/commands/check.js → .ts
+30. lib/commands/ci-check.js → .ts
+31. lib/commands/compress-essentials.js → .ts
+32. lib/commands/deps-health.js → .ts
+33. lib/commands/config.js → .ts
+34. lib/commands/install-agents.js → .ts
+35. lib/commands/install-skills.js → .ts
+36. lib/commands/learn.js → .ts
+37. lib/commands/migrate.js → .ts
+38. lib/commands/plugins.js → .ts
+39. lib/commands/scan.js → .ts
+40. lib/commands/update.js → .ts
 
-**Batch 7: Final Cleanup**
-48. lib/context7/index.js → .ts
-49. lib/plugins/loader.js → .ts
+**Batch 7: Core Infrastructure (LAST - most dependencies)**
+41. lib/parse-essentials.js → .ts
+42. lib/skill-mapping.js → .ts
+43. lib/context7/index.js → .ts
+44. lib/plugins/loader.js → .ts
+45. lib/logger.js → delete (already have .ts - coexisting)
+46. lib/config.js → delete (already have .ts - coexisting)
+47. lib/error-helpers.js → delete (already have .ts - coexisting)
+48. lib/utils.js → delete (already have .ts - coexisting)
+49. lib/commands/quality-check.js → delete (duplicate check)
 
 **TDD Workflow (Each File):**
 1. 🔴 RED: Rename .js → .ts, add type annotations
