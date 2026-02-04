@@ -1,12 +1,8 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import os from 'node:os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 // Test fixtures
 const mockConversationData = {
@@ -34,15 +30,15 @@ const mockSessionFile = `# Session: Fix logger (Jan 31, 2026)
 `;
 
 describe('Context Learning - Session Summarizer', () => {
-  let tmpDir;
-  let sessionSummarizer;
+  let tmpDir: string;
+  let sessionSummarizer: any;
 
   before(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Dynamic import to test module
     const module = await import('../lib/context/session-summarizer.js');
-    sessionSummarizer = module;
+    sessionSummarizer = module as any;
   });
 
   after(async () => {
@@ -85,8 +81,8 @@ describe('Context Learning - Session Summarizer', () => {
 });
 
 describe('Context Learning - Pattern Detector', () => {
-  let tmpDir;
-  let patternDetector;
+  let tmpDir: string;
+  let patternDetector: any;
 
   before(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
@@ -114,7 +110,7 @@ describe('Context Learning - Pattern Detector', () => {
     );
     
     const module = await import('../lib/context/pattern-detector.js');
-    patternDetector = module;
+    patternDetector = module as any;
   });
 
   after(async () => {
@@ -159,21 +155,21 @@ describe('Context Learning - Pattern Detector', () => {
     const patterns = await detectPatterns(tmpDir, { threshold: 3 });
     
     // Should NOT include the unique error
-    const uniquePattern = patterns.find(p => p.error.includes('Very rare'));
+    const uniquePattern = patterns.find((p: any) => p.error.includes('Very rare'));
     assert.equal(uniquePattern, undefined);
   });
 });
 
 describe('Context Learning - Skill Creator', () => {
-  let tmpDir;
-  let skillCreator;
+  let tmpDir: string;
+  let skillCreator: any;
 
   before(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     await fs.mkdir(path.join(tmpDir, '.aiknowsys', 'learned'), { recursive: true });
     
     const module = await import('../lib/context/skill-creator.js');
-    skillCreator = module;
+    skillCreator = module as any;
   });
 
   after(async () => {
@@ -246,8 +242,8 @@ describe('Context Learning - Skill Creator', () => {
 });
 
 describe('Context Learning - Learn Command', () => {
-  let tmpDir;
-  let learnCommand;
+  let tmpDir: string;
+  let learnCommand: any;
 
   before(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
@@ -270,7 +266,7 @@ describe('Context Learning - Learn Command', () => {
     );
     
     const module = await import('../lib/commands/learn.js');
-    learnCommand = module;
+    learnCommand = module as any;
   });
 
   after(async () => {
@@ -337,7 +333,7 @@ describe('Context Learning - Learn Command', () => {
 });
 
 describe('Context Learning - Pattern Tracking', () => {
-  let tmpDir;
+  let tmpDir: string;
 
   before(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
@@ -349,7 +345,8 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should create pattern-history.json if not exists', async () => {
-    const { initPatternTracking } = await import('../lib/context/pattern-tracker.js');
+    const module = await import('../lib/context/pattern-tracker.js');
+    const { initPatternTracking } = module as any;
     
     await initPatternTracking(tmpDir);
     
@@ -359,7 +356,8 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should track pattern occurrences', async () => {
-    const { trackPattern } = await import('../lib/context/pattern-tracker.js');
+    const module = await import('../lib/context/pattern-tracker.js');
+    const { trackPattern } = module as any;
     
     await trackPattern(tmpDir, {
       error: 'chalk import error',
@@ -373,13 +371,14 @@ describe('Context Learning - Pattern Tracking', () => {
     assert.ok(data.patterns);
     assert.ok(data.patterns.length >= 1);
     
-    const chalkPattern = data.patterns.find(p => p.error === 'chalk import error');
+    const chalkPattern = data.patterns.find((p: any) => p.error === 'chalk import error');
     assert.ok(chalkPattern);
     assert.equal(chalkPattern.frequency, 1);
   });
 
   it('should increment frequency for repeated patterns', async () => {
-    const { trackPattern } = await import('../lib/context/pattern-tracker.js');
+    const module = await import('../lib/context/pattern-tracker.js');
+    const { trackPattern } = module as any;
     
     // Track same pattern twice
     await trackPattern(tmpDir, { error: 'repeated error', resolution: 'fix' });
@@ -389,13 +388,14 @@ describe('Context Learning - Pattern Tracking', () => {
     const content = await fs.readFile(historyPath, 'utf-8');
     const data = JSON.parse(content);
     
-    const pattern = data.patterns.find(p => p.error === 'repeated error');
+    const pattern = data.patterns.find((p: any) => p.error === 'repeated error');
     assert.ok(pattern);
     assert.equal(pattern.frequency, 2);
   });
 
   it('should mark pattern as documented when skill created', async () => {
-    const { markPatternDocumented } = await import('../lib/context/pattern-tracker.js');
+    const module = await import('../lib/context/pattern-tracker.js');
+    const { markPatternDocumented } = module as any;
     
     await markPatternDocumented(tmpDir, 'chalk import error');
     
@@ -403,7 +403,7 @@ describe('Context Learning - Pattern Tracking', () => {
     const content = await fs.readFile(historyPath, 'utf-8');
     const data = JSON.parse(content);
     
-    const pattern = data.patterns.find(p => p.error === 'chalk import error');
+    const pattern = data.patterns.find((p: any) => p.error === 'chalk import error');
     assert.ok(pattern);
     assert.equal(pattern.documented, true);
   });

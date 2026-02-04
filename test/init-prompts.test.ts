@@ -1,12 +1,9 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
 
 describe('Feature Preferences Prompts', () => {
-  let originalInquirer;
-  let mockPrompt;
+  let originalInquirer: any;
+  let mockPrompt: any;
 
   before(async () => {
     // Save original inquirer
@@ -14,10 +11,10 @@ describe('Feature Preferences Prompts', () => {
     originalInquirer = inquirerModule.default.prompt;
     
     // Create mock
-    mockPrompt = async (questions) => {
+    mockPrompt = async (questions: any) => {
       // Return mock answers based on the question
       if (Array.isArray(questions)) {
-        const result = {};
+        const result: any = {};
         for (const q of questions) {
           if (q.name === 'features' && q.type === 'checkbox') {
             // Return default features
@@ -46,7 +43,8 @@ describe('Feature Preferences Prompts', () => {
     });
 
     it('should return feature selections', async () => {
-      const { getFeaturePreferences } = await import('../lib/commands/init/prompts.js');
+      const prompts = await import('../lib/commands/init/prompts.js');
+      const { getFeaturePreferences } = prompts as any;
       
       const result = await getFeaturePreferences();
       assert.ok(result, 'Should return result');
@@ -55,7 +53,8 @@ describe('Feature Preferences Prompts', () => {
     });
 
     it('should include core features in defaults', async () => {
-      const { getFeaturePreferences } = await import('../lib/commands/init/prompts.js');
+      const prompts = await import('../lib/commands/init/prompts.js');
+      const { getFeaturePreferences } = prompts as any;
       
       const result = await getFeaturePreferences();
       
