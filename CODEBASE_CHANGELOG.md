@@ -7,6 +7,52 @@
 
 ---
 
+## Session: Smart TDD Compliance Check (Feb 4, 2026)
+
+**Goal:** Eliminate CI false positives for refactors while maintaining TDD enforcement
+
+**Context:** GitHub Actions TDD check flagged valid refactors (variable renames, operator changes) as "logic changes requiring tests", forcing developers to bypass with `--no-verify`.
+
+**Changes:**
+- [.github/workflows/tdd-compliance.yml](.github/workflows/tdd-compliance.yml#L41-L110): Added smart refactor detection
+  - **Variable renames:** Detects `x` → `_x` patterns (eslint unused param fixes) [+10 points]
+  - **Operator equivalence:** Detects `||` → `??` for default values [+15 points]
+  - **Import reordering:** Detects import-only changes [+100 points]
+  - **Docs-only:** Detects comment/JSDoc changes [+100 points]
+  - **Scoring threshold:** Score ≥ 30 = likely refactor (skip test requirement)
+  - **Enhanced messages:** Distinguishes NEW LOGIC vs REFACTORS in output
+- [templates/workflows/tdd-compliance.yml](templates/workflows/tdd-compliance.yml): Synced template for new projects
+- [test/ci/tdd-check-test.sh](test/ci/tdd-check-test.sh): Validation script for detection patterns
+  - Tests variable rename detection (e6b209e commit)
+  - Tests operator equivalence (bd0b3c8 commit)
+  - Tests threshold logic
+  - Tests that new logic detection still works
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L420-L465): Documented refactor patterns
+
+**Validation:**
+- ✅ All 598 tests passing
+- ✅ Historical commits verified:
+  - e6b209e (lint fix: variable renames) → Would now PASS
+  - bd0b3c8 (consistency: || → ??) → Would now PASS
+  - 447a195 (new feature with tests) → Still requires tests
+- ✅ Template validation passed (validate-deliverables)
+
+**Key Learning:**
+- **Conservative threshold (30)** balances false positives vs false negatives
+- **Logic keywords take precedence** - mixed commits (refactor + logic) still require tests
+- **Explicit refactor types** reduce ambiguity (rename, operator, import, docs)
+
+**Impact:**
+- Reduces friction (no more --no-verify for valid refactors)
+- Maintains quality (TDD enforcement for new logic)
+- Better DX (clear feedback on detected patterns)
+
+**See:** [.aiknowsys/PLAN_tdd_check_refactor_detection.md](.aiknowsys/PLAN_tdd_check_refactor_detection.md)
+
+**Committed:** d2d11f8
+
+---
+
 ## Session: Quality Check Improvements (Feb 3-4, 2026)
 
 **Goal:** Fix quality-check false positives (pattern violations and link integrity)
