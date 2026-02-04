@@ -26,7 +26,8 @@ describe('migrate command', () => {
   // ========================================
 
   it('should exit when user cancels at start prompt', async () => {
-    // RED: Write test first - this will fail because we need to mock inquirer
+    // TODO: Implement when inquirer mocking is available
+    // Expected: User can cancel the migration at the initial prompt
     // Testing that user can cancel the migration
 
     // We need to mock inquirer.prompt to return { proceed: false }
@@ -41,7 +42,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should create AGENTS.md from template when migration completes', async () => {
-    // RED: Test that AGENTS.md is created
+    // TODO: Verify AGENTS.md is created from template
     
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
     
@@ -56,7 +57,7 @@ describe('migrate command', () => {
   });
 
   it('should create CODEBASE_CHANGELOG.md from template', async () => {
-    // RED: Test that CHANGELOG is created
+    // TODO: Verify CHANGELOG is created from template
     
     const changelogPath: string = path.join(testDir, 'CODEBASE_CHANGELOG.md');
     
@@ -69,7 +70,7 @@ describe('migrate command', () => {
   });
 
   it('should create .github/agents/ directory via install-agents', async () => {
-    // RED: Test that agents directory is created
+    // TODO: Verify agents directory is created
     
     const agentsDir: string = path.join(testDir, '.github', 'agents');
     
@@ -82,7 +83,7 @@ describe('migrate command', () => {
   });
 
   it('should create .github/skills/ directory via install-skills', async () => {
-    // RED: Test that skills directory is created
+    // TODO: Verify skills directory is created
     
     const skillsDir: string = path.join(testDir, '.github', 'skills');
     
@@ -99,7 +100,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should replace {{DATE}} placeholder in created files', async () => {
-    // RED: Verify placeholders are replaced, not left as {{DATE}}
+    // TODO: Verify placeholders are replaced, not left as {{DATE}}
     
     // After migration creates AGENTS.md
     // const agentsPath = path.join(testDir, 'AGENTS.md');
@@ -110,7 +111,7 @@ describe('migrate command', () => {
   });
 
   it('should not leave {{PLACEHOLDERS}} in CHANGELOG.md', async () => {
-    // RED: Ensure CHANGELOG has no remaining placeholders
+    // TODO: Ensure CHANGELOG has no remaining placeholders
     
     // const changelogPath = path.join(testDir, 'CODEBASE_CHANGELOG.md');
     // assertFileExists(changelogPath);
@@ -124,7 +125,8 @@ describe('migrate command', () => {
   // ========================================
 
   it('should handle missing CODEBASE_ESSENTIALS.md and prompt user', async () => {
-    // RED: When draft exists but not renamed, should prompt for action
+    // TODO: Implement when inquirer mocking is available
+    // Expected: When draft exists but not renamed, should prompt for action
     
     // Create sample project for scanning
     createSampleNodeProject(testDir);
@@ -141,7 +143,7 @@ describe('migrate command', () => {
   });
 
   it('should rename draft when user chooses rename action', async () => {
-    // RED: Test rename functionality
+    // TODO: Test rename functionality (requires inquirer mocking)
     
     // Create draft file
     const draftPath: string = path.join(testDir, 'CODEBASE_ESSENTIALS.draft.md');
@@ -165,7 +167,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should pass _silent: true to install-agents', async () => {
-    // RED: Verify nested commands receive silent flag
+    // TODO: Verify nested commands receive silent flag (requires function mocking)
     
     // migrate should call:
     // await installAgents({ dir: targetDir, _silent: true })
@@ -176,7 +178,7 @@ describe('migrate command', () => {
   });
 
   it('should pass _silent: true to install-skills', async () => {
-    // RED: Verify nested commands receive silent flag
+    // TODO: Verify nested commands receive silent flag (requires function mocking)
     
     // migrate should call:
     // await installSkills({ dir: targetDir, _silent: true })
@@ -189,7 +191,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should work with --dir option to target different directory', async () => {
-    // RED: Test custom directory option
+    // TODO: Test custom directory option (requires migrate execution)
     
     const customDir: string = createTestDir();
     
@@ -209,7 +211,7 @@ describe('migrate command', () => {
   });
 
   it('should use current directory by default when --dir not provided', async () => {
-    // RED: Test default behavior
+    // TODO: Test default behavior (requires process.cwd() handling)
     
     // When options.dir is undefined, should use process.cwd()
     // We'll need to change working directory for this test
@@ -222,7 +224,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should handle scan failure gracefully without crashing', async () => {
-    // RED: Test error handling when scan throws
+    // TODO: Test error handling when scan throws (requires scan mocking)
     
     // Mock scan to throw an error
     // migrate should catch it and display error message
@@ -236,7 +238,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should display all 5 migration steps in console output', async () => {
-    // RED: Verify user sees Step 1/5 through Step 5/5
+    // TODO: Verify user sees Step 1/5 through Step 5/5 (requires console capture)
     
     // Need to capture console.log output
     // Look for "Step 1/5", "Step 2/5", ... "Step 5/5"
@@ -245,7 +247,7 @@ describe('migrate command', () => {
   });
 
   it('should display next steps with AI prompt at completion', async () => {
-    // RED: Verify displayAIPrompt is called
+    // TODO: Verify displayAIPrompt is called (requires console/prompt capture)
     
     // After migration completes successfully
     // Should show "Next steps:" section with AI prompt
@@ -258,7 +260,7 @@ describe('migrate command', () => {
   // ========================================
 
   it('should complete full migration workflow end-to-end', async () => {
-    // RED: Full happy path integration test
+    // TODO: Full happy path integration test (requires inquirer mocking)
     // This is the most important test - it tests everything together
     
     // 1. Create sample project

@@ -37,7 +37,7 @@ export interface SampleNodeProjectOptions {
   framework?: string;
   hasTests?: boolean;
   hasDatabase?: boolean;
-  [key: string]: any;
+  [key: string]: string | boolean | number | undefined;
 }
 
 /**
@@ -78,7 +78,7 @@ export function assertPlaceholderExists(filePath: string, placeholder: string, m
 /**
  * Mock inquirer prompt responses
  */
-export function mockInquirerPrompt(answers: Record<string, any>): void;
+export function mockInquirerPrompt(answers: Record<string, unknown>): void;
 
 /**
  * Count lines in a file
