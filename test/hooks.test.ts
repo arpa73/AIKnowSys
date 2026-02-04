@@ -1,9 +1,9 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,7 +92,7 @@ describe('VSCode Hooks', () => {
         });
       } catch (error) {
         // stderr output causes non-zero exit in some cases
-        const stderr = error.stderr?.toString() || '';
+        const stderr = (error as any).stderr?.toString() || '';
         assert.ok(stderr.includes('[SessionStart] Found recent session'));
         assert.ok(stderr.includes(recentFileName));
       }
@@ -117,7 +117,7 @@ describe('VSCode Hooks', () => {
           stdio: ['pipe', 'pipe', 'pipe']
         });
       } catch (error) {
-        const stderr = error.stderr?.toString() || '';
+        const stderr = (error as any).stderr?.toString() || '';
         assert.ok(stderr.includes(todayFile)); // Should reference most recent
       }
     });
@@ -179,9 +179,6 @@ Working on features
 `;
       
       fs.writeFileSync(sessionFile, initialContent);
-
-      // Wait a moment to ensure time changes
-      const originalTime = fs.readFileSync(sessionFile, 'utf-8');
       
       // Run session-end script
       execSync(`node ${sessionEndScript}`, {
@@ -218,7 +215,7 @@ Working on features
           stdio: ['pipe', 'pipe', 'pipe']
         });
       } catch (error) {
-        const stderr = error.stderr?.toString() || '';
+        const stderr = (error as any).stderr?.toString() || '';
         assert.ok(stderr.includes('[SessionEnd]'));
       }
     });

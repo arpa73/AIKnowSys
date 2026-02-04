@@ -1,29 +1,30 @@
 import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { fileURLToPath } from 'url';
-import {
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Context7 module is JavaScript (not migrated yet) - using any for imports
+const context7 = await import('../lib/context7/index.js');
+const {
   isContext7Available,
   extractLibraryReferences,
   buildContext7Query,
   suggestLibraryId,
   hasExternalLibraryReferences,
   generateValidationReminder
-} from '../lib/context7/index.js';
+} = context7 as any;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 describe('Context7 Utilities', () => {
-  let testConfigDir;
-  let testConfigPath;
+  let testConfigDir: string;
 
   before(() => {
     // Create temporary config directory
     testConfigDir = path.join(__dirname, 'tmp', `context7-test-${Date.now()}`);
-    testConfigPath = path.join(testConfigDir, 'claude_desktop_config.json');
+    // testConfigPath would be: path.join(testConfigDir, 'claude_desktop_config.json');
     fs.mkdirSync(testConfigDir, { recursive: true });
   });
 
@@ -60,15 +61,15 @@ describe('Context7 Utilities', () => {
       const refs = extractLibraryReferences(content);
       
       assert.ok(refs.length > 0);
-      assert.ok(refs.some(r => r.name === 'Next.js'));
-      assert.ok(refs.some(r => r.name === 'React'));
+      assert.ok(refs.some((r: any) => r.name === 'Next.js'));
+      assert.ok(refs.some((r: any) => r.name === 'React'));
     });
 
     it('should extract version numbers', () => {
       const content = 'Next.js v15.0.0 middleware pattern';
       const refs = extractLibraryReferences(content);
       
-      const nextRef = refs.find(r => r.name === 'Next.js');
+      const nextRef = refs.find((r: any) => r.name === 'Next.js');
       assert.ok(nextRef);
       assert.strictEqual(nextRef.version, '15.0.0');
     });
@@ -82,8 +83,8 @@ describe('Context7 Utilities', () => {
       
       // Extract root package names
       // Note: "React" (capital R) is matched by framework pattern before import pattern
-      assert.ok(refs.some(r => r.name === 'next' || r.name === 'Next.js'), `Expected 'next', got: ${JSON.stringify(refs)}`);
-      assert.ok(refs.some(r => r.name.toLowerCase() === 'react'), `Expected 'react', got: ${JSON.stringify(refs)}`);
+      assert.ok(refs.some((r: any) => r.name === 'next' || r.name === 'Next.js'), `Expected 'next', got: ${JSON.stringify(refs)}`);
+      assert.ok(refs.some((r: any) => r.name.toLowerCase() === 'react'), `Expected 'react', got: ${JSON.stringify(refs)}`);
     });
 
     it('should handle multiple frameworks', () => {
@@ -97,7 +98,7 @@ describe('Context7 Utilities', () => {
       const content = 'Next.js v15. Using Next.js middleware. Next.js patterns.';
       const refs = extractLibraryReferences(content);
       
-      const nextRefs = refs.filter(r => r.name === 'Next.js');
+      const nextRefs = refs.filter((r: any) => r.name === 'Next.js');
       // Should only have one entry (with version)
       assert.ok(nextRefs.length >= 1);
     });
@@ -114,7 +115,7 @@ describe('Context7 Utilities', () => {
       const content = 'import { helper } from \'./utils\';';
       const refs = extractLibraryReferences(content);
       
-      assert.ok(!refs.some(r => r.name.startsWith('./')));
+      assert.ok(!refs.some((r: any) => r.name.startsWith('./')));
     });
   });
 
