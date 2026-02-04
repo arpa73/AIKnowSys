@@ -6,7 +6,7 @@
     "vscodeHooks": true,
     "sessionPersistence": true,
     "tddEnforcement": true,
-    "openspec": false,
+    "openspec": true,
     "context7": false
   },
   "preferences": {
