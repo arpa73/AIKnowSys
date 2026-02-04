@@ -459,6 +459,34 @@ describe('Archive Commands', () => {
       
       assert.strictEqual(result.archived, 1, 'Should archive plan immediately with threshold=0');
     });
+
+    it('should return zero archived when threshold=0 but no matching plans', async () => {
+      // Setup multi-dev structure
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
+      
+      // Create pointer with ACTIVE plan (not COMPLETE)
+      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
+      await fs.writeFile(pointerPath, `
+# test's Active Plan
+
+| Plan | Status | Description | Last Updated |
+|------|--------|-------------|--------------|
+| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | Working | 2026-02-04 |
+`);
+      
+      // Create plan file
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), '# Active Plan');
+      
+      // Archive with threshold=0 (should not archive ACTIVE plans)
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 0,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 0, 'Should not archive non-COMPLETE plans');
+      assert.strictEqual(result.kept, 1, 'Should keep 1 active plan');
+    });
   });
 
   describe('archive-plans --status option', () => {
