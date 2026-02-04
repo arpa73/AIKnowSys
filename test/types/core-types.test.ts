@@ -106,8 +106,8 @@ const commandOptions: CommandOptions = {
 
 // Test InitOptions
 const initOptions: InitOptions = {
-  force: true,
-  template: 'nodejs-express',
+  dir: '/test/path',
+  template: 'full',  // Use 'full' or 'minimal' (not stack name)
   yes: false,
 };
 
@@ -130,7 +130,7 @@ function processValidationResult(result: ValidationResult): void {
 }
 
 // Optional property tests
-const minimalInitOptions: InitOptions = {};
+const minimalInitOptions: InitOptions = { dir: process.cwd() };
 const minimalCommandOptions: CommandOptions = {};
 
 // Export to prevent "unused" errors (these are type tests, not runtime tests)

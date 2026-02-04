@@ -38,24 +38,26 @@ export interface WorkflowPreferences {
  * Interface for feature preferences
  */
 export interface FeaturePreferences {
-  features: Array<'agents' | 'skills' | 'vscodeHooks' | 'sessionPersistence' | 'tddEnforcement' | 'openspec' | 'context7'>;
+  features?: Array<'agents' | 'skills' | 'vscodeHooks' | 'sessionPersistence' | 'tddEnforcement' | 'openspec' | 'context7'>;
 }
 
 /**
  * Interface for tooling details
  */
 export interface ToolingDetails {
-  packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun';
+  packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
   buildTool?: 'vite' | 'webpack' | 'rollup' | 'esbuild' | 'none';
-  testFramework: 'pytest' | 'unittest' | 'nose2' | 'vitest' | 'jest' | 'mocha' | 'node-test' | 'none';
-  linter: 'ruff' | 'flake8' | 'pylint' | 'eslint' | 'biome' | 'none';
+  testFramework?: 'pytest' | 'unittest' | 'nose2' | 'vitest' | 'jest' | 'mocha' | 'node-test' | 'none';
+  linter?: 'ruff' | 'flake8' | 'pylint' | 'eslint' | 'biome' | 'none';
   database?: 'postgresql' | 'mysql' | 'sqlite' | 'mongodb' | 'redis' | 'none';
 }
 
 /**
  * Combined project answers interface
  */
-export interface ProjectAnswers extends BasicProjectInfo, TechStackInfo, WorkflowPreferences, FeaturePreferences, ToolingDetails {}
+export interface ProjectAnswers extends BasicProjectInfo, TechStackInfo, WorkflowPreferences, FeaturePreferences, ToolingDetails {
+  useVSCodeHooks?: boolean;
+}
 
 /**
  * Get basic project information (name, description, type)

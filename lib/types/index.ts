@@ -66,8 +66,12 @@ export interface CommandOptions {
 }
 
 export interface InitOptions {
-  force?: boolean;
-  template?: string;
+  dir: string;
+  _silent?: boolean;
+  listStacks?: boolean;
+  stack?: string;
+  essentials?: string;
+  template?: 'full' | 'minimal';
   yes?: boolean;
 }
 
