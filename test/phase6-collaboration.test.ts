@@ -4,15 +4,11 @@
 
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { ciCheck } from '../lib/commands/ci-check.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const TEST_DIR = path.join(__dirname, 'fixtures', 'ci-check-test');
+const TEST_DIR: string = path.join(import.meta.dirname, 'fixtures', 'ci-check-test');
 
 describe('ci-check command', () => {
   beforeEach(async () => {
@@ -38,7 +34,7 @@ describe('ci-check command', () => {
   });
 
   it('should run CI checks and report results', async () => {
-    const result = await ciCheck({
+    const result: any = await ciCheck({
       dir: TEST_DIR,
       _silent: true
     });
@@ -62,14 +58,14 @@ describe('ci-check command', () => {
       }, null, 2)
     );
 
-    const result = await ciCheck({
+    const result: any = await ciCheck({
       dir: TEST_DIR,
       _silent: true
     });
 
     assert.strictEqual(result.success, false, 'CI checks should fail when tests fail');
     
-    const testCheck = result.checks.find(c => c.check === 'Tests');
+    const testCheck: any = result.checks.find((c: any) => c.check === 'Tests');
     assert.ok(testCheck, 'Should include Tests check');
     assert.strictEqual(testCheck.passed, false, 'Tests check should fail');
   });
@@ -87,7 +83,7 @@ describe('ci-check command', () => {
       }, null, 2)
     );
 
-    const result = await ciCheck({
+    const result: any = await ciCheck({
       dir: TEST_DIR,
       _silent: true
     });
@@ -97,7 +93,7 @@ describe('ci-check command', () => {
   });
 
   it('should report check durations', async () => {
-    const result = await ciCheck({
+    const result: any = await ciCheck({
       dir: TEST_DIR,
       _silent: true
     });
@@ -110,7 +106,7 @@ describe('ci-check command', () => {
 });
 
 describe('pre-commit hook', () => {
-  const HOOK_PATH = path.join(__dirname, '..', 'templates', 'git-hooks', 'pre-commit-enhanced');
+  const HOOK_PATH: string = path.join(import.meta.dirname, '..', 'templates', 'git-hooks', 'pre-commit-enhanced');
 
   it('should exist as a file', async () => {
     try {
@@ -122,25 +118,25 @@ describe('pre-commit hook', () => {
   });
 
   it('should be a bash script', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.startsWith('#!/bin/bash'), 'Should start with bash shebang');
   });
 
   it('should include test validation', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.includes('npm test'), 'Should run tests');
     assert.ok(content.includes('commit blocked'), 'Should block on test failure');
   });
 
   it('should include ESSENTIALS size check', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.includes('CODEBASE_ESSENTIALS.md'), 'Should check ESSENTIALS');
     assert.ok(content.includes('800'), 'Should check for 800 line limit');
   });
 });
 
 describe('collaboration-check hook', () => {
-  const HOOK_PATH = path.join(__dirname, '..', 'templates', 'hooks', 'collaboration-check.mjs');
+  const HOOK_PATH: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'collaboration-check.mjs');
 
   it('should exist as a file', async () => {
     try {
@@ -152,24 +148,24 @@ describe('collaboration-check hook', () => {
   });
 
   it('should be a Node.js script', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.startsWith('#!/usr/bin/env node'), 'Should start with node shebang');
   });
 
   it('should check for git repository', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.includes('isGitRepo'), 'Should check if git repo');
     assert.ok(content.includes('git rev-parse'), 'Should use git commands');
   });
 
   it('should check CURRENT_PLAN.md changes', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.includes('CURRENT_PLAN.md'), 'Should check plan file');
     assert.ok(content.includes('Collaboration Notice'), 'Should warn about concurrent changes');
   });
 
   it('should check branch divergence', async () => {
-    const content = await fs.readFile(HOOK_PATH, 'utf-8');
+    const content: string = await fs.readFile(HOOK_PATH, 'utf-8');
     assert.ok(content.includes('checkBranchDivergence'), 'Should check branch sync');
     assert.ok(content.includes('behind'), 'Should detect commits behind');
   });
