@@ -1,17 +1,14 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import assert from 'node:assert/strict';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { checkEssentialsBloat } from '../lib/quality-checkers/essentials-bloat.js';
 import { validateTemplates } from '../lib/quality-checkers/template-validator.js';
 import { validateLinks } from '../lib/quality-checkers/link-validator.js';
 import { scanPatterns } from '../lib/quality-checkers/pattern-scanner.js';
 import { qualityCheck } from '../lib/commands/quality-check.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEST_DIR = path.join(__dirname, '../test-temp-quality');
+const TEST_DIR: string = path.join(import.meta.dirname, '../test-temp-quality');
 
 describe('quality-check command', () => {
   beforeEach(async () => {
@@ -25,13 +22,13 @@ describe('quality-check command', () => {
   describe('ESSENTIALS bloat detection', () => {
     it('should detect when ESSENTIALS exceeds threshold', async () => {
       // Create bloated ESSENTIALS (900 lines, threshold 800)
-      const bloatedContent = Array(900).fill('# Line').join('\n');
+      const bloatedContent: string = Array(900).fill('# Line').join('\n');
       await fs.writeFile(
         path.join(TEST_DIR, 'CODEBASE_ESSENTIALS.md'),
         bloatedContent
       );
 
-      const result = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
+      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
       assert.strictEqual(result.passed, false);
       assert.strictEqual(result.severity, 'warning');
@@ -45,13 +42,13 @@ describe('quality-check command', () => {
 
     it('should pass when ESSENTIALS under threshold', async () => {
       // Create small ESSENTIALS (650 lines, threshold 800)
-      const smallContent = Array(650).fill('# Line').join('\n');
+      const smallContent: string = Array(650).fill('# Line').join('\n');
       await fs.writeFile(
         path.join(TEST_DIR, 'CODEBASE_ESSENTIALS.md'),
         smallContent
       );
 
-      const result = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
+      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
       assert.strictEqual(result.passed, true);
       assert.ok(result.message.includes('650 lines'));
@@ -60,32 +57,32 @@ describe('quality-check command', () => {
 
     it('should respect custom threshold from config', async () => {
       // 950 lines with threshold 1000 should pass
-      const content = Array(950).fill('# Line').join('\n');
+      const content: string = Array(950).fill('# Line').join('\n');
       await fs.writeFile(
         path.join(TEST_DIR, 'CODEBASE_ESSENTIALS.md'),
         content
       );
 
-      const result = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 1000 });
+      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 1000 });
 
       assert.strictEqual(result.passed, true);
     });
 
     it('should suggest compress-essentials when bloated', async () => {
-      const bloatedContent = Array(900).fill('# Line').join('\n');
+      const bloatedContent: string = Array(900).fill('# Line').join('\n');
       await fs.writeFile(
         path.join(TEST_DIR, 'CODEBASE_ESSENTIALS.md'),
         bloatedContent
       );
 
-      const result = await checkEssentialsBloat(TEST_DIR);
+      const result: any = await checkEssentialsBloat(TEST_DIR);
 
       assert.ok(result.fix.includes('compress-essentials'));
       assert.ok(result.fix.includes('--analyze'));
     });
 
     it('should handle missing ESSENTIALS.md gracefully', async () => {
-      const result = await checkEssentialsBloat(TEST_DIR);
+      const result: any = await checkEssentialsBloat(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
       assert.ok(result.message.includes('not found'));
@@ -99,7 +96,7 @@ describe('quality-check command', () => {
         '# {{PROJECT_NAME}}\n\nWelcome to {{APP_NAME}}!'
       );
 
-      const result = await validateTemplates(TEST_DIR);
+      const result: any = await validateTemplates(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
       assert.strictEqual(result.severity, 'error');
@@ -118,7 +115,7 @@ describe('quality-check command', () => {
         '# {{PROJECT_NAME}}'
       );
 
-      const result = await validateTemplates(TEST_DIR);
+      const result: any = await validateTemplates(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -129,7 +126,7 @@ describe('quality-check command', () => {
         'Line 1\n# {{VAR}} here\nLine 3'
       );
 
-      const result = await validateTemplates(TEST_DIR);
+      const result: any = await validateTemplates(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
       assert.ok(result.violations[0].file.includes('docs.md'));
@@ -143,7 +140,7 @@ describe('quality-check command', () => {
         '{{VAR1}} and {{VAR2}} here'
       );
 
-      const result = await validateTemplates(TEST_DIR);
+      const result: any = await validateTemplates(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
       assert.strictEqual(result.violations.length, 2);
@@ -155,7 +152,7 @@ describe('quality-check command', () => {
         '# My Project\n\nNo variables here!'
       );
 
-      const result = await validateTemplates(TEST_DIR);
+      const result: any = await validateTemplates(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -168,7 +165,7 @@ describe('quality-check command', () => {
         '[Link to missing](missing-file.md)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
       assert.strictEqual(result.severity, 'warning');
@@ -187,7 +184,7 @@ describe('quality-check command', () => {
         '[Link](target.md#section-two)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
       assert.ok(result.violations[0].reason.includes('Anchor'));
@@ -200,7 +197,7 @@ describe('quality-check command', () => {
         '[External](https://example.com)\n[Secure](https://secure.org)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -216,7 +213,7 @@ describe('quality-check command', () => {
         '[Guide](docs/guide.md)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -228,7 +225,7 @@ describe('quality-check command', () => {
         '[Valid link](target.md)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -239,7 +236,7 @@ describe('quality-check command', () => {
         '[Email](mailto:test@example.com)'
       );
 
-      const result = await validateLinks(TEST_DIR);
+      const result: any = await validateLinks(TEST_DIR);
 
       assert.strictEqual(result.passed, true);
     });
@@ -252,10 +249,10 @@ describe('quality-check command', () => {
         'const path = "/Users/john/project/file.txt";'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
-      assert.ok(result.violations.some(v => v.rule === 'no-hardcoded-paths'));
+      assert.ok(result.violations.some((v: any) => v.rule === 'no-hardcoded-paths'));
     });
 
     it('should detect require() in ES module project', async () => {
@@ -268,10 +265,10 @@ describe('quality-check command', () => {
         'const fs = require("fs");'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
       assert.strictEqual(result.passed, false);
-      const violation = result.violations.find(v => v.rule === 'no-require-in-esm');
+      const violation: any = result.violations.find((v: any) => v.rule === 'no-require-in-esm');
       assert.ok(violation);
       assert.ok(violation.fix.includes('import'));
     });
@@ -286,9 +283,9 @@ describe('quality-check command', () => {
         'const fs = require("fs");'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
-      const hasRequireViolation = result.violations?.some(v => 
+      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('hook.cjs')
       );
       assert.strictEqual(hasRequireViolation, false);
@@ -301,9 +298,9 @@ describe('quality-check command', () => {
         'export function doSomething() {}'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
-      const violation = result.violations?.find(v => v.rule === 'missing-test-file');
+      const violation: any = result.violations?.find((v: any) => v.rule === 'missing-test-file');
       // This check may be optional depending on project structure
       // For now, we'll consider it informational
     });
@@ -314,9 +311,9 @@ describe('quality-check command', () => {
         'import path from "path";\nconst dir = process.cwd();'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
-      const hasViolations = result.violations && result.violations.length > 0;
+      const hasViolations: boolean = result.violations && result.violations.length > 0;
       assert.strictEqual(hasViolations, false);
     });
 
@@ -331,10 +328,10 @@ describe('quality-check command', () => {
         'const errorMsg = "Use import instead of require() in ES module project";'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
       // Should not flag require() when it's in a string
-      const hasRequireViolation = result.violations?.some(v => 
+      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('checker.js')
       );
       assert.strictEqual(hasRequireViolation, false);
@@ -352,10 +349,10 @@ describe('quality-check command', () => {
         'const mock = require("./fixtures/mock.json");'
       );
 
-      const result = await scanPatterns(TEST_DIR);
+      const result: any = await scanPatterns(TEST_DIR);
 
       // Should not flag require() in test files
-      const hasRequireViolation = result.violations?.some(v => 
+      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('test')
       );
       assert.strictEqual(hasRequireViolation, false);
@@ -374,7 +371,7 @@ describe('quality-check command', () => {
         '# {{PROJECT}}'
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       assert.ok(result.checks);
       assert.ok(result.checks.essentials);
@@ -384,7 +381,7 @@ describe('quality-check command', () => {
     });
 
     it('should support dry-run mode', async () => {
-      const result = await qualityCheck({ 
+      const result: any = await qualityCheck({ 
         dir: TEST_DIR, 
         dryRun: true,
         _silent: true 
@@ -405,7 +402,7 @@ describe('quality-check command', () => {
         '# My Project'
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       assert.strictEqual(result.passed, true);
       assert.strictEqual(result.totalIssues, 0);
@@ -426,7 +423,7 @@ describe('quality-check command', () => {
         Array(950).fill('# Line').join('\n')
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Should pass because threshold is 1000, not default 800
       assert.ok(result.checks.essentials.passed);
@@ -440,7 +437,7 @@ describe('quality-check command', () => {
         '# Test Template'
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       assert.ok(result.checks.deliverables, 'Should have deliverables check');
       assert.ok('passed' in result.checks.deliverables, 'Should have passed property');
@@ -455,7 +452,7 @@ describe('quality-check command', () => {
         'See PENDING_REVIEW.md for review'
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Deliverables check should detect legacy pattern
       assert.ok(result.checks.deliverables);
@@ -471,11 +468,11 @@ describe('quality-check command', () => {
         '# Test Template\n\nThis is a test template.'
       );
 
-      const result = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Verify full mode ran (should have all 6 checks, not just 4)
       assert.ok(result.checks.deliverables.checks, 'Should have individual checks');
-      const checkNames = result.checks.deliverables.checks.map(c => c.name);
+      const checkNames: string[] = result.checks.deliverables.checks.map((c: any) => c.name);
       assert.ok(checkNames.includes('Template Execution'), 'Should run Template Execution (full mode)');
       assert.ok(checkNames.includes('Fresh Init'), 'Should run Fresh Init (full mode)');
       
