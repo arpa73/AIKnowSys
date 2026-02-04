@@ -7,11 +7,11 @@ import { execSync } from 'child_process';
 
 /**
  * Get git username and normalize it for directory naming
- * @returns {string|null} Normalized username or null if git not configured
+ * @returns Normalized username or null if git not configured
  */
-export function getGitUsername() {
+export function getGitUsername(): string | null {
   try {
-    let username;
+    let username: string;
     try {
       // Try local config first
       username = execSync('git config user.name', { 

@@ -50,7 +50,11 @@ export async function migrateToMultidev(options: MigrateToMultidevOptions = {}):
     }
 
     // Get username
-    const username = options.username || await getGitUsername(targetDir);
+    const username = options.username || getGitUsername();
+    if (!username) {
+      log.error('Could not determine git username. Please configure git or use --username flag.');
+      throw new Error('Git username not configured');
+    }
     const normalizedUsername = normalizeUsername(username);
 
     log.info(`Migrating for user: ${normalizedUsername}`);
