@@ -1,0 +1,143 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import type { Ora } from 'ora';
+import ora from 'ora';
+import { createLogger } from '../logger.js';
+import { getPackageDir, copyDirectory } from '../utils.js';
+import { sanitizeSkillName } from '../sanitize.js';
+
+const AVAILABLE_SKILLS = [
+  'ai-friendly-documentation',
+  'context7-usage',
+  'dependency-management',
+  'feature-implementation',
+  'pattern-sharing',
+  'refactoring-workflow',
+  'skill-creator',
+  'skill-validation',
+  'tdd-workflow',
+  'validation-troubleshooting'
+] as const;
+
+/**
+ * Options interface for install-skills command
+ */
+export interface InstallSkillsOptions {
+  dir: string;
+  skills?: string[];
+  _silent?: boolean;
+}
+
+/**
+ * Install universal skills to .github/skills/
+ */
+export async function installSkills(options: InstallSkillsOptions): Promise<void> {
+  const targetDir = path.resolve(options.dir);
+  
+  // Sanitize skill names if provided by user
+  let selectedSkills: readonly string[] | string[] = options.skills || AVAILABLE_SKILLS;
+  if (options.skills) {
+    selectedSkills = options.skills.map(skill => {
+      const result = sanitizeSkillName(skill);
+      if (!result.valid) {
+        // Log warning but use sanitized version
+        if (!options._silent) {
+          console.log(`⚠️  Invalid skill name "${skill}": ${result.errors.join(', ')}`);
+          console.log(`   Using sanitized: "${result.sanitized}"`);
+        }
+      }
+      return result.sanitized;
+    }).filter(s => s.length > 0); // Remove empty results
+  }
+  
+  const silent = options._silent || false;
+  const log = createLogger(silent);
+  
+  log.blank();
+  log.header('Installing Universal Skills', '📚');
+  log.blank();
+  
+  const packageDir = getPackageDir();
+  const skillsDir = path.join(targetDir, '.github', 'skills');
+  
+  // Create skills directory
+  if (!fs.existsSync(skillsDir)) {
+    fs.mkdirSync(skillsDir, { recursive: true });
+  }
+  
+  const spinner: Ora | null = silent ? null : ora('Installing skills...').start();
+  
+  let installed = 0;
+  let skipped = 0;
+  
+  try {
+    for (const skill of selectedSkills) {
+      const sourcePath = path.join(packageDir, 'templates', 'skills', skill);
+      const destPath = path.join(skillsDir, skill);
+      
+      if (!fs.existsSync(sourcePath)) {
+        log.log('\x1b[33m   ⚠️  Skill not found: ' + skill + '\x1b[0m');
+        continue;
+      }
+      
+      if (fs.existsSync(destPath)) {
+        skipped++;
+        continue;
+      }
+      
+      await copyDirectory(sourcePath, destPath);
+      installed++;
+    }
+    
+    if (spinner) {
+      if (installed > 0) {
+        spinner.succeed(`Installed ${installed} skill${installed > 1 ? 's' : ''}`);
+      } else if (skipped > 0) {
+        spinner.succeed('All skills already installed');
+      } else {
+        spinner.warn('No skills found to install');
+      }
+    }
+    
+    // Update AGENTS.md with skill mapping if it exists
+    // Always regenerate mapping to include custom skills
+    const agentsPath = path.join(targetDir, 'AGENTS.md');
+    if (fs.existsSync(agentsPath)) {
+      // @ts-ignore - skill-mapping.js not yet migrated to TypeScript, will be migrated in later batch
+      const { buildSkillMapping } = await import('../skill-mapping.js');
+      const skillMapping = await buildSkillMapping(targetDir);
+      
+      let agentsContent = await fs.promises.readFile(agentsPath, 'utf-8');
+      
+      // Only update if placeholder still exists
+      if (agentsContent.includes('{{SKILL_MAPPING}}')) {
+        agentsContent = agentsContent.replace('{{SKILL_MAPPING}}', skillMapping);
+        await fs.promises.writeFile(agentsPath, agentsContent, 'utf-8');
+        
+        if (!silent) {
+          log.dim('   ✅ Updated skill mapping in AGENTS.md');
+        }
+      }
+    }
+    
+    log.blank();
+    log.white('📁 Location: .github/skills/');
+    
+    for (const skill of AVAILABLE_SKILLS) {
+      const destPath = path.join(skillsDir, skill);
+      if (fs.existsSync(destPath)) {
+        log.dim(`   ✅ ${skill}`);
+      }
+    }
+    
+    log.blank();
+    log.cyan('💡 Skills provide domain-specific guidance for AI assistants');
+    log.dim('   Use by asking about the topic, e.g., "How do I update dependencies?"');
+    log.blank();
+    
+  } catch (error) {
+    if (spinner) spinner.fail('Failed to install skills');
+    log.error((error as Error).message);
+    throw error;
+  }
+}
