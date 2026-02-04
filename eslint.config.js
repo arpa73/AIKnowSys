@@ -1,5 +1,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
 
 export default [
   js.configs.recommended,
@@ -36,16 +38,47 @@ export default [
     }
   },
   {
-    // Test files - more relaxed rules
-    files: ['test/**/*.js'],
+    // TypeScript files
+    files: ['**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        project: './tsconfig.json'
+      }
+    },
+    plugins: {
+      '@typescript-eslint': tseslint
+    },
     rules: {
-      'no-unused-vars': 'off'  // Tests often have unused variables for readability
+      // Disable base rules that are covered by TypeScript
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_'
+      }],
+      'no-undef': 'off',  // TypeScript compiler checks undefined variables
+      
+      // TypeScript-specific rules
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'warn'
+    }
+  },
+  {
+    // Test files - more relaxed rules
+    files: ['test/**/*.js', 'test/**/*.ts'],
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'  // Tests often have unused variables for readability
     }
   },
   {
     // Ignore patterns
     ignores: [
       'node_modules/**',
+      'dist/**',  // TypeScript build output
       'test/tmp/**',
       'test/fixtures/**',
       'templates/**',

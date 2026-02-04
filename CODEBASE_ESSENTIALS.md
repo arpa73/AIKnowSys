@@ -11,7 +11,7 @@
 | Component | Technology |
 |-----------|------------|
 | Runtime | Node.js 20+ |
-| Language | JavaScript (ES Modules) |
+| Language | JavaScript (ES Modules) → TypeScript migration in progress |
 | CLI Framework | Commander.js 14.x |
 | User Prompts | Inquirer.js 13.x |
 | Terminal UI | Chalk 5.x, Ora 9.x |
