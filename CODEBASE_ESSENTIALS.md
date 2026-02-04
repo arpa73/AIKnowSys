@@ -407,8 +407,18 @@ function isValidationResult(obj: unknown): obj is ValidationResult {
 
 **Type-only imports:**
 ```typescript
-// ✅ Explicitly mark type-only imports (gets erased during compilation)
+// ✅ Single type import
 import type { ValidationResult } from './types/index.js';
+
+// ✅ Multi-line type-only imports (for many types from same module)
+import type { 
+  TemplateSchemaMap, 
+  LegacyPattern, 
+  AutoFixPattern,
+  DeliverableValidationOptions,
+  DeliverableValidationResult,
+  ValidationCheck
+} from './types/index.js';
 
 // ✅ Mixed import/type
 import { validateFile } from './validator.js';
@@ -455,6 +465,73 @@ import { ValidationResult } from './types/index.js';  // Could be optimized
    - Extract validation logic to separate functions
    - Add more specific type definitions
    - Improve error messages
+
+### TypeScript Suppressions
+
+**When to use error suppressions during incremental migration:**
+
+```typescript
+// ✅ BEST: @ts-expect-error (fails if error goes away)
+// @ts-expect-error - quality-checkers not yet migrated to TypeScript
+import { checkEssentialsBloat } from '../../lib/quality-checkers/essentials-bloat.js';
+
+// ⚠️ AVOID: @ts-ignore (hides all errors, even new ones)
+// @ts-ignore
+import { something } from './unmigrated.js';  // Don't use this!
+
+// ⚠️ AVOID: Type assertions (no runtime safety)
+const result = response as ValidationResult;  // Dangerous if wrong!
+```
+
+**Why @ts-expect-error is best:**
+- ✅ Documents WHY the error is expected (with comment)
+- ✅ Fails compilation if error is fixed (prevents stale suppressions)
+- ✅ Scoped to specific line (doesn't hide other errors)
+- ✅ Shows progress (remove when module migrated)
+
+**When to use @ts-expect-error:**
+- Importing unmigrated JavaScript modules during incremental migration
+- Temporary workaround for known type issues in dependencies
+- Testing edge cases that intentionally cause type errors
+
+**When NOT to use:**
+- ❌ To bypass legitimate type errors (fix the types instead!)
+- ❌ In production code (only acceptable in tests during migration)
+- ❌ Without explanatory comment (always explain WHY)
+
+### Typing Unmigrated Modules
+
+**Pattern for typing JavaScript modules not yet migrated:**
+
+```typescript
+// ✅ Use ReturnType<typeof> for function return types
+import { createLogger } from '../logger.js';  // Still .js (not migrated)
+
+type Logger = ReturnType<typeof createLogger>;  // Extract return type
+
+function myCommand(log: Logger) {  // Now type-safe!
+  log.success('Command completed');
+  log.error('Something failed');
+}
+```
+
+**Why this works:**
+- TypeScript infers return type from JavaScript function
+- No need to create manual interface (DRY principle)
+- Automatically updates when JS function changes
+- Works with unmigrated modules during incremental migration
+
+**Other utility types for migration:**
+```typescript
+// Get parameter types from unmigrated function
+type Params = Parameters<typeof unmigrated>;
+
+// Get return type from unmigrated async function  
+type AsyncReturn = Awaited<ReturnType<typeof asyncFn>>;
+
+// Get instance type from unmigrated class
+type Instance = InstanceType<typeof MyClass>;
+```
 
 ### Common TypeScript Gotchas
 
