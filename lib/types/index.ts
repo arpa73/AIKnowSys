@@ -75,6 +75,11 @@ export interface InitOptions {
   yes?: boolean;
 }
 
+export interface MigrateOptions {
+  dir: string;
+  essentials?: string;
+}
+
 export interface QualityCheckResult {
   passed: boolean;
   checks: Array<{
