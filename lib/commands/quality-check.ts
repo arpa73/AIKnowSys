@@ -90,7 +90,6 @@ interface Config {
  */
 export async function qualityCheck(options: QualityCheckOptions = {}): Promise<QualityCheckResult> {
   const targetDir = path.resolve(options.dir || process.cwd());
-  const dryRun = options.dryRun || false;
   const silent = options._silent || false;
   const log = createLogger(silent);
 
@@ -124,7 +123,7 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
 
   // Display results
   if (!silent) {
-    displayResults(log, checks, dryRun);
+    displayResults(log, checks);
   }
 
   // Summary
@@ -155,7 +154,7 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
 /**
  * Display results for all checks
  */
-function displayResults(log: ReturnType<typeof createLogger>, checks: QualityChecks, _dryRun: boolean): void {
+function displayResults(log: ReturnType<typeof createLogger>, checks: QualityChecks): void {
   // ESSENTIALS bloat check
   log.cyan('\n📄 ESSENTIALS Size:');
   if (checks.essentials.passed) {
