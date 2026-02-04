@@ -127,8 +127,8 @@ describe('audit command', () => {
     assert.strictEqual(fillIssue.type, 'warning', 'Should be warning type');
   });
 
-  // Note: "generic placeholder text" detection removed - too many false positives
-  // in documentation that legitimately discusses placeholders and examples
+  // Note: "generic placeholder text" detection removed due to too many false positives
+  // in documentation that legitimately discusses placeholders and examples.
 
   it('should allow up to 3 TBD/TODO instances without warning', async () => {
     createMockProject(testDir, { hasEssentials: true });
@@ -374,7 +374,7 @@ describe('audit command', () => {
     assert.ok(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md'), 'Should suggest adding gitignore pattern');
   });
 
-  it('should warn when no .gitignore file exists but .aiknowsys/ does', async () => {
+  it('should warn about missing .gitignore when .aiknowsys/ exists', async () => {
     createMockProject(testDir, { hasEssentials: true });
     
     // Create .aiknowsys directory
