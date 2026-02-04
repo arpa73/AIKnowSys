@@ -10,17 +10,14 @@
  */
 
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import assert from 'node:assert/strict';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 describe('Personal Pattern Directory Migration', () => {
-  let testDir;
-  let originalCwd;
+  let testDir: string;
+  let originalCwd: string;
 
   beforeEach(async () => {
     // Create temp test directory
@@ -32,7 +29,7 @@ describe('Personal Pattern Directory Migration', () => {
     process.chdir(testDir);
     
     // Create .aiknowsys/learned/ directory with existing patterns
-    const learnedDir = path.join(testDir, '.aiknowsys', 'learned');
+    const learnedDir: string = path.join(testDir, '.aiknowsys', 'learned');
     await fs.mkdir(learnedDir, { recursive: true });
     
     // Create sample learned pattern
@@ -63,8 +60,8 @@ describe('Personal Pattern Directory Migration', () => {
     it('should create personal/<username>/ directory', async () => {
       // RED: This test will fail because migration script doesn't exist yet
       
-      const username = 'test-user';
-      const expectedDir = path.join(testDir, '.aiknowsys', 'personal', username);
+      const username: string = 'test-user';
+      const expectedDir: string = path.join(testDir, '.aiknowsys', 'personal', username);
       
       // Verify directory doesn't exist before migration
       await assert.rejects(
@@ -84,10 +81,10 @@ describe('Personal Pattern Directory Migration', () => {
     it('should update .gitignore with personal/ pattern', async () => {
       // RED: Migration script doesn't exist yet
       
-      const username = 'test-user';
+      const username: string = 'test-user';
       
       // Verify .gitignore doesn't have personal/ pattern
-      const gitignoreBefore = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
+      const gitignoreBefore: string = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
       assert.ok(
         !gitignoreBefore.includes('.aiknowsys/personal/'),
         '.gitignore should not have personal/ pattern before migration'
@@ -98,7 +95,7 @@ describe('Personal Pattern Directory Migration', () => {
       await migratePersonalPatterns({ _username: username, _silent: true });
       
       // Verify .gitignore was updated
-      const gitignoreAfter = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
+      const gitignoreAfter: string = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
       assert.ok(
         gitignoreAfter.includes('.aiknowsys/personal/'),
         '.gitignore should include personal/ pattern'
@@ -112,8 +109,8 @@ describe('Personal Pattern Directory Migration', () => {
     it('should create personal/README.md with username', async () => {
       // RED: Migration script doesn't exist yet
       
-      const username = 'test-user';
-      const readmePath = path.join(testDir, '.aiknowsys', 'personal', username, 'README.md');
+      const username: string = 'test-user';
+      const readmePath: string = path.join(testDir, '.aiknowsys', 'personal', username, 'README.md');
       
       // Verify README doesn't exist before migration
       await assert.rejects(
@@ -126,7 +123,7 @@ describe('Personal Pattern Directory Migration', () => {
       await migratePersonalPatterns({ _username: username, _silent: true });
       
       // Verify README was created with username
-      const readmeContent = await fs.readFile(readmePath, 'utf-8');
+      const readmeContent: string = await fs.readFile(readmePath, 'utf-8');
       assert.ok(
         readmeContent.includes(username),
         'README should include username'
@@ -140,11 +137,11 @@ describe('Personal Pattern Directory Migration', () => {
     it('should preserve existing learned/ patterns', async () => {
       // RED: Migration script doesn't exist yet
       
-      const username = 'test-user';
-      const existingPattern = path.join(testDir, '.aiknowsys', 'learned', 'existing-pattern.md');
+      const username: string = 'test-user';
+      const existingPattern: string = path.join(testDir, '.aiknowsys', 'learned', 'existing-pattern.md');
       
       // Verify existing pattern exists before migration
-      const contentBefore = await fs.readFile(existingPattern, 'utf-8');
+      const contentBefore: string = await fs.readFile(existingPattern, 'utf-8');
       assert.ok(
         contentBefore.includes('Existing Pattern'),
         'existing pattern should exist before migration'
@@ -155,7 +152,7 @@ describe('Personal Pattern Directory Migration', () => {
       await migratePersonalPatterns({ _username: username, _silent: true });
       
       // Verify existing pattern still exists and unchanged
-      const contentAfter = await fs.readFile(existingPattern, 'utf-8');
+      const contentAfter: string = await fs.readFile(existingPattern, 'utf-8');
       assert.strictEqual(
         contentAfter,
         contentBefore,
@@ -169,7 +166,7 @@ describe('Personal Pattern Directory Migration', () => {
       // Don't provide username (simulate git config failure)
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
       
-      const result = await migratePersonalPatterns({ _username: null, _silent: true });
+      const result: any = await migratePersonalPatterns({ _username: null, _silent: true });
       
       assert.strictEqual(
         result.success,
@@ -185,8 +182,8 @@ describe('Personal Pattern Directory Migration', () => {
     it('should skip if already migrated', async () => {
       // RED: Migration script doesn't exist yet
       
-      const username = 'test-user';
-      const personalDir = path.join(testDir, '.aiknowsys', 'personal', username);
+      const username: string = 'test-user';
+      const personalDir: string = path.join(testDir, '.aiknowsys', 'personal', username);
       
       // Create personal directory (simulate already migrated)
       await fs.mkdir(personalDir, { recursive: true });
@@ -197,7 +194,7 @@ describe('Personal Pattern Directory Migration', () => {
       
       // Run migration
       const { migratePersonalPatterns } = await import('../scripts/migrate-learned-patterns.js');
-      const result = await migratePersonalPatterns({ _username: username, _silent: true });
+      const result: any = await migratePersonalPatterns({ _username: username, _silent: true });
       
       assert.strictEqual(
         result.success,
@@ -210,7 +207,7 @@ describe('Personal Pattern Directory Migration', () => {
       );
       
       // Verify README wasn't overwritten
-      const readmeContent = await fs.readFile(path.join(personalDir, 'README.md'), 'utf-8');
+      const readmeContent: string = await fs.readFile(path.join(personalDir, 'README.md'), 'utf-8');
       assert.ok(
         readmeContent.includes('Already migrated'),
         'existing README should not be overwritten'
@@ -220,7 +217,7 @@ describe('Personal Pattern Directory Migration', () => {
     it('should handle missing .gitignore file', async () => {
       // RED: Migration script doesn't exist yet
       
-      const username = 'test-user';
+      const username: string = 'test-user';
       
       // Remove .gitignore
       await fs.rm(path.join(testDir, '.gitignore'));
@@ -230,7 +227,7 @@ describe('Personal Pattern Directory Migration', () => {
       await migratePersonalPatterns({ _username: username, _silent: true });
       
       // Verify .gitignore was created with personal/ pattern
-      const gitignoreContent = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
+      const gitignoreContent: string = await fs.readFile(path.join(testDir, '.gitignore'), 'utf-8');
       assert.ok(
         gitignoreContent.includes('.aiknowsys/personal/'),
         '.gitignore should be created with personal/ pattern'
@@ -242,11 +239,9 @@ describe('Personal Pattern Directory Migration', () => {
     it('should call personal pattern migration during migrate', async () => {
       // RED: migrate.js doesn't call personal migration yet
       
-      const { migrate } = await import('../lib/commands/migrate.js');
-      
       // Verify migrate.js imports migratePersonalPatterns
-      const migrateSource = await fs.readFile(
-        path.join(__dirname, '../lib/commands/migrate.js'),
+      const migrateSource: string = await fs.readFile(
+        path.join(import.meta.dirname, '../lib/commands/migrate.js'),
         'utf-8'
       );
       
@@ -260,9 +255,6 @@ describe('Personal Pattern Directory Migration', () => {
     it('should create personal directory during full migration', async () => {
       // This will be tested via integration tests
       // For now, we verify the structure is correct
-      
-      const username = 'test-user';
-      const expectedDir = path.join(testDir, '.aiknowsys', 'personal', username);
       
       // Verify directory structure after migration
       // (This is a placeholder - actual migration test would run full migrate command)
