@@ -1,19 +1,15 @@
-import { describe, it, before, after, beforeEach, afterEach } from 'node:test';
+import { describe, it, before, after, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { execSync } from 'node:child_process';
 
 describe('share-pattern command', () => {
-  let testDir;
-  let testDirsToCleanup = [];
+  let testDir: string;
+  let testDirsToCleanup: string[] = [];
 
   before(() => {
-    testDir = path.join(__dirname, 'tmp', `test-share-pattern-${Date.now()}`);
+    testDir = path.join(import.meta.dirname, 'tmp', `test-share-pattern-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
@@ -32,13 +28,13 @@ describe('share-pattern command', () => {
     }
   });
 
-  it('should move pattern from personal to learned directory', async () => {
-    const testShareMove = path.join(__dirname, 'tmp', `share-move-${Date.now()}`);
+  it('should move pattern from personal to learned directory', () => {
+    const testShareMove = path.join(import.meta.dirname, 'tmp', `share-move-${Date.now()}`);
     fs.mkdirSync(testShareMove, { recursive: true });
     testDirsToCleanup.push(testShareMove);
 
     // Setup directories
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -73,12 +69,12 @@ describe('share-pattern command', () => {
     assert.ok(!fs.existsSync(sourcePath), 'Pattern should be removed from personal directory');
   });
 
-  it('should detect exact duplicate patterns by title', async () => {
-    const testDuplicate = path.join(__dirname, 'tmp', `duplicate-${Date.now()}`);
+  it('should detect exact duplicate patterns by title', () => {
+    const testDuplicate = path.join(import.meta.dirname, 'tmp', `duplicate-${Date.now()}`);
     fs.mkdirSync(testDuplicate, { recursive: true });
     testDirsToCleanup.push(testDuplicate);
 
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -109,12 +105,12 @@ describe('share-pattern command', () => {
     assert.ok(isDuplicate, 'Should detect exact duplicate by filename');
   });
 
-  it('should detect similar patterns by keyword overlap', async () => {
-    const testSimilar = path.join(__dirname, 'tmp', `similar-${Date.now()}`);
+  it('should detect similar patterns by keyword overlap', () => {
+    const testSimilar = path.join(import.meta.dirname, 'tmp', `similar-${Date.now()}`);
     fs.mkdirSync(testSimilar, { recursive: true });
     testDirsToCleanup.push(testSimilar);
 
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -147,12 +143,12 @@ describe('share-pattern command', () => {
     assert.ok(overlapPercent > 0.5, 'Should detect >50% keyword overlap as similar');
   });
 
-  it('should error if pattern does not exist in personal directory', async () => {
-    const testMissing = path.join(__dirname, 'tmp', `missing-${Date.now()}`);
+  it('should error if pattern does not exist in personal directory', () => {
+    const testMissing = path.join(import.meta.dirname, 'tmp', `missing-${Date.now()}`);
     fs.mkdirSync(testMissing, { recursive: true });
     testDirsToCleanup.push(testMissing);
 
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -172,12 +168,12 @@ describe('share-pattern command', () => {
     // share-pattern command should throw/return error
   });
 
-  it('should handle patterns without trigger words gracefully', async () => {
-    const testNoKeywords = path.join(__dirname, 'tmp', `no-keywords-${Date.now()}`);
+  it('should handle patterns without trigger words gracefully', () => {
+    const testNoKeywords = path.join(import.meta.dirname, 'tmp', `no-keywords-${Date.now()}`);
     fs.mkdirSync(testNoKeywords, { recursive: true });
     testDirsToCleanup.push(testNoKeywords);
 
-    let username;
+    let username: string;
     try {
       username = execSync('git config user.name', { encoding: 'utf-8' }).trim()
         .toLowerCase()
@@ -200,8 +196,8 @@ describe('share-pattern command', () => {
     assert.ok(fs.existsSync(path.join(personalDir, 'simple-pattern.md')), 'Pattern should exist and be valid');
   });
 
-  it('should handle missing git username gracefully', async () => {
-    const testNoGit = path.join(__dirname, 'tmp', `no-git-share-${Date.now()}`);
+  it('should handle missing git username gracefully', () => {
+    const testNoGit = path.join(import.meta.dirname, 'tmp', `no-git-share-${Date.now()}`);
     fs.mkdirSync(testNoGit, { recursive: true });
     testDirsToCleanup.push(testNoGit);
 

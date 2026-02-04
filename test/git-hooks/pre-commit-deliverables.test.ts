@@ -9,8 +9,8 @@ import { promisify } from 'node:util';
 const execAsync = promisify(exec);
 
 describe('pre-commit-deliverables hook', () => {
-  let testDir;
-  let originalCwd;
+  let testDir: string;
+  let originalCwd: string;
 
   beforeEach(async () => {
     // Create temporary directory
@@ -105,7 +105,7 @@ exit 1
       await execAsync('git commit -m "test"');
       assert.fail('Commit should have failed');
     } catch (error) {
-      assert.match(error.message, /VALIDATION_TRIGGERED/);
+      assert.match((error as Error).message, /VALIDATION_TRIGGERED/);
     }
   });
 
@@ -134,9 +134,9 @@ exit 1
       await execAsync('git commit -m "test"');
       assert.fail('Commit should have failed');
     } catch (error) {
-      assert.match(error.message, /Deliverables validation failed/);
-      assert.match(error.message, /npx aiknowsys validate-deliverables/);
-      assert.match(error.message, /--no-verify/);
+      assert.match((error as Error).message, /Deliverables validation failed/);
+      assert.match((error as Error).message, /npx aiknowsys validate-deliverables/);
+      assert.match((error as Error).message, /--no-verify/);
     }
   });
 
@@ -228,7 +228,7 @@ exit 0
       assert.fail('Should have blocked commit due to validation failure');
     } catch (error) {
       // Verify it's the deliverables validation that failed
-      assert.match(error.message, /Deliverables validation failed/);
+      assert.match((error as Error).message, /Deliverables validation failed/);
     }
   });
 });

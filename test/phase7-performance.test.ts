@@ -1,15 +1,11 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { depsHealth } from '../lib/commands/deps-health.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 describe('Phase 7: Performance & Dependency Monitoring', () => {
-  const testDir = path.join(__dirname, 'fixtures', 'phase7-test');
+  const testDir = path.join(import.meta.dirname, 'fixtures', 'phase7-test');
   const perfHistoryPath = path.join(testDir, '.aiknowsys', 'performance-history.json');
 
   beforeEach(async () => {
@@ -65,8 +61,8 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       assert.strictEqual(result.testRuns[0].tests, 422);
     });
 
-    it('should maintain limited history (last 100 runs)', async () => {
-      const data = { testRuns: [], buildTimes: [], slowestTests: [] };
+    it('should maintain limited history (last 100 runs)', () => {
+      const data = { testRuns: [] as any[], buildTimes: [], slowestTests: [] };
       
       // Add 150 test runs
       for (let i = 0; i < 150; i++) {
@@ -87,7 +83,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
   });
 
   describe('deps-health Command', () => {
-    it('should check if deps-health command exists', async () => {
+    it('should check if deps-health command exists', () => {
       assert.strictEqual(typeof depsHealth, 'function');
     });
 
@@ -111,7 +107,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
         await depsHealth({ dir: testDir, _silent: true });
         assert.fail('Should throw error for missing package.json');
       } catch (error) {
-        assert.ok(error.message.includes('package.json'));
+        assert.ok((error as Error).message.includes('package.json'));
       }
     });
 
@@ -165,7 +161,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
   });
 
   describe('Performance Monitor Hook', () => {
-    const hookPath = path.join(__dirname, '..', 'templates', 'hooks', 'performance-monitor.cjs');
+    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'performance-monitor.cjs');
 
     it('should have performance-monitor.cjs hook file', async () => {
       try {
