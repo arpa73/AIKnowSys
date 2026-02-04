@@ -430,4 +430,78 @@ describe('Archive Commands', () => {
       assert.strictEqual(exists, true);
     });
   });
+
+  describe('archive-plans --threshold=0 fix', () => {
+    it('should archive immediately when threshold is 0', async () => {
+      // Setup multi-dev structure
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
+      
+      // Create pointer file with completed plan
+      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
+      await fs.writeFile(pointerPath, `
+# test's Active Plan
+
+| Plan | Status | Description | Last Updated |
+|------|--------|-------------|--------------|
+| [Test Plan](../PLAN_test.md) | ✅ COMPLETE | Done | 2026-02-04 |
+`);
+      
+      // Create the actual plan file (modified today)
+      const planPath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_test.md');
+      await fs.writeFile(planPath, '# Test Plan\n\nCompleted today.');
+      
+      // Archive with threshold=0 (should archive even though file is new)
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 0,
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 1, 'Should archive plan immediately with threshold=0');
+    });
+  });
+
+  describe('archive-plans --status option', () => {
+    it('should archive plans by custom status', async () => {
+      // Setup multi-dev structure
+      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
+      
+      // Create pointer file with cancelled plan
+      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
+      await fs.writeFile(pointerPath, `
+# test's Active Plan
+
+| Plan | Status | Description | Last Updated |
+|------|--------|-------------|--------------|
+| [Cancelled Plan](../PLAN_cancelled.md) | ❌ CANCELLED | Abandoned | 2025-12-01 |
+| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | Working | 2026-02-04 |
+`);
+      
+      // Create plan files
+      const cancelledPath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_cancelled.md');
+      const activePath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md');
+      await fs.writeFile(cancelledPath, '# Cancelled Plan');
+      await fs.writeFile(activePath, '# Active Plan');
+      
+      // Set old date for cancelled plan
+      const oldDate = new Date();
+      oldDate.setDate(oldDate.getDate() - 60);
+      await fs.utimes(cancelledPath, oldDate, oldDate);
+      
+      // Archive CANCELLED plans with threshold=0
+      const result = await archivePlans({
+        dir: TEST_DIR,
+        threshold: 0,
+        status: 'CANCELLED',
+        _silent: true
+      });
+      
+      assert.strictEqual(result.archived, 1, 'Should archive 1 cancelled plan');
+      
+      // Active plan should still exist
+      const activeExists = await fs.access(activePath).then(() => true).catch(() => false);
+      assert.strictEqual(activeExists, true, 'Active plan should not be archived');
+    });
+  });
 });
+

@@ -197,14 +197,16 @@ program
 
 program
   .command('archive-plans')
-  .description('Archive completed plans to archive folder')
+  .description('Archive plans by status to archive folder')
   .option('-d, --dir <directory>', 'Target directory', '.')
-  .option('--threshold <days>', 'Archive completed plans older than N days', '7')
+  .option('--threshold <days>', 'Archive plans older than N days (use 0 for immediate)', '7')
+  .option('--status <status>', 'Status to archive (COMPLETE, CANCELLED, etc.)', 'COMPLETE')
   .option('--dry-run', 'Preview what would be archived without moving files')
   .action(async (options) => {
     await archivePlans({
       dir: options.dir,
       threshold: parseInt(options.threshold, 10),
+      status: options.status,
       dryRun: options.dryRun
     });
   });
