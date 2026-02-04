@@ -226,6 +226,120 @@ Then create a Pull Request on GitHub with:
 
 ---
 
+## TypeScript Development
+
+**Since v0.9.0**, this project uses TypeScript for type safety and better IDE support.
+
+### Building
+
+```bash
+npm run build         # Compile TypeScript to JavaScript (dist/)
+npm run build:watch   # Watch mode for development (auto-recompile)
+npm run dev           # Alias for build:watch
+npm run type-check    # Check types without building (CI-friendly)
+```
+
+### Development Workflow
+
+1. **Edit TypeScript source** in `lib/`, `bin/`, or `test/`
+2. **Build automatically runs** before tests (`pretest` hook)
+3. **Tests validate** compiled JavaScript in `dist/`
+
+**Note:** The `dist/` directory contains compiled JavaScript that users actually run. Always test changes with `npm test` to ensure compiled code works correctly.
+
+### Type Definitions
+
+Core types are in `lib/types/`. When adding new features:
+
+1. **Define types FIRST** in `lib/types/index.ts`
+2. **Write tests** using the types (TDD: RED phase)
+3. **Implement** with type safety (TDD: GREEN phase)
+
+### TypeScript Patterns
+
+**Critical Invariants:**
+- ✅ All new code must be TypeScript (not JavaScript)
+- ✅ Use `.js` extensions in imports (ES modules requirement)
+- ✅ Strict mode enabled (catch more bugs at compile time)
+- ✅ Avoid `any` - use `unknown` if truly dynamic
+
+**Type Safety Examples:**
+
+```typescript
+// ✅ Good: Explicit interface
+interface CommandOptions {
+  force?: boolean;
+  silent?: boolean;
+}
+
+export async function runCommand(options: CommandOptions): Promise<void> {
+  // Implementation
+}
+
+// ✅ Good: Type-only imports
+import type { ValidationResult } from './types/index.js';
+
+// ❌ Bad: any type
+function process(data: any) { }  // Use unknown instead
+
+// ✅ Better: unknown with type guards
+function process(data: unknown) {
+  if (typeof data === 'string') {
+    // TypeScript knows data is string here
+  }
+}
+```
+
+**Import Patterns:**
+
+```typescript
+// ✅ Correct: .js extension (TypeScript quirk for ES modules)
+import { validateDeliverables } from './commands/validate-deliverables.js';
+
+// ✅ Correct: Type-only import
+import type { ValidationResult } from './types/index.js';
+
+// ❌ Wrong: .ts extension
+import { utils } from './utils.ts';  // Will fail at runtime!
+```
+
+### Publishing
+
+The published package includes:
+- ✅ `dist/` - Compiled JavaScript (.js, .d.ts, .js.map)
+- ✅ `templates/` - User-facing files
+- ✅ `bin/` - CLI entry point
+- ❌ `lib/` - TypeScript source (excluded)
+- ❌ `test/` - Test files (excluded)
+
+**Build pipeline:**
+```bash
+npm publish
+└─> prepublishOnly: npm run build  # Fresh compile
+└─> prepublishOnly: npm run lint    # Code quality
+└─> prepublishOnly: npm run test:cli # CLI works
+└─> prepublishOnly: npm pack --dry-run # Verify package
+```
+
+### Common Issues
+
+**"Cannot find module" errors:**
+- Ensure you're using `.js` extensions in imports (not `.ts`)
+- Run `npm run build` to compile TypeScript
+- Check that `dist/` directory exists
+
+**Type errors:**
+- Run `npm run type-check` to see all errors
+- Enable strict mode checking in VSCode
+- Use type guards for `unknown` types
+
+**Tests fail after TypeScript changes:**
+- Run `npm test` (includes build via pretest hook)
+- Don't run test files directly - use npm script
+- Tests run against compiled `dist/` code
+
+---
+
 ## Working with AI Assistants (VSCode Users)
 
 If using AI coding assistants (Copilot, Claude) **in VSCode**, be aware of file operation conflicts.

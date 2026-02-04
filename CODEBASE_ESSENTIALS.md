@@ -274,6 +274,251 @@ See: [.github/skills/pattern-sharing/SKILL.md](.github/skills/pattern-sharing/SK
 
 ---
 
+## 4a. TypeScript Patterns (Since v0.9.0)
+
+### Build System
+
+**Commands:**
+```bash
+npm run build         # Compile TypeScript → dist/ (prod)
+npm run build:watch   # Watch mode for development
+npm run dev           # Alias for build:watch
+npm run type-check    # Check types without building (CI)
+```
+
+**Build Pipeline:**
+```
+lib/              # TypeScript source (.ts files)
+  ↓ tsc build
+dist/             # Compiled output (.js, .d.ts, .js.map)
+  ↓ npm test (pretest: npm run build)
+Test against      # Tests validate compiled code
+  ↓ npm publish (prepublishOnly: build + lint + test)
+Users get dist/   # Compiled JavaScript only
+```
+
+### Type System Configuration
+
+**tsconfig.json settings:**
+```json
+{
+  "compilerOptions": {
+    "strict": true,              // All strict checks enabled
+    "target": "ES2022",          // Modern JavaScript features
+    "module": "ES2022",          // ES modules
+    "moduleResolution": "node",  
+    "esModuleInterop": true,     
+    "outDir": "./dist",          // Compiled output
+    "declaration": true,         // Generate .d.ts files
+    "declarationMap": true,      // Source maps for types
+    "sourceMap": true            // JavaScript source maps
+  },
+  "include": ["lib/**/*", "bin/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "templates"]
+}
+```
+
+### Import Patterns
+
+**CRITICAL: Use `.js` extensions in imports (TypeScript quirk for ES modules)**
+
+```typescript
+// ✅ Correct: .js extension (required for ES modules)
+import { validateDeliverables } from './commands/validate-deliverables.js';
+import { createLogger } from './logger.js';
+
+// ✅ Correct: Type-only import
+import type { ValidationResult, FileOperation } from './types/index.js';
+
+// ❌ Wrong: .ts extension
+import { utils } from './utils.ts';  // Will fail at runtime!
+
+// ❌ Wrong: No extension
+import { config } from './config';   // Module resolution error
+```
+
+**Why `.js` extensions?**  
+TypeScript compiles `.ts` → `.js`, but import paths are NOT rewritten. Runtime needs `.js` to find the compiled file.
+
+### Type Definitions
+
+**Core types location:** `lib/types/index.ts`
+
+```typescript
+// File operation result
+export interface FileOperation {
+  source: string;
+  destination: string;
+  status: 'success' | 'skipped' | 'error';
+  reason?: string;
+}
+
+// Validation result
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+// Command options (extends Commander.js options)
+export interface CommandOptions {
+  dir?: string;
+  force?: boolean;
+  silent?: boolean;
+  _silent?: boolean;  // Internal flag for nested calls
+}
+```
+
+### Type Safety Patterns
+
+**Critical Invariants:**
+- ✅ All new code MUST be TypeScript (not JavaScript)
+- ✅ Use `.js` extensions in imports
+- ✅ Avoid `any` - use `unknown` for truly dynamic data
+- ✅ Write tests before implementation (TDD with types)
+- ✅ Type-only imports for interfaces/types
+
+**Avoid `any`:**
+```typescript
+// ❌ Bad: Loses all type safety
+function process(data: any) {
+  data.anything();  // No error, but might crash
+}
+
+// ✅ Better: Unknown with type guards
+function process(data: unknown) {
+  if (typeof data === 'string') {
+    console.log(data.toUpperCase());  // TypeScript knows it's string
+  } else if (isValidationResult(data)) {
+    console.log(data.errors);  // TypeScript knows the shape
+  }
+}
+
+// Type guard function
+function isValidationResult(obj: unknown): obj is ValidationResult {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'valid' in obj &&
+    'errors' in obj
+  );
+}
+```
+
+**Type-only imports:**
+```typescript
+// ✅ Explicitly mark type-only imports (gets erased during compilation)
+import type { ValidationResult } from './types/index.js';
+
+// ✅ Mixed import/type
+import { validateFile } from './validator.js';
+import type { FileOperation } from './types/index.js';
+
+// ❌ Unnecessary: Importing only for types but not marked as type-only
+import { ValidationResult } from './types/index.js';  // Could be optimized
+```
+
+### TDD with TypeScript
+
+**Development workflow:**
+
+1. **RED: Write failing test FIRST (with types)**
+   ```typescript
+   // test/commands/validate.test.ts
+   import type { ValidationResult } from '../../lib/types/index.js';
+   import { validateDeliverables } from '../../lib/commands/validate-deliverables.js';
+   
+   it('should detect missing files', async () => {
+     const result: ValidationResult = await validateDeliverables({ dir: './test/fixtures/missing' });
+     expect(result.valid).toBe(false);
+     expect(result.errors).toContain('AGENTS.md not found');
+   });
+   ```
+
+2. **GREEN: Implement minimal code to pass**
+   ```typescript
+   // lib/commands/validate-deliverables.ts
+   import type { ValidationResult } from '../types/index.js';
+   
+   export async function validateDeliverables(options: CommandOptions): Promise<ValidationResult> {
+     const errors: string[] = [];
+     
+     if (!fs.existsSync(path.join(options.dir, 'AGENTS.md'))) {
+       errors.push('AGENTS.md not found');
+     }
+     
+     return { valid: errors.length === 0, errors, warnings: [] };
+   }
+   ```
+
+3. **REFACTOR: Clean up while keeping tests green**
+   - Extract validation logic to separate functions
+   - Add more specific type definitions
+   - Improve error messages
+
+### Common TypeScript Gotchas
+
+**Module resolution:**
+```typescript
+// ❌ This works in TypeScript but fails at runtime
+import { config } from './config';
+
+// ✅ Always use .js extension
+import { config } from './config.js';
+```
+
+**Type assertions:**
+```typescript
+// ❌ Unsafe: Might be wrong at runtime
+const result = response as ValidationResult;
+
+// ✅ Better: Type guard with runtime check
+function isValidationResult(obj: unknown): obj is ValidationResult {
+  return /* runtime validation */;
+}
+
+if (isValidationResult(result)) {
+  // Safe to use result.errors, result.warnings
+}
+```
+
+**Async/await:**
+```typescript
+// ✅ Always type Promise return
+export async function runCommand(options: CommandOptions): Promise<ValidationResult> {
+  // ...
+}
+
+// ❌ Don't forget await (TypeScript catches this)
+const result = runCommand(options);  // Error: result is Promise<ValidationResult>, not ValidationResult
+```
+
+### Distribution
+
+**Package contents:**
+- ✅ `dist/` - Compiled JavaScript (.js, .d.ts, .js.map)
+- ✅ `templates/` - User-facing files
+- ✅ `bin/` - CLI entry point
+- ❌ `lib/` - TypeScript source (excluded from npm package)
+- ❌ `test/` - Test files (excluded)
+
+**Why ship `dist/` not `lib/`?**
+- Users don't need TypeScript compiler
+- Faster execution (no runtime compilation)
+- Industry standard for TypeScript packages
+
+### Migration Status
+
+- ✅ Phase 1: Infrastructure complete
+- ✅ Phase 2: Core type definitions complete
+- ✅ Phase 3: Core utilities migrated
+- ✅ Phase 4: All 40 test files migrated to TypeScript
+- ✅ Phase 5: Build integration complete
+- ⏳ Phase 6: Documentation updates in progress
+- ⏹️ Phase 7: Template schema enforcement (pending)
+
+---
+
 ## 5. Critical Invariants
 
 1. **ES Modules Only**
