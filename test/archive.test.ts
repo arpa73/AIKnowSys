@@ -1,12 +1,12 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
-import { promises as fs } from 'fs';
-import path from 'path';
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { archiveSessions } from '../lib/commands/archive-sessions.js';
 import { archivePlans } from '../lib/commands/archive-plans.js';
 import { clean } from '../lib/commands/clean.js';
 
-const TEST_DIR = path.join(process.cwd(), 'test-archive-temp');
+const TEST_DIR: string = path.join(process.cwd(), 'test-archive-temp');
 
 describe('Archive Commands', () => {
   beforeEach(async () => {
@@ -391,7 +391,7 @@ describe('Archive Commands', () => {
       const result = await clean({
         dir: TEST_DIR,
         _silent: true
-      });
+      } as any);  // Type definition missing _silent property
       
       assert.strictEqual(result.sessionsArchived, 1);
       assert.strictEqual(result.plansArchived, 1);
@@ -404,7 +404,7 @@ describe('Archive Commands', () => {
       const result = await clean({
         dir: TEST_DIR,
         _silent: true
-      });
+      } as any);  // Type definition missing _silent property
       
       assert.ok(result.tempFilesRemoved >= 0, 'Should report temp files removed');
     });
@@ -421,7 +421,7 @@ describe('Archive Commands', () => {
         dir: TEST_DIR,
         dryRun: true,
         _silent: true
-      });
+      } as any);  // Type definition missing _silent property
       
       assert.strictEqual(result.sessionsArchived, 0);
       
@@ -522,7 +522,7 @@ describe('Archive Commands', () => {
         threshold: 0,
         status: 'CANCELLED',
         _silent: true
-      });
+      } as any);  // Type definition missing status property
       
       assert.strictEqual(result.archived, 1, 'Should archive 1 cancelled plan');
       
