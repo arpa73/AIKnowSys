@@ -2,27 +2,9 @@
  * Display utilities for the init command
  */
 import { createLogger } from '../../logger.js';
-// @ts-ignore - JavaScript module, will be migrated later
 import { displayAIPrompt } from '../../utils.js';
 import { getProjectTypeName, getLanguageName, getFrameworkName } from './constants.js';
-
-/**
- * Project answers interface (temporary - will be refined when prompts.ts is migrated)
- */
-interface ProjectAnswers {
-  projectName: string;
-  projectDescription?: string;
-  projectType: string;
-  language: string;
-  customLanguage?: string;
-  framework?: string;
-  testFramework?: string;
-  linter?: string;
-  buildTool?: string;
-  packageManager?: string;
-  useOpenSpec?: boolean;
-  [key: string]: unknown;
-}
+import type { ProjectAnswers } from './prompts.js';
 
 /**
  * Build validation matrix rows from answers

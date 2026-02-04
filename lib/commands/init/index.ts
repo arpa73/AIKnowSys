@@ -11,8 +11,23 @@ export {
   getFrameworkName 
 } from './constants.js';
 
-// @ts-ignore - JavaScript module, will be migrated later
-export { getBasicProjectInfo, getTechStack, getWorkflowPreferences, getToolingDetails, askManualQuestions } from './prompts.js';
+export { 
+  getBasicProjectInfo, 
+  getTechStack, 
+  getWorkflowPreferences,
+  getFeaturePreferences,
+  getToolingDetails, 
+  askManualQuestions 
+} from './prompts.js';
+
+export type { 
+  ProjectAnswers,
+  BasicProjectInfo,
+  TechStackInfo,
+  WorkflowPreferences,
+  FeaturePreferences,
+  ToolingDetails
+} from './prompts.js';
 
 export { 
   buildValidationMatrix, 
@@ -23,5 +38,14 @@ export {
 
 export { setupOpenSpec } from './openspec.js';
 
-// @ts-ignore - JavaScript module, will be migrated later
-export { createKnowledgeSystemFiles, installAgentsAndSkills, setupSessionPersistence, setupTDDEnforcement, setupHooks } from './templates.js';
+export { 
+  createKnowledgeSystemFiles, 
+  installAgentsAndSkills, 
+  setupSessionPersistence, 
+  setupTDDEnforcement, 
+  setupHooks 
+} from './templates.js';
+
+export type { InstallOptions } from './templates.js';
+
+
