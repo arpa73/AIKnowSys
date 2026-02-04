@@ -29,7 +29,7 @@
   },
   "files": [
     "bin/",
-    "lib/",
+    "dist/",
     "templates/",
     "scripts/",
     "SETUP_GUIDE.md",
@@ -44,6 +44,7 @@
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",
+    "pretest": "npm run build",
     "test": "node --test test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
     "test:coverage": "node --test --experimental-test-coverage test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
     "test:cli": "node bin/cli.js --help",
