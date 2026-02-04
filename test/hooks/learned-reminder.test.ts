@@ -3,19 +3,15 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '../..');
+const projectRoot = join(import.meta.dirname, '../..');
 
 describe('learned-reminder hook', () => {
-  let testDir;
-  let hookPath;
+  let testDir: string;
+  let hookPath: string;
 
   beforeEach(() => {
-    testDir = join(__dirname, 'tmp', `learned-reminder-${Date.now()}`);
+    testDir = join(import.meta.dirname, 'tmp', `learned-reminder-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
     hookPath = join(projectRoot, 'templates', 'hooks', 'learned-reminder.cjs');
   });
@@ -173,4 +169,3 @@ describe('learned-reminder hook', () => {
     });
   });
 });
-  

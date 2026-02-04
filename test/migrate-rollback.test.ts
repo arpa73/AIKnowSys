@@ -1,15 +1,11 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import os from 'os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as os from 'os';
 
 /**
- * migrate-rollback.test.js - RED PHASE
+ * migrate-rollback.test.ts - RED PHASE
  * 
  * These tests verify FileTracker integration into migrate.js.
  * They should FAIL initially because FileTracker is not yet integrated.
@@ -18,7 +14,7 @@ const __dirname = path.dirname(__filename);
  */
 
 describe('migrate command rollback (FileTracker integration)', () => {
-  let testDir;
+  let testDir: string;
 
   beforeEach(async () => {
     // Create temporary test directory for each test
@@ -42,9 +38,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies FileTracker import exists
     // Will FAIL until we add: import { FileTracker } from '../utils.js';
     
-    const migrateModule = await import('../lib/commands/migrate.js');
+    await import('../lib/commands/migrate.js');
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -59,7 +55,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Will FAIL until we add: const tracker = new FileTracker();
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -74,7 +70,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Will FAIL until we add: tracker.trackFile(agentsPath);
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -93,7 +89,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Will FAIL until we add: tracker.trackFile(changelogPath);
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -112,7 +108,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Will FAIL until we wrap migrate operations in try-catch with rollback
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -130,7 +126,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Ensures atomic migration - draft file cleaned up on failure
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     
@@ -148,7 +144,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Migration has multiple phases and should show progress
     
     const migrateSource = await fs.readFile(
-      path.join(__dirname, '../lib/commands/migrate.js'),
+      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
       'utf-8'
     );
     

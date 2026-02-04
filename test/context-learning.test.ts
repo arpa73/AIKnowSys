@@ -18,17 +18,6 @@ const mockConversationData = {
   timestamp: new Date().toISOString(),
 };
 
-const mockSessionFile = `# Session: Fix logger (Jan 31, 2026)
-
-**Changes:**
-- [lib/logger.js](lib/logger.js#L12): Changed to dynamic chalk import
-
-**Validation:**
-- ✅ Tests: 390 passed
-
-**Key Learning:** ESM requires dynamic import for chalk
-`;
-
 describe('Context Learning - Session Summarizer', () => {
   let tmpDir: string;
   let sessionSummarizer: any;

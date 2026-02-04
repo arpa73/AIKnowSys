@@ -1,14 +1,10 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 
 describe('Phase 8: Advanced Intelligence', () => {
-  const testDir = path.join(__dirname, 'fixtures', 'phase8-test');
+  const testDir = path.join(import.meta.dirname, 'fixtures', 'phase8-test');
 
   beforeEach(async () => {
     await fs.mkdir(testDir, { recursive: true });
@@ -23,7 +19,7 @@ describe('Phase 8: Advanced Intelligence', () => {
   });
 
   describe('Migration Check Hook', () => {
-    const hookPath = path.join(__dirname, '..', 'templates', 'hooks', 'migration-check.cjs');
+    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'migration-check.cjs');
 
     it('should have migration-check.cjs hook file', async () => {
       try {
@@ -83,7 +79,7 @@ describe('Phase 8: Advanced Intelligence', () => {
   });
 
   describe('Documentation Sync Hook', () => {
-    const hookPath = path.join(__dirname, '..', 'templates', 'hooks', 'doc-sync.cjs');
+    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'doc-sync.cjs');
 
     it('should have doc-sync.cjs hook file', async () => {
       try {
@@ -154,7 +150,7 @@ describe('Phase 8: Advanced Intelligence', () => {
 
   describe('Version Detection Logic', () => {
     it('should compare version strings correctly', () => {
-      const compareVersions = (v1, v2) => {
+      const compareVersions = (v1: string, v2: string) => {
         const parts1 = v1.split('.').map(Number);
         const parts2 = v2.split('.').map(Number);
         
@@ -171,7 +167,7 @@ describe('Phase 8: Advanced Intelligence', () => {
     });
 
     it('should detect major version differences', () => {
-      const isMajorDiff = (v1, v2) => {
+      const isMajorDiff = (v1: string, v2: string) => {
         const major1 = parseInt(v1.split('.')[0]);
         const major2 = parseInt(v2.split('.')[0]);
         return major1 !== major2;
@@ -213,7 +209,7 @@ describe('Phase 8: Advanced Intelligence', () => {
 
   describe('Code-to-Doc Mapping', () => {
     it('should map commands to documentation files', () => {
-      const codeToDoc = {
+      const codeToDoc: Record<string, string[]> = {
         'lib/commands/init.js': ['README.md', 'SETUP_GUIDE.md'],
         'lib/commands/scan.js': ['docs/customization-guide.md'],
         'lib/commands/migrate.js': ['docs/migration-guide.md']
@@ -224,7 +220,7 @@ describe('Phase 8: Advanced Intelligence', () => {
     });
 
     it('should support multiple docs per code file', () => {
-      const codeToDoc = {
+      const codeToDoc: Record<string, string[]> = {
         'lib/commands/init.js': ['README.md', 'SETUP_GUIDE.md', 'docs/examples.md']
       };
 
