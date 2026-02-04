@@ -1,19 +1,15 @@
-import { describe, it, before, after, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import os from 'os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { describe, it, after, beforeEach } from 'node:test';
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
 
 // Import FileTracker from utils.js
-let FileTracker;
+let FileTracker: any;
 
 describe('FileTracker', () => {
-  let testDir;
-  let tracker;
+  let testDir: string;
+  let tracker: any;
 
   beforeEach(async () => {
     // Create temporary test directory for each test
@@ -193,10 +189,10 @@ describe('FileTracker', () => {
       await fs.writeFile(file, 'content');
       tracker.trackFile(file);
       
-      const logs = [];
+      const logs: Array<{ level: string; msg: string }> = [];
       const mockLog = {
-        warn: (msg) => logs.push({ level: 'warn', msg }),
-        info: (msg) => logs.push({ level: 'info', msg })
+        warn: (msg: string) => logs.push({ level: 'warn', msg }),
+        info: (msg: string) => logs.push({ level: 'info', msg })
       };
       
       await tracker.rollback(mockLog);

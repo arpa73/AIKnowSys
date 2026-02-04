@@ -1,21 +1,18 @@
 import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { init } from '../lib/commands/init.js';
 import { check } from '../lib/commands/check.js';
 import { sync } from '../lib/commands/sync.js';
 import { audit } from '../lib/commands/audit.js';
-import { migrate } from '../lib/commands/migrate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const projectRoot = path.join(__dirname, '..');
 
 describe('--essentials flag consistency across commands', () => {
-  let testDir;
+  let testDir: string;
 
   before(() => {
     testDir = path.join(__dirname, 'tmp', `essentials-flag-test-${Date.now()}`);
@@ -70,7 +67,7 @@ describe('--essentials flag consistency across commands', () => {
       // If we get here, check passed (didn't throw)
       assert.ok(true, 'Check should complete successfully');
     } catch (error) {
-      assert.fail(`Check should not throw: ${error.message}`);
+      assert.fail(`Check should not throw: ${(error as Error).message}`);
     }
   });
 
@@ -209,7 +206,7 @@ Some duplicated content here.
     } catch (error) {
       // Error should be thrown (health check failed)
       assert.ok(
-        error.message.includes('Health check failed') || error.message.includes('failed'),
+        (error as Error).message.includes('Health check failed') || (error as Error).message.includes('failed'),
         'Error should be thrown when essentials file is missing'
       );
     }

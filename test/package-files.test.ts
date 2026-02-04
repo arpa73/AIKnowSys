@@ -4,10 +4,10 @@
  */
 
 import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import * as assert from 'node:assert/strict';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -44,7 +44,7 @@ describe('Package Files Validation', () => {
     ];
     
     const missingFiles = requiredFiles.filter(file => {
-      return !packageJson.files.some(pattern => {
+      return !packageJson.files.some((pattern: string) => {
         // Check exact match
         if (pattern === file) return true;
         
