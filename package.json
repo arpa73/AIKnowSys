@@ -41,7 +41,7 @@
   },
   "scripts": {
     "build": "tsc && npm run copy-js-files && npm run copy-package-json",
-    "copy-js-files": "find lib scripts -name '*.js' -type f 2>/dev/null | while read file; do mkdir -p \"dist/$(dirname \"$file\")\" && cp \"$file\" \"dist/$file\"; done || true",
+    "copy-js-files": "find lib scripts test/helpers -name '*.js' -type f 2>/dev/null | while read file; do mkdir -p \"dist/$(dirname \"$file\")\" && cp \"$file\" \"dist/$file\"; done || true",
     "copy-package-json": "cp package.json dist/package.json",
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",

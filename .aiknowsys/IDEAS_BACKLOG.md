@@ -13,6 +13,83 @@
 
 ## High Priority (Should Consider Soon)
 
+### 1. Enterprise VectorDB Adapter 🔬
+**Category:** Enterprise Integration  
+**Effort:** 8-12 hours (Phase C)  
+**Value:** Very High (enables enterprise adoption)  
+**Business Value:** 🚀 **CTO Pitch Material**
+
+**Idea:**
+The storage adapter pattern isn't just JSON → SQLite. It's an **enterprise integration gateway**.
+
+**Use Cases:**
+1. **RAG Integration** - Existing corporate VectorDB (Pinecone, Weaviate, Qdrant, Milvus)
+   - Semantic search instead of exact match
+   - "Find sessions related to authentication bugs" (without keyword matching)
+   - Cross-project knowledge discovery
+
+2. **Enterprise Data Governance** - Corporate PostgreSQL/MongoDB/Oracle
+   - Centralized knowledge base across teams
+   - Audit trails, access control, compliance
+   - Single source of truth for all AI agent interactions
+
+3. **Hybrid Architecture** - Best of both worlds
+   - VectorDB for semantic search
+   - JSON/SQLite for local caching (offline mode)
+   - Sync on network reconnect
+
+**Implementation Path:**
+```typescript
+// lib/context/vectordb-storage.js
+class VectorDBAdapter extends StorageAdapter {
+  async queryPlans(filters) {
+    // Semantic search: "Find plans about performance optimization"
+    const embedding = await this.embed(filters.semanticQuery);
+    const results = await this.vectorDB.search(embedding, {
+      filter: { type: 'plan', author: filters.author },
+      limit: 10
+    });
+    return results.map(hit => hit.metadata);
+  }
+}
+```
+
+**CTO Pitch Angle:**
+- **"AI agents generate massive amounts of knowledge. We need to capture it, not lose it."**
+- **Pain:** 147 session files (400k+ lines) → nobody reads them → knowledge lost
+- **Solution:** Index-first architecture → knowledge becomes queryable, actionable
+- **Enterprise Ready:** Adapter pattern supports VectorDB → integrates with existing RAG infrastructure
+- **ROI:** Reduce repeated work (AI finds previous solutions), improve onboarding (new devs query past decisions)
+- **Competitive Edge:** "Our AI agents learn from themselves" (most companies just archive chat logs)
+
+**Technical Wins for Enterprise:**
+- ✅ Security: No data leaves corporate network (on-prem VectorDB)
+- ✅ Scale: VectorDB handles millions of knowledge items (JSON won't)
+- ✅ Compliance: Audit trails, retention policies (built into enterprise DB)
+- ✅ Collaboration: Cross-team knowledge discovery (not siloed in individual repos)
+- ✅ Investment Protection: Leverages existing RAG infrastructure (doesn't compete with it)
+
+**Phasing:**
+- **Phase A (14-19h):** Prove JSON adapter works (local, git-based)
+- **Phase B (3-4h):** Add mutations (prove index-first philosophy)
+- **Phase C (8-12h):** VectorDB adapter (prove enterprise integration)
+
+**Decision Trigger:** If Phase B succeeds + CTO approval → Build Phase C
+
+**Concerns:**
+- VectorDB setup complexity (need devops support)
+- Embedding costs (if using OpenAI/Anthropic APIs)
+- Network dependency (need offline fallback)
+
+**Next Step:** 
+1. Complete Phase A/B (prove concept with JSON)
+2. Create Phase C proposal with VectorDB adapter design
+3. Demo to CTO: "Here's how it works locally, here's how it scales enterprise-wide"
+
+**Status:** 🔬 Research - Needs Phase A/B validation first
+
+---
+
 ### 4. Auto-Context for Session Creation 🌱
 **Category:** DX Improvement  
 **Effort:** 2-3 hours  
