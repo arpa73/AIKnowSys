@@ -1,13 +1,9 @@
-import { promises as fs } from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { createLogger } from '../logger.js';
-// @ts-ignore - JavaScript module, will be migrated later
 import { checkEssentialsBloat } from '../quality-checkers/essentials-bloat.js';
-// @ts-ignore - JavaScript module, will be migrated later
 import { validateTemplates } from '../quality-checkers/template-validator.js';
-// @ts-ignore - JavaScript module, will be migrated later
 import { validateLinks } from '../quality-checkers/link-validator.js';
-// @ts-ignore - JavaScript module, will be migrated later
 import { scanPatterns } from '../quality-checkers/pattern-scanner.js';
 // @ts-ignore - JavaScript module, will be migrated later
 import { validateDeliverables } from './validate-deliverables.js';
