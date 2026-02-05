@@ -6,19 +6,48 @@
 
 ---
 
+## ⚠️ BLOCKERS & Dependencies
+
+### BLOCKER: TypeScript Phase 8 Must Complete First
+
+**Current state:**
+- Phase 8 Batch 7 committed (43 .js files deleted)
+- **114 test failures** (test import paths broken)
+- 4 final .js files remain (parse-essentials, skill-mapping, context7/index, plugins/loader)
+
+**Why this blocks context query system:**
+- Context query adds 10+ new command files
+- Mixing .js and .ts creates maintenance burden
+- TypeScript migration incomplete = unstable foundation
+
+**Required before starting this plan:**
+- [ ] Fix 114 test failures (restore test suite to baseline)
+- [ ] Migrate final 4 .js files to TypeScript
+- [ ] Achieve "Zero JavaScript in lib/" milestone
+- [ ] Validate: All tests passing, build clean, CLI functional
+
+**Timeline impact:** +2-4 hours (finish TypeScript first)
+
+**Decision:** Wait for TypeScript Phase 8 completion, then implement context query in TypeScript from day 1.
+
+---
+
 ## Overview
 
 Replace manual file searching with structured query commands:
 - **Before:** AI runs `grep_search`, `semantic_search`, reads multiple files
 - **After:** AI runs `npx aiknowsys query-plans --status active --json`
 
-**Key Innovation:** Storage adapter pattern allows starting with simple JSON, upgrading to SQLite/PostgreSQL later without changing CLI.
+**Key Innovations:**
+1. **Storage adapter pattern** - Start with JSON, upgrade to SQLite/PostgreSQL later without changing CLI
+2. **Dual-index architecture** - Team index (committed) + Personal index (local) = zero merge conflicts
 
 **Benefits:**
 - ✅ **Faster queries** - O(1) index lookup vs O(n) file reads
 - ✅ **AI-friendly** - Structured JSON output, not markdown parsing
 - ✅ **Human-usable** - Same commands developers can run
-- ✅ **Git-friendly** - JSON index is diffable and trackable
+- ✅ **Git-friendly** - Team index committed, personal index private
+- ✅ **Zero conflicts** - Matches existing plans/ vs personal/ pattern
 - ✅ **Incremental** - Add commands one at a time
 - ✅ **Future-proof** - Swap backends without CLI changes
 
@@ -44,6 +73,33 @@ Replace manual file searching with structured query commands:
 
 ## Architecture Changes
 
+### Collaboration Model: Dual Index
+
+**Team Index** (`context-index.json`)
+- Sources: Committed team data (plans/, sessions/, learned/)
+- Git: **Committed** (like CURRENT_PLAN.md)
+- Syncs: Auto via git pull (post-merge hook rebuilds)
+- Purpose: Shared context across team
+
+**Personal Index** (`context-index.personal.json`)
+- Sources: Gitignored personal data (personal/ patterns)
+- Git: **Gitignored** (private to each developer)
+- Syncs: Local only (manual rebuild or lazy load)
+- Purpose: Private patterns, draft work
+
+**Query Merging**
+- CLI commands load both indexes automatically
+- Merge transparently (personal takes precedence on conflicts)
+- AI agents see unified JSON result
+- Zero context strain (merge logic in CLI, not AI)
+
+**Benefits:**
+- ✅ No merge conflicts (personal is local-only)
+- ✅ Team data auto-syncs via git
+- ✅ Personal patterns stay private
+- ✅ Same pattern as existing plans/ (team) vs personal/ (local)
+- ✅ AI interface stays simple (unified JSON)
+
 ### New Files
 
 ```
@@ -60,7 +116,8 @@ lib/
 │   └── rebuild-index.js         # Rebuild context index
 
 .aiknowsys/
-└── context-index.json           # Indexed metadata (gitignored)
+├── context-index.json           # Team index (COMMITTED)
+└── context-index.personal.json  # Personal index (GITIGNORED)
 
 .github/skills/
 └── context-query/
@@ -78,6 +135,302 @@ lib/
 ---
 
 ## Implementation Steps
+
+---
+
+### Phase 0: Skill-First Design (1 hour) ⚠️ CRITICAL - DO THIS FIRST
+
+**Goal:** Design API through skill documentation (specification-driven development)
+
+**Why This Matters:**
+- Skill = API contract (defines command signatures, JSON formats, error messages)
+- Writing skill FIRST catches design issues before coding
+- Serves as implementation checklist (can't skip a step in skill)
+- AI agents learn the system by reading the skill
+- **Violates feature-implementation pattern if skipped**
+
+---
+
+#### Step 0: Create Context Query Skill
+**File:** `.github/skills/context-query/SKILL.md`
+
+**Action:** Write complete skill documentation BEFORE implementing any commands
+
+**Skill Structure:**
+```markdown
+---
+name: context-query
+description: Query AIKnowSys knowledge system using CLI commands instead of file searching
+triggers:
+  - "what's the current plan"
+  - "find sessions about"
+  - "show me plans from"
+  - "search knowledge for"
+  - "query plans"
+  - "recent sessions"
+maintainer: false
+---
+
+# Context Query Skill
+
+## When to Use
+
+Use this skill when you need to:
+- Find current/active plans without reading CURRENT_PLAN.md
+- Search session history by date or topic
+- Query specific sections from CODEBASE_ESSENTIALS.md (chunked retrieval)
+- Search across all knowledge (plans, sessions, learned patterns)
+- **INSTEAD OF:** grep_search, semantic_search, reading multiple files sequentially
+
+**Performance benefit:** O(1) index lookup vs O(n) file reads
+
+## Commands Available
+
+### Query Plans
+```bash
+# Find active plans
+npx aiknowsys query-plans --status ACTIVE --json
+
+# Find plans by author
+npx aiknowsys query-plans --author arno --json
+
+# Find plans by topic
+npx aiknowsys query-plans --topic "TypeScript migration" --json
+```
+
+**JSON Output:**
+```json
+{
+  "count": 2,
+  "plans": [
+    {
+      "id": "PLAN_context_query_system",
+      "author": "arno",
+      "status": "ACTIVE",
+      "topic": "Context query system",
+      "filePath": ".aiknowsys/PLAN_context_query_system.md",
+      "lastUpdated": "2026-02-05"
+    }
+  ]
+}
+```
+
+### Query Sessions
+```bash
+# Find sessions from last 7 days
+npx aiknowsys query-sessions --days 7 --json
+
+# Find sessions by topic
+npx aiknowsys query-sessions --topic "TDD" --json
+
+# Combine filters
+npx aiknowsys query-sessions --days 30 --topic "TypeScript" --json
+```
+
+**JSON Output:**
+```json
+{
+  "count": 3,
+  "sessions": [
+    {
+      "date": "2026-02-05",
+      "topics": ["TypeScript", "Migration", "Testing"],
+      "plan": "PLAN_typescript_migration",
+      "files": ["lib/commands/init.ts", "test/init.test.ts"],
+      "filePath": ".aiknowsys/sessions/2026-02-05-session.md"
+    }
+  ]
+}
+```
+
+### Query ESSENTIALS (Chunked Retrieval)
+```bash
+# Get specific section (saves 85% tokens)
+npx aiknowsys query-essentials "TypeScript Patterns" --json
+
+# List all sections
+npx aiknowsys list-sections --json
+```
+
+**JSON Output:**
+```json
+{
+  "section": "TypeScript Patterns",
+  "content": "### Build System\n\n**Commands:**\n...",
+  "lineRange": { "start": 270, "end": 360 },
+  "relatedSections": ["Testing Philosophy", "TDD Workflow"],
+  "file": "CODEBASE_ESSENTIALS.md"
+}
+```
+
+**Why use this:** ESSENTIALS.md is 803 lines. Loading one section = 100 lines (8x savings).
+
+### Search Everything
+```bash
+# Search across all context
+npx aiknowsys search-context "validation strategy" --json
+
+# Search specific scope
+npx aiknowsys search-context "TDD" --scope sessions --json
+npx aiknowsys search-context "refactor" --scope plans --json
+```
+
+**JSON Output:**
+```json
+{
+  "query": "validation",
+  "count": 5,
+  "results": [
+    {
+      "file": ".aiknowsys/sessions/2026-02-04-session.md",
+      "type": "session",
+      "snippet": "...added validation for deliverables...",
+      "score": 0.95
+    }
+  ]
+}
+```
+
+## Workflow Examples
+
+### Example 1: Find Current Work
+```
+User: "What's the current plan?"
+
+AI workflow:
+1. Run: npx aiknowsys query-plans --status ACTIVE --json
+2. Parse JSON response
+3. Present: "Currently working on: [plan.topic]"
+4. Optionally: Load full plan file if details needed
+```
+
+**Old workflow:** Read CURRENT_PLAN.md (200 lines), parse markdown manually  
+**New workflow:** 1 command, <1 second, structured JSON
+
+### Example 2: Research Past Sessions
+```
+User: "What did we work on regarding TypeScript last month?"
+
+AI workflow:
+1. Run: npx aiknowsys query-sessions --days 30 --topic "TypeScript" --json
+2. Parse JSON response
+3. Present summary with file links
+4. Optionally: Read specific session files for details
+```
+
+**Old workflow:** grep_search 147 session files sequentially (30+ seconds)  
+**New workflow:** 1 command, <1 second, filtered results
+
+### Example 3: Load Specific ESSENTIALS Section
+```
+AI needs: "How do we handle TypeScript imports?"
+
+AI workflow:
+1. Run: npx aiknowsys query-essentials "TypeScript Patterns" --json
+2. Extract content from JSON (100 lines)
+3. Use content to answer question
+```
+
+**Old workflow:** Load entire ESSENTIALS.md (803 lines), search manually  
+**New workflow:** Load only needed section (100 lines, 8x token savings)
+
+### Example 4: Search Knowledge Base
+```
+User: "How have we handled migration issues before?"
+
+AI workflow:
+1. Run: npx aiknowsys search-context "migration issues" --json
+2. Review top matches
+3. Read relevant session files
+4. Summarize past solutions
+```
+
+**Old workflow:** semantic_search (slow, no ranking)  
+**New workflow:** Indexed search with relevance scoring
+
+## Decision Tree: When to Use Which Command
+
+```
+Need plan information?
+  ├─ Active plans → query-plans --status ACTIVE
+  ├─ Specific author → query-plans --author X
+  └─ Topic search → query-plans --topic "X"
+
+Need session history?
+  ├─ Recent work → query-sessions --days 7
+  ├─ Topic research → query-sessions --topic "X"
+  └─ Specific date → query-sessions --days 1 (if today)
+
+Need ESSENTIALS info?
+  ├─ Know section name → query-essentials "Section Name"
+  ├─ Don't know section → list-sections, then query-essentials
+  └─ Fuzzy search → query-essentials "typescript" (fuzzy match)
+
+Need to search everything?
+  └─ search-context "query" --scope all
+```
+
+## Error Handling
+
+Commands provide helpful errors:
+
+```bash
+# Plan not found
+❌ Plan not found: PLAN_nonexistent
+
+Available plans:
+  • PLAN_context_query_system (ACTIVE)
+  • PLAN_typescript_migration (COMPLETE)
+
+💡 TIP: Run 'aiknowsys query-plans' to see all plans
+```
+
+```bash
+# Invalid status
+❌ Invalid status: UNKNOWN
+
+Valid statuses: ACTIVE, PAUSED, COMPLETE, CANCELLED
+
+💡 Example: aiknowsys query-plans --status ACTIVE
+```
+
+## Performance Guidelines
+
+- Use `--json` flag for programmatic use (AI agents)
+- Queries run in <100ms for <10k items
+- Chunked retrieval (query-essentials) saves 85% tokens
+- Index rebuilds automatically on git pull (team data)
+
+## Success Criteria
+
+After using this skill, you should:
+- ✅ Query plans in <1 second (vs 10+ file reads)
+- ✅ Load ESSENTIALS sections (100 lines vs 803 lines)
+- ✅ Search 147 sessions in <1 second (vs 30+ seconds)
+- ✅ Get structured JSON (no markdown parsing)
+```
+
+**Testing:** During implementation, use this skill to guide command design
+
+**Success criteria:**
+- [ ] Skill written with all command examples
+- [ ] All JSON output formats documented
+- [ ] Workflow examples cover common use cases
+- [ ] Decision tree helps AI choose right command
+- [ ] Error message patterns documented
+- [ ] Skill becomes test specification (implement to match)
+
+**Why this is CRITICAL:**
+- If we skip this, we'll design commands during coding (wrong order)
+- API will be inconsistent (no unified vision)
+- AI won't know when to use which command (no guidance)
+- We'll miss edge cases that skill examples would reveal
+
+**Dependencies:** None (pure documentation)
+
+**Risk:** Low (documentation only, but HIGH impact if skipped)
+
+---
 
 ### Phase 1: Storage Adapter Foundation (3-4 hours)
 
@@ -116,14 +469,25 @@ describe('StorageAdapter', () => {
 #### Step 2: Implement JSON Storage Adapter
 **File:** `lib/context/json-storage.js`
 
-**Action:** Implement JSON file-based storage
-- Read/write `.aiknowsys/context-index.json`
+**Action:** Implement JSON file-based storage with dual-index support
+- Read/write `.aiknowsys/context-index.json` (team data)
+- Read/write `.aiknowsys/context-index.personal.json` (personal data)
 - Parse plan metadata from `active-*.md` files
 - Parse session metadata from `YYYY-MM-DD-session.md` files
+- Implement index merging (personal takes precedence)
 - Implement filtering logic (status, author, topic, date)
 - Simple string matching for search (regex-based)
 
-**Why:** Simple, git-friendly, zero dependencies, works everywhere
+**Team Index Sources:**
+- `plans/active-*.md` - All team plan pointers
+- `PLAN_*.md` - Shared implementation plans
+- `sessions/*.md` - Committed session history
+- `learned/*.md` - Team-shared patterns
+
+**Personal Index Sources:**
+- `personal/*.md` - Private patterns only
+
+**Why:** Simple, git-friendly, zero dependencies, works everywhere, matches existing plans/ vs personal/ pattern
 
 **Dependencies:** Step 1 (storage-adapter.js)
 
@@ -185,6 +549,236 @@ describe('createStorage', () => {
 
 ---
 
+#### Step 3.5: Migration Command (Dogfooding Critical)
+**File:** `lib/commands/migrate-to-indexed.js`
+
+**Action:** Create migration command for existing markdown files
+
+**Why:** AIKnowSys has 147 session files in various formats. Need safe migration path.
+
+**CLI Usage:**
+```bash
+# Dry run (analyze existing files)
+npx aiknowsys migrate-to-indexed --dry-run
+
+# Show what would be created:
+# ✓ 12 plans detected (PLAN_*.md)
+# ✓ 147 sessions detected (sessions/*.md)
+# ⚠ 3 sessions have non-standard format (manual review needed)
+# Would create:
+#   - context-index.json (team data)
+#   - Migration log: .aiknowsys/migration-log.json
+
+# Execute migration
+npx aiknowsys migrate-to-indexed --execute
+```
+
+**Implementation:**
+
+**Step 1: Scan existing files**
+```javascript
+const files = {
+  plans: glob('.aiknowsys/PLAN_*.md'),
+  sessions: glob('.aiknowsys/sessions/*.md'),
+  learned: glob('.aiknowsys/learned/*.md')
+};
+```
+
+**Step 2: Parse each file (flexible parser)**
+```javascript
+function parseSessionFile(content) {
+  // Try YAML frontmatter first
+  const yamlMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (yamlMatch) {
+    return yaml.parse(yamlMatch[1]);
+  }
+  
+  // Fall back to header parsing
+  const headerMatch = content.match(/^# Session: (.+?) \((.+?)\)/);
+  if (headerMatch) {
+    return {
+      title: headerMatch[1],
+      date: parseDate(headerMatch[2]),
+      topics: extractTopics(content),
+      files: extractFiles(content)
+    };
+  }
+  
+  // Log unparseable files for manual review
+  return { error: 'Unparseable format', file: filename };
+}
+```
+
+**Step 3: Build index**
+```javascript
+const index = {
+  version: '1.0.0',
+  migrated: new Date().toISOString(),
+  plans: parsedPlans.map(p => ({
+    id: p.id,
+    status: p.status,
+    author: p.author || 'unknown',
+    created: p.created,
+    file: p.file
+  })),
+  sessions: parsedSessions.map(s => ({
+    date: s.date,
+    topics: s.topics,
+    plan: s.plan,
+    files: s.files,
+    file: s.file
+  }))
+};
+```
+
+**Step 4: Write index + migration log**
+```javascript
+// Save index
+saveIndex(index);
+
+// Save migration log (audit trail)
+const log = {
+  date: new Date().toISOString(),
+  filesProcessed: files.length,
+  filesSucceeded: succeeded.length,
+  filesFailed: failed.length,
+  failures: failed.map(f => ({ file: f.file, reason: f.error }))
+};
+fs.writeFileSync('.aiknowsys/migration-log.json', JSON.stringify(log, null, 2));
+```
+
+**Error Handling:**
+```javascript
+if (failed.length > 0) {
+  console.log('⚠️  Some files could not be migrated:');
+  failed.forEach(f => console.log(`  - ${f.file}: ${f.error}`));
+  console.log('\n💡 TIP: Review these files manually and run migration again');
+  
+  if (!options.force) {
+    throw new Error('Migration incomplete. Use --force to proceed anyway.');
+  }
+}
+```
+
+**Testing:**
+```javascript
+describe('migrate-to-indexed', () => {
+  it('parses YAML frontmatter sessions', async () => {
+    const content = `---\ndate: 2026-02-05\ntopics: [TDD]\n---\n# Session`;
+    const result = parseSessionFile(content);
+    expect(result.date).toBe('2026-02-05');
+    expect(result.topics).toEqual(['TDD']);
+  });
+  
+  it('parses header-only sessions (fallback)', async () => {
+    const content = `# Session: My Work (Feb 5, 2026)`;
+    const result = parseSessionFile(content);
+    expect(result.title).toBe('My Work');
+    expect(result.date).toMatch(/2026-02-05/);
+  });
+  
+  it('logs unparseable files', async () => {
+    const content = `Random content without structure`;
+    const result = parseSessionFile(content, 'bad-session.md');
+    expect(result.error).toBe('Unparseable format');
+  });
+  
+  it('creates migration log', async () => {
+    await migrateToIndexed({ execute: true });
+    const log = JSON.parse(readFileSync('.aiknowsys/migration-log.json', 'utf-8'));
+    expect(log.filesProcessed).toBeGreaterThan(0);
+    expect(log.date).toBeDefined();
+  });
+  
+  // Edge cases (critical for dogfooding)
+  it('handles corrupt YAML gracefully', async () => {
+    const content = `---\ndate: 2026-02-05\ntopics: [TDD\n---\n# Unclosed array`;
+    const result = parseSessionFile(content, 'corrupt.md');
+    expect(result.error).toContain('YAML parse error');
+  });
+  
+  it('skips binary files', async () => {
+    // Binary file detection
+    const binaryContent = Buffer.from([0x00, 0xFF, 0xFE]);
+    const result = parseSessionFile(binaryContent, 'binary.md');
+    expect(result.error).toBe('Binary file detected');
+  });
+  
+  it('handles very large files', async () => {
+    const largeContent = 'x'.repeat(11 * 1024 * 1024); // 11MB
+    const result = parseSessionFile(largeContent, 'huge.md');
+    expect(result.error).toBe('File too large (max 10MB)');
+  });
+  
+  it('handles mixed format (YAML + multiple sessions)', async () => {
+    const content = `---\ndate: 2026-02-05\n---\n## Session 1\n## Session 2`;
+    const result = parseSessionFile(content);
+    // Should extract YAML and ignore multiple sessions (log warning)
+    expect(result.date).toBe('2026-02-05');
+  });
+  
+  it('handles ambiguous date formats', async () => {
+    const content = `# Session: My Work (2/5/26)`;
+    const result = parseSessionFile(content);
+    // Should log warning about ambiguous format, pick ISO (2026-02-05)
+    expect(result.date).toMatch(/2026-02-05/);
+    expect(result.warnings).toContain('Ambiguous date format');
+  });
+});
+```
+
+**Implementation additions for edge cases:**
+```javascript
+// Add to parseSessionFile function:
+
+// Binary file detection
+if (Buffer.isBuffer(content) && content.includes(0x00)) {
+  return { error: 'Binary file detected', file: filename };
+}
+
+// File size check (before parsing)
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+if (content.length > MAX_FILE_SIZE) {
+  return { error: 'File too large (max 10MB)', file: filename };
+}
+
+// YAML error handling
+try {
+  if (yamlMatch) {
+    return yaml.parse(yamlMatch[1]);
+  }
+} catch (err) {
+  return { error: `YAML parse error: ${err.message}`, file: filename };
+}
+
+// Date parsing with warnings
+function parseDate(dateStr) {
+  const warnings = [];
+  
+  // Ambiguous format detection
+  if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(dateStr)) {
+    warnings.push('Ambiguous date format (MM/DD/YY) - assumed YYYY-MM-DD');
+  }
+  
+  // Parse and normalize to ISO
+  const date = new Date(dateStr);
+  if (isNaN(date)) {
+    return { error: 'Invalid date', warnings };
+  }
+  
+  return { 
+    date: date.toISOString().split('T')[0],
+    warnings
+  };
+}
+```
+
+**Dependencies:** Phase 1 complete (storage adapter)
+
+**Risk:** Medium - Parsing variety of formats is complex
+
+---
+
 ### Phase 2: Query Commands (4-5 hours)
 
 **Goal:** CLI commands for querying context with JSON output
@@ -221,6 +815,43 @@ npx aiknowsys query-plans --topic authentication
   ]
 }
 ```
+
+**Implementation:**
+```javascript
+import { createLogger } from '../logger.js';
+import { loadStorage } from '../context/index.js';
+import type { CommandOptions } from '../types/index.js';
+
+export async function queryPlans(options: CommandOptions = {}) {
+  const log = createLogger(options._silent);
+  const storage = loadStorage();
+  
+  try {
+    const plans = await storage.queryPlans({
+      status: options.status,
+      author: options.author,
+      topic: options.topic
+    });
+    
+    if (options.json) {
+      return { count: plans.length, plans };
+    }
+    
+    // Human-readable table
+    log.info(`Found ${plans.length} plans:`);
+    plans.forEach(p => {
+      log.info(`  • ${p.id} (${p.status}) - ${p.topic}`);
+    });
+    
+    return plans;
+  } catch (err) {
+    log.error(`Failed to query plans: ${err.message}`);
+    throw err;
+  }
+}
+```
+
+**Silent mode support:** `_silent: true` option disables console output (testability)
 
 **Why:** Primary use case - check active plans without file searching
 
@@ -349,24 +980,36 @@ describe('search-context', () => {
 #### Step 7: Rebuild Index Command
 **File:** `lib/commands/rebuild-index.js`
 
-**Action:** Rebuild index from markdown files
-- Scan `.aiknowsys/plans/` for active-*.md
-- Scan `.aiknowsys/sessions/` for session files
+**Action:** Rebuild index from markdown files (team, personal, or both)
+- Scan `.aiknowsys/plans/` for active-*.md (team)
+- Scan `.aiknowsys/sessions/` for session files (team)
+- Scan `.aiknowsys/personal/` for patterns (personal)
 - Extract metadata (topics, dates, status)
-- Write context-index.json
+- Write appropriate index file(s)
 - Show summary (X plans, Y sessions indexed)
 
 **CLI Usage:**
 ```bash
+# Rebuild team index only (default - shared data)
 npx aiknowsys rebuild-index
+
+# Rebuild personal index only (local patterns)
+npx aiknowsys rebuild-index --personal
+
+# Rebuild both indexes (comprehensive refresh)
+npx aiknowsys rebuild-index --all
 ```
 
 **Output:**
 ```
-✓ Index rebuilt successfully
+✓ Team index rebuilt successfully
   • 3 plans indexed
   • 45 sessions indexed (last 90 days)
   • Index saved to .aiknowsys/context-index.json
+
+✓ Personal index rebuilt successfully
+  • 12 patterns indexed
+  • Index saved to .aiknowsys/context-index.personal.json
 ```
 
 **Why:** Manual refresh when files edited outside CLI, debugging
@@ -424,19 +1067,120 @@ program
 
 ---
 
-#### Step 9: Update Gitignore
-**Files:** `.gitignore`, `templates/.gitignore`
+#### Step 9: Update Gitignore & Git Attributes
+**Files:** `.gitignore`, `templates/.gitignore`, `.gitattributes`
 
-**Action:** Ignore generated index file
-- Add `context-index.json` to gitignore
-- Index is generated, not source of truth (markdown is)
-- Template projects get same gitignore
+**Action:** Configure git tracking for dual-index architecture
 
-**Why:** Prevent merge conflicts, index is derived data
+**Gitignore changes:**
+```diff
+# AIKnowSys - Personal data only
+.aiknowsys/personal/
+.aiknowsys/performance-history.json
++.aiknowsys/context-index.personal.json  # Personal index (local only)
+
+# Team index is COMMITTED (like CURRENT_PLAN.md)
+# .aiknowsys/context-index.json  ← NOT IGNORED (tracked)
+```
+
+**Add .gitattributes for smart merging:**
+```
+# Auto-rebuild team index on merge conflict
+.aiknowsys/context-index.json merge=ours
+```
+
+**Add post-merge git hook:**
+```bash
+#!/bin/bash
+# Rebuild team index after pull (resolve conflicts)
+if [ -f ".aiknowsys/CURRENT_PLAN.md" ]; then
+  npx aiknowsys rebuild-index --silent
+  echo "✓ Team index updated"
+fi
+```
+
+**Why:**
+- Team index committed = auto-sync between developers
+- Personal index gitignored = privacy preserved
+- Git hook = auto-resolution of conflicts
+- Matches existing CURRENT_PLAN.md pattern
 
 **Dependencies:** None
 
 **Risk:** None
+
+---
+
+#### Step 9.5: Error Message Design
+**Action:** Implement helpful error messages (design guide)
+
+**Why:** Good errors save debugging time for humans AND AI
+
+**Error Message Patterns:**
+
+**Pattern 1: Not Found → Suggest Alternatives**
+```javascript
+// ❌ Bad
+throw new Error('Plan not found');
+
+// ✅ Good
+function planNotFoundError(planId) {
+  const available = queryPlans({ json: true });
+  const suggestions = available.slice(0, 3).map(p => `  • ${p.id} (${p.status})`);
+  
+  return new Error(
+    `❌ Plan not found: ${planId}\n\n` +
+    `Available plans:\n${suggestions.join('\n')}\n\n` +
+    `💡 TIP: Run 'aiknowsys query-plans' to see all plans`
+  );
+}
+```
+
+**Pattern 2: Invalid Input → Show Valid Options**
+```javascript
+// ❌ Bad
+throw new Error('Invalid status');
+
+// ✅ Good
+const VALID_STATUSES = ['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'];
+
+function invalidStatusError(status) {
+  return new Error(
+    `❌ Invalid status: ${status}\n\n` +
+    `Valid statuses: ${VALID_STATUSES.join(', ')}\n\n` +
+    `💡 Example: aiknowsys mark-plan-status PLAN_xyz COMPLETE`
+  );
+}
+```
+
+**Pattern 3: Sync Issues → Recovery Command**
+```javascript
+function syncError(details) {
+  return new Error(
+    `❌ Index out of sync with markdown\n\n` +
+    `Details: ${details}\n\n` +
+    `🔧 Fix: npx aiknowsys rebuild-index --source markdown\n` +
+    `   (This will rebuild index from markdown files)`
+  );
+}
+```
+
+**Implementation:**
+- Create `lib/errors.js` with error factories
+- Use throughout commands
+- Add tests for error messages
+
+**Testing:**
+```javascript
+it('shows helpful error when plan not found', () => {
+  try {
+    markPlanStatus('PLAN_nonexistent', 'COMPLETE');
+  } catch (err) {
+    expect(err.message).toContain('Available plans:');
+    expect(err.message).toContain('💡 TIP:');
+  }
+});
+```
 
 ---
 
@@ -597,6 +1341,266 @@ Show summary with file links
 
 ---
 
+### Phase 6: Mutation Commands (3-4 hours)
+
+**Goal:** Enable AI agents to perform structured operations instead of text editing
+
+#### Step 17: Plan Mutation Commands
+**Files:** `lib/commands/mark-plan-status.js`, `lib/commands/create-plan.js`, `lib/commands/archive-plan.js`
+
+**Action:** Implement plan management commands
+
+**mark-plan-status:**
+```bash
+npx aiknowsys mark-plan-status PLAN_xyz COMPLETE --json
+```
+
+**Implementation:**
+- Load index
+- Validate plan exists
+- Validate status (ACTIVE|PAUSED|COMPLETE|CANCELLED)
+- Update plan in index
+- Regenerate plan markdown (with new status emoji/text)
+- Rebuild CURRENT_PLAN.md (via sync-plans)
+- Return JSON confirmation
+
+**create-plan:**
+```bash
+npx aiknowsys create-plan "Auth System" --author arno --json
+```
+
+**Implementation:**
+- Generate plan ID (PLAN_auth_system)
+- Create plan entry in index
+- Generate plan markdown from template
+- Create/update active-{author}.md pointer
+- Rebuild team index
+- Return plan ID and file path
+
+**Why:** AI calls one command instead of editing 3 files manually
+
+**Dependencies:** Phase 1-2 complete
+
+**Risk:** Low - Similar to rebuild-index logic
+
+**Testing:**
+```javascript
+describe('mark-plan-status', () => {
+  it('validates plan exists', async () => {
+    await expect(
+      markPlanStatus('PLAN_nonexistent', 'COMPLETE')
+    ).rejects.toThrow('Plan not found');
+  });
+
+  it('validates status enum', async () => {
+    await expect(
+      markPlanStatus('PLAN_xyz', 'INVALID')
+    ).rejects.toThrow('Invalid status');
+  });
+
+  it('updates index and regenerates markdown', async () => {
+    await markPlanStatus('PLAN_xyz', 'COMPLETE');
+    const index = loadIndex();
+    expect(index.plans.find(p => p.id === 'PLAN_xyz').status).toBe('COMPLETE');
+    
+    const markdown = readFileSync('.aiknowsys/PLAN_xyz.md', 'utf-8');
+    expect(markdown).toContain('Status: ✅ COMPLETE');
+  });
+});
+```
+
+---
+
+#### Step 18: Session Mutation Commands
+**Files:** `lib/commands/create-session.js`, `lib/commands/update-session.js`
+
+**Action:** Implement session management commands
+
+**create-session:**
+```bash
+npx aiknowsys create-session --topics "TDD,validation" --plan PLAN_xyz --json
+```
+
+**Implementation:**
+- Generate session file name (YYYY-MM-DD-session.md)
+- Check if session already exists (append vs create)
+- Create markdown from template with YAML frontmatter:
+  ```yaml
+  ---
+  date: 2026-02-05
+  topics: [TDD, validation]
+  plan: PLAN_xyz
+  files: []
+  ---
+  ```
+- Add session to index
+- Return file path for AI to edit content
+
+**update-session:**
+```bash
+npx aiknowsys update-session --add-topic "TypeScript" --add-file "lib/init.js"
+```
+
+**Implementation:**
+- Find today's session file
+- Update YAML frontmatter
+- Update index entry
+- Return confirmation
+
+**Why:** Session files guaranteed correct structure, index always in sync
+
+**Dependencies:** Phase 1-2 complete
+
+**Risk:** Low
+
+**Testing:**
+```javascript
+describe('create-session', () => {
+  it('creates session with YAML frontmatter', async () => {
+    const result = await createSession({
+      topics: ['TDD', 'validation'],
+      plan: 'PLAN_xyz'
+    });
+    
+    const content = readFileSync(result.filePath, 'utf-8');
+    expect(content).toMatch(/^---\ndate: \d{4}-\d{2}-\d{2}/);
+    expect(content).toContain('topics: [TDD, validation]');
+  });
+
+  it('appends to existing session', async () => {
+    // Create first session
+    await createSession({ topics: ['TDD'] });
+    
+    // Create second (should append)
+    const result = await createSession({ topics: ['validation'] });
+    
+    const content = readFileSync(result.filePath, 'utf-8');
+    const sessions = content.split('## Session:');
+    expect(sessions.length).toBe(3); // Header + 2 sessions
+  });
+});
+```
+
+---
+
+#### Step 19: Essentials Chunking Commands
+**Files:** `lib/commands/query-essentials.js`, `lib/commands/list-sections.js`
+
+**Action:** Implement chunked ESSENTIALS retrieval
+
+**query-essentials:**
+```bash
+npx aiknowsys query-essentials "Extending AIKnowSys" --json
+```
+
+**Implementation:**
+- Parse ESSENTIALS.md for section headers (## Level 2)
+- Build section index (header → line range)
+- Find matching section (fuzzy match on name)
+- Extract section content
+- Return JSON with:
+  - Section title
+  - Content (just that section)
+  - Line range (for editing)
+  - Related sections (mentioned in text)
+
+**JSON Output:**
+```json
+{
+  "section": "Extending AIKnowSys",
+  "content": "...",
+  "lineRange": { "start": 666, "end": 715 },
+  "relatedSections": ["Commands", "Skills", "Testing"],
+  "file": "CODEBASE_ESSENTIALS.md"
+}
+```
+
+**list-sections:**
+```bash
+npx aiknowsys list-sections --json
+```
+
+**Returns:** Array of section names with line ranges
+
+**Why:** AI loads 100 lines instead of 800, 8x context savings
+
+**Dependencies:** None (reads markdown directly)
+
+**Risk:** Low - Simple parsing
+
+**Testing:**
+```javascript
+describe('query-essentials', () => {
+  it('extracts specific section', async () => {
+    const result = await queryEssentials('TypeScript Patterns');
+    expect(result.section).toBe('TypeScript Patterns');
+    expect(result.content).toContain('Build System');
+    expect(result.content).not.toContain('Testing Philosophy'); // Different section
+  });
+
+  it('handles fuzzy section names', async () => {
+    const result = await queryEssentials('typescript'); // lowercase
+    expect(result.section).toBe('TypeScript Patterns');
+  });
+
+  it('suggests related sections', async () => {
+    const result = await queryEssentials('Testing Philosophy');
+    expect(result.relatedSections).toContain('TDD Compliance Check');
+  });
+});
+```
+
+---
+
+#### Step 20: Markdown Regeneration
+**File:** `lib/commands/regenerate-markdown.js`
+
+**Action:** Regenerate markdown files from index (view layer)
+
+**CLI Usage:**
+```bash
+# Regenerate all markdown from index
+npx aiknowsys regenerate-markdown --all
+
+# Regenerate specific plan
+npx aiknowsys regenerate-markdown --plan PLAN_xyz
+
+# Regenerate CURRENT_PLAN.md
+npx aiknowsys regenerate-markdown --current-plan
+```
+
+**Implementation:**
+- Load index (source of truth)
+- For each plan/session, generate markdown from template
+- Preserve user-added content (session narratives)
+- Update YAML frontmatter from index
+- Write files
+
+**Why:** Index = data, markdown = view. Views can be regenerated.
+
+**Dependencies:** Phase 6 (needs templates for generation)
+
+**Risk:** Medium - Must preserve user content
+
+**Testing:**
+```javascript
+describe('regenerate-markdown', () => {
+  it('preserves session narrative content', async () => {
+    // Create session with custom content
+    const original = `## Session: My Work\n\nI did X, Y, Z...`;
+    
+    // Regenerate from index
+    await regenerateMarkdown({ plan: 'PLAN_xyz' });
+    
+    // Custom content preserved
+    const content = readFileSync('.aiknowsys/sessions/2026-02-05-session.md', 'utf-8');
+    expect(content).toContain('I did X, Y, Z');
+  });
+});
+```
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -631,11 +1635,12 @@ Show summary with file links
 
 ### Risk 1: Index Drift (Markdown edited manually)
 **Impact:** Query results don't match actual files  
-**Likelihood:** High (developers edit files directly)  
+**Likelihood:** Medium (mitigated by git hooks)  
 **Mitigation:**
-- Always reload index from disk in JSON storage
-- Auto-rebuild on session-end hook (optional)
-- Clear messaging: "Index refreshed from files"
+- Team index: Auto-rebuild on post-merge hook (after git pull)
+- Personal index: Lazy reload (check mtime, rebuild if stale)
+- Manual rebuild available: `npx aiknowsys rebuild-index --all`
+- Git attributes: Auto-resolution on merge conflicts
 
 ### Risk 2: Large Datasets (>10k sessions)
 **Impact:** JSON parsing becomes slow  
@@ -653,7 +1658,16 @@ Show summary with file links
 - Log warnings for unparseable files
 - Continue indexing other files on error
 
-### Risk 4: Platform Differences (Windows paths)
+### Risk 4: Team Index Merge Conflicts
+**Impact:** Two developers rebuild index, both commit, merge conflict  
+**Likelihood:** Low (only if both change plans simultaneously)  
+**Mitigation:**
+- Git attributes: `merge=ours` strategy
+- Post-merge hook: Auto-rebuild on conflict
+- Index is derived data (can always regenerate)
+- Clear docs: "On conflict, just rebuild"
+
+### Risk 5: Platform Differences (Windows paths)
 **Impact:** File paths break on Windows  
 **Likelihood:** Medium  
 **Mitigation:**
@@ -665,14 +1679,24 @@ Show summary with file links
 
 ## Success Criteria
 
+### Must Have (Phase 0)
+- [ ] Context query skill written with examples
+- [ ] All command signatures documented
+- [ ] Workflow examples cover common use cases
+- [ ] Skill serves as implementation specification
+
 ### Must Have (Phase 1-3)
 - [ ] Storage adapter interface defined and tested
-- [ ] JSON storage implementation working
+- [ ] JSON storage implementation working (dual-index)
+- [ ] **Migration command working (migrate-to-indexed)**
+- [ ] **AIKnowSys dogfooding: 147 sessions migrated successfully**
 - [ ] `query-plans` command with JSON output
 - [ ] `query-sessions` command with JSON output
 - [ ] `search-context` command with JSON output
-- [ ] `rebuild-index` command working
+- [ ] `query-essentials` command (chunked retrieval)
+- [ ] `rebuild-index` command working (team + personal)
 - [ ] Commands registered in CLI
+- [ ] **Error messages are helpful (suggest fixes, show alternatives)**
 - [ ] All tests passing (>85% coverage)
 - [ ] Documentation updated
 
@@ -682,24 +1706,74 @@ Show summary with file links
 - [ ] AGENTS.md updated with query workflow
 - [ ] AI can successfully use commands
 
+### Must Have (Phase 6 - Mutation Commands)
+- [ ] `mark-plan-status` command working
+- [ ] `create-plan` command working
+- [ ] `create-session` command with YAML frontmatter
+- [ ] `update-session` command working
+- [ ] `regenerate-markdown` command working
+- [ ] All mutation commands validated (schema enforcement)
+- [ ] Index-first workflow proven (index → markdown)
+- [ ] AI can perform structured operations without text editing
+
 ### Nice to Have (Future)
 - [ ] SQLite adapter implementation
 - [ ] Auto-rebuild on git hooks
 - [ ] Query learned patterns (`query-learned`)
 - [ ] Statistics command (`context-stats`)
+- [ ] `close-session` command with auto-summary
+- [ ] `archive-plan` command
 
 ---
 
 ## Timeline Estimate
 
-| Phase | Hours | Tasks |
-|-------|-------|-------|
-| Phase 1: Storage Adapter | 3-4 | Steps 1-3 |
-| Phase 2: Query Commands | 4-5 | Steps 4-7 |
-| Phase 3: CLI Integration | 1-2 | Steps 8-10 |
-| Phase 4: Skill Integration | 2-3 | Steps 11-13 |
-| Phase 5: Testing | 3-4 | Steps 14-16 |
-| **Total** | **13-18 hours** | **16 steps** |
+## Phase A: Read-Only Query System (PRIORITY - Ship This First)
+
+| Phase | Hours | Tasks | Milestone |
+|-------|-------|-------|----------|
+| **Phase 0: Skill-First Design** | **1** | **Step 0** | **API spec complete** |
+| Phase 1: Storage Adapter | 3-4 | Steps 1-3.5 | Migration working |
+| Phase 2: Query Commands | 4-5 | Steps 4-7 | **Milestone 1: Queries faster than grep** |
+| Phase 3: CLI Integration | 1-2 | Steps 8-10.5 | All commands registered |
+| Phase 4: Skill Integration | 2-3 | Steps 11-13 | AI can use system |
+| Phase 5: Testing | 3-4 | Steps 14-16 | **Milestone 2: Real data tested** |
+| **Phase A Total** | **14-19 hours** | **17 steps** | **2 decision points** |
+
+**Decision Point After Phase A:**
+- ✅ **Are queries faster than file searching?** (Milestone 1)
+- ✅ **Did migration handle 147 sessions correctly?** (Milestone 2)
+- ✅ **Is AI agent adoption smooth?** (Skill Integration)
+
+**IF YES:** Proceed to Phase B (mutation commands)  
+**IF NO:** Pivot or cancel (write lessons learned, avoid Phase B waste)
+
+---
+
+## Phase B: Mutation Commands (FUTURE - Depends on Phase A Success)
+
+⚠️ **DO NOT START until Phase A is complete, tested, and proven valuable.**
+
+| Phase | Hours | Tasks | Milestone |
+|-------|-------|-------|----------|
+| Phase 6: Mutation Commands | 3-4 | Steps 17-20 | **Milestone 3: Full system** |
+| **Phase B Total** | **3-4 hours** | **4 steps** | **1 decision point** |
+
+**Blockers:**
+- Phase A must be complete and proven
+- Phase B requires Phase A infrastructure (index, storage adapter, rebuild logic)
+
+**Risk:** If Phase A doesn't deliver value, Phase B is wasted effort. Split allows early pivot.
+
+---
+
+## Combined Timeline (If Both Phases Succeed)
+
+| Total Effort | 17-23 hours |
+|--------------|-------------|
+| Phase A | 14-19 hours |
+| Phase B | 3-4 hours |
+| Decision Points | 3 milestones |
 
 **Recommendation:** Implement in phases over 2-3 days, validate each phase before proceeding.
 
@@ -725,9 +1799,86 @@ Show summary with file links
 
 ### Implementation Order
 1. **Start with adapter interface** - Defines contract
-2. **JSON storage next** - Simplest implementation
-3. **One command at a time** - Validate each before next
-4. **Skill last** - Once commands proven to work
+2. **JSON storage next** - Simplest implementation (dual-index)
+3. **Query commands first** - Prove read-only operations work
+4. **Mutation commands second** - Prove write operations work
+5. **Skill last** - Once commands proven to work
+
+### Index-First Philosophy
+
+**Critical paradigm:** Index is source of truth, markdown is view layer
+
+**Old model (current):**
+```
+Markdown files = source of truth
+AI = reads/writes markdown directly
+Index = optional speed optimization
+```
+
+**New model (this plan):**
+```
+Index (JSON) = canonical data (source of truth)
+Markdown files = generated views (for humans)
+AI = calls CLI commands (structured API)
+Skills = teach AI which command for what
+```
+
+**Implementation implications:**
+- Mutation commands write to index FIRST
+- Markdown regenerated FROM index
+- Validation happens at CLI boundary (not AI)
+- Index drift = regenerate markdown (view is derived)
+
+**Benefits:**
+- ✅ Schema validation (can't create malformed plans)
+- ✅ Atomic updates (JSON write is safe)
+- ✅ Auto-sync (dependent files updated automatically)
+- ✅ Audit trail (index tracks all changes)
+- ✅ AI becomes CLI user, not text editor
+- ✅ **No more placeholder hunting** - Markdown generated from data, not filled in
+
+### How This Changes Project Setup
+
+**Old workflow (current):**
+```bash
+npx aiknowsys init        # Copies templates with {{PLACEHOLDERS}}
+# AI reads CODEBASE_ESSENTIALS.md
+# AI manually replaces {{PROJECT_NAME}}, {{TECH_STACK}}, etc.
+# Validation hunts for unfilled {{PLACEHOLDERS}}
+```
+
+**New workflow (with index-first):**
+```bash
+npx aiknowsys init        # Creates empty index + schema
+npx aiknowsys setup       # Interactive or AI-driven data collection
+
+# AI provides data via commands (no text editing):
+aiknowsys set-project-info --name "MyApp" --stack "Next.js,PostgreSQL"
+aiknowsys add-tech-pattern --name "TypeScript" --version "5.x"
+aiknowsys add-testing-pattern --framework "Vitest" --coverage-min 80
+
+# Markdown auto-generated from index (no placeholders needed!)
+aiknowsys regenerate-markdown --all
+```
+
+**Validation changes:**
+```javascript
+// ❌ Old: Hunt for unfilled placeholders in text
+const violations = findUnfilledPlaceholders(markdownContent);
+
+// ✅ New: Validate schema in index
+const errors = validateProjectSchema(indexData);
+if (!errors.length) {
+  generateMarkdown(indexData);  // Always correct!
+}
+```
+
+**Benefits:**
+- No more "did I miss a {{PLACEHOLDER}}?" anxiety
+- AI can't create malformed ESSENTIALS (schema enforces structure)
+- Setup becomes data entry, not text editing
+- Validation = schema check (fast, reliable)
+- Markdown always matches template structure (regenerated on demand)
 
 ### Key Design Decisions
 
@@ -742,10 +1893,18 @@ Show summary with file links
 - Works everywhere
 - Good enough for years of usage
 
-**Why always reload index?**
-- Handles manual file edits
-- Simpler than file watchers
-- Acceptable performance (<100ms)
+**Why dual-index (team + personal)?**
+- Matches existing plans/ (committed) vs personal/ (gitignored)
+- Zero merge conflicts (personal is local-only)
+- Team data auto-syncs via git
+- Privacy preserved for work-in-progress
+- AI sees unified view (merge happens in CLI)
+
+**Why commit team index?**
+- Same pattern as CURRENT_PLAN.md (generated but committed)
+- Instant sync between developers (no manual rebuild after pull)
+- Git hooks auto-resolve conflicts (just regenerate)
+- Source of truth remains markdown files
 
 **Why limit to 90 days of sessions?**
 - Prevents unbounded growth
@@ -758,12 +1917,49 @@ Show summary with file links
 - **Empty state:** Commands must work on brand-new projects
 - **Markdown variations:** Users customize format, parsing must be flexible
 
+### Migration Strategy: Current Users → Index-First
+
+**Phased rollout to avoid breaking changes:**
+
+**Phase A (this plan): Index-first for CONTEXT ONLY**
+- Plans, sessions, learned patterns → indexed
+- CODEBASE_ESSENTIALS.md → still template-based (unchanged)
+- init command → unchanged (still copies templates)
+- **Backward compatible** (existing projects work)
+
+**Phase B (future plan): Extend to project setup**
+- ESSENTIALS.md, AGENTS.md → schema-driven
+- init command → rewritten (interactive setup wizard)
+- Requires OpenSpec proposal (breaking change)
+- Separate plan, separate timeline
+
+**Decision:** Phase A doesn't break existing users. Phase B needs separate proposal and planning.
+
+---
+
+### Future: Schema-Driven Project Setup (Separate Plan Required)
+
+**Vision:** Extend index-first philosophy to entire init process
+
+**Requires:**
+- OpenSpec proposal (breaking change to init command)
+- ESSENTIALS schema design (JSON structure for all sections)
+- Template migration (convert .template.md to data models)
+- Backward compatibility strategy (detect old vs new format)
+
+**Estimated effort:** 15-20 hours (larger than this plan)
+
+**Decision:** Context query system (this plan) is Phase A. Schema-driven setup is Phase B (future).
+
+---
+
 ### Future Enhancements
 - SQLite adapter when JSON >1MB
 - `query-learned` for pattern search
 - `context-stats` for analytics
 - GraphQL API for complex queries
 - VSCode extension with tree view
+- **Multi-language support** - Index stores i18n data, generates localized markdown
 
 ---
 
