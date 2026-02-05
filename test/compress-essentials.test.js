@@ -1,6 +1,6 @@
 import { describe, test, mock, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { compressEssentials } from '../lib/commands/compress-essentials.js';
+import { compressEssentials } from '../dist/lib/commands/compress-essentials.js';
 import fs from 'fs';
 import path from 'path';
 

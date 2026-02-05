@@ -9,8 +9,8 @@ import {
   saveConfig,
   validateConfig,
   isFeatureEnabled
-} from '../lib/config.js';
-import { enableFeature, disableFeature, uninstall } from '../lib/commands/config.js';
+} from '../dist/lib/config.js';
+import { enableFeature, disableFeature, uninstall } from '../dist/lib/commands/config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
