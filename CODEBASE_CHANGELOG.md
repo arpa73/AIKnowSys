@@ -15,28 +15,44 @@
 
 **Root Cause:** TypeScript compilation to dist/ changes __dirname context, breaking relative paths. Remaining .js files (parse-essentials, skill-mapping, context7/index, plugins/loader) aren't copied to dist/, and compiled .ts code can't find them or package.json.
 
-**Solution:** Modified build system to copy .js files AND package.json to dist/:
+**Solution Attempts:**
+1. **Build script v1 (commit 4615ab1):** Copy .js files from bin/, lib/, scripts/ to dist/  
+   - Issue: bin/cli.js imports from `../dist/lib/`, creating double paths (dist/dist/lib/)
+   - CLI worked but tests failed looking for dist/bin/cli.js
+2. **Build script v2 (commit 22f27d9):** Copy .js files from lib/, scripts/, test/helpers/ (exclude bin/)  
+   - bin/cli.js stays in project root (avoids double-path issue)
+   - CLI works ✅
+   - Tests improved to 435/594 (73%) but 156 failures remain
+   - Issue: Tests calculate projectRoot from __dirname, which changes when compiled to dist/test/
 
 **Changes:**
-- [package.json](package.json): Added `copy-js-files` and `copy-package-json` scripts to build workflow
-  - Build now: `tsc && npm run copy-js-files && npm run copy-package-json`
-  - Copies 4 remaining .js files (parse-essentials, skill-mapping, context7/index, plugins/loader) to dist/
-  - Copies package.json to dist/package.json (for __dirname resolution in init.ts)
+- [package.json](package.json#L43-L45): Modified build workflow  
+  - `"build": "tsc && npm run copy-js-files && npm run copy-package-json"`
+  - `copy-js-files`: Copies .js from lib/, scripts/, test/helpers/ (NOT bin/)
+  - `copy-package-json`: Copies package.json to dist/ for __dirname resolution
+  - bin/cli.js stays in project root (not copied to dist/)
 
 **Validation:**
 - ✅ CLI: Works! `node bin/cli.js --help` shows all commands
-- ⚠️ Tests: 352/491 passing (72%) - improved from 280 but still many failures
-- ⚠️ Test failures: Tests looking for dist/test/ files - need investigation
+- ⚠️ Tests: 435/594 passing (73%) - improved from 280 baseline
+- ❌ 156 test failures: Compiled tests calculate projectRoot wrong (`dist/test/..` = `dist/` not `.`)
+
+**Root Issue:** Test files use `const projectRoot = path.join(__dirname, '..')` which works in source but breaks when compiled to dist/test/ (becomes dist/ instead of project root).
 
 **Key Learning:**
-- TypeScript dist/ compilation breaks relative paths - __dirname points to dist/lib/commands/ instead of project root
-- Can't do partial migration with remaining .js files - need either full migration OR build system workarounds
-- Copying files to dist/ is fragile - better to complete TypeScript migration (migrate remaining 4 .js files)
+- TypeScript dist/ compilation breaks relative paths - __dirname points to dist/test/ instead of test/
+- Can't do partial migration with remaining .js files - creates cascading build complexity
+- Build workarounds are fragile - better to complete TypeScript migration
+- Test path calculations must account for compilation context changes
 
-**Next Steps:**
-- Investigate test failures (136 failures related to dist/test/ lookups)
-- Consider migrating remaining 4 .js files to TypeScript for cleaner solution
-- Complete TypeScript Phase 8 to unblock Context Query System
+**Next Steps (from Architect Review):**
+1. **HIGH:** Migrate remaining 4 .js files to TypeScript (proper fix, 2-3 hours)
+   - lib/parse-essentials.js
+   - lib/skill-mapping.js
+   - lib/context7/index.js
+   - lib/plugins/loader.js
+2. **HIGH:** Fix test projectRoot calculation or migrate remaining test .js files
+3. **MEDIUM:** Remove build workaround scripts after migration complete
 
 ---
 
