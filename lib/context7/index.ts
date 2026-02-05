@@ -11,14 +11,30 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+export interface Context7Availability {
+  available: boolean;
+  configPath: string | null;
+  source: 'claude-desktop' | 'cursor' | 'unknown' | 'none';
+}
+
+export interface LibraryReference {
+  name: string;
+  version: string | null;
+}
+
+interface MCPConfig {
+  mcpServers?: Record<string, unknown>;
+  servers?: Record<string, unknown>;
+}
+
 /**
  * Check if Context7 MCP is likely configured
  * 
- * @returns {Promise<{available: boolean, configPath: string|null, source: string}>}
+ * @returns Promise resolving to availability info
  */
-export async function isContext7Available() {
+export async function isContext7Available(): Promise<Context7Availability> {
   // Check common MCP configuration locations
-  const configLocations = [
+  const configLocations: string[] = [
     // Claude Desktop (macOS)
     path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
     // Claude Desktop (Linux)
@@ -36,8 +52,8 @@ export async function isContext7Available() {
   for (const configPath of configLocations) {
     try {
       if (fs.existsSync(configPath)) {
-        const content = await fs.promises.readFile(configPath, 'utf-8');
-        const config = JSON.parse(content);
+        const content: string = await fs.promises.readFile(configPath, 'utf-8');
+        const config: MCPConfig = JSON.parse(content);
         
         // Check if context7 is configured
         if (config.mcpServers?.context7 || config.servers?.context7) {
@@ -63,10 +79,10 @@ export async function isContext7Available() {
 
 /**
  * Detect which AI client is configured
- * @param {string} configPath
- * @returns {string} 'claude-desktop' | 'cursor' | 'unknown'
+ * @param configPath - Path to config file
+ * @returns Source identifier
  */
-function detectSource(configPath) {
+function detectSource(configPath: string): 'claude-desktop' | 'cursor' | 'unknown' {
   if (configPath.includes('Claude')) return 'claude-desktop';
   if (configPath.includes('Cursor')) return 'cursor';
   return 'unknown';
@@ -80,15 +96,15 @@ function detectSource(configPath) {
  * - "v14", "version 15" (version numbers)
  * - Import statements
  * 
- * @param {string} content - Text to analyze
- * @returns {Array<{name: string, version: string|null}>}
+ * @param content - Text to analyze
+ * @returns Array of library references
  */
-export function extractLibraryReferences(content) {
-  const references = [];
-  const seen = new Set();
+export function extractLibraryReferences(content: string): LibraryReference[] {
+  const references: LibraryReference[] = [];
+  const seen: Set<string> = new Set();
 
   // Common framework/library patterns
-  const patterns = [
+  const patterns: RegExp[] = [
     // Framework names with optional version
     /\b(Next\.js|React|Vue|Angular|Svelte|Nuxt|SvelteKit|Remix)\s*(?:v?(\d+(?:\.\d+)*))?/gi,
     /\b(Express|Fastify|Koa|Hapi)\s*(?:v?(\d+(?:\.\d+)*))?/gi,
@@ -99,11 +115,11 @@ export function extractLibraryReferences(content) {
   ];
 
   for (const pattern of patterns) {
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = pattern.exec(content)) !== null) {
-      const name = match[1];
-      const version = match[2] || null;
-      const key = `${name.toLowerCase()}-${version}`;
+      const name: string = match[1];
+      const version: string | null = match[2] || null;
+      const key: string = `${name.toLowerCase()}-${version}`;
       
       if (!seen.has(key)) {
         seen.add(key);
@@ -113,15 +129,15 @@ export function extractLibraryReferences(content) {
   }
 
   // Import statements (package names)
-  const importPattern = /(?:import|from|require)\s+['"]([^'"]+)['"]/g;
-  let match;
+  const importPattern: RegExp = /(?:import|from|require)\s+['"]([^'"]+)['"]/g;
+  let match: RegExpExecArray | null;
   while ((match = importPattern.exec(content)) !== null) {
-    const packageName = match[1];
+    const packageName: string = match[1];
     // Only include if it looks like a package name (not relative path)
     if (!packageName.startsWith('.') && !packageName.startsWith('/')) {
       // Extract root package name (e.g., 'react' from 'react/jsx-runtime')
-      const rootPackage = packageName.split('/')[0];
-      const key = `${rootPackage.toLowerCase()}-null`;
+      const rootPackage: string = packageName.split('/')[0];
+      const key: string = `${rootPackage.toLowerCase()}-null`;
       if (!seen.has(key)) {
         seen.add(key);
         references.push({ name: rootPackage, version: null });
@@ -135,11 +151,11 @@ export function extractLibraryReferences(content) {
 /**
  * Build a Context7 query suggestion for AI assistant
  * 
- * @param {string} libraryId - Context7 library ID (e.g., '/vercel/next.js')
- * @param {string} topic - Specific topic to query
- * @returns {string} Suggested query text for AI
+ * @param libraryId - Context7 library ID (e.g., '/vercel/next.js')
+ * @param topic - Specific topic to query
+ * @returns Suggested query text for AI
  */
-export function buildContext7Query(libraryId, topic) {
+export function buildContext7Query(libraryId: string, topic: string): string {
   return `Query Context7 for ${libraryId}: ${topic}`;
 }
 
@@ -148,11 +164,11 @@ export function buildContext7Query(libraryId, topic) {
  * 
  * Maps common library names to their Context7 IDs
  * 
- * @param {string} libraryName
- * @returns {string|null} Context7 library ID or null if unknown
+ * @param libraryName - Library name to look up
+ * @returns Context7 library ID or null if unknown
  */
-export function suggestLibraryId(libraryName) {
-  const mapping = {
+export function suggestLibraryId(libraryName: string): string | null {
+  const mapping: Record<string, string> = {
     'next.js': '/vercel/next.js',
     'nextjs': '/vercel/next.js',
     'react': '/facebook/react',
@@ -178,23 +194,23 @@ export function suggestLibraryId(libraryName) {
 /**
  * Check if skill content references external libraries
  * 
- * @param {string} skillContent - Skill markdown content
- * @returns {boolean} True if external library references detected
+ * @param skillContent - Skill markdown content
+ * @returns True if external library references detected
  */
-export function hasExternalLibraryReferences(skillContent) {
-  const refs = extractLibraryReferences(skillContent);
+export function hasExternalLibraryReferences(skillContent: string): boolean {
+  const refs: LibraryReference[] = extractLibraryReferences(skillContent);
   return refs.length > 0;
 }
 
 /**
  * Generate Context7 validation reminder for AI
  * 
- * @param {string} skillPath - Path to skill file
- * @param {Array<{name: string, version: string|null}>} libraries
- * @returns {string} Reminder message
+ * @param skillPath - Path to skill file
+ * @param libraries - Array of library references
+ * @returns Reminder message
  */
-export function generateValidationReminder(skillPath, libraries) {
-  const libList = libraries.map(lib => 
+export function generateValidationReminder(skillPath: string, libraries: LibraryReference[]): string {
+  const libList: string = libraries.map(lib => 
     lib.version ? `${lib.name} v${lib.version}` : lib.name
   ).join(', ');
   

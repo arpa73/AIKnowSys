@@ -1,22 +1,30 @@
 /**
  * Shared utilities for parsing CODEBASE_ESSENTIALS.md
- * Used by check.js and compress-essentials.js
+ * Used by check.ts and compress-essentials.ts
  */
+
+export interface EssentialsSection {
+  name: string;
+  startLine: number;
+  endLine: number;
+  lines: number;
+  content: string;
+}
 
 /**
  * Parse ESSENTIALS markdown into sections with line counts
- * @param {string} content - Full ESSENTIALS file content
- * @returns {Array} Array of section objects with name, startLine, endLine, lines, content
+ * @param content - Full ESSENTIALS file content
+ * @returns Array of section objects with name, startLine, endLine, lines, content
  */
-export function parseEssentialsSections(content) {
-  const lines = content.split('\n');
-  const sections = [];
-  let currentSection = null;
+export function parseEssentialsSections(content: string): EssentialsSection[] {
+  const lines: string[] = content.split('\n');
+  const sections: EssentialsSection[] = [];
+  let currentSection: EssentialsSection | null = null;
   let sectionStartLine = 0;
-  let sectionContent = [];
+  let sectionContent: string[] = [];
   
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line: string = lines[i];
     
     // Detect section headers (## Something)
     if (line.match(/^##\s+/)) {
@@ -70,4 +78,4 @@ export const COMPRESSION_THRESHOLDS = {
   
   // Future: Auto-extraction threshold
   AUTO_EXTRACT_THRESHOLD: 20 // Lines for auto mode (Phase 3.5)
-};
+} as const;

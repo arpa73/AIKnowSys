@@ -10,7 +10,6 @@ import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Command } from 'commander';
-// @ts-expect-error - Not yet migrated to TypeScript
 import { loadPlugins, listInstalledPlugins, getPluginInfo } from '../lib/plugins/loader.js';
 
 describe('Plugin System', () => {

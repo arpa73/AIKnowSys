@@ -40,9 +40,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "build": "tsc && npm run copy-js-files && npm run copy-package-json",
-    "copy-js-files": "find lib scripts test/helpers -name '*.js' -type f 2>/dev/null | while read file; do mkdir -p \"dist/$(dirname \"$file\")\" && cp \"$file\" \"dist/$file\"; done || true",
-    "copy-package-json": "cp package.json dist/package.json",
+    "build": "tsc",
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",

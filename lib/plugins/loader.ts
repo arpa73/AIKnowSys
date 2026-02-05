@@ -14,9 +14,47 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import type { Command } from 'commander';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
+
+export interface PluginCommand {
+  name: string;
+  description?: string;
+  action?: (...args: any[]) => Promise<void> | void;
+  options?: Array<{
+    flags: string;
+    description: string;
+    defaultValue?: any;
+  }>;
+  arguments?: Array<{
+    name: string;
+    description: string;
+    defaultValue?: any;
+  }>;
+}
+
+export interface Plugin {
+  name: string;
+  version?: string;
+  description?: string;
+  commands: PluginCommand[];
+  onLoad?: () => Promise<void> | void;
+}
+
+interface PackageJson {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+}
+
+export interface PluginInfo {
+  name: string;
+  version: string;
+  commands: string;
+  description: string;
+}
 
 /**
  * Discover and load aiknowsys plugins
@@ -24,9 +62,9 @@ const __dirname = dirname(__filename);
  * Scans package.json for dependencies matching "aiknowsys-plugin-*",
  * then dynamically imports and registers each plugin's commands.
  * 
- * @param {import('commander').Command} program - Commander program instance
- * @param {string|null} basePath - Optional base directory for package.json (for tests)
- * @returns {Promise<Array<Object>>} Array of loaded plugin objects
+ * @param program - Commander program instance
+ * @param basePath - Optional base directory for package.json (for tests)
+ * @returns Array of loaded plugin objects
  * 
  * @example
  * import { loadPlugins } from './lib/plugins/loader.js';
@@ -36,25 +74,25 @@ const __dirname = dirname(__filename);
  * await loadPlugins(program);
  * program.parse();
  */
-export async function loadPlugins(program, basePath = null) {
-	const plugins = [];
+export async function loadPlugins(program: Command, basePath: string | null = null): Promise<Plugin[]> {
+	const plugins: Plugin[] = [];
 
 	try {
 		// Read package.json to find plugin dependencies
-		const pkgPath = basePath
+		const pkgPath: string = basePath
 			? join(basePath, 'package.json')
 			: join(__dirname, '../../package.json');
-		const pkgContent = await readFile(pkgPath, 'utf-8');
-		const pkg = JSON.parse(pkgContent);
+		const pkgContent: string = await readFile(pkgPath, 'utf-8');
+		const pkg: PackageJson = JSON.parse(pkgContent);
 
 		// Find all dependencies matching "aiknowsys-plugin-*"
-		const allDeps = {
+		const allDeps: Record<string, string> = {
 			...pkg.dependencies || {},
 			...pkg.devDependencies || {},
 			...pkg.optionalDependencies || {}
 		};
 
-		const pluginNames = Object.keys(allDeps).filter(name =>
+		const pluginNames: string[] = Object.keys(allDeps).filter(name =>
 			name.startsWith('aiknowsys-plugin-')
 		);
 
@@ -66,13 +104,14 @@ export async function loadPlugins(program, basePath = null) {
 		// Load each plugin
 		for (const pluginName of pluginNames) {
 			try {
-				const plugin = await loadPlugin(pluginName, program);
+				const plugin: Plugin | null = await loadPlugin(pluginName, program);
 				if (plugin) {
 					plugins.push(plugin);
 				}
 			} catch (error) {
 				// Plugin failed to load - warn but don't crash
-				console.warn(`Warning: Failed to load plugin "${pluginName}": ${error.message}`);
+				const errorMessage: string = error instanceof Error ? error.message : String(error);
+				console.warn(`Warning: Failed to load plugin "${pluginName}": ${errorMessage}`);
 			}
 		}
 
@@ -81,8 +120,9 @@ export async function loadPlugins(program, basePath = null) {
 	} catch (error) {
 		// Failed to read package.json or discover plugins
 		// This is non-fatal - just means no plugins available
-		if (error.code !== 'ENOENT') {
-			console.warn(`Plugin discovery failed: ${error.message}`);
+		if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+			const errorMessage: string = error instanceof Error ? error.message : String(error);
+			console.warn(`Plugin discovery failed: ${errorMessage}`);
 		}
 		return plugins;
 	}
@@ -94,16 +134,16 @@ export async function loadPlugins(program, basePath = null) {
  * Dynamically imports the plugin module, validates structure,
  * calls lifecycle hooks, and registers commands with Commander.
  * 
- * @param {string} pluginName - NPM package name (e.g., "aiknowsys-plugin-context7")
- * @param {import('commander').Command} program - Commander program instance
- * @returns {Promise<Object|null>} Plugin object or null if failed
- * @throws {Error} If plugin structure is invalid
+ * @param pluginName - NPM package name (e.g., "aiknowsys-plugin-context7")
+ * @param program - Commander program instance
+ * @returns Plugin object or null if failed
+ * @throws Error if plugin structure is invalid
  */
-async function loadPlugin(pluginName, program) {
+async function loadPlugin(pluginName: string, program: Command): Promise<Plugin | null> {
 	try {
 		// Dynamically import the plugin module
-		const pluginModule = await import(pluginName);
-		const plugin = pluginModule.default;
+		const pluginModule: { default: Plugin } = await import(pluginName);
+		const plugin: Plugin = pluginModule.default;
 
 		// Validate plugin structure
 		validatePluginStructure(plugin, pluginName);
@@ -123,18 +163,19 @@ async function loadPlugin(pluginName, program) {
 
 	} catch (error) {
 		// Re-throw with context
-		throw new Error(`Failed to load plugin "${pluginName}": ${error.message}`);
+		const errorMessage: string = error instanceof Error ? error.message : String(error);
+		throw new Error(`Failed to load plugin "${pluginName}": ${errorMessage}`);
 	}
 }
 
 /**
  * Validate plugin exports correct structure
  * 
- * @param {any} plugin - Plugin object to validate
- * @param {string} pluginName - Plugin package name (for error messages)
- * @throws {Error} If plugin structure is invalid
+ * @param plugin - Plugin object to validate
+ * @param pluginName - Plugin package name (for error messages)
+ * @throws Error if plugin structure is invalid
  */
-function validatePluginStructure(plugin, pluginName) {
+function validatePluginStructure(plugin: any, pluginName: string): asserts plugin is Plugin {
 	if (!plugin || typeof plugin !== 'object') {
 		throw new Error('Plugin must export default object');
 	}
@@ -162,12 +203,12 @@ function validatePluginStructure(plugin, pluginName) {
 /**
  * Register a single plugin command with Commander
  * 
- * @param {import('commander').Command} program - Commander program instance
- * @param {Object} cmd - Command definition from plugin
- * @param {string} pluginName - Plugin package name (for error context)
+ * @param program - Commander program instance
+ * @param cmd - Command definition from plugin
+ * @param _pluginName - Plugin package name (for error context)
  */
-function registerPluginCommand(program, cmd, _pluginName) {
-	const command = program.command(cmd.name);
+function registerPluginCommand(program: Command, cmd: PluginCommand, _pluginName: string): void {
+	const command: Command = program.command(cmd.name);
 
 	if (cmd.description) {
 		command.description(cmd.description);
@@ -189,11 +230,12 @@ function registerPluginCommand(program, cmd, _pluginName) {
 
 	// Set action handler
 	if (typeof cmd.action === 'function') {
-		command.action(async (...args) => {
+		command.action(async (...args: any[]) => {
 			try {
-				await cmd.action(...args);
+				await cmd.action?.(...args);
 			} catch (error) {
-				console.error(`Error executing ${cmd.name}:`, error.message);
+				const errorMessage: string = error instanceof Error ? error.message : String(error);
+				console.error(`Error executing ${cmd.name}:`, errorMessage);
 				process.exit(1);
 			}
 		});
@@ -203,23 +245,23 @@ function registerPluginCommand(program, cmd, _pluginName) {
 /**
  * Get list of installed plugins (for diagnostics)
  * 
- * @param {string|null} basePath - Optional base directory for package.json (for tests)
- * @returns {Promise<Array<string>>} Plugin package names
+ * @param basePath - Optional base directory for package.json (for tests)
+ * @returns Plugin package names
  * 
  * @example
  * const plugins = await listInstalledPlugins();
  * console.log('Installed plugins:', plugins);
  * // Output: ['aiknowsys-plugin-context7', 'aiknowsys-plugin-github']
  */
-export async function listInstalledPlugins(basePath = null) {
+export async function listInstalledPlugins(basePath: string | null = null): Promise<string[]> {
 	try {
-		const pkgPath = basePath
+		const pkgPath: string = basePath
 			? join(basePath, 'package.json')
 			: join(__dirname, '../../package.json');
-		const pkgContent = await readFile(pkgPath, 'utf-8');
-		const pkg = JSON.parse(pkgContent);
+		const pkgContent: string = await readFile(pkgPath, 'utf-8');
+		const pkg: PackageJson = JSON.parse(pkgContent);
 
-		const allDeps = {
+		const allDeps: Record<string, string> = {
 			...pkg.dependencies || {},
 			...pkg.devDependencies || {},
 			...pkg.optionalDependencies || {}
@@ -236,15 +278,15 @@ export async function listInstalledPlugins(basePath = null) {
 /**
  * Get detailed information about loaded plugins
  * 
- * @param {Array<Object>} plugins - Array of loaded plugin objects
- * @returns {Array<Object>} Plugin metadata
+ * @param plugins - Array of loaded plugin objects
+ * @returns Plugin metadata
  * 
  * @example
  * const loaded = await loadPlugins(program);
  * const info = getPluginInfo(loaded);
  * console.table(info);
  */
-export function getPluginInfo(plugins) {
+export function getPluginInfo(plugins: Plugin[]): PluginInfo[] {
 	return plugins.map(plugin => ({
 		name: plugin.name,
 		version: plugin.version || 'unknown',

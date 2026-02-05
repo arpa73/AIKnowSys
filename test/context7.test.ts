@@ -4,8 +4,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Context7 module is JavaScript (not migrated yet) - using any for imports
-// @ts-expect-error - Not yet migrated to TypeScript
 const context7 = await import('../lib/context7/index.js');
 const {
   isContext7Available,

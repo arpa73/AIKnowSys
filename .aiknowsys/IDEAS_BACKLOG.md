@@ -90,6 +90,136 @@ class VectorDBAdapter extends StorageAdapter {
 
 ---
 
+### 2. ESSENTIALS as Skill Index (Phase A.5) 📋
+**Category:** Knowledge Architecture  
+**Effort:** 2-3 hours  
+**Value:** Very High (solves AI agent overconfidence)  
+**Impact:** 60-80% token reduction, prevents "I thought I knew" mistakes
+
+**Real-World Failure Case:**
+> User: "Why didn't you use the skill I wrote for you?"  
+> Agent: "It was presented to me but it's optional, so I ignored it because I thought I knew it already."  
+> Agent: (Made mistake) "If I would have used it, I wouldn't have made this mistake."
+
+**The Problem:**
+- **Agent overconfidence:** "I think I know TDD, skip the skill" → violates TDD anyway
+- **Optional guidance:** Skills presented but not enforced → agent ignores them
+- **ESSENTIALS bloat:** 803 lines → agent loads everything every session, most irrelevant
+- **Cognitive load:** Agent sees 803 lines, skims it, misses critical details
+
+**The Solution: Index-Based ESSENTIALS**
+
+**Structure:**
+```markdown
+# CODEBASE_ESSENTIALS.md (~200 lines)
+
+## Critical Invariants (ALWAYS LOADED - NOT OPTIONAL)
+1. Validation is mandatory
+2. TDD for features (RED-GREEN-REFACTOR)
+3. ... (7 invariants total)
+
+## Skill Index (ON-DEMAND LOADING)
+- [tdd-workflow] - Triggers: "write tests", "TDD"
+- [refactoring-workflow] - Triggers: "refactor", "clean up"
+- [context-query] - Triggers: "find plan", "query sessions"
+```
+
+**Agent Workflow:**
+1. **Session start:** Read ESSENTIALS index (200 lines, not 803)
+2. **Critical invariants:** ALWAYS loaded (not optional, prevents "I thought I knew")
+3. **Detect trigger:** Agent sees "write tests" in user request
+4. **Load skill:** Call `query-essentials "TDD Workflow"` → loads only that skill (100 lines)
+5. **Apply skill:** Follows workflow (can't skip it, already loaded)
+
+**Why This Fixes "I Thought I Knew" Problem:**
+
+| Scenario | Current (803-line ESSENTIALS) | Index-Based (200 + on-demand) |
+|----------|------------------------------|-------------------------------|
+| **Agent confidence** | "I read 803 lines, I know everything" | "I read invariants, I know the rules" |
+| **Skill loading** | Optional (agent decides to skip) | Automatic (trigger words → load skill) |
+| **When agent skips** | "I think I know TDD" → violates TDD | Skill already loaded → follows it |
+| **Cognitive load** | High (803 lines, agent skims) | Low (200 lines index, focused reading) |
+
+**Benefits:**
+1. **Prevents overconfidence:** Critical rules ALWAYS loaded (not optional)
+2. **Reduces tokens:** 60-80% savings (load only relevant skills)
+3. **Enforces workflows:** Trigger words → auto-load skill → agent can't "forget"
+4. **Environment independence:** Skills become process-focused, not tool-specific
+5. **Modular knowledge:** Skills in `.github/skills/` (portable across projects)
+
+**Implementation:**
+
+**Phase A.5 (2-3 hours):**
+1. Decompose ESSENTIALS into index (~200 lines) + skill references
+2. Move detailed workflows to `.github/skills/` (already exist, just reorganize)
+3. Update `query-essentials` command to load skills instead of sections
+4. Add auto-load on trigger words (agent detects "refactor" → loads refactoring-workflow)
+
+**Example: ESSENTIALS Index**
+```markdown
+## Critical Invariants
+
+1. **Validation is Mandatory** (NOT OPTIONAL)
+   - Never claim work complete without validation
+   - Validation matrix: [validation-troubleshooting](../.github/skills/validation-troubleshooting/SKILL.md)
+
+2. **TDD for Features** (RED-GREEN-REFACTOR - NOT OPTIONAL)
+   - Write failing test FIRST
+   - Full workflow: [tdd-workflow](../.github/skills/tdd-workflow/SKILL.md)
+
+## Skill Index
+
+### When to Load Skills
+Agent: If you detect trigger words, call `query-essentials "<skill-name>"` to load the full workflow.
+**Do not skip this.** Skills contain patterns you may not be aware of.
+
+- **[tdd-workflow]** - Triggers: "write tests", "TDD", "test first"
+- **[refactoring-workflow]** - Triggers: "refactor", "clean up", "extract"
+- **[context-query]** - Triggers: "find plan", "query sessions"
+```
+
+**Environment Independence:**
+Skills become process-focused (works across VSCode/Claude/Cursor/web):
+
+```markdown
+## Query Plans Workflow
+
+**Goal:** Find plans by status/author/topic
+
+**Process:**
+1. Determine filter criteria (status, author, topic)
+2. **If terminal access:** Run `npx aiknowsys query-plans --status=active`
+3. **If web environment:** Ask user to run command, paste output
+4. **Parse JSON output:** Array of plan objects
+5. **Present results:** Show relevant plans to user
+
+**Output format:** JSON array, parse programmatically
+```
+
+**Meta-Beauty:**
+ESSENTIALS uses its own query system (self-referential):
+- `query-essentials "TDD"` → loads TDD skill
+- `query-essentials "Refactoring"` → loads refactoring skill
+- System demonstrates its own architecture
+
+**Phasing:**
+- ✅ **Phase A:** Build context query system (proves `query-essentials` works)
+- ✅ **Phase A.5:** Decompose ESSENTIALS into index (2-3 hours)
+- ✅ **Phase B:** Mutation commands (if Phase A succeeds)
+
+**Decision Trigger:** After Phase A validation, if queries work well → implement Phase A.5
+
+**Success Criteria:**
+- [ ] ESSENTIALS reduced from 803 → ~200 lines
+- [ ] Agent can load skills on-demand with `query-essentials`
+- [ ] Critical invariants ALWAYS loaded (not optional)
+- [ ] Agent follows workflows (can't skip with "I thought I knew")
+- [ ] 60-80% token savings on session startup
+
+**Status:** 📋 Ready - Clear problem, clear solution, fits in existing plan
+
+---
+
 ### 4. Auto-Context for Session Creation 🌱
 **Category:** DX Improvement  
 **Effort:** 2-3 hours  

@@ -3,19 +3,11 @@
  */
 
 import chalk from 'chalk';
-// @ts-ignore - plugins/loader.js not yet migrated to TypeScript
-import { listInstalledPlugins, getPluginInfo } from '../plugins/loader.js';
+import { listInstalledPlugins, getPluginInfo, type Plugin } from '../plugins/loader.js';
 import { logger as log } from '../logger.js';
 
 export interface ListPluginsOptions {
   // No options currently used, but interface maintained for consistency
-}
-
-interface LoadedPlugin {
-  name: string;
-  version?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any; // Plugin objects can have arbitrary properties
 }
 
 /**
@@ -61,7 +53,7 @@ export async function listPlugins(_options: ListPluginsOptions): Promise<void> {
  * @param loadedPlugins - Array of loaded plugin objects
  * @returns void
  */
-export function showPluginInfo(loadedPlugins: LoadedPlugin[]): void {
+export function showPluginInfo(loadedPlugins: Plugin[]): void {
 	if (loadedPlugins.length === 0) {
 		return;
 	}
