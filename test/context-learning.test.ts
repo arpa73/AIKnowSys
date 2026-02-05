@@ -26,7 +26,6 @@ describe('Context Learning - Session Summarizer', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Dynamic import to test module
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/session-summarizer.js');
     sessionSummarizer = module as any;
   });
@@ -99,7 +98,6 @@ describe('Context Learning - Pattern Detector', () => {
       '**Key Learning:** chalk import error - use dynamic import'
     );
     
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/pattern-detector.js');
     patternDetector = module as any;
   });
@@ -159,7 +157,6 @@ describe('Context Learning - Skill Creator', () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     await fs.mkdir(path.join(tmpDir, '.aiknowsys', 'learned'), { recursive: true });
     
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/skill-creator.js');
     skillCreator = module as any;
   });
@@ -337,7 +334,6 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should create pattern-history.json if not exists', async () => {
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/pattern-tracker.js');
     const { initPatternTracking } = module as any;
     
@@ -349,7 +345,6 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should track pattern occurrences', async () => {
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/pattern-tracker.js');
     const { trackPattern } = module as any;
     
@@ -371,7 +366,6 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should increment frequency for repeated patterns', async () => {
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/pattern-tracker.js');
     const { trackPattern } = module as any;
     
@@ -389,7 +383,6 @@ describe('Context Learning - Pattern Tracking', () => {
   });
 
   it('should mark pattern as documented when skill created', async () => {
-    // @ts-expect-error - Not yet migrated to TypeScript
     const module = await import('../lib/context/pattern-tracker.js');
     const { markPatternDocumented } = module as any;
     
