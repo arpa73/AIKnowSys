@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import { accessSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
+import { DEFAULT_EXCLUDE_PATTERNS } from './common.js';
 
 /**
  * Broken link violation
@@ -164,7 +165,7 @@ function existsSync(filePath: string): boolean {
  */
 async function findMarkdownFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
-  const excludePatterns = ['node_modules', '.git', 'dist', 'build', 'coverage', 'templates', '.aiknowsys/archive'];
+  const excludePatterns = DEFAULT_EXCLUDE_PATTERNS;
   
   async function walk(currentDir: string): Promise<void> {
     const entries = await fs.readdir(currentDir, { withFileTypes: true });
