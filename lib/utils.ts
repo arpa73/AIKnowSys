@@ -107,9 +107,35 @@ export class FileTracker {
  * Get the package installation directory
  */
 export function getPackageDir(): string {
+  // Use PROJECT_ROOT env var if available (set by test runner and CLI)
+  if (process.env.PROJECT_ROOT) {
+    return process.env.PROJECT_ROOT;
+  }
+  
+  // Otherwise, find package.json by walking up from current file location
   const __filename = fileURLToPath(import.meta.url);
+  let currentDir = path.dirname(__filename);
+  
+  // Walk up directory tree until we find package.json
+  while (currentDir !== path.dirname(currentDir)) {
+    try {
+      const packageJsonPath = path.join(currentDir, 'package.json');
+      if (fs.existsSync(packageJsonPath)) {
+        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        // Verify it's the aiknowsys package
+        if (pkg.name === 'aiknowsys') {
+          return currentDir;
+        }
+      }
+    } catch {
+      // Continue searching
+    }
+    currentDir = path.dirname(currentDir);
+  }
+  
+  // Fallback: assume we're in dist/lib and go up two levels
   const __dirname = path.dirname(__filename);
-  return path.resolve(__dirname, '..');
+  return path.resolve(__dirname, '../..');
 }
 
 /**

@@ -7,10 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
-// Always use project root (not dist/ when compiled)
-const rootDir: string = __dirname.includes('/dist/test')
-  ? path.join(__dirname, '../..')
-  : path.join(__dirname, '..');
+// Use PROJECT_ROOT env var set by test script (avoids dist/ path issues)
+const rootDir: string = process.env.PROJECT_ROOT || path.join(__dirname, '..');
 
 describe('scan command', () => {
   let testDir: string;

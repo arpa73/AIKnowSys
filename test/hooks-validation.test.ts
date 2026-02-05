@@ -10,7 +10,8 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
 /**
  * Helper: Run hook script with JSON input via stdin
  * @param {string} hookPath - Path to hook script
@@ -44,7 +45,7 @@ async function runHook(hookPath: string, input: any = {}): Promise<{code: number
 // ============================================================================
 
 describe('Validation Reminder Hook', () => {
-  const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'validation-reminder.cjs');
+  const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'validation-reminder.cjs');
   
   it('should parse validation matrix from ESSENTIALS', async () => {
     // Test will fail until hook is implemented
@@ -117,8 +118,8 @@ describe('Validation Reminder Hook', () => {
 // ============================================================================
 
 describe('TDD Reminder Hook', () => {
-  const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'tdd-reminder.cjs');
-  const testDir: string = path.join(import.meta.dirname, '..', 'test');
+  const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'tdd-reminder.cjs');
+  const testDir: string = path.join(projectRoot, 'test');
   let tempTestFile: string;
   
   beforeEach(() => {
@@ -213,21 +214,21 @@ describe('TDD Reminder Hook', () => {
 
 describe('Hook Error Handling', () => {
   it('validation hook should handle empty input gracefully', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'validation-reminder.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'validation-reminder.cjs');
     const result = await runHook(hookPath, {});
     
     assert.strictEqual(result.code, 0, 'Should not crash on empty input');
   });
   
   it('tdd hook should handle empty input gracefully', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'tdd-reminder.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'tdd-reminder.cjs');
     const result = await runHook(hookPath, {});
     
     assert.strictEqual(result.code, 0, 'Should not crash on empty input');
   });
   
   it('validation hook should handle malformed input', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'validation-reminder.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'validation-reminder.cjs');
     
     return new Promise<void>((resolve) => {
       const proc = spawn('node', [hookPath]);

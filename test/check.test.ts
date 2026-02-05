@@ -7,7 +7,8 @@ import { execSync } from 'node:child_process';
 
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
-const projectRoot: string = path.join(__dirname, '..');
+// Use PROJECT_ROOT env var set by test script (avoids dist/ path issues)
+const projectRoot: string = process.env.PROJECT_ROOT || path.join(__dirname, '..');
 
 describe('check command', () => {
   let testDir: string;

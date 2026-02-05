@@ -3,6 +3,9 @@ import assert from 'node:assert';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
+
 describe('Phase 8: Advanced Intelligence', () => {
   const testDir = path.join(import.meta.dirname, 'fixtures', 'phase8-test');
 
@@ -19,7 +22,7 @@ describe('Phase 8: Advanced Intelligence', () => {
   });
 
   describe('Migration Check Hook', () => {
-    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'migration-check.cjs');
+    const hookPath = path.join(projectRoot, 'templates', 'hooks', 'migration-check.cjs');
 
     it('should have migration-check.cjs hook file', async () => {
       try {
@@ -79,7 +82,7 @@ describe('Phase 8: Advanced Intelligence', () => {
   });
 
   describe('Documentation Sync Hook', () => {
-    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'doc-sync.cjs');
+    const hookPath = path.join(projectRoot, 'templates', 'hooks', 'doc-sync.cjs');
 
     it('should have doc-sync.cjs hook file', async () => {
       try {

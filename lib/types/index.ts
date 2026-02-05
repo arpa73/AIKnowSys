@@ -113,6 +113,7 @@ export interface AutoFixPattern {
 
 export interface DeliverableValidationOptions extends CommandOptions {
   projectRoot?: string;
+  full?: boolean;
   _testMode?: boolean;
   _preCommit?: boolean;
 }

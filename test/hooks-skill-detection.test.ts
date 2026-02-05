@@ -4,6 +4,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
+
 /**
  * Test suite for VSCode Hooks Phase 2: Skill Detection
  * 
@@ -34,8 +37,8 @@ describe('Hook Configuration', () => {
 
 describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   it('should detect code-refactoring from "refactor" keyword', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-detector.cjs');
-    const tmpFile: string = path.join(import.meta.dirname, '..', 'test-input.json');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
+    const tmpFile: string = path.join(projectRoot, 'test-input.json');
     const input: {userMessage: string; conversation: any[]} = {
       userMessage: 'Let\'s refactor this module to improve readability',
       conversation: []
@@ -60,8 +63,8 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   });
   
   it('should detect multiple skills from complex prompt', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-detector.cjs');
-    const tmpFile: string = path.join(import.meta.dirname, '..', 'test-input.json');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
+    const tmpFile: string = path.join(projectRoot, 'test-input.json');
     const input: {userMessage: string; conversation: any[]} = {
       userMessage: 'I want to add a new command and write tests first using TDD',
       conversation: []
@@ -87,7 +90,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   it('should respect autoLoad configuration', async () => {
     // This test verifies the hook properly distinguishes auto-load vs requires-confirmation
     // Since dependency-updates requires confirmation, it should be in separate section
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-detector.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
     const input: string = JSON.stringify({
       userMessage: 'Update dependencies to latest versions',
       conversation: []
@@ -120,7 +123,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   
   it('should track conversation context for continuity', async () => {
     // Test that reading a skill file earlier affects current detection
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-detector.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
     const input: string = JSON.stringify({
       userMessage: 'Continue with the refactoring',
       conversation: [
@@ -148,7 +151,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   });
   
   it('should handle no skill match gracefully', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-detector.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
     const input: string = JSON.stringify({
       userMessage: 'What is the meaning of life?',
       conversation: []
@@ -171,7 +174,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
 
 describe('Skill Prerequisite Check (preToolUse)', () => {
   it('should detect when editing dependency files', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-prereq-check.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-prereq-check.cjs');
     const input: string = JSON.stringify({
       parameters: { filePath: 'package.json' },
       conversation: []
@@ -196,7 +199,7 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
   });
   
   it('should remain silent if skill was read', async () => {
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-prereq-check.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-prereq-check.cjs');
     const input: string = JSON.stringify({
       parameters: { filePath: 'package.json' },
       conversation: [
@@ -228,7 +231,7 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
   
   it('should detect multiple skill requirements', async () => {
     // When editing test files, tdd-workflow might be suggested
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-prereq-check.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-prereq-check.cjs');
     const input: string = JSON.stringify({
       parameters: { filePath: 'test/something.test.js' },
       conversation: []
@@ -249,7 +252,7 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
   
   it('should handle missing config gracefully', async () => {
     // Hook has built-in defaults when config.json missing
-    const hookPath: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'skill-prereq-check.cjs');
+    const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-prereq-check.cjs');
     const input: string = JSON.stringify({
       parameters: { filePath: 'some-file.js' },
       conversation: []

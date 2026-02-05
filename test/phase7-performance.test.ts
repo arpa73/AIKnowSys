@@ -4,6 +4,9 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { depsHealth } from '../lib/commands/deps-health.js';
 
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
+
 describe('Phase 7: Performance & Dependency Monitoring', () => {
   const testDir = path.join(import.meta.dirname, 'fixtures', 'phase7-test');
   const perfHistoryPath = path.join(testDir, '.aiknowsys', 'performance-history.json');
@@ -161,7 +164,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
   });
 
   describe('Performance Monitor Hook', () => {
-    const hookPath = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'performance-monitor.cjs');
+    const hookPath = path.join(projectRoot, 'templates', 'hooks', 'performance-monitor.cjs');
 
     it('should have performance-monitor.cjs hook file', async () => {
       try {

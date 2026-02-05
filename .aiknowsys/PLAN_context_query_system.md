@@ -1341,6 +1341,207 @@ Show summary with file links
 
 ---
 
+### Phase A.5: ESSENTIALS Decomposition (2-3 hours) ⚠️ CRITICAL - PREVENTS AI OVERCONFIDENCE
+
+**Goal:** Transform ESSENTIALS from monolithic 803-line file into skill index, preventing "I thought I knew" failures
+
+**Real-World Failure Case:**
+> User: "Why didn't you use the skill I wrote for you?"  
+> Agent: "It was presented to me but it's optional, so I ignored it because I thought I knew it already."  
+> Agent: (Made mistake) "If I would have used it, I wouldn't have made this mistake."
+
+**Problem Being Solved:**
+- **Agent overconfidence:** "I think I know TDD" → skips skill → violates TDD anyway
+- **Optional guidance:** Skills presented but ignored → mistakes happen
+- **ESSENTIALS bloat:** 803 lines → agent skims → misses critical details
+- **High cognitive load:** Agent loads everything, applies nothing
+
+**Architecture Change:**
+```
+BEFORE: ESSENTIALS.md (803 lines, all loaded)
+├─ Critical Invariants (7 rules)
+├─ TDD workflow (detailed)
+├─ Refactoring patterns (detailed)
+├─ Dependency management (detailed)
+└─ ... (all workflows embedded)
+
+AFTER: ESSENTIALS.md (200 lines, index only)
+├─ Critical Invariants (7 rules - ALWAYS LOADED, NOT OPTIONAL)
+└─ Skill Index (links to .github/skills/)
+    ├─ tdd-workflow → Load on trigger: "write tests", "TDD"
+    ├─ refactoring-workflow → Load on trigger: "refactor", "clean up"
+    ├─ context-query → Load on trigger: "find plan", "query sessions"
+    └─ ... (all workflows in separate skills)
+```
+
+**Benefits:**
+1. **Prevents overconfidence:** Critical rules ALWAYS loaded (not optional)
+2. **Reduces tokens:** 60-80% savings (200 lines index + 100 lines skill vs 803 lines total)
+3. **Enforces workflows:** Trigger words → auto-load skill → agent can't "forget"
+4. **Environment independence:** Skills become process-focused, not tool-specific
+5. **Modular knowledge:** Skills in `.github/skills/` (portable across projects)
+
+---
+
+#### Step 16.5: Decompose ESSENTIALS into Index + Skills
+**Files:** `CODEBASE_ESSENTIALS.md`, `.github/skills/*/SKILL.md`
+
+**Action:** Restructure ESSENTIALS as skill index
+
+**New ESSENTIALS Structure (~200 lines):**
+```markdown
+# Codebase Essentials
+
+## Critical Invariants (ALWAYS LOADED - NOT OPTIONAL)
+
+These rules are MANDATORY. AI agents cannot skip them.
+
+1. **Validation is Mandatory**
+   - Never claim work complete without running validation
+   - See: [validation-troubleshooting](../.github/skills/validation-troubleshooting/SKILL.md)
+
+2. **TDD for Features** (RED-GREEN-REFACTOR - NOT OPTIONAL)
+   - Write failing test FIRST
+   - Implement minimal code (GREEN)
+   - Refactor while keeping tests green (REFACTOR)
+   - Full workflow: [tdd-workflow](../.github/skills/tdd-workflow/SKILL.md)
+
+3. **Validation Matrix** (Check BEFORE claiming done)
+   - Tests passing: `npm test`
+   - Type check: `npm run type-check`
+   - Build clean: `npm run build`
+   - CLI functional: `node bin/cli.js --help`
+
+... (7 invariants total)
+
+---
+
+## Skill Index (ON-DEMAND LOADING)
+
+**How to use (for AI agents):**
+When you detect trigger words in user request, call `query-essentials "<skill-name>"` to load the full workflow.
+**Do not skip this step.** Skills contain patterns you may not be aware of.
+
+### Development Workflows
+
+#### Testing & Validation
+- **[tdd-workflow](.github/skills/tdd-workflow/SKILL.md)**
+  - **Triggers:** "write tests", "TDD", "test first", "failing test"
+  - **Summary:** RED-GREEN-REFACTOR cycle, test structure patterns
+  
+- **[validation-troubleshooting](.github/skills/validation-troubleshooting/SKILL.md)**
+  - **Triggers:** "test fail", "validation error", "build broken"
+  - **Summary:** Debug validation failures, common issues
+
+#### Code Quality
+- **[refactoring-workflow](.github/skills/refactoring-workflow/SKILL.md)**
+  - **Triggers:** "refactor", "clean up", "simplify", "extract"
+  - **Summary:** Test-driven refactoring, safe code restructuring
+
+### Architecture & Patterns
+- **[feature-implementation](.github/skills/feature-implementation/SKILL.md)**
+  - **Triggers:** "new feature", "implement", "add capability"
+  - **Summary:** Planning, OpenSpec integration, implementation steps
+
+### Context & Knowledge
+- **[context-query](.github/skills/context-query/SKILL.md)**
+  - **Triggers:** "find plan", "query sessions", "search context"
+  - **Summary:** Query CLI commands instead of file searching
+
+### Dependency Management
+- **[dependency-management](.github/skills/dependency-management/SKILL.md)**
+  - **Triggers:** "update deps", "upgrade packages", "security fix"
+  - **Summary:** Safe upgrade procedures (npm, pip, cargo, go mod)
+
+---
+
+## Project Basics (50 lines)
+
+**Package Manager:** npm  
+**Test Command:** `npm test`  
+**Build Command:** `npm run build`  
+**CLI Entry:** `node bin/cli.js`
+
+... (minimal setup info)
+```
+
+**Modified Skills (Make Environment-Independent):**
+
+All skills updated to use process-focused instructions instead of tool-specific commands:
+
+```markdown
+## Example: Context Query Skill (Environment-Independent)
+
+### Query Plans Workflow
+
+**Goal:** Find plans by status/author/topic
+
+**Process:**
+1. Determine filter criteria (status, author, topic)
+2. **If terminal access:** Run `npx aiknowsys query-plans --status=active`
+3. **If web environment:** Ask user to run command, paste output
+4. **Parse JSON output:** Array of plan objects
+5. **Present results:** Show relevant plans to user
+
+**Output format:** JSON array, parse programmatically
+
+**Compatibility:**
+- ✅ GitHub Copilot (VSCode) - has terminal access
+- ✅ Claude Code - if terminal access available
+- ✅ Cursor AI - has terminal access
+- ⚠️ Web-based agents - ask user to run command
+```
+
+**Integration with query-essentials:**
+
+Update `query-essentials` command to auto-load skills:
+
+```javascript
+// lib/commands/query-essentials.js - UPDATE
+async function queryEssentials(section) {
+  // Check if section is a skill reference
+  const skillMatch = section.match(/\[([^\]]+)\]/);
+  if (skillMatch) {
+    const skillName = skillMatch[1];
+    const skillPath = `.github/skills/${skillName}/SKILL.md`;
+    
+    if (fs.existsSync(skillPath)) {
+      return {
+        type: 'skill',
+        name: skillName,
+        path: skillPath,
+        content: fs.readFileSync(skillPath, 'utf-8')
+      };
+    }
+  }
+  
+  // Otherwise load ESSENTIALS section
+  // ... (existing logic)
+}
+```
+
+**Why This Works:**
+- ESSENTIALS becomes index (200 lines loaded always)
+- Critical invariants ALWAYS loaded (can't skip)
+- Skills auto-load on trigger words (via `query-essentials`)
+- Agent sees "write tests" → loads TDD skill → follows workflow
+- Agent can't say "I thought I knew" (skill already loaded)
+- 60-80% token reduction (200 + 100 vs 803)
+
+**Testing:**
+- [ ] ESSENTIALS reduced from 803 → ~200 lines
+- [ ] All skills still accessible via `query-essentials`
+- [ ] Agent auto-loads skills on trigger detection
+- [ ] Critical invariants always present (not optional)
+- [ ] Token usage reduced 60-80%
+- [ ] Agent follows workflows (can't skip)
+
+**Dependencies:** Phase A complete (query-essentials command exists)
+
+**Risk:** Low (restructuring existing content, not creating new)
+
+---
+
 ### Phase 6: Mutation Commands (3-4 hours)
 
 **Goal:** Enable AI agents to perform structured operations instead of text editing
@@ -1706,6 +1907,17 @@ describe('regenerate-markdown', () => {
 - [ ] AGENTS.md updated with query workflow
 - [ ] AI can successfully use commands
 
+### Must Have (Phase A.5 - ESSENTIALS Decomposition)
+- [ ] **ESSENTIALS reduced from 803 → ~200 lines**
+- [ ] **Critical invariants ALWAYS loaded (not optional)**
+- [ ] **Skill index with clear trigger words**
+- [ ] **All existing skills referenced in index**
+- [ ] **query-essentials auto-loads skills on trigger detection**
+- [ ] **Skills made environment-independent (process-focused)**
+- [ ] **60-80% token reduction achieved**
+- [ ] **Agent cannot say "I thought I knew" (skills auto-load)**
+- [ ] **Validation: Agent follows workflows, doesn't skip**
+
 ### Must Have (Phase 6 - Mutation Commands)
 - [ ] `mark-plan-status` command working
 - [ ] `create-plan` command working
@@ -1745,35 +1957,59 @@ describe('regenerate-markdown', () => {
 - ✅ **Did migration handle 147 sessions correctly?** (Milestone 2)
 - ✅ **Is AI agent adoption smooth?** (Skill Integration)
 
-**IF YES:** Proceed to Phase B (mutation commands)  
-**IF NO:** Pivot or cancel (write lessons learned, avoid Phase B waste)
+**IF YES:** Proceed to Phase A.5 (ESSENTIALS decomposition)  
+**IF NO:** Pivot or cancel (write lessons learned, avoid waste)
 
 ---
 
-## Phase B: Mutation Commands (FUTURE - Depends on Phase A Success)
-
-⚠️ **DO NOT START until Phase A is complete, tested, and proven valuable.**
+## Phase A.5: ESSENTIALS Decomposition (CRITICAL - Prevents AI Overconfidence)
 
 | Phase | Hours | Tasks | Milestone |
 |-------|-------|-------|----------|
-| Phase 6: Mutation Commands | 3-4 | Steps 17-20 | **Milestone 3: Full system** |
+| **Phase A.5: ESSENTIALS Index** | **2-3** | **Step 16.5** | **Milestone 3: Agent can't skip skills** |
+
+**Why This Phase Matters:**
+- **Real failure mode:** Agent said "I thought I knew it already" → made preventable mistake
+- **Prevents overconfidence:** Critical rules ALWAYS loaded (not optional)
+- **Enforces workflows:** Trigger words → auto-load skill → agent follows it
+- **Token savings:** 60-80% reduction (200 + 100 vs 803 lines)
+
+**Decision Point After Phase A.5:**
+- ✅ **Does agent auto-load skills on triggers?** (Workflow Enforcement)
+- ✅ **Are critical invariants always visible?** (Prevents "I thought I knew")
+- ✅ **60%+ token reduction achieved?** (Performance)
+
+**IF YES:** Proceed to Phase B (mutation commands)  
+**IF NO:** Keep monolithic ESSENTIALS, but query system still valuable
+
+---
+
+## Phase B: Mutation Commands (FUTURE - Depends on Phase A + A.5 Success)
+
+⚠️ **DO NOT START until Phase A and A.5 are complete, tested, and proven valuable.**
+
+| Phase | Hours | Tasks | Milestone |
+|-------|-------|-------|----------|
+| Phase 6: Mutation Commands | 3-4 | Steps 17-20 | **Milestone 4: Full system** |
 | **Phase B Total** | **3-4 hours** | **4 steps** | **1 decision point** |
 
 **Blockers:**
-- Phase A must be complete and proven
+- Phase A must be complete and proven (queries work, migration successful)
+- Phase A.5 must prevent "I thought I knew" failures (agent enforcement proven)
 - Phase B requires Phase A infrastructure (index, storage adapter, rebuild logic)
 
 **Risk:** If Phase A doesn't deliver value, Phase B is wasted effort. Split allows early pivot.
 
 ---
 
-## Combined Timeline (If Both Phases Succeed)
+## Combined Timeline (If All Phases Succeed)
 
-| Total Effort | 17-23 hours |
+| Total Effort | 19-26 hours |
 |--------------|-------------|
 | Phase A | 14-19 hours |
+| Phase A.5 | 2-3 hours |
 | Phase B | 3-4 hours |
-| Decision Points | 3 milestones |
+| Decision Points | 4 milestones |
 
 **Recommendation:** Implement in phases over 2-3 days, validate each phase before proceeding.
 

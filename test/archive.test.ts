@@ -390,6 +390,7 @@ describe('Archive Commands', () => {
       
       const result = await clean({
         dir: TEST_DIR,
+        threshold: 30,  // 60-day old files should be archived with 30-day threshold
         _silent: true
       } as any);  // Type definition missing _silent property
       
@@ -520,9 +521,9 @@ describe('Archive Commands', () => {
       const result = await archivePlans({
         dir: TEST_DIR,
         threshold: 0,
-        status: 'CANCELLED',
+        statusFilter: '❌ CANCELLED',  // Fixed: was 'status' but should be 'statusFilter'
         _silent: true
-      } as any);  // Type definition missing status property
+      });
       
       assert.strictEqual(result.archived, 1, 'Should archive 1 cancelled plan');
       

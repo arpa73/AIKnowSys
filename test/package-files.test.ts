@@ -10,7 +10,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, '..');
+// Use PROJECT_ROOT env var set by test script (avoids dist/ path issues)
+const rootDir = process.env.PROJECT_ROOT || path.resolve(__dirname, '..');
 
 describe('Package Files Validation', () => {
   it('should include SETUP_GUIDE.md in package.json files array', () => {

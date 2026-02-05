@@ -8,10 +8,13 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(__dirname, '..');
+
 describe('VSCode Hooks', () => {
   const testSessionsDir = path.join(__dirname, 'fixtures', 'test-sessions');
-  const sessionStartScript = path.join(__dirname, '..', 'templates', 'hooks', 'session-start.js');
-  const sessionEndScript = path.join(__dirname, '..', 'templates', 'hooks', 'session-end.js');
+  const sessionStartScript = path.join(projectRoot, 'templates', 'hooks', 'session-start.js');
+  const sessionEndScript = path.join(projectRoot, 'templates', 'hooks', 'session-end.js');
 
   beforeEach(() => {
     // Create test sessions directory

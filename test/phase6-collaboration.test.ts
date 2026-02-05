@@ -8,6 +8,8 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ciCheck } from '../lib/commands/ci-check.js';
 
+// Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
+const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
 const TEST_DIR: string = path.join(import.meta.dirname, 'fixtures', 'ci-check-test');
 
 describe('ci-check command', () => {
@@ -106,7 +108,7 @@ describe('ci-check command', () => {
 });
 
 describe('pre-commit hook', () => {
-  const HOOK_PATH: string = path.join(import.meta.dirname, '..', 'templates', 'git-hooks', 'pre-commit-enhanced');
+  const HOOK_PATH: string = path.join(projectRoot, 'templates', 'git-hooks', 'pre-commit-enhanced');
 
   it('should exist as a file', async () => {
     try {
@@ -136,7 +138,7 @@ describe('pre-commit hook', () => {
 });
 
 describe('collaboration-check hook', () => {
-  const HOOK_PATH: string = path.join(import.meta.dirname, '..', 'templates', 'hooks', 'collaboration-check.mjs');
+  const HOOK_PATH: string = path.join(projectRoot, 'templates', 'hooks', 'collaboration-check.mjs');
 
   it('should exist as a file', async () => {
     try {
