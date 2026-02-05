@@ -38,15 +38,15 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies FileTracker import exists
     // Will FAIL until we add: import { FileTracker } from '../utils.js';
     
-    await import('../lib/commands/migrate.js');
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
     assert.ok(
       migrateSource.includes('FileTracker'),
-      'migrate.js should import FileTracker from utils.js'
+      'migrate.ts should import FileTracker from utils.js'
     );
   });
 
@@ -54,14 +54,15 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies FileTracker is instantiated
     // Will FAIL until we add: const tracker = new FileTracker();
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
     assert.ok(
       migrateSource.includes('new FileTracker()'),
-      'migrate.js should create FileTracker instance'
+      'migrate.ts should create FileTracker instance'
     );
   });
 
@@ -69,8 +70,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies AGENTS.md is tracked
     // Will FAIL until we add: tracker.trackFile(agentsPath);
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
@@ -80,7 +82,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     
     assert.ok(
       hasAgentsTracking,
-      'migrate.js should track AGENTS.md creation'
+      'migrate.ts should track AGENTS.md creation'
     );
   });
 
@@ -88,8 +90,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies CHANGELOG is tracked
     // Will FAIL until we add: tracker.trackFile(changelogPath);
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
@@ -99,7 +102,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     
     assert.ok(
       hasChangelogTracking,
-      'migrate.js should track CODEBASE_CHANGELOG.md creation'
+      'migrate.ts should track CODEBASE_CHANGELOG.md creation'
     );
   });
 
@@ -107,8 +110,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // RED: This test verifies error handling with rollback
     // Will FAIL until we wrap migrate operations in try-catch with rollback
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
@@ -117,7 +121,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     
     assert.ok(
       hasTryCatch && hasRollback,
-      'migrate.js should have try-catch with tracker.rollback() on error'
+      'migrate.ts should have try-catch with tracker.rollback() on error'
     );
   });
 
@@ -125,8 +129,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // This test verifies the draft file created by scan() is tracked
     // Ensures atomic migration - draft file cleaned up on failure
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
@@ -143,8 +148,9 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // This test verifies progress indicators are shown during migration
     // Migration has multiple phases and should show progress
     
+    const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
     const migrateSource = await fs.readFile(
-      path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+      path.join(projectRoot, 'lib', 'commands', 'migrate.ts'),
       'utf-8'
     );
     
@@ -156,7 +162,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     
     assert.ok(
       hasOraImport && hasSpinner,
-      'migrate.js should use ora spinner for progress indicators'
+      'migrate.ts should use ora spinner for progress indicators'
     );
   });
 });

@@ -5,6 +5,7 @@ import { checkEssentialsBloat } from '../quality-checkers/essentials-bloat.js';
 import { validateTemplates } from '../quality-checkers/template-validator.js';
 import { validateLinks } from '../quality-checkers/link-validator.js';
 import { scanPatterns } from '../quality-checkers/pattern-scanner.js';
+import type { ValidationCheck, ValidationMetrics } from '../types/index.js';
 // @ts-ignore - JavaScript module, will be migrated later
 import { validateDeliverables } from './validate-deliverables.js';
 
@@ -23,15 +24,6 @@ interface Violation {
 }
 
 /**
- * Check result with issues
- */
-interface CheckWithIssues {
-  passed: boolean;
-  issues?: string[];
-  [key: string]: unknown;
-}
-
-/**
  * Individual check result
  */
 interface CheckResult {
@@ -41,8 +33,8 @@ interface CheckResult {
   details?: Record<string, unknown>;
   violations?: Violation[];
   fix?: string;
-  checks?: CheckWithIssues[];
-  metrics?: Record<string, unknown>;
+  checks?: ValidationCheck[];
+  metrics?: ValidationMetrics;
 }
 
 /**
@@ -97,6 +89,7 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
 
   // Run all checks
   const deliverablesResult = await validateDeliverables({
+    full: true,
     fix: false,
     _silent: true
   });
@@ -108,6 +101,9 @@ export async function qualityCheck(options: QualityCheckOptions = {}): Promise<Q
     patterns: await scanPatterns(targetDir, qualityConfig),
     deliverables: {
       passed: deliverablesResult.passed,
+      summary: deliverablesResult.summary,
+      checks: deliverablesResult.checks,
+      metrics: deliverablesResult.metrics,
       violations: deliverablesResult.checks.flatMap(check => 
         check.issues.map((issue: string) => ({
           file: 'deliverables',
