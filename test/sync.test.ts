@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sync } from '../lib/commands/sync.js';
@@ -36,16 +35,13 @@ describe('sync command', () => {
     await sync({ dir: testDir, _silent: true });
     
     // Should pass the matrix existence check
-    assert.ok(true, 'Matrix should be found in ESSENTIALS');
+    expect(true).toBeTruthy();
   });
 
   it('should exit if ESSENTIALS not found', async () => {
     // No CODEBASE_ESSENTIALS.md in directory
     
-    await assert.rejects(
-      async () => await sync({ dir: testDir, _silent: true }),
-      'Should reject when ESSENTIALS missing'
-    );
+    await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/ESSENTIALS.*not found/i);
   });
 
   it('should exit if AGENTS not found', async () => {
@@ -54,10 +50,7 @@ describe('sync command', () => {
       // No AGENTS.md
     });
     
-    await assert.rejects(
-      async () => await sync({ dir: testDir, _silent: true }),
-      'Should reject when AGENTS missing'
-    );
+    await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/AGENTS.*not found/i);
   });
 
   it('should exit if validation matrix missing in ESSENTIALS', async () => {
@@ -67,11 +60,7 @@ describe('sync command', () => {
       hasValidationMatrix: false // No matrix
     });
     
-    await assert.rejects(
-      async () => await sync({ dir: testDir, _silent: true }),
-      /validation matrix/i,
-      'Should reject when matrix missing'
-    );
+    await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/validation matrix/i);
   });
 
   // ========================================
@@ -153,10 +142,7 @@ describe('sync command', () => {
     }
     
     // sync should detect this format
-    await assert.doesNotReject(
-      async () => await sync({ dir: testDir, _silent: true }),
-      'Should handle numbered section heading'
-    );
+    await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   it('should detect matrix with "## Validation Matrix" heading', async () => {
@@ -170,10 +156,7 @@ describe('sync command', () => {
     fs.writeFileSync(essentialsPath, content);
     
     // sync should detect this format too
-    await assert.doesNotReject(
-      async () => await sync({ dir: testDir, _silent: true }),
-      'Should handle non-numbered heading'
-    );
+    await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   it('should detect matrix table in AGENTS using regex pattern', async () => {
@@ -190,10 +173,7 @@ describe('sync command', () => {
     const hasCommandColumn: boolean = /\|\s*Command\s*\|/i.test(content);
     const hasTestCommand: boolean = /npm test/i.test(content);
     
-    assert.ok(
-      hasCommandColumn && hasTestCommand,
-      'Matrix table with Command column and test command should be detected in AGENTS before sync'
-    );
+    expect(hasCommandColumn && hasTestCommand).toBeTruthy();
   });
 
   // ========================================
@@ -212,7 +192,7 @@ describe('sync command', () => {
       
       await sync({ dir: customDir, _silent: true });
       
-      assert.ok(true, 'Should work with custom directory');
+      expect(true).toBeTruthy();
     } finally {
       cleanupTestDir(customDir);
     }
@@ -241,11 +221,7 @@ describe('sync command', () => {
     const contentAfterSecond: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // Content should be the same (idempotent)
-    assert.strictEqual(
-      contentAfterFirst,
-      contentAfterSecond,
-      'Running sync twice should produce same result'
-    );
+    expect(contentAfterFirst).toBe(contentAfterSecond);
   });
 
   it('should not modify files when already in sync', async () => {
@@ -264,10 +240,6 @@ describe('sync command', () => {
     const contentAfter: string = fs.readFileSync(agentsPath, 'utf-8');
     
     // If already synced, should not change
-    assert.strictEqual(
-      contentBefore,
-      contentAfter,
-      'Should not modify files when already synced'
-    );
+    expect(contentBefore).toBe(contentAfter);
   });
 });
