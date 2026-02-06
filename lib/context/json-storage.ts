@@ -15,12 +15,16 @@ import type {
   SearchScope
 } from './types.js';
 
+/**
+ * Internal index structure for JSON storage
+ * Persisted to .aiknowsys/context-index.json
+ */
 interface ContextIndex {
   version: number;
   updated: string;
   plans: PlanMetadata[];
   sessions: SessionMetadata[];
-  learned: any[];
+  learned: any[]; // TODO: Define LearnedMetadata interface when implementing learned patterns (Phase 2)
 }
 
 export class JsonStorage extends StorageAdapter {
