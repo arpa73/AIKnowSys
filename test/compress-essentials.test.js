@@ -1,4 +1,4 @@
-import { describe, test, beforeEach, afterEach, expect, vi } from 'vitest';
+import { describe, test, afterEach, expect, vi } from 'vitest';
 import path from 'path';
 
 /**
@@ -136,7 +136,6 @@ ${verboseSection}
         _silent: true
       });
       
-      // Should recommend extraction
       // Should recommend extraction
       expect(result.opportunities.length > 0).toBeTruthy();
       const opp = result.opportunities[0];
