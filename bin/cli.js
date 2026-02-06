@@ -31,6 +31,8 @@ import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
+import { searchContext } from '../dist/lib/commands/search-context.js';
+import { rebuildIndex } from '../dist/lib/commands/rebuild-index.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
 
 // Get version from package.json
@@ -311,6 +313,25 @@ program
       options.days = parseInt(options.days, 10);
     }
     await querySessions(options);
+  });
+
+program
+  .command('search-context <query>')
+  .description('Full-text search across plans, sessions, and learned patterns')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-s, --scope <scope>', 'Search scope: all, plans, sessions, learned (default: all)')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (query, options) => {
+    await searchContext(query, options);
+  });
+
+program
+  .command('rebuild-index')
+  .description('Rebuild context index from markdown files')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    await rebuildIndex(options);
   });
 
 // Config management commands

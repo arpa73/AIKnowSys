@@ -194,7 +194,7 @@ export class JsonStorage extends StorageAdapter {
     };
   }
 
-  async rebuildIndex(): Promise<void> {
+  async rebuildIndex(): Promise<{ plansIndexed: number; sessionsIndexed: number; learnedIndexed: number }> {
     const newIndex: ContextIndex = {
       version: 1,
       updated: new Date().toISOString(),
@@ -261,8 +261,46 @@ export class JsonStorage extends StorageAdapter {
       // Sessions directory doesn't exist yet
     }
 
+    // Parse learned patterns
+    const learnedDir = path.join(this.targetDir, '.aiknowsys', 'learned');
+    try {
+      const learnedFiles = await fs.readdir(learnedDir);
+      
+      for (const file of learnedFiles) {
+        if (file.endsWith('.md')) {
+          const content = await fs.readFile(path.join(learnedDir, file), 'utf-8');
+          // Parse frontmatter for learned pattern metadata
+          const frontmatterMatch = content.match(/^---\n([\s\S]+?)\n---/);
+          if (frontmatterMatch) {
+            const lines = frontmatterMatch[1].split('\n');
+            const metadata: any = { file: `learned/${file}` };
+            
+            lines.forEach(line => {
+              const [key, ...valueParts] = line.split(':');
+              if (key && valueParts.length > 0) {
+                const value = valueParts.join(':').trim();
+                metadata[key.trim()] = value;
+              }
+            });
+            
+            if (metadata.name) {
+              newIndex.learned.push(metadata);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Learned directory doesn't exist yet
+    }
+
     this.index = newIndex;
     await this.saveIndex();
+    
+    return {
+      plansIndexed: newIndex.plans.length,
+      sessionsIndexed: newIndex.sessions.length,
+      learnedIndexed: newIndex.learned.length
+    };
   }
 
   async close(): Promise<void> {
@@ -305,24 +343,69 @@ export class JsonStorage extends StorageAdapter {
   }
 
   private parsePlanFile(content: string, filename: string): PlanMetadata | null {
+    let status: string | undefined;
+    let author: string | undefined;
+    let created: string | undefined;
+    let updated: string | undefined;
+    let topics: string[] | undefined;
+    
+    // Try to parse YAML frontmatter first
+    const frontmatterMatch = content.match(/^---\n([\s\S]+?)\n---/);
+    if (frontmatterMatch) {
+      const lines = frontmatterMatch[1].split('\n');
+      lines.forEach(line => {
+        const [key, ...valueParts] = line.split(':');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join(':').trim();
+          const k = key.trim();
+          
+          if (k === 'status') status = value;
+          else if (k === 'author') author = value;
+          else if (k === 'created') created = value;
+          else if (k === 'updated') updated = value;
+          else if (k === 'topics') {
+            // Parse array format: [item1, item2]
+            const topicsMatch = value.match(/\[(.*)\]/);
+            if (topicsMatch) {
+              topics = topicsMatch[1].split(',').map((t:string) => t.trim());
+            }
+          }
+        }
+      });
+    }
+    
     // Extract title from first # heading
     const titleMatch = content.match(/^#\s+(.+)$/m);
     if (!titleMatch) return null;
     
-    // Extract status
-    const statusMatch = content.match(/\*\*Status:\*\*\s+[🎯📋✅❌🔄]\s+(\w+)/m);
+    // Fallback to markdown-formatted fields if frontmatter not present
+    if (!status) {
+      const statusMatch = content.match(/\*\*Status:\*\*\s+[🎯📋✅❌🔄]\s+(\w+)/m);
+      status = statusMatch ? statusMatch[1] : 'PLANNED';
+    }
     
-    // Extract dates
-    const createdMatch = content.match(/\*\*Created:\*\*\s+(\d{4}-\d{2}-\d{2})/m);
-    const updatedMatch = content.match(/\*\*Updated:\*\*\s+(\d{4}-\d{2}-\d{2})/m);
+    if (!created) {
+      const createdMatch = content.match(/\*\*Created:\*\*\s+(\d{4}-\d{2}-\d{2})/m);
+      created = createdMatch ? new Date(createdMatch[1]).toISOString() : new Date().toISOString();
+    } else {
+      created = new Date(created).toISOString();
+    }
+    
+    if (!updated) {
+      const updatedMatch = content.match(/\*\*Updated:\*\*\s+(\d{4}-\d{2}-\d{2})/m);
+      updated = updatedMatch ? new Date(updatedMatch[1]).toISOString() : new Date().toISOString();
+    } else {
+      updated = new Date(updated).toISOString();
+    }
     
     return {
-      id: filename.replace('PLAN_', '').replace('.md', ''),
+      id: filename.replace('.md', ''),
       title: titleMatch[1],
-      status: (statusMatch ? statusMatch[1] as any : 'PLANNED'),
-      author: 'unknown',
-      created: createdMatch ? new Date(createdMatch[1]).toISOString() : new Date().toISOString(),
-      updated: updatedMatch ? new Date(updatedMatch[1]).toISOString() : new Date().toISOString(),
+      status: (status as any) || 'PLANNED',
+      author: author || 'unknown',
+      created,
+      updated,
+      topics,
       file: filename
     };
   }

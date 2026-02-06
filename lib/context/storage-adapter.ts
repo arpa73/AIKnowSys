@@ -48,8 +48,9 @@ export class StorageAdapter {
 
   /**
    * Rebuild index from markdown files.
+   * @returns Summary of indexed items
    */
-  async rebuildIndex(): Promise<void> {
+  async rebuildIndex(): Promise<{ plansIndexed: number; sessionsIndexed: number; learnedIndexed: number }> {
     throw new Error('StorageAdapter.rebuildIndex() must be implemented by subclass');
   }
 

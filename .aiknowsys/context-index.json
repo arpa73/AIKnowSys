@@ -1,86 +1,86 @@
 {
   "version": 1,
-  "updated": "2026-02-06T21:36:40.408Z",
+  "updated": "2026-02-06T22:05:41.599Z",
   "plans": [
     {
       "id": "arno-paffen-plan",
       "title": "Mandatory Multi-Dev Migration (v0.9.0)",
       "status": "ACTIVE",
       "author": "arno-paffen",
-      "created": "2026-02-06T21:36:40.417Z",
-      "updated": "2026-02-06T21:36:40.417Z",
+      "created": "2026-02-06T22:05:41.601Z",
+      "updated": "2026-02-06T22:05:41.601Z",
       "file": "PLAN_mandatory_multidev_migration.md"
     },
     {
-      "id": "context_query_system",
+      "id": "PLAN_context_query_system",
       "title": "Implementation Plan: Context Query System (CLI + Storage Adapter)",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-05T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.420Z",
+      "updated": "2026-02-06T22:05:41.602Z",
       "file": "PLAN_context_query_system.md"
     },
     {
-      "id": "deliverables_clarity",
+      "id": "PLAN_deliverables_clarity",
       "title": "Implementation Plan: Deliverables Clarity Architecture",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.423Z",
+      "updated": "2026-02-06T22:05:41.602Z",
       "file": "PLAN_deliverables_clarity.md"
     },
     {
-      "id": "remove_context7_config",
+      "id": "PLAN_remove_context7_config",
       "title": "Implementation Plan: Remove Confusing context7 Config Setting",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-04T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.423Z",
+      "updated": "2026-02-06T22:05:41.602Z",
       "file": "PLAN_remove_context7_config.md"
     },
     {
-      "id": "review_pointer_system",
+      "id": "PLAN_review_pointer_system",
       "title": "Implementation Plan: Review Pointer System",
       "status": "ALL",
       "author": "unknown",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.425Z",
+      "updated": "2026-02-06T22:05:41.603Z",
       "file": "PLAN_review_pointer_system.md"
     },
     {
-      "id": "sprint3_performance",
+      "id": "PLAN_sprint3_performance",
       "title": "Implementation Plan: Performance & Integration Testing (Sprint 3)",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.426Z",
+      "updated": "2026-02-06T22:05:41.603Z",
       "file": "PLAN_sprint3_performance.md"
     },
     {
-      "id": "typescript_migration",
+      "id": "PLAN_typescript_migration",
       "title": "Implementation Plan: TypeScript Migration & Type-Safe Architecture",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.427Z",
+      "updated": "2026-02-06T22:05:41.604Z",
       "file": "PLAN_typescript_migration.md"
     },
     {
-      "id": "v0.9.0_release_notes_validation",
+      "id": "PLAN_v0.9.0_release_notes_validation",
       "title": "Implementation Plan: v0.9.0 Release Notes Validation & Finalization",
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.428Z",
+      "updated": "2026-02-06T22:05:41.604Z",
       "file": "PLAN_v0.9.0_release_notes_validation.md"
     },
     {
-      "id": "vitest_migration",
+      "id": "PLAN_vitest_migration",
       "title": "Implementation Plan: Vitest Migration",
       "status": "COMPLETE",
       "author": "unknown",
       "created": "2026-02-06T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.428Z",
+      "updated": "2026-02-06T22:05:41.604Z",
       "file": "PLAN_vitest_migration.md"
     }
   ],
@@ -90,14 +90,14 @@
       "topic": "v0.4.0 Release - Memory & Learning",
       "file": "sessions/2026-01-25-session.md",
       "created": "2026-01-25T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.430Z"
+      "updated": "2026-02-06T22:05:41.605Z"
     },
     {
       "date": "2026-01-26",
       "topic": "v0.5.0 Test Coverage Implementation",
       "file": "sessions/2026-01-26-session.md",
       "created": "2026-01-26T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.430Z"
+      "updated": "2026-02-06T22:05:41.605Z"
     },
     {
       "date": "2026-01-27",
@@ -105,14 +105,14 @@
       "plan": "Architect tool permissions & gitignore updates  ",
       "file": "sessions/2026-01-27-session.md",
       "created": "2026-01-27T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.432Z"
+      "updated": "2026-02-06T22:05:41.606Z"
     },
     {
       "date": "2026-01-28",
       "topic": "Architect Session File Auto-Creation",
       "file": "sessions/2026-01-28-session.md",
       "created": "2026-01-28T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.433Z"
+      "updated": "2026-02-06T22:05:41.606Z"
     },
     {
       "date": "2026-01-29",
@@ -120,7 +120,7 @@
       "plan": "Progress indicator implementation (scan, audit, migrate)  ",
       "file": "sessions/2026-01-29-session.md",
       "created": "2026-01-29T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.434Z"
+      "updated": "2026-02-06T22:05:41.606Z"
     },
     {
       "date": "2026-01-30",
@@ -128,14 +128,14 @@
       "plan": "[PLAN_essentials_compression.md](PLAN_essentials_compression.md)",
       "file": "sessions/2026-01-30-session.md",
       "created": "2026-01-30T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.437Z"
+      "updated": "2026-02-06T22:05:41.607Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 4 Implementation & Review",
       "file": "sessions/2026-01-31-phase4-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.441Z"
+      "updated": "2026-02-06T22:05:41.607Z"
     },
     {
       "date": "2026-01-31",
@@ -143,21 +143,21 @@
       "plan": "Phase 5 implementation - Context preservation & learning system  ",
       "file": "sessions/2026-01-31-phase5-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.448Z"
+      "updated": "2026-02-06T22:05:41.607Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 6 - Collaboration & CI/CD Integration",
       "file": "sessions/2026-01-31-phase6-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.451Z"
+      "updated": "2026-02-06T22:05:41.608Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 7 Implementation Session",
       "file": "sessions/2026-01-31-phase7-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.456Z"
+      "updated": "2026-02-06T22:05:41.608Z"
     },
     {
       "date": "2026-01-31",
@@ -165,7 +165,7 @@
       "plan": "Hooks Documentation Completion (All 5 Phases)  ",
       "file": "sessions/2026-01-31-phase8-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.459Z"
+      "updated": "2026-02-06T22:05:41.608Z"
     },
     {
       "date": "2026-01-31",
@@ -173,7 +173,7 @@
       "plan": "Workspace Maintenance & Archiving  ",
       "file": "sessions/2026-01-31-session.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.461Z"
+      "updated": "2026-02-06T22:05:41.608Z"
     },
     {
       "date": "2026-02-01",
@@ -181,7 +181,7 @@
       "plan": "[PLAN_remove_deprecated_scripts.md](PLAN_remove_deprecated_scripts.md)  ",
       "file": "sessions/2026-02-01-session.md",
       "created": "2026-02-01T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.466Z"
+      "updated": "2026-02-06T22:05:41.609Z"
     },
     {
       "date": "2026-02-02",
@@ -189,7 +189,7 @@
       "plan": "CI Test Failures Fix - 17 failures across 3 categories  ",
       "file": "sessions/2026-02-02-session.md",
       "created": "2026-02-02T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.468Z"
+      "updated": "2026-02-06T22:05:41.610Z"
     },
     {
       "date": "2026-02-03",
@@ -197,7 +197,7 @@
       "plan": "[PLAN_deliverables_validation_protocol.md](../PLAN_deliverables_validation_protocol.md)  ",
       "file": "sessions/2026-02-03-session.md",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.470Z"
+      "updated": "2026-02-06T22:05:41.610Z"
     },
     {
       "date": "2026-02-04",
@@ -205,7 +205,7 @@
       "plan": "archive-plans Bug Fixes and Enhancement",
       "file": "sessions/2026-02-04-session.md",
       "created": "2026-02-04T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.474Z"
+      "updated": "2026-02-06T22:05:41.611Z"
     },
     {
       "date": "2026-02-05",
@@ -213,7 +213,7 @@
       "plan": "[PLAN_context_query_system.md](../PLAN_context_query_system.md) (1470 lines)  ",
       "file": "sessions/2026-02-05-session.md",
       "created": "2026-02-05T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.477Z"
+      "updated": "2026-02-06T22:05:41.611Z"
     },
     {
       "date": "2026-02-06",
@@ -221,8 +221,52 @@
       "plan": "VSCode hooks configuration fix + setupHooks() installation bugs  ",
       "file": "sessions/2026-02-06-session.md",
       "created": "2026-02-06T00:00:00.000Z",
-      "updated": "2026-02-06T21:36:40.479Z"
+      "updated": "2026-02-06T22:05:41.612Z"
     }
   ],
-  "learned": []
+  "learned": [
+    {
+      "file": "learned/agent-mode-boundaries.md",
+      "name": "Agent Mode Boundary Enforcement",
+      "type": "debugging_techniques, project_specific",
+      "triggers": "mode rushing, implement instead of plan, agent boundaries, mode instructions ignored",
+      "status": "validated",
+      "created": "2026-01-30",
+      "updated": "2026-01-30"
+    },
+    {
+      "file": "learned/bash-script-tdd.md",
+      "name": "bash-script-tdd",
+      "description": "Test-Driven Development workflow for bash scripts using Node.js test runner. Write comprehensive tests for bash utilities to catch bugs before production.",
+      "trigger_words": "[bash TDD, test bash script, bash testability, script testing, test shell script]",
+      "created": "2026-02-06",
+      "origin": "cleanup-test-dirs.sh implementation",
+      "pattern_type": "testing_workflow"
+    },
+    {
+      "file": "learned/plan-management.md",
+      "name": "plan-management",
+      "triggers": "multiple plans, pause plan, switch plans, plan pointer, concurrent work, overwrite, team plans, multi-dev",
+      "applies_to": "[planner, developer]",
+      "related_patterns": "[session-continuity, context-preservation, multi-developer-collaboration]",
+      "problem_solved": "plan-overwrites, data-loss, context-switching, merge-conflicts",
+      "type": "project_specific",
+      "confidence": "high",
+      "last_validated": "2026-02-02"
+    },
+    {
+      "file": "learned/ux-improvements-from-dogfooding.md",
+      "name": "UX Improvements from Dogfooding",
+      "type": "project_specific, user_corrections",
+      "triggers": "dogfooding, real-world testing, UX feedback, user friction, clipboard integration, status visibility, auto-copy",
+      "status": "validated",
+      "created": "2026-01-30",
+      "updated": "2026-01-30"
+    },
+    {
+      "file": "learned/vscode-file-operations.md",
+      "name": "vscode-file-operations",
+      "description": "Troubleshoot mysterious file operation failures when using AI assistants in VSCode. Detects and resolves VSCode file watcher conflicts that cause 'file doesn't exist' or 'file already exists' errors. VSCode users only."
+    }
+  ]
 }

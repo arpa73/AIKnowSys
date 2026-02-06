@@ -118,6 +118,9 @@ export async function queryPlans(options: QueryPlansOptions = {}) {
     log.success(`Found ${result.count} plan(s):`);
     log.blank();
     
+    // Note: Plans use verbose output format showing all core fields (status, author, updated)
+    // because these are always present and critical for plan management.
+    // Sessions use compact format with conditional fields since they have more optional metadata.
     result.plans.forEach(plan => {
       const statusEmoji = {
         ACTIVE: '🎯',

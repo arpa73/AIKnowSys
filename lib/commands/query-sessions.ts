@@ -150,6 +150,8 @@ export async function querySessions(options: QuerySessionsOptions = {}) {
     log.success(`Found ${result.count} session(s):`);
     log.blank();
     
+    // Note: Sessions use compact output format with conditional fields to avoid clutter,
+    // since duration/phases are optional. Plans show all core fields (status/author/updated).
     result.sessions.forEach(session => {
       log.info(`📅 ${session.date} - ${session.topic}`);
       if (session.plan) {
