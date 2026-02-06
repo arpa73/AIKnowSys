@@ -1,0 +1,228 @@
+{
+  "version": 1,
+  "updated": "2026-02-06T21:36:40.408Z",
+  "plans": [
+    {
+      "id": "arno-paffen-plan",
+      "title": "Mandatory Multi-Dev Migration (v0.9.0)",
+      "status": "ACTIVE",
+      "author": "arno-paffen",
+      "created": "2026-02-06T21:36:40.417Z",
+      "updated": "2026-02-06T21:36:40.417Z",
+      "file": "PLAN_mandatory_multidev_migration.md"
+    },
+    {
+      "id": "context_query_system",
+      "title": "Implementation Plan: Context Query System (CLI + Storage Adapter)",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-05T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.420Z",
+      "file": "PLAN_context_query_system.md"
+    },
+    {
+      "id": "deliverables_clarity",
+      "title": "Implementation Plan: Deliverables Clarity Architecture",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-03T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.423Z",
+      "file": "PLAN_deliverables_clarity.md"
+    },
+    {
+      "id": "remove_context7_config",
+      "title": "Implementation Plan: Remove Confusing context7 Config Setting",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-04T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.423Z",
+      "file": "PLAN_remove_context7_config.md"
+    },
+    {
+      "id": "review_pointer_system",
+      "title": "Implementation Plan: Review Pointer System",
+      "status": "ALL",
+      "author": "unknown",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.425Z",
+      "file": "PLAN_review_pointer_system.md"
+    },
+    {
+      "id": "sprint3_performance",
+      "title": "Implementation Plan: Performance & Integration Testing (Sprint 3)",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.426Z",
+      "file": "PLAN_sprint3_performance.md"
+    },
+    {
+      "id": "typescript_migration",
+      "title": "Implementation Plan: TypeScript Migration & Type-Safe Architecture",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-03T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.427Z",
+      "file": "PLAN_typescript_migration.md"
+    },
+    {
+      "id": "v0.9.0_release_notes_validation",
+      "title": "Implementation Plan: v0.9.0 Release Notes Validation & Finalization",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-03T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.428Z",
+      "file": "PLAN_v0.9.0_release_notes_validation.md"
+    },
+    {
+      "id": "vitest_migration",
+      "title": "Implementation Plan: Vitest Migration",
+      "status": "COMPLETE",
+      "author": "unknown",
+      "created": "2026-02-06T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.428Z",
+      "file": "PLAN_vitest_migration.md"
+    }
+  ],
+  "sessions": [
+    {
+      "date": "2026-01-25",
+      "topic": "v0.4.0 Release - Memory & Learning",
+      "file": "sessions/2026-01-25-session.md",
+      "created": "2026-01-25T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.430Z"
+    },
+    {
+      "date": "2026-01-26",
+      "topic": "v0.5.0 Test Coverage Implementation",
+      "file": "sessions/2026-01-26-session.md",
+      "created": "2026-01-26T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.430Z"
+    },
+    {
+      "date": "2026-01-27",
+      "topic": "P1 Fixes - ESLint, CI, init.js Refactor",
+      "plan": "Architect tool permissions & gitignore updates  ",
+      "file": "sessions/2026-01-27-session.md",
+      "created": "2026-01-27T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.432Z"
+    },
+    {
+      "date": "2026-01-28",
+      "topic": "Architect Session File Auto-Creation",
+      "file": "sessions/2026-01-28-session.md",
+      "created": "2026-01-28T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.433Z"
+    },
+    {
+      "date": "2026-01-29",
+      "topic": "Custom Agent Format Restoration",
+      "plan": "Progress indicator implementation (scan, audit, migrate)  ",
+      "file": "sessions/2026-01-29-session.md",
+      "created": "2026-01-29T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.434Z"
+    },
+    {
+      "date": "2026-01-30",
+      "topic": "Multiple Features + Documentation",
+      "plan": "[PLAN_essentials_compression.md](PLAN_essentials_compression.md)",
+      "file": "sessions/2026-01-30-session.md",
+      "created": "2026-01-30T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.437Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 4 Implementation & Review",
+      "file": "sessions/2026-01-31-phase4-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.441Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 5 - Context & Learning",
+      "plan": "Phase 5 implementation - Context preservation & learning system  ",
+      "file": "sessions/2026-01-31-phase5-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.448Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 6 - Collaboration & CI/CD Integration",
+      "file": "sessions/2026-01-31-phase6-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.451Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 7 Implementation Session",
+      "file": "sessions/2026-01-31-phase7-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.456Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 8 Implementation Session",
+      "plan": "Hooks Documentation Completion (All 5 Phases)  ",
+      "file": "sessions/2026-01-31-phase8-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.459Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "ESSENTIALS Compression System + VSCode Hooks Phases 1 & 2",
+      "plan": "Workspace Maintenance & Archiving  ",
+      "file": "sessions/2026-01-31-session.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.461Z"
+    },
+    {
+      "date": "2026-02-01",
+      "topic": "Legacy Script Cleanup + Cross-Platform Enhancement + Personal Patterns Phase 1",
+      "plan": "[PLAN_remove_deprecated_scripts.md](PLAN_remove_deprecated_scripts.md)  ",
+      "file": "sessions/2026-02-01-session.md",
+      "created": "2026-02-01T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.466Z"
+    },
+    {
+      "date": "2026-02-02",
+      "topic": "Skill Audit & Cleanup Planning",
+      "plan": "CI Test Failures Fix - 17 failures across 3 categories  ",
+      "file": "sessions/2026-02-02-session.md",
+      "created": "2026-02-02T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.468Z"
+    },
+    {
+      "date": "2026-02-03",
+      "topic": "TypeScript Migration Phase 4-6",
+      "plan": "[PLAN_deliverables_validation_protocol.md](../PLAN_deliverables_validation_protocol.md)  ",
+      "file": "sessions/2026-02-03-session.md",
+      "created": "2026-02-03T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.470Z"
+    },
+    {
+      "date": "2026-02-04",
+      "topic": "TypeScript Migration",
+      "plan": "archive-plans Bug Fixes and Enhancement",
+      "file": "sessions/2026-02-04-session.md",
+      "created": "2026-02-04T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.474Z"
+    },
+    {
+      "date": "2026-02-05",
+      "topic": "TypeScript Migration Phase 8 Implementation",
+      "plan": "[PLAN_context_query_system.md](../PLAN_context_query_system.md) (1470 lines)  ",
+      "file": "sessions/2026-02-05-session.md",
+      "created": "2026-02-05T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.477Z"
+    },
+    {
+      "date": "2026-02-06",
+      "topic": "VSCode Hooks Configuration + setupHooks() Bug Fixes + JSON Storage Review",
+      "plan": "VSCode hooks configuration fix + setupHooks() installation bugs  ",
+      "file": "sessions/2026-02-06-session.md",
+      "created": "2026-02-06T00:00:00.000Z",
+      "updated": "2026-02-06T21:36:40.479Z"
+    }
+  ],
+  "learned": []
+}

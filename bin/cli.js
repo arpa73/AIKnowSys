@@ -29,6 +29,8 @@ import { listPatterns } from '../dist/lib/commands/list-patterns.js';
 import { syncPlans } from '../dist/lib/commands/sync-plans.js';
 import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
+import { queryPlans } from '../dist/lib/commands/query-plans.js';
+import { querySessions } from '../dist/lib/commands/query-sessions.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
 
 // Get version from package.json
@@ -275,6 +277,40 @@ program
   .description('List installed plugins')
   .action(async (options) => {
     await listPlugins(options);
+  });
+
+// Context query commands
+program
+  .command('query-plans')
+  .description('Query plan metadata with filters (status, author, topic, dates)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-s, --status <status>', 'Filter by status: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED')
+  .option('-a, --author <author>', 'Filter by author')
+  .option('-t, --topic <topic>', 'Filter by topic (fuzzy match)')
+  .option('--updated-after <date>', 'Filter by plans updated after date (YYYY-MM-DD)')
+  .option('--updated-before <date>', 'Filter by plans updated before date (YYYY-MM-DD)')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    await queryPlans(options);
+  });
+
+program
+  .command('query-sessions')
+  .description('Query session history with filters (date, topic, plan)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--date <date>', 'Filter by exact date (YYYY-MM-DD)')
+  .option('--date-after <date>', 'Filter by sessions after date (YYYY-MM-DD)')
+  .option('--date-before <date>', 'Filter by sessions before date (YYYY-MM-DD)')
+  .option('-t, --topic <topic>', 'Filter by topic (fuzzy match)')
+  .option('-p, --plan <plan>', 'Filter by plan reference')
+  .option('--days <number>', 'Filter by sessions from last N days (convenience)')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    // Convert days to number if provided
+    if (options.days) {
+      options.days = parseInt(options.days, 10);
+    }
+    await querySessions(options);
   });
 
 // Config management commands
