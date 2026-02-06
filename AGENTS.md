@@ -421,6 +421,7 @@ Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
 - `validation-troubleshooting` - Debug validation failures
 - `context7-usage` - Query framework documentation with Context7 MCP
 - `skill-validation` - Validate skill format and content
+- `context-query` - Query plans/sessions/context via CLI instead of file searching
 
 **To use a skill:**
 1. AI detects trigger words
