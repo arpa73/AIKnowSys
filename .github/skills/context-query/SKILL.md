@@ -10,6 +10,8 @@ triggers:
   - "recent sessions"
   - "search context"
   - "load essentials section"
+  - "query essentials section"
+  - "list sections"
 maintainer: false
 ---
 
@@ -111,17 +113,17 @@ npx aiknowsys query-sessions --json
 
 ---
 
-### Query ESSENTIALS (Chunked Retrieval)
+### Query ESSENTIALS Section (Chunked Retrieval)
 
 ```bash
 # Get specific section (saves 85% tokens)
-npx aiknowsys query-essentials "TypeScript Patterns" --json
+npx aiknowsys query-essentials-section "TypeScript Patterns" --json
 
 # Fuzzy match section name
-npx aiknowsys query-essentials "typescript" --json
+npx aiknowsys query-essentials-section "typescript" --json
 
-# List all sections
-npx aiknowsys list-sections --json
+# List all available sections
+npx aiknowsys list-essentials-sections --json
 ```
 
 **JSON Output:**
@@ -142,6 +144,8 @@ npx aiknowsys list-sections --json
 - Returns line numbers for file references
 - Suggests related sections
 - Falls back to full file if section not found
+
+**Note:** Command name is explicit (`query-essentials-section`) to clarify that it queries ONE section from ONE file (CODEBASE_ESSENTIALS.md), not multiple essentials files.
 
 ---
 
@@ -233,7 +237,7 @@ AI workflow:
 AI needs: "How do we handle TypeScript imports?"
 
 AI workflow:
-1. Run: npx aiknowsys query-essentials "TypeScript Patterns" --json
+1. Run: npx aiknowsys query-essentials-section "TypeScript Patterns" --json
 2. Extract content from JSON (100 lines)
 3. Use content to answer question
 ```
@@ -274,9 +278,9 @@ Need session history?
   └─ Specific date → query-sessions --days 1 (if today)
 
 Need ESSENTIALS info?
-  ├─ Know section name → query-essentials "Section Name"
-  ├─ Don't know section → list-sections, then query-essentials
-  └─ Fuzzy search → query-essentials "typescript" (fuzzy match)
+  ├─ Know section name → query-essentials-section "Section Name"
+  ├─ Don't know section → list-essentials-sections, then query-essentials-section
+  └─ Fuzzy search → query-essentials-section "typescript" (fuzzy match)
 
 Need to search everything?
   └─ search-context "query" --scope all
@@ -324,7 +328,7 @@ Did you mean:
   • Testing Philosophy
   • TDD Workflow
 
-💡 TIP: Run 'aiknowsys list-sections' to see all sections
+💡 TIP: Run 'aiknowsys list-essentials-sections' to see all sections
 ```
 
 ---
