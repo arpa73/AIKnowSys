@@ -6,9 +6,9 @@
 
 # Active Plan Pointer
 
-**Currently Working On:** Awaiting v0.10.0 direction  
-**Status:** Planning  
-**Started:** 2026-02-06  
+**Currently Working On:** None (paused for v0.10.0 planning)  
+**Status:** ⏸️ PAUSED  
+**Started:** N/A  
 **Last Completed:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
@@ -28,6 +28,7 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 | [Mandatory Multi-Dev Migration](../PLAN_mandatory_multidev_migration.md) | ✅ COMPLETE | v0.9.0 released | 2026-02-02 |
 | [Learned Collaboration Original](../PLAN_learned_collaboration_original.md) | 🔄 PAUSED | Multi-dev done, pattern workflow → skill approach instead | 2026-02-03 |
 | [Skill Audit & Cleanup](../PLAN_skill_audit_cleanup.md) | ✅ COMPLETE | 3 universal skills created, 5 deleted, 594 tests passing | 2026-02-03 |
+| [Context Query System](../PLAN_context_query_system.md) | 🔄 PAUSED | CLI query commands for plans/sessions/context (awaiting v0.10.0) | 2026-02-06 |
 | [ESSENTIALS Validation](../PLAN_essentials_validation.md) | 📋 PLANNED | Ready for implementation (5 phases) | 2026-02-01 |
 | [Sprint 3: Performance & Integration](../PLAN_sprint3_performance.md) | 📋 PLANNED | Benchmarks, integration tests, architecture docs | 2026-01-31 |
 | [Review Pointer System](../PLAN_review_pointer_system.md) | ❌ CANCELLED | Over-engineering; cleanup hook solves this | 2026-01-31 |
