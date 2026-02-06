@@ -15,6 +15,18 @@ export interface RebuildIndexOptions {
 }
 
 /**
+ * Result from the rebuild-index command
+ */
+export interface RebuildIndexResult {
+  /** Number of plan files indexed */
+  plansIndexed: number;
+  /** Number of session files indexed */
+  sessionsIndexed: number;
+  /** Number of learned pattern files indexed */
+  learnedIndexed: number;
+}
+
+/**
  * Rebuild context index from markdown files
  * 
  * Scans .aiknowsys/ directory for plans, sessions, and learned patterns,
@@ -34,7 +46,7 @@ export interface RebuildIndexOptions {
  */
 export async function rebuildIndex(
   options: RebuildIndexOptions = {}
-): Promise<any> {
+): Promise<RebuildIndexResult> {
   const log = createLogger(options._silent);
 
   // Get target directory (absolute path)

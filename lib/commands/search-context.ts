@@ -1,6 +1,6 @@
 import { createLogger } from '../logger.js';
 import { createStorage } from '../context/index.js';
-import type { SearchScope } from '../context/types.js';
+import type { SearchScope, SearchResult } from '../context/types.js';
 import path from 'path';
 
 /**
@@ -15,6 +15,20 @@ export interface SearchContextOptions {
   json?: boolean;
   /** Silent mode (for testing) */
   _silent?: boolean;
+}
+
+/**
+ * Result from the search-context command
+ */
+export interface SearchContextResult {
+  /** The search query that was executed */
+  query: string;
+  /** The scope that was searched */
+  scope: 'all' | 'plans' | 'sessions' | 'learned';
+  /** Number of matches found */
+  count: number;
+  /** Array of search results sorted by relevance (highest first) */
+  matches: SearchResult[];
 }
 
 const VALID_SCOPES = ['all', 'plans', 'sessions', 'learned'] as const;
@@ -44,7 +58,7 @@ const VALID_SCOPES = ['all', 'plans', 'sessions', 'learned'] as const;
 export async function searchContext(
   query: string,
   options: SearchContextOptions = {}
-): Promise<any> {
+): Promise<SearchContextResult> {
   const log = createLogger(options._silent);
 
   // Validate query
@@ -104,7 +118,7 @@ export async function searchContext(
 
     // Note: Search results use compact output with relevance scores and file context.
     // Matches are pre-sorted by relevance (highest first) from storage layer.
-    result.results.forEach((match: any) => {
+    result.results.forEach((match: SearchResult) => {
       const typeEmoji: Record<string, string> = {
         plan: '📋',
         session: '📅',
