@@ -631,7 +631,8 @@ const result = runCommand(options);  // Error: result is Promise<ValidationResul
 
 **Still use file reading when:**
 - Need full plan/session content (query returns metadata only)
-- Performing complex semantic analysis
+- Performing deep semantic analysis requiring full text context
+- When query result count is unknown (might return hundreds of matches)
 - Reading CODEBASE_ESSENTIALS.md sections
 
 ### Available Commands
@@ -770,6 +771,8 @@ npx aiknowsys rebuild-index --json
 - Initial query: ~50-100ms (includes index rebuild if needed)
 - Subsequent queries: ~5-10ms (index cached in memory)
 - Scales to 10,000+ items without noticeable delay
+- For >10k items, consider pagination or more specific filters
+- Index rebuild time grows linearly with file count (~1ms per file)
 
 ### Error Messages
 
