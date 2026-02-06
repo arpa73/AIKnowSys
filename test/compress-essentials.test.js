@@ -1,31 +1,31 @@
-import { describe, test, mock, beforeEach, afterEach, expect } from 'vitest';
-import { compressEssentials } from '../dist/lib/commands/compress-essentials.js';
-import * as fs from 'node:fs';  // Fixed: Match implementation's import style
+import { describe, test, beforeEach, afterEach, expect, vi } from 'vitest';
 import path from 'path';
 
 /**
  * Test compress-essentials command
  * Phase 3.7: Comprehensive testing for ESSENTIALS compression
  * 
- * NOTE: These tests are currently skipped due to mocking issues after TypeScript migration.
- * The compress-essentials.ts file now uses `import * as fs from 'node:fs'` (namespace import),
- * but Node's test mock system has difficulty mocking namespace imports.
- * 
- * TODO: Rewrite these tests to either:
- * 1. Use dependency injection for fs operations
- * 2. Use a proper mocking library like sinon
- * 3. Test against real filesystem with temp directories
- * 
- * See: https://github.com/arpa73/AIKnowSys/issues/XXX
+ * Using Vitest mocking (vi.mock) for filesystem operations
  */
 
+// Mock the fs module
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn()
+}));
+
+// Import after mocking
+const { compressEssentials } = await import('../dist/lib/commands/compress-essentials.js');
+const fs = await import('node:fs');
+
 describe('compress-essentials command', () => {
-  // Reset all mocks after each test to prevent "Cannot redefine property" errors
   afterEach(() => {
-    mock.restoreAll();
+    vi.clearAllMocks();
   });
   
-  describe.skip('Analysis Mode (--analyze)', () => {
+  describe('Analysis Mode (--analyze)', () => {
     test('should parse ESSENTIALS into sections correctly', async () => {
       const mockContent = `# Project Knowledge System
 
@@ -47,13 +47,9 @@ When you change X, run Y.
 `;
       
       const mockDir = '/tmp/test-compress';
-      const mockEssentials = path.join(mockDir, 'CODEBASE_ESSENTIALS.md');
       
-      // Mock fs.existsSync
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      
-      // Mock fs.readFileSync
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
       
       const result = await compressEssentials({
         dir: mockDir,
@@ -67,9 +63,6 @@ When you change X, run Y.
       expect(result.sections[0].name).toEqual('Architecture Patterns');
       expect(result.sections[1].name).toEqual('API Calls');
       expect(result.sections[2].name).toEqual('Validation Matrix');
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
     });
     
     test('should identify verbose sections (>150 lines)', async () => {
@@ -97,8 +90,8 @@ Just a few lines here.
       
       const mockDir = '/tmp/test-compress';
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
       
       const result = await compressEssentials({
         dir: mockDir,
@@ -112,9 +105,6 @@ Just a few lines here.
       expect(result.opportunities[0].section).toEqual('Verbose Section with Examples');
       expect(result.opportunities[0].currentLines > 150).toBeTruthy();
       expect(result.opportunities[0].estimatedSavings > 0).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
     });
     
     test('should report compression recommendations', async () => {
@@ -137,8 +127,8 @@ ${verboseSection}
       
       const mockDir = '/tmp/test-compress';
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
       
       const result = await compressEssentials({
         dir: mockDir,
@@ -147,13 +137,11 @@ ${verboseSection}
       });
       
       // Should recommend extraction
+      // Should recommend extraction
       expect(result.opportunities.length > 0).toBeTruthy();
       const opp = result.opportunities[0];
       expect(opp.recommendedAction.includes('Extract to docs/patterns/')).toBeTruthy();
       expect(opp.estimatedSavings > 50).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
     });
     
     test('should handle well-sized ESSENTIALS without recommendations', async () => {
@@ -174,8 +162,8 @@ ${'Content line\n'.repeat(35)}
       
       const mockDir = '/tmp/test-compress';
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
       
       const result = await compressEssentials({
         dir: mockDir,
@@ -186,28 +174,20 @@ ${'Content line\n'.repeat(35)}
       // Should have no compression opportunities
       expect(result.opportunities.length).toEqual(0);
       expect(result.potentialSavings).toEqual(0);
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
     });
     
     test('should throw error if ESSENTIALS not found', async () => {
       const mockDir = '/tmp/test-compress';
       
-      const existsSync = mock.method(fs, 'existsSync', () => false);
+      fs.existsSync.mockReturnValue(false);
       
       await expect(async () => {
-                await compressEssentials({
-                  dir: mockDir,
-                  analyze: true,
-                  _silent: true
-                });
-              }).rejects.toThrow({
-                name: 'AIKnowSysError',
-                message: 'CODEBASE_ESSENTIALS.md not found'
-              });
-      
-      existsSync.mock.restore();
+        await compressEssentials({
+          dir: mockDir,
+          analyze: true,
+          _silent: true
+        });
+      }).rejects.toThrow(/CODEBASE_ESSENTIALS\.md not found/);
     });
     
     test('should calculate total potential savings correctly', async () => {
@@ -243,8 +223,8 @@ Just a bit.
       
       const mockDir = '/tmp/test-compress';
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
       
       const result = await compressEssentials({
         dir: mockDir,
@@ -264,9 +244,6 @@ Just a bit.
       const projectedSize = result.totalLines - result.potentialSavings;
       expect(projectedSize > 0).toBeTruthy();
       expect(projectedSize < result.totalLines).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
     });
   });
   
@@ -283,23 +260,22 @@ Just a bit.
     });
   });
   
-  describe.skip('Extraction Logic (Phase 3.3)', () => {
+  describe('Extraction Logic (Phase 3.3)', () => {
     test('should create docs/patterns directory if not exists', async () => {
       const mockDir = '/tmp/test-extract';
-      const patternsDir = path.join(mockDir, 'docs', 'patterns');
       
       const verboseSection = `## API Examples\n\n${'Line\n'.repeat(160)}\`\`\`js\ncode\n\`\`\`\n`;
       const mockContent = `# Project\n\n${verboseSection}\n\n## Small Section\n\nBrief.`;
       
-      const existsSync = mock.method(fs, 'existsSync', (p) => {
+      fs.existsSync.mockImplementation((p) => {
         if (p.includes('CODEBASE_ESSENTIALS.md')) return true;
         if (p.includes('docs/patterns')) return false;  // Directory doesn't exist yet
         return false;
       });
       
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -308,15 +284,10 @@ Just a bit.
       });
       
       // Should have created directory with recursive flag
-      expect(mkdirSync.mock.calls.length > 0).toBeTruthy();
-      const mkdirCall = mkdirSync.mock.calls.find(call => call.arguments[0].includes('patterns'));
+      expect(fs.mkdirSync).toHaveBeenCalled();
+      const mkdirCall = fs.mkdirSync.mock.calls.find(call => call[0].includes('patterns'));
       expect(mkdirCall).toBeTruthy();
-      expect(mkdirCall.arguments[1]).toEqual({ recursive: true });
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
+      expect(mkdirCall[1]).toEqual({ recursive: true });
     });
     
     test('should extract verbose section to separate file', async () => {
@@ -325,10 +296,10 @@ Just a bit.
       const verboseSection = `## API Examples\n\n${sectionContent}${'Line\n'.repeat(150)}`;
       const mockContent = `# Project\n\n${verboseSection}\n\n## Small Section\n\nBrief.`;
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -337,22 +308,17 @@ Just a bit.
       });
       
       // Should write extracted content to docs/patterns/
-      expect(writeFileSync.mock.calls.length >= 2).toBeTruthy();
+      expect(fs.writeFileSync.mock.calls.length >= 2).toBeTruthy();
       
-      const extractedFileCall = writeFileSync.mock.calls.find(call => 
-        call.arguments[0].includes('docs/patterns/api-examples.md')
+      const extractedFileCall = fs.writeFileSync.mock.calls.find(call => 
+        call[0].includes('docs/patterns/api-examples.md')
       );
       expect(extractedFileCall).toBeTruthy();
       
       // Extracted file should contain section content
-      const extractedContent = extractedFileCall.arguments[1];
+      const extractedContent = extractedFileCall[1];
       expect(extractedContent.includes('API Examples')).toBeTruthy();
       expect(extractedContent.includes('const example')).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
     });
     
     test('should replace verbose section with summary and link', async () => {
@@ -360,10 +326,10 @@ Just a bit.
       const verboseSection = `## API Examples\n\nVerbose content...\n${'Line\n'.repeat(160)}\`\`\`js\ncode\n\`\`\`\n`;
       const mockContent = `# Project\n\n${verboseSection}\n\n## Small Section\n\nBrief.`;
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -372,12 +338,12 @@ Just a bit.
       });
       
       // Should write updated ESSENTIALS
-      const essentialsCall = writeFileSync.mock.calls.find(call => 
-        call.arguments[0].includes('CODEBASE_ESSENTIALS.md')
+      const essentialsCall = fs.writeFileSync.mock.calls.find(call => 
+        call[0].includes('CODEBASE_ESSENTIALS.md')
       );
       expect(essentialsCall).toBeTruthy();
       
-      const updatedContent = essentialsCall.arguments[1];
+      const updatedContent = essentialsCall[1];
       
       // Should have summary
       expect(updatedContent.includes('API Examples')).toBeTruthy();
@@ -390,11 +356,6 @@ Just a bit.
       
       // Should still have other sections
       expect(updatedContent.includes('Small Section')).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
     });
     
     test('should preserve all content (nothing deleted)', async () => {
@@ -403,10 +364,10 @@ Just a bit.
       const verboseSection = `## API Examples\n\n${uniqueMarker}\n${'Line\n'.repeat(160)}\`\`\`js\ncode\n\`\`\`\n`;
       const mockContent = `# Project\n\n${verboseSection}\n\n## Small Section\n\nBrief.`;
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -415,20 +376,15 @@ Just a bit.
       });
       
       // Find extracted file content
-      const extractedFileCall = writeFileSync.mock.calls.find(call => 
-        call.arguments[0].includes('docs/patterns/')
+      const extractedFileCall = fs.writeFileSync.mock.calls.find(call => 
+        call[0].includes('docs/patterns/')
       );
       
       expect(extractedFileCall).toBeTruthy();
       
       // Unique marker should be in extracted file (not lost)
-      const extractedContent = extractedFileCall.arguments[1];
+      const extractedContent = extractedFileCall[1];
       expect(extractedContent.includes(uniqueMarker)).toBeTruthy();
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
     });
     
     test('should handle multiple sections extraction', async () => {
@@ -437,10 +393,10 @@ Just a bit.
       const section2 = `## Testing Patterns\n\n${'Line\n'.repeat(180)}\`\`\`js\ntest\n\`\`\`\n`;
       const mockContent = `# Project\n\n${section1}\n\n${section2}\n\n## Small\n\nBrief.`;
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -449,19 +405,19 @@ Just a bit.
       });
       
       // Should extract both sections
-      const apiCall = writeFileSync.mock.calls.find(call => call.arguments[0].includes('api-examples.md'));
-      const testCall = writeFileSync.mock.calls.find(call => call.arguments[0].includes('testing-patterns.md'));
+      const apiCall = fs.writeFileSync.mock.calls.find(call => call[0].includes('api-examples.md'));
+      const testCall = fs.writeFileSync.mock.calls.find(call => call[0].includes('testing-patterns.md'));
       
       expect(apiCall).toBeTruthy();
       expect(testCall).toBeTruthy();
       
       // Verify updated ESSENTIALS contains both summaries
-      const essentialsCall = writeFileSync.mock.calls.find(call => 
-        call.arguments[0].includes('CODEBASE_ESSENTIALS.md')
+      const essentialsCall = fs.writeFileSync.mock.calls.find(call => 
+        call[0].includes('CODEBASE_ESSENTIALS.md')
       );
       expect(essentialsCall).toBeTruthy();
       
-      const updatedContent = essentialsCall.arguments[1];
+      const updatedContent = essentialsCall[1];
       
       // Both sections should have links
       expect(updatedContent.includes('docs/patterns/api-examples.md')).toBeTruthy();
@@ -472,22 +428,17 @@ Just a bit.
       expect(lineCount < 10).toBeTruthy();
       
       // Both should be separate files
-      expect(apiCall.arguments[0]).not.toEqual(testCall.arguments[0]);
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
+      expect(apiCall[0]).not.toEqual(testCall[0]);
     });
     
     test('should not extract well-sized sections', async () => {
       const mockDir = '/tmp/test-extract';
       const mockContent = '# Project\n\n## Small Section 1\n\nJust a bit.\n\n## Small Section 2\n\nAlso brief.';
       
-      const existsSync = mock.method(fs, 'existsSync', () => true);
-      const readFileSync = mock.method(fs, 'readFileSync', () => mockContent);
-      const mkdirSync = mock.method(fs, 'mkdirSync', () => {});
-      const writeFileSync = mock.method(fs, 'writeFileSync', () => {});
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(mockContent);
+      fs.mkdirSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => {});
       
       await compressEssentials({
         dir: mockDir,
@@ -496,15 +447,11 @@ Just a bit.
       });
       
       // Should not extract anything (no docs/patterns/ writes)
-      const extractCalls = writeFileSync.mock.calls.filter(call => 
-        call.arguments[0].includes('docs/patterns/')
+      const extractCalls = fs.writeFileSync.mock.calls.filter(call => 
+        call[0].includes('docs/patterns/')
       );
       expect(extractCalls.length).toEqual(0);
-      
-      existsSync.mock.restore();
-      readFileSync.mock.restore();
-      mkdirSync.mock.restore();
-      writeFileSync.mock.restore();
     });
   });
 });
+
