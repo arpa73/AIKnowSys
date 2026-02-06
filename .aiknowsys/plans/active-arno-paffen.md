@@ -6,10 +6,11 @@
 
 # Active Plan Pointer
 
-**Currently Working On:** No active plan  
-**Status:** 🎯 Available for new work  
-**Last Completed:** [Context Query System](../PLAN_context_query_system.md) - 2026-02-07  
-**Previously:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
+**Currently Working On:** [Context Query System - Phase A.5](../PLAN_context_query_system.md)  
+**Status:** 🔄 ACTIVE (Phase A.5: ESSENTIALS Decomposition)  
+**Started:** 2026-02-07  
+**Phase A Completed:** 2026-02-07  
+**Last Fully Completed:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
@@ -28,7 +29,7 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 | [Mandatory Multi-Dev Migration](../PLAN_mandatory_multidev_migration.md) | ✅ COMPLETE | v0.9.0 released | 2026-02-02 |
 | [Learned Collaboration Original](../PLAN_learned_collaboration_original.md) | 🔄 PAUSED | Multi-dev done, pattern workflow → skill approach instead | 2026-02-03 |
 | [Skill Audit & Cleanup](../PLAN_skill_audit_cleanup.md) | ✅ COMPLETE | 3 universal skills created, 5 deleted, 594 tests passing | 2026-02-03 |
-| [Context Query System](../PLAN_context_query_system.md) | ✅ COMPLETE | All 3 phases complete, 91 tests passing, architect approved | 2026-02-07 |
+| [Context Query System](../PLAN_context_query_system.md) | 🔄 ACTIVE | Phase A complete (91 tests), Phase A.5 pending (ESSENTIALS decomposition) | 2026-02-07 |
 | [ESSENTIALS Validation](../PLAN_essentials_validation.md) | 📋 PLANNED | Ready for implementation (5 phases) | 2026-02-01 |
 | [Sprint 3: Performance & Integration](../PLAN_sprint3_performance.md) | 📋 PLANNED | Benchmarks, integration tests, architecture docs | 2026-01-31 |
 | [Review Pointer System](../PLAN_review_pointer_system.md) | ❌ CANCELLED | Over-engineering; cleanup hook solves this | 2026-01-31 |

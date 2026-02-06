@@ -1,35 +1,27 @@
 # Implementation Plan: Context Query System (CLI + Storage Adapter)
 
-**Status:** ✅ COMPLETE  
+**Status:** 🔄 PHASE A.5 PENDING  
 **Created:** 2026-02-05  
-**Completed:** 2026-02-07  
+**Phase A Completed:** 2026-02-07  
 **Goal:** Enable AI agents to query plans, sessions, and context via CLI commands with JSON output, using adapter pattern for future-proof storage
 
-## 🎉 Implementation Complete
+## ✅ Phase A Complete - 🎯 Phase A.5 Pending
 
-**All 3 phases completed successfully:**
+**Phase A: Read-Only Query System (COMPLETE):**
 - ✅ Phase 1: Storage Adapter Foundation (adapter pattern + JSON implementation)
 - ✅ Phase 2: Query Commands (4 commands: query-plans, query-sessions, search-context, rebuild-index)
 - ✅ Phase 3: CLI Integration & Documentation (CODEBASE_ESSENTIALS.md Section 4b + context-query skill)
+- ✅ **Architect Review:** APPROVED WITH HIGHEST COMMENDATION
+- ✅ **Tests:** 737/737 passing (91 context tests, 100% pass rate)
 
-**Architect Review:** ✅ APPROVED WITH HIGHEST COMMENDATION
-- Zero blocking issues
-- Perfect TypeScript compliance
-- Exceptional TDD discipline (91 tests, 100% pass rate)
-- Production-ready documentation
-- Sets new gold standard for the project
+**Phase A.5: ESSENTIALS Decomposition (PENDING):**
+- 🎯 **Goal:** Prevent AI overconfidence by reducing ESSENTIALS to critical invariants + skill index
+- 🎯 **Target:** 803 lines → ~200 lines (60-80% token reduction)
+- 🎯 **Why Critical:** Prevents "I thought I knew it already" failures
+- 🎯 **Mechanism:** Auto-load skills on trigger detection via query-essentials
+- 🎯 **Benefit:** Critical invariants ALWAYS loaded, workflows cannot be skipped
 
-**Test Status:** 737/737 passing (100%)
-- 91 context tests (16 query-plans, 17 query-sessions, 17 search-context, 14 rebuild-index, 25 json-storage, 8 factory, 7 adapter)
-- Test-to-code ratio: 1.7:1
-
-**Commits:**
-- ce19b57: feat(context): Implement storage adapter factory
-- 2b28e56: feat(context): Implement query-plans and query-sessions commands
-- 4624b95: feat: implement search-context and rebuild-index
-- 92192a6: docs(context): Document context query commands
-- dffe8f7: docs(context): Add optional enhancements from architect review
-- 69b60be: refactor(context): Complete type safety improvements
+**Phase B: Mutation Commands (FUTURE - depends on A.5 completion)**
 
 ---
 
