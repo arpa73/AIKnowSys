@@ -447,27 +447,41 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
   
   // Make all hook scripts executable (required by GitHub Copilot)
   // https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks
-  const hookFiles = [
-    'session-start.js',
-    'session-end.js',
-    'validation-reminder.cjs',
-    'tdd-reminder.cjs',
-    'skill-detector.cjs',
-    'skill-prereq-check.cjs',
-    'workspace-health.cjs',
-    'quality-health.cjs',
-    'collaboration-check.mjs',
-    'doc-sync.cjs',
-    'migration-check.cjs',
-    'performance-monitor.cjs',
-    'learned-reminder.cjs',
-    'plan-reminder.cjs',
-    'sync-plans.cjs'
+  // Generate list from TEMPLATE_PATHS constants (DRY principle)
+  const hookPaths = [
+    TEMPLATE_PATHS.VSCODE_SESSION_START,
+    TEMPLATE_PATHS.VSCODE_SESSION_END,
+    TEMPLATE_PATHS.VSCODE_VALIDATION_REMINDER,
+    TEMPLATE_PATHS.VSCODE_TDD_REMINDER,
+    TEMPLATE_PATHS.VSCODE_SKILL_DETECTOR,
+    TEMPLATE_PATHS.VSCODE_SKILL_PREREQ_CHECK,
+    TEMPLATE_PATHS.VSCODE_WORKSPACE_HEALTH,
+    TEMPLATE_PATHS.VSCODE_QUALITY_HEALTH,
+    TEMPLATE_PATHS.VSCODE_COLLABORATION_CHECK,
+    TEMPLATE_PATHS.VSCODE_DOC_SYNC,
+    TEMPLATE_PATHS.VSCODE_MIGRATION_CHECK,
+    TEMPLATE_PATHS.VSCODE_PERFORMANCE_MONITOR,
+    TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER,
+    TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER,
+    TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS
   ];
   
-  for (const hookFile of hookFiles) {
-    await fs.promises.chmod(path.join(hooksDir, hookFile), 0o755);
+  // Make hooks executable (best effort - may fail on Windows/restricted filesystems)
+  for (const hookPath of hookPaths) {
+    const filename = path.basename(hookPath);
+    try {
+      await fs.promises.chmod(path.join(hooksDir, filename), 0o755);
+    } catch (err) {
+      // chmod may fail on Windows or restricted filesystems
+      // Files are still copied, hooks may still work if shell executes them
+      if (!silent && hooksSpinner) {
+        hooksSpinner.warn(`Could not make ${filename} executable (may not affect Windows)`);
+      }
+    }
   }
   
-  if (hooksSpinner) hooksSpinner.succeed('Hooks installed (14 VSCode + 3 Git collaboration)');
+  // Auto-calculate counts for accurate reporting
+  const vscodeCount = hookPaths.filter(p => p.includes('VSCODE_')).length;
+  const gitCount = hookPaths.filter(p => p.includes('GIT_HOOK_')).length;
+  if (hooksSpinner) hooksSpinner.succeed(`Hooks installed (${vscodeCount} VSCode + ${gitCount} Git = ${hookPaths.length} total)`);
 }
