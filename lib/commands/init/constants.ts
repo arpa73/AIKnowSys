@@ -43,6 +43,10 @@ export const TEMPLATE_PATHS = {
   VSCODE_SKILL_PREREQ_CHECK: 'templates/hooks/skill-prereq-check.cjs',
   VSCODE_WORKSPACE_HEALTH: 'templates/hooks/workspace-health.cjs',
   VSCODE_QUALITY_HEALTH: 'templates/hooks/quality-health.cjs',
+  VSCODE_COLLABORATION_CHECK: 'templates/hooks/collaboration-check.mjs',
+  VSCODE_DOC_SYNC: 'templates/hooks/doc-sync.cjs',
+  VSCODE_MIGRATION_CHECK: 'templates/hooks/migration-check.cjs',
+  VSCODE_PERFORMANCE_MONITOR: 'templates/hooks/performance-monitor.cjs',
   
   // Git collaboration hooks (Phase 3)
   GIT_HOOK_LEARNED_REMINDER: 'templates/hooks/learned-reminder.cjs',

@@ -409,6 +409,26 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
     path.join(hooksDir, 'quality-health.cjs')
   );
   
+  await fs.promises.copyFile(
+    path.join(packageDir, TEMPLATE_PATHS.VSCODE_COLLABORATION_CHECK),
+    path.join(hooksDir, 'collaboration-check.mjs')
+  );
+  
+  await fs.promises.copyFile(
+    path.join(packageDir, TEMPLATE_PATHS.VSCODE_DOC_SYNC),
+    path.join(hooksDir, 'doc-sync.cjs')
+  );
+  
+  await fs.promises.copyFile(
+    path.join(packageDir, TEMPLATE_PATHS.VSCODE_MIGRATION_CHECK),
+    path.join(hooksDir, 'migration-check.cjs')
+  );
+  
+  await fs.promises.copyFile(
+    path.join(packageDir, TEMPLATE_PATHS.VSCODE_PERFORMANCE_MONITOR),
+    path.join(hooksDir, 'performance-monitor.cjs')
+  );
+  
   // Copy git collaboration hooks (Phase 3)
   await fs.promises.copyFile(
     path.join(packageDir, TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER),
@@ -425,5 +445,29 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
     path.join(hooksDir, 'sync-plans.cjs')
   );
   
-  if (hooksSpinner) hooksSpinner.succeed('Hooks installed (10 VSCode + 3 Git collaboration)');
+  // Make all hook scripts executable (required by GitHub Copilot)
+  // https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks
+  const hookFiles = [
+    'session-start.js',
+    'session-end.js',
+    'validation-reminder.cjs',
+    'tdd-reminder.cjs',
+    'skill-detector.cjs',
+    'skill-prereq-check.cjs',
+    'workspace-health.cjs',
+    'quality-health.cjs',
+    'collaboration-check.mjs',
+    'doc-sync.cjs',
+    'migration-check.cjs',
+    'performance-monitor.cjs',
+    'learned-reminder.cjs',
+    'plan-reminder.cjs',
+    'sync-plans.cjs'
+  ];
+  
+  for (const hookFile of hookFiles) {
+    await fs.promises.chmod(path.join(hooksDir, hookFile), 0o755);
+  }
+  
+  if (hooksSpinner) hooksSpinner.succeed('Hooks installed (14 VSCode + 3 Git collaboration)');
 }
