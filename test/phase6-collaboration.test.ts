@@ -103,7 +103,7 @@ describe('ci-check command', () => {
       expect(typeof check.duration === 'number').toBeTruthy();
       expect(check.duration >= 0).toBeTruthy();
     }
-  });
+  }, 30000); // Increase timeout for npm operations
 });
 
 describe('pre-commit hook', () => {

@@ -102,7 +102,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       const result = await depsHealth({ dir: testDir, _silent: true });
       expect(result).toBeTruthy();
       expect(typeof result).toBe('object');
-    });
+    }, 30000); // Increase timeout for npm operations
 
     it('should detect missing package.json', async () => {
       try {
@@ -129,7 +129,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       expect(Object.hasOwn(result, 'securityAdvisories')).toBeTruthy();
       expect(Object.hasOwn(result, 'outdated')).toBeTruthy();
       expect(Object.hasOwn(result, 'totalDependencies')).toBeTruthy();
-    });
+    }, 30000); // Increase timeout for npm operations
 
     it('should count total dependencies correctly', async () => {
       const packageJsonPath = path.join(testDir, 'package.json');
@@ -148,7 +148,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
 
       const result = await depsHealth({ dir: testDir, _silent: true });
       expect(result.totalDependencies).toBe(4);
-    });
+    }, 30000); // Increase timeout for npm operations
 
     it('should handle projects with no dependencies', async () => {
       const packageJsonPath = path.join(testDir, 'package.json');

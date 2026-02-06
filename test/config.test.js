@@ -290,7 +290,7 @@ describe('Config Utilities', () => {
                       dir: tempDir, 
                       _silent: true 
                     });
-                  }).rejects.toThrow({ message: /Invalid feature/ });
+                  }).rejects.toThrow(/Invalid feature/);
       });
       
       it('should install sessionPersistence directories', async () => {
@@ -344,7 +344,7 @@ describe('Config Utilities', () => {
                       dir: tempDir, 
                       _silent: true 
                     });
-                  }).rejects.toThrow({ message: /Invalid feature/ });
+                  }).rejects.toThrow(/Invalid feature/);
       });
     });
     

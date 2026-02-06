@@ -159,7 +159,7 @@ exit 1
   it('should execute actual validate-deliverables command when templates changed', async () => {
     // Copy actual validate-deliverables command from project
     const projectRoot = join(originalCwd);
-    const validateDeliverablesSource = join(projectRoot, 'lib/commands/validate-deliverables.js');
+    const validateDeliverablesSource = join(projectRoot, 'dist/lib/commands/validate-deliverables.js');
     const validateDeliverablesTarget = join(testDir, 'lib/commands/validate-deliverables.js');
     
     // Copy all dependencies
@@ -168,7 +168,7 @@ exit 1
     // Copy logger dependency
     await writeFile(
       join(testDir, 'lib/logger.js'),
-      await readFile(join(projectRoot, 'lib/logger.js'), 'utf-8')
+      await readFile(join(projectRoot, 'dist/lib/logger.js'), 'utf-8')
     );
     
     // Create a simplified hook that skips tests (test would fail in isolated env)

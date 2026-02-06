@@ -199,7 +199,7 @@ describe('Personal Pattern Directory Migration', () => {
       
       // Verify migrate.js imports migratePersonalPatterns
       const migrateSource: string = await fs.readFile(
-        path.join(import.meta.dirname, '../lib/commands/migrate.js'),
+        path.join(import.meta.dirname, '../dist/lib/commands/migrate.js'),
         'utf-8'
       );
       
