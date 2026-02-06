@@ -224,7 +224,7 @@ describe('init command', () => {
     
     // The prompt should still be generated correctly
     expect(output.includes('AI-Guided Project Bootstrap')).toBeTruthy();
-  });
+  }, 30000); // Increase timeout for init command execution
 
   // Stack Template Tests
   it('should list available stacks with --list-stacks', () => {

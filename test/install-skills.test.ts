@@ -40,7 +40,7 @@ describe('install-skills command', () => {
     
     assertFileExists(skillsDir);
     
-    await await expect(async () => await installSkills({ dir: testDir, _silent: true })).resolves.not.toThrow();
+    await expect(installSkills({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   // ========================================
@@ -143,7 +143,7 @@ describe('install-skills command', () => {
 
   it('should skip invalid skill name gracefully', async () => {
     // When user provides a skill that doesn't exist
-    await await expect(async () => await installSkills({
+    await expect(installSkills({
             dir: testDir,
             skills: ['refactoring-workflow', 'nonexistent-skill', 'tdd-workflow'],
             _silent: true

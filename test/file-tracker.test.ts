@@ -177,7 +177,7 @@ describe('FileTracker', () => {
         info: () => {}
       };
       
-      await await expect(async () => await tracker.rollback(mockLog)).resolves.not.toThrow();
+      await expect(tracker.rollback(mockLog)).resolves.not.toThrow();
     });
 
     it('should log each deletion', async () => {

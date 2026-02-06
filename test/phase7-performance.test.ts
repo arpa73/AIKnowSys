@@ -159,7 +159,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
 
       const result = await depsHealth({ dir: testDir, _silent: true });
       expect(result.totalDependencies).toBe(0);
-    });
+    }, 30000); // Increase timeout for npm operations
   });
 
   describe('Performance Monitor Hook', () => {

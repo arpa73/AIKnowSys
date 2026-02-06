@@ -44,7 +44,7 @@ describe('ci-check command', () => {
     expect(Array.isArray(result.checks)).toBeTruthy();
     expect(result.checks.length > 0).toBeTruthy();
     expect(typeof result.totalDuration === 'number').toBeTruthy();
-  });
+  }, 30000); // Increase timeout for npm operations
 
   it('should detect failing tests', async () => {
     // Override test script to fail
@@ -69,7 +69,7 @@ describe('ci-check command', () => {
     const testCheck: any = result.checks.find((c: any) => c.check === 'Tests');
     expect(testCheck).toBeTruthy();
     expect(testCheck.passed).toBe(false);
-  });
+  }, 30000); // Increase timeout for npm operations
 
   it('should handle optional checks gracefully', async () => {
     // Package without optional scripts
@@ -91,7 +91,7 @@ describe('ci-check command', () => {
 
     // Should still pass even without optional scripts
     expect(result.success).toBe(true);
-  });
+  }, 30000); // Increase timeout for npm operations
 
   it('should report check durations', async () => {
     const result: any = await ciCheck({

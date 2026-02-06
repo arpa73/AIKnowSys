@@ -44,7 +44,7 @@ describe('install-agents command', () => {
     assertFileExists(agentsDir);
     
     // Should not throw
-    await await expect(async () => await installAgents({ dir: testDir, _silent: true })).resolves.not.toThrow();
+    await expect(installAgents({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   // ========================================

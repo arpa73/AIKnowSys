@@ -63,7 +63,7 @@ describe('Personal Pattern Directory Migration', () => {
       const expectedDir: string = path.join(testDir, '.aiknowsys', 'personal', username);
       
       // Verify directory doesn't exist before migration
-      await expect(fs.access(expectedDir)).rejects.toThrow('personal/<username>/ should not exist before migration');
+      await expect(fs.access(expectedDir)).rejects.toThrow(/ENOENT|no such file/);
       
       // Run migration (will fail in RED phase)
       // @ts-expect-error - Not yet migrated to TypeScript
@@ -102,7 +102,7 @@ describe('Personal Pattern Directory Migration', () => {
       const readmePath: string = path.join(testDir, '.aiknowsys', 'personal', username, 'README.md');
       
       // Verify README doesn't exist before migration
-      await expect(fs.access(readmePath)).rejects.toThrow('README.md should not exist before migration');
+      await expect(fs.access(readmePath)).rejects.toThrow(/ENOENT|no such file/);
       
       // Run migration
       // @ts-expect-error - Not yet migrated to TypeScript

@@ -106,11 +106,13 @@ describe('validate-deliverables', () => {
 
   describe('Auto-Fix Mode', () => {
     it('should fix simple pattern replacements with --fix', async () => {
-      const testFile = path.join(testDir, 'auto-fix-test.md');
-      await fs.mkdir(testDir, {recursive: true});
-      await fs.writeFile(testFile, 'See PENDING_REVIEW.md for details');
+      // Create templates/ directory with a file containing fixable content
+      const templatesDir = path.join(testDir, 'templates');
+      await fs.mkdir(templatesDir, {recursive: true});
+      const testFile = path.join(templatesDir, 'test-doc.md');
+      await fs.writeFile(testFile, '# Test Doc\n\nSee PENDING_REVIEW.md for details\nEdit CURRENT_PLAN.md to update');
 
-      const result = await validateDeliverables({_silent: true, fix: true});
+      const result = await validateDeliverables({_silent: true, fix: true, projectRoot: testDir});
       
       expect('fixed' in result).toBeTruthy();
       
