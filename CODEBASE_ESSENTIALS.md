@@ -1,8 +1,12 @@
 # aiknowsys - Codebase Essentials
 
-> **Last Updated:** February 6, 2026  
+> **Last Updated:** February 7, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
-> **Maintainer:** arpa73
+> **Maintainer:** arpa73  
+> **Version:** v0.10.0 (Skill-Indexed Architecture)
+
+⚠️ **MAJOR CHANGE:** ESSENTIALS is now a skill index, not a workflow encyclopedia.  
+**Full workflows** are in [.github/skills/](/.github/skills/) (auto-loaded on trigger detection).
 
 ---
 
@@ -29,11 +33,7 @@
 | `npm run lint` | Lint codebase | No errors or warnings |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
-| `node bin/cli.js scan --dir .` | Scan command | Generates draft ESSENTIALS |
-| `node bin/cli.js check` | Validation + bloat detection | ESSENTIALS <800 lines |
 | `node bin/cli.js validate-deliverables` | Deliverables validation | All checks pass |
-| `node bin/cli.js validate-deliverables --full` | Comprehensive validation | All checks pass (includes fresh init) |
-| `node bin/cli.js compress-essentials --analyze` | Preview compression | Shows opportunities |
 | `npm pack --dry-run` | Package contents | Lists correct files |
 
 ---
@@ -42,997 +42,286 @@
 
 ```
 aiknowsys/
-├── bin/
-│   └── cli.js              # CLI entry point
-├── lib/
+├── bin/cli.js              # CLI entry point
+├── lib/                    # TypeScript source
 │   ├── commands/           # Command implementations
-│   │   ├── init.js         # New project setup (entry point)
-│   │   ├── init/           # Init command modules
-│   │   │   ├── index.js    # Barrel exports
-│   │   │   ├── constants.js # Stack configs
-│   │   │   ├── prompts.js  # Interactive prompts
-│   │   │   ├── display.js  # Output formatting
-│   │   │   └── openspec.js # OpenSpec integration
-│   │   ├── query-plans.ts  # Query plan metadata (JSON output)
+│   │   ├── query-plans.ts  # Query plan metadata (JSON)
 │   │   ├── query-sessions.ts # Query session history
-│   │   ├── search-context.ts # Full-text contextual search
+│   │   ├── search-context.ts # Full-text search
 │   │   ├── rebuild-index.ts # Rebuild context index
-│   │   ├── scan.js         # Codebase scanner
-│   │   ├── migrate.js      # Migration workflow
-│   │   ├── install-agents.js
-│   │   └── install-skills.js
+│   │   └── ... (other commands)
 │   ├── context/            # Storage adapter layer (v0.10.0+)
-│   │   ├── index.ts        # Factory + exports
 │   │   ├── storage-adapter.ts # Base interface
-│   │   ├── json-storage.ts # JSON file implementation
+│   │   ├── json-storage.ts # JSON implementation
 │   │   └── types.ts        # Type definitions
 │   └── utils.js            # Shared utilities
 ├── templates/              # All template files
-│   ├── agents/             # Agent templates
-│   ├── skills/             # Skill templates (user-facing only)
-│   ├── git-hooks/          # TDD git hooks
-│   ├── scripts/            # TDD install scripts
-│   ├── workflows/          # GitHub Actions workflows
-│   ├── hooks/              # VSCode session hooks (optional)
-│   │   ├── hooks.json      # Hook configuration
-│   │   ├── session-start.js # Auto-load context
-│   │   ├── session-end.js  # Auto-save state
-│   │   ├── validation-reminder.cjs # Stop hook (validation enforcement)
-│   │   ├── tdd-reminder.cjs # PreToolUse hook (TDD reminders)
-│   │   ├── collaboration-check.mjs # Concurrent work detection
-│   │   ├── performance-monitor.cjs # Performance tracking
-│   │   ├── migration-check.cjs # Version mismatch detection
-│   │   └── doc-sync.cjs # Documentation staleness tracking
+│   ├── skills/             # Skill templates (user-facing)
 │   ├── stacks/             # Stack-specific templates
-│   ├── AGENTS.template.md
-│   ├── CODEBASE_ESSENTIALS.template.md
-│   ├── CODEBASE_ESSENTIALS.minimal.template.md
-│   └── CODEBASE_CHANGELOG.template.md
-├── .github/
-│   └── skills/             # Universal skills (includes maintainer-only)
-│       ├── deliverable-review/  # Maintainer skill (maintainer: true)
-│       ├── _skill-template/     # Maintainer skill (maintainer: true)
-│       ├── ai-friendly-documentation/  # User skills (distributed)
-│       ├── context-query/  # Query plans/sessions via CLI
-│       ├── context7-usage/
-│       ├── dependency-management/
-│       ├── feature-implementation/
-│       ├── refactoring-workflow/
-│       ├── skill-creator/
-│       ├── skill-validation/
-│       ├── tdd-workflow/
-│       └── validation-troubleshooting/
-├── .aiknowsys/             # AI knowledge system (user workspace)
+│   └── ...
+├── .github/skills/         # Universal skills (includes maintainer-only)
+├── .aiknowsys/             # AI knowledge system
 │   ├── context-index.json  # Context index (auto-generated, committed)
-│   ├── performance-history.json # Performance tracking (gitignored, last 100 runs)
-│   ├── CURRENT_PLAN.md     # Team index (auto-generated by sync-plans)
 │   ├── PLAN_*.md           # Implementation plans
-│   ├── plans/              # Multi-developer plan tracking (committed)
-│   │   ├── README.md       # Workflow explanation
-│   │   └── active-<username>.md  # Per-developer active plan pointer
-│   ├── reviews/            # Multi-developer reviews (gitignored)
-│   │   ├── README.md       # Workflow explanation (committed)
-│   │   └── PENDING_<username>.md  # Per-developer review files
-│   ├── learned/            # Project-specific patterns (committed)
-│   ├── personal/           # Personal patterns (gitignored)
-│   │   └── <username>/     # Per-developer personal patterns
+│   ├── plans/              # Multi-developer plan tracking
+│   ├── learned/            # Project-specific learned patterns
 │   └── sessions/           # Session notes (gitignored)
-├── scripts/                # Utility bash scripts (cleanup, maintenance)
-├── examples/               # Stack-specific examples
-├── docs/                   # Documentation
 └── package.json
 ```
 
-### Maintainer vs User Content
+---
 
-Skills with `maintainer: true` in frontmatter are for AIKnowSys development only.
-They stay in `.github/skills/` but are NOT synced to `templates/skills/`.
+## 4. Critical Invariants (ALWAYS ENFORCED - NOT OPTIONAL)
 
-**User skills (10):** Distributed via `npx aiknowsys init`  
-**Maintainer skills (2):** `deliverable-review`, `_skill-template`
+These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
+
+### 1. ES Modules Only
+- All **internal** files use `import`/`export`, never `require()`
+- package.json has `"type": "module"`
+- **Exception:** Templates distributed to user projects may use `.cjs` for compatibility
+
+### 2. Absolute Paths Required
+- Always use `path.resolve()` for user-provided paths
+- Use `getPackageDir()` for template paths
+
+### 3. Graceful Failures
+- All commands must handle missing files/directories
+- Show helpful error messages, not stack traces
+
+### 4. Template Preservation
+- Never modify files in `templates/` - they're the source of truth
+- User customization happens in generated files
+
+### 5. Template Structure Integrity
+- When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
+- Replace `{{PLACEHOLDERS}}` with real values, not generic placeholders
+- Preserve template structure exactly (don't rename sections)
+
+### 6. Backwards Compatibility
+- Bash scripts in `scripts/` must remain functional
+- npm CLI is additive, not replacement
+
+### 7. Test-Driven Development (TDD) - MANDATORY
+- **For new features:** Write tests BEFORE implementation (RED → GREEN → REFACTOR)
+- **For bugfixes:** Write test that reproduces bug FIRST, then fix, then refactor
+- Follow RED-GREEN-REFACTOR cycle for both features and bugs
+- **Exception:** Configuration-only changes (adding properties to const objects)
+- **Full workflow:** [.github/skills/tdd-workflow/SKILL.md](.github/skills/tdd-workflow/SKILL.md)
+
+### 8. Deliverables Consistency
+- Templates (`templates/` directory) are **deliverables** distributed to users
+- ANY change to core functionality MUST update corresponding templates
+- Templates must match non-template equivalents
+- Run `npx aiknowsys validate-deliverables` before commits/releases
+- Pre-commit hook automatically validates when templates/changed
 
 ---
 
-## 4. Core Patterns
+## 5. Skill Index (Auto-Load on Trigger Detection)
 
-### CLI Command Structure
-```javascript
-// All commands follow this pattern:
-import { createLogger } from '../logger.js';
+**How this works:**
+1. AI agent detects trigger words in user request
+2. AI calls `npx aiknowsys query-essentials "<skill-name>"` to load full workflow
+3. AI follows loaded workflow (cannot skip or "think they know")
 
-export async function commandName(options) {
-  const targetDir = path.resolve(options.dir);
-  const silent = options._silent || false;
-  const log = createLogger(silent);
-  
-  // 1. Display header
-  log.header('Command Title', '🎯');
-  
-  // 2. Interactive prompts (if needed, skip if silent)
-  if (!silent) {
-    const answers = await inquirer.prompt([...]);
-  }
-  
-  // 3. Spinner for long operations (conditional on silent mode)
-  const spinner = silent ? null : ora('Doing work...').start();
-  
-  // 4. Execute logic
-  try {
-    // ... work
-    if (spinner) spinner.succeed('Done');
-    
-    // Return data for test assertions
-    return { success: true, data: result };
-  } catch (error) {
-    if (spinner) spinner.fail('Failed');
-    log.error('Failed: ' + error.message);
-    throw error;  // Testable - don't use process.exit()
-  }
-  
-  // 5. Display next steps
-  log.cyan('📖 Next steps:');
-}
-```
-
-### Logger Pattern
-All commands use `createLogger(silent)` for consistent, testable output. See [learned skill](.aiknowsys/learned/logger-pattern.md) for detailed usage, methods, and examples.
-
-```javascript
-import { createLogger } from '../logger.js';
-const log = createLogger(silent);  // silent = true/false
-```
-
-### Inquirer Prompts
-Use `'rawlist'` instead of `'list'` for VS Code terminal compatibility. See [learned skill](.aiknowsys/learned/inquirer-compatibility.md) for details.
-
-```javascript
-// Use rawlist (numbered options) - works everywhere
-await inquirer.prompt([{
-  type: 'rawlist',
-  name: 'choice',
-  message: 'Select option:',
-  choices: [...],
-  default: 1
-}]);
-```
-
-### Template Variable Replacement
-```javascript
-// Use {{VARIABLE}} syntax in templates
-copyTemplate(source, dest, {
-  '{{PROJECT_NAME}}': answers.projectName,
-  '{{DATE}}': new Date().toLocaleDateString(...)
-});
-```
-
-### Silent Mode for Nested Calls
-```javascript
-// Commands accept _silent option for programmatic use
-export async function installAgents(options) {
-  const silent = options._silent || false;
-  if (!silent) {
-    console.log(...);
-  }
-}
-```
-
-### Progress Indicators
-For detailed guidance on progress indicators and spinners, see the [learned skill](.aiknowsys/learned/progress-indicators.md). This project uses ora spinners with three distinct patterns depending on the operation type (file processing, multi-step checks, or sequential phases). Always call `succeed()`, `fail()`, or `info()` to clear spinner state.
-
-### Plan Management Pattern
-**Multiple concurrent plans** enabled via pointer system.
-
-**Multi-Developer Workflow (Mandatory v0.9.0+):**
-
-**Plan Pointers:**
-- **plans/active-<username>.md:** Personal active plan pointer (committed to git)
-- **CURRENT_PLAN.md:** Team index aggregating all developers' plans (auto-generated, committed)
-- **Username:** Extracted from `git config user.name`, normalized (lowercase, spaces → hyphens)
-
-**Individual Plans (.aiknowsys/PLAN_*.md):**
-- Full implementation details (committed to git)
-- Progress tracking with checkboxes
-- Phase/step breakdown
-- Status lifecycle: 📋 PLANNED → 🎯 ACTIVE → 🔄 PAUSED or ✅ COMPLETE or ❌ CANCELLED
-
-**Workflow:**
-1. **@Planner** creates detailed PLAN_*.md
-2. **Developer** updates `plans/active-<username>.md` to point to plan
-3. **Developer** runs `npx aiknowsys sync-plans` to regenerate team index
-4. **Developer** follows active plan, tracking progress in PLAN_*.md
-5. **Completed plans** remain visible in team index with ✅ status
-
-**Benefits:**
-- No merge conflicts on plan tracking (each dev has own pointer)
-- Team visibility (CURRENT_PLAN.md shows everyone's active work)
-- Solo developers work the same way (just one entry in team index)
-- Clean git history (auto-generated file committed, not manually edited)
-
-**Migration:**
-- **Existing projects (pre-v0.9.0):** Run `npx aiknowsys migrate-to-multidev` to convert single-dev → multi-dev
-- **New projects:** Run `npx aiknowsys init` (creates multi-dev structure by default)
-
-See: [AGENTS.md](AGENTS.md#plan-management)
-
-### Pattern Sharing Workflow
-
-**Personal vs Learned Patterns:**
-- **personal/<username>/** - Private patterns (gitignored, individual discoveries)
-- **learned/** - Team patterns (committed, shared knowledge)
-
-**Sharing Mechanism:**
-- AI agents suggest sharing valuable personal patterns
-- Pattern files move from personal/ → learned/ with updated frontmatter
-- Duplicate detection prevents redundant patterns
-- Merge workflow combines similar patterns intelligently
-
-**Trigger words:** "share pattern", "share with team", "what patterns can I share"
-
-**Automated workflow:**
-1. Agent detects valuable pattern (high usage, solves recurring problem)
-2. Checks learned/ for duplicates (title, keywords, content overlap)
-3. If unique: Moves to learned/, updates frontmatter (adds shared_by, shared_date)
-4. If duplicate: Offers merge or keep separate
-5. Updates session notes, suggests commit
-
-**Benefits:**
-- Knowledge captured naturally during development
-- No manual "learn" command needed (AI-assisted)
-- Duplicate prevention reduces pattern bloat
-- Merge intelligence combines related discoveries
-- Team collaboration without meetings
-
-See: [.github/skills/pattern-sharing/SKILL.md](.github/skills/pattern-sharing/SKILL.md)
+**Why this prevents mistakes:**
+- Critical invariants ALWAYS loaded (above section, not optional)
+- Detailed workflows loaded ON-DEMAND (prevents "I thought I knew" failures)
+- 70-80% token reduction (300 lines + 100 skill vs 1039 lines total)
 
 ---
 
-## 4a. TypeScript Patterns (Since v0.9.0)
+### Development Workflows
 
-### Build System
+#### Testing & Validation
+**[tdd-workflow](.github/skills/tdd-workflow/SKILL.md)**
+- **Triggers:** "write tests", "TDD", "test first", "failing test", "RED-GREEN-REFACTOR"
+- **Summary:** Complete TDD cycle - write failing test FIRST, implement minimal code, refactor
+- **Why use:** Prevents "I'll add tests later" - tests drive design
+- **Output:** Test file paths, test execution logs
 
-**Commands:**
+**[validation-troubleshooting](.github/skills/validation-troubleshooting/SKILL.md)**
+- **Triggers:** "test fail", "validation error", "build broken", "tests not passing"
+- **Summary:** Debug validation failures - common issues, fixes, rollback procedures
+- **Why use:** Systematic debugging instead of guessing
+- **Output:** Root cause, fix steps, validation commands
+
+#### Code Quality
+**[refactoring-workflow](.github/skills/refactoring-workflow/SKILL.md)**
+- **Triggers:** "refactor", "clean up", "simplify", "extract function", "reduce duplication"
+- **Summary:** Test-driven refactoring - tests pass BEFORE and AFTER each change
+- **Why use:** Safe code improvements without breaking functionality
+- **Output:** Refactored code paths, test results
+
+**[ai-friendly-documentation](.github/skills/ai-friendly-documentation/SKILL.md)**
+- **Triggers:** "write docs", "update README", "changelog", "documentation"
+- **Summary:** AI-optimized documentation for RAG systems - self-contained sections, explicit terminology
+- **Why use:** Better AI comprehension and retrieval
+- **Output:** Documentation files, changelog entries
+
+#### Architecture & Planning
+**[feature-implementation](.github/skills/feature-implementation/SKILL.md)**
+- **Triggers:** "new feature", "implement", "add capability", "build feature"
+- **Summary:** Step-by-step feature planning - when to use OpenSpec, implementation patterns
+- **Why use:** Structured approach prevents scope creep
+- **Output:** Plan file, implementation steps, OpenSpec proposal (if needed)
+
+**[context-query](.github/skills/context-query/SKILL.md)**
+- **Triggers:** "find plan", "query sessions", "search context", "what's the current plan"
+- **Summary:** Query CLI commands instead of file searching - O(1) index lookup
+- **Why use:** 100x faster than grep_search for >100 items
+- **Output:** JSON with structured metadata, file paths
+
+#### Dependency Management
+**[dependency-management](.github/skills/dependency-management/SKILL.md)**
+- **Triggers:** "update deps", "upgrade packages", "security fix", "npm update"
+- **Summary:** Safe upgrade procedures - security-first, incremental updates, rollback plans
+- **Why use:** Prevents breaking changes from surprise dependencies
+- **Output:** Updated package.json, test results
+
+#### Context7 Integration
+**[context7-usage](.github/skills/context7-usage/SKILL.md)**
+- **Triggers:** "query framework docs", "Context7", "library documentation"
+- **Summary:** Query up-to-date documentation via Context7 MCP server
+- **Why use:** Always current docs instead of outdated web search
+- **Output:** Framework-specific code examples, API documentation
+
+#### Skill Management
+**[skill-creator](.github/skills/skill-creator/SKILL.md)**
+- **Triggers:** "create skill", "new skill", "make this a skill"
+- **Summary:** Create new Agent Skills from guides - follows VS Code Agent Skills standard
+- **Why use:** Proper skill format and metadata
+- **Output:** SKILL.md file, registered in AVAILABLE_SKILLS
+
+**[skill-validation](.github/skills/skill-validation/SKILL.md)**
+- **Triggers:** "validate skill", "check skill format"
+- **Summary:** Validate skill format and content against standards
+- **Why use:** Ensures skill works correctly
+- **Output:** Validation report, errors/warnings
+
+**[pattern-sharing](.github/skills/pattern-sharing/SKILL.md)**
+- **Triggers:** "share pattern", "team pattern", "collaborate"
+- **Summary:** AI-assisted workflow for sharing personal patterns with team
+- **Why use:** Detects valuable patterns, checks duplicates
+- **Output:** Pattern file in learned/ or personal/
+
+---
+
+### Maintainer Skills (Not Distributed to Users)
+
+These skills have `maintainer: true` in frontmatter and stay in `.github/skills/`:
+
+**[deliverable-review](.github/skills/deliverable-review/SKILL.md)**
+- **Purpose:** Monthly quality reviews using Context7 MCP for current framework docs
+- **When:** Pre-release validation, framework major version updates
+
+**[_skill-template](.github/skills/_skill-template/SKILL.md)**
+- **Purpose:** Template for creating new skills following VS Code Agent Skills standard
+
+---
+
+## 6. Quick Reference
+
+### Validation Before Claiming "Done"
 ```bash
-npm run build         # Compile TypeScript → dist/ (prod)
-npm run build:watch   # Watch mode for development
-npm run dev           # Alias for build:watch
-npm run type-check    # Check types without building (CI)
+npm test              # All tests pass
+npm run lint          # No errors
+npm run build         # Clean compilation
+node bin/cli.js --help  # CLI functional
 ```
 
-**Build Pipeline:**
-```
-lib/              # TypeScript source (.ts files)
-  ↓ tsc build
-dist/             # Compiled output (.js, .d.ts, .js.map)
-  ↓ npm test (pretest: npm run build)
-Test against      # Tests validate compiled code
-  ↓ npm publish (prepublishOnly: build + lint + test)
-Users get dist/   # Compiled JavaScript only
-```
+### Common Patterns
 
-### Type System Configuration
-
-**tsconfig.json settings:**
-```json
-{
-  "compilerOptions": {
-    "strict": true,              // All strict checks enabled
-    "target": "ES2022",          // Modern JavaScript features
-    "module": "ES2022",          // ES modules
-    "moduleResolution": "node",  
-    "esModuleInterop": true,     
-    "outDir": "./dist",          // Compiled output
-    "declaration": true,         // Generate .d.ts files
-    "declarationMap": true,      // Source maps for types
-    "sourceMap": true            // JavaScript source maps
-  },
-  "include": ["lib/**/*", "bin/**/*", "test/**/*"],
-  "exclude": ["node_modules", "dist", "templates"]
-}
-```
-
-### Import Patterns
-
-**CRITICAL: Use `.js` extensions in imports (TypeScript quirk for ES modules)**
-
+**Logger pattern (all commands):**
 ```typescript
-// ✅ Correct: .js extension (required for ES modules)
-import { validateDeliverables } from './commands/validate-deliverables.js';
-import { createLogger } from './logger.js';
-
-// ✅ Correct: Type-only import
-import type { ValidationResult, FileOperation } from './types/index.js';
-
-// ❌ Wrong: .ts extension
-import { utils } from './utils.ts';  // Will fail at runtime!
-
-// ❌ Wrong: No extension
-import { config } from './config';   // Module resolution error
+import { createLogger } from '../logger.js';
+const log = createLogger(options._silent);
+log.header('Title', '🎯');
+log.success('Done');
 ```
 
-**Why `.js` extensions?**  
-TypeScript compiles `.ts` → `.js`, but import paths are NOT rewritten. Runtime needs `.js` to find the compiled file.
-
-### Type Definitions
-
-**Core types location:** `lib/types/index.ts`
-
+**TypeScript imports (REQUIRED):**
 ```typescript
-// File operation result
-export interface FileOperation {
-  source: string;
-  destination: string;
-  status: 'success' | 'skipped' | 'error';
-  reason?: string;
-}
-
-// Validation result
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-// Command options (extends Commander.js options)
-export interface CommandOptions {
-  dir?: string;
-  force?: boolean;
-  silent?: boolean;
-  _silent?: boolean;  // Internal flag for nested calls
-}
+import { myFunction } from './file.js';  // ✅ .js extension required
+import type { MyType } from './types.js';  // ✅ type-only import
 ```
 
-### Type Safety Patterns
-
-**Critical Invariants:**
-- ✅ All new code MUST be TypeScript (not JavaScript)
-- ✅ Use `.js` extensions in imports
-- ✅ Avoid `any` - use `unknown` for truly dynamic data
-- ✅ Write tests before implementation (TDD with types)
-- ✅ Type-only imports for interfaces/types
-
-**Avoid `any`:**
+**Absolute paths (REQUIRED):**
 ```typescript
-// ❌ Bad: Loses all type safety
-function process(data: any) {
-  data.anything();  // No error, but might crash
-}
-
-// ✅ Better: Unknown with type guards
-function process(data: unknown) {
-  if (typeof data === 'string') {
-    console.log(data.toUpperCase());  // TypeScript knows it's string
-  } else if (isValidationResult(data)) {
-    console.log(data.errors);  // TypeScript knows the shape
-  }
-}
-
-// Type guard function
-function isValidationResult(obj: unknown): obj is ValidationResult {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'valid' in obj &&
-    'errors' in obj
-  );
-}
+const targetDir = path.resolve(options.dir || process.cwd());
 ```
-
-**Type-only imports:**
-```typescript
-// ✅ Single type import
-import type { ValidationResult } from './types/index.js';
-
-// ✅ Multi-line type-only imports (for many types from same module)
-import type { 
-  TemplateSchemaMap, 
-  LegacyPattern, 
-  AutoFixPattern,
-  DeliverableValidationOptions,
-  DeliverableValidationResult,
-  ValidationCheck
-} from './types/index.js';
-
-// ✅ Mixed import/type
-import { validateFile } from './validator.js';
-import type { FileOperation } from './types/index.js';
-
-// ❌ Unnecessary: Importing only for types but not marked as type-only
-import { ValidationResult } from './types/index.js';  // Could be optimized
-```
-
-### TDD with TypeScript
-
-**Development workflow:**
-
-1. **RED: Write failing test FIRST (with types)**
-   ```typescript
-   // test/commands/validate.test.ts
-   import type { ValidationResult } from '../../lib/types/index.js';
-   import { validateDeliverables } from '../../lib/commands/validate-deliverables.js';
-   
-   it('should detect missing files', async () => {
-     const result: ValidationResult = await validateDeliverables({ dir: './test/fixtures/missing' });
-     expect(result.valid).toBe(false);
-     expect(result.errors).toContain('AGENTS.md not found');
-   });
-   ```
-
-2. **GREEN: Implement minimal code to pass**
-   ```typescript
-   // lib/commands/validate-deliverables.ts
-   import type { ValidationResult } from '../types/index.js';
-   
-   export async function validateDeliverables(options: CommandOptions): Promise<ValidationResult> {
-     const errors: string[] = [];
-     
-     if (!fs.existsSync(path.join(options.dir, 'AGENTS.md'))) {
-       errors.push('AGENTS.md not found');
-     }
-     
-     return { valid: errors.length === 0, errors, warnings: [] };
-   }
-   ```
-
-3. **REFACTOR: Clean up while keeping tests green**
-   - Extract validation logic to separate functions
-   - Add more specific type definitions
-   - Improve error messages
-
-### TypeScript Suppressions
-
-**When to use error suppressions during incremental migration:**
-
-```typescript
-// ✅ BEST: @ts-expect-error (fails if error goes away)
-// @ts-expect-error - quality-checkers not yet migrated to TypeScript
-import { checkEssentialsBloat } from '../../lib/quality-checkers/essentials-bloat.js';
-
-// ⚠️ AVOID: @ts-ignore (hides all errors, even new ones)
-// @ts-ignore
-import { something } from './unmigrated.js';  // Don't use this!
-
-// ⚠️ AVOID: Type assertions (no runtime safety)
-const result = response as ValidationResult;  // Dangerous if wrong!
-```
-
-**Why @ts-expect-error is best:**
-- ✅ Documents WHY the error is expected (with comment)
-- ✅ Fails compilation if error is fixed (prevents stale suppressions)
-- ✅ Scoped to specific line (doesn't hide other errors)
-- ✅ Shows progress (remove when module migrated)
-
-**When to use @ts-expect-error:**
-- Importing unmigrated JavaScript modules during incremental migration
-- Temporary workaround for known type issues in dependencies
-- Testing edge cases that intentionally cause type errors
-
-**When NOT to use:**
-- ❌ To bypass legitimate type errors (fix the types instead!)
-- ❌ In production code (only acceptable in tests during migration)
-- ❌ Without explanatory comment (always explain WHY)
-
-### Typing Unmigrated Modules
-
-**Pattern for typing JavaScript modules not yet migrated:**
-
-```typescript
-// ✅ Use ReturnType<typeof> for function return types
-import { createLogger } from '../logger.js';  // Still .js (not migrated)
-
-type Logger = ReturnType<typeof createLogger>;  // Extract return type
-
-function myCommand(log: Logger) {  // Now type-safe!
-  log.success('Command completed');
-  log.error('Something failed');
-}
-```
-
-**Why this works:**
-- TypeScript infers return type from JavaScript function
-- No need to create manual interface (DRY principle)
-- Automatically updates when JS function changes
-- Works with unmigrated modules during incremental migration
-
-**Other utility types for migration:**
-```typescript
-// Get parameter types from unmigrated function
-type Params = Parameters<typeof unmigrated>;
-
-// Get return type from unmigrated async function  
-type AsyncReturn = Awaited<ReturnType<typeof asyncFn>>;
-
-// Get instance type from unmigrated class
-type Instance = InstanceType<typeof MyClass>;
-```
-
-### Common TypeScript Gotchas
-
-**Module resolution:**
-```typescript
-// ❌ This works in TypeScript but fails at runtime
-import { config } from './config';
-
-// ✅ Always use .js extension
-import { config } from './config.js';
-```
-
-**Type assertions:**
-```typescript
-// ❌ Unsafe: Might be wrong at runtime
-const result = response as ValidationResult;
-
-// ✅ Better: Type guard with runtime check
-function isValidationResult(obj: unknown): obj is ValidationResult {
-  return /* runtime validation */;
-}
-
-if (isValidationResult(result)) {
-  // Safe to use result.errors, result.warnings
-}
-```
-
-**Async/await:**
-```typescript
-// ✅ Always type Promise return
-export async function runCommand(options: CommandOptions): Promise<ValidationResult> {
-  // ...
-}
-
-// ❌ Don't forget await (TypeScript catches this)
-const result = runCommand(options);  // Error: result is Promise<ValidationResult>, not ValidationResult
-```
-
-### Distribution
-
-**Package contents:**
-- ✅ `dist/` - Compiled JavaScript (.js, .d.ts, .js.map)
-- ✅ `templates/` - User-facing files
-- ✅ `bin/` - CLI entry point
-- ❌ `lib/` - TypeScript source (excluded from npm package)
-- ❌ `test/` - Test files (excluded)
-
-**Why ship `dist/` not `lib/`?**
-- Users don't need TypeScript compiler
-- Faster execution (no runtime compilation)
-- Industry standard for TypeScript packages
-
-### Migration Status
-
-- ✅ Phase 1: Infrastructure complete
-- ✅ Phase 2: Core type definitions complete
-- ✅ Phase 3: Core utilities migrated
-- ✅ Phase 4: All 40 test files migrated to TypeScript
-- ✅ Phase 5: Build integration complete
-- ⏳ Phase 6: Documentation updates in progress
-- ⏹️ Phase 7: Template schema enforcement (pending)
 
 ---
 
-## 4b. Context Query Commands (Since v0.10.0)
+## 7. Common Gotchas
 
-**Purpose:** Enable AI agents to query plans, sessions, and learned patterns via CLI instead of file searching.
+**ESM `__dirname` not available:**
+```typescript
+import { fileURLToPath } from 'url';
+import path from 'path';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+```
 
-**Performance:** O(1) index lookup vs O(n) file reads (100x faster for >100 items)
+**Chalk 5.x is ESM-only:**
+```typescript
+import chalk from 'chalk';  // ✅ Must use import
+const { default: chalk } = require('chalk');  // ❌ Won't work
+```
 
-**Benefits:**
-- ✅ Structured JSON output (no markdown parsing)
-- ✅ Filter by status, author, topic, date
-- ✅ Full-text search across all context
-- ✅ Human-readable table output
-- ✅ Same commands work for AI agents and developers
+**Import extensions required:**
+```typescript
+import { fn } from './utils.js';  // ✅ .js extension required
+import { fn } from './utils';     // ❌ Won't resolve
+```
 
-### When to Use Query Commands
+**For detailed solutions:** See [.aiknowsys/learned/common-gotchas.md](.aiknowsys/learned/common-gotchas.md)
 
-**Use query commands when:**
-- Finding active/recent plans without reading CURRENT_PLAN.md
-- Searching session history by topic or date
-- Looking for patterns across all knowledge
-- Need structured data (JSON output)
+---
 
-**Still use file reading when:**
-- Need full plan/session content (query returns metadata only)
-- Performing deep semantic analysis requiring full text context
-- When query result count is unknown (might return hundreds of matches)
-- Reading CODEBASE_ESSENTIALS.md sections
+## 8. Extending AIKnowSys
 
-### Available Commands
+**Adding commands:** Create `lib/commands/my-command.ts`, register in `bin/cli.js`, add tests  
+**Adding skills:** Create `.github/skills/my-skill/SKILL.md`, register in AVAILABLE_SKILLS  
+**Pattern:** Follow existing code, write tests FIRST (TDD)
 
-#### query-plans
-Query plan metadata with filtering:
+**Full guide:** See [.aiknowsys/learned/extending-aiknowsys.md](.aiknowsys/learned/extending-aiknowsys.md)
+
+---
+
+## 9. Context Query Commands (v0.10.0+)
+
+**Purpose:** Query plans/sessions/context via CLI instead of file searching
+
+**Available commands:**
 ```bash
-# Find active plans
 npx aiknowsys query-plans --status ACTIVE --json
-
-# Find plans by author
-npx aiknowsys query-plans --author arno --json
-
-# Find plans by topic
-npx aiknowsys query-plans --topic "TypeScript migration" --json
-
-# Filter by date range
-npx aiknowsys query-plans --updated-after 2026-01-01 --json
-```
-
-**JSON Output Format:**
-```typescript
-{
-  count: number;
-  plans: Array<{
-    id: string;           // "PLAN_context_query_system"
-    title: string;        // "Context Query System"
-    status: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
-    author: string;       // "arno-paffen"
-    created: string;      // ISO 8601 date
-    updated: string;      // ISO 8601 date
-    topics?: string[];    // ["CLI", "TypeScript"]
-    file: string;         // "PLAN_context_query_system.md"
-  }>;
-}
-```
-
-#### query-sessions
-Query session history with filtering:
-```bash
-# Last 7 days of sessions
 npx aiknowsys query-sessions --days 7 --json
-
-# Sessions about specific topic
-npx aiknowsys query-sessions --topic TDD --json
-
-# Sessions for specific plan
-npx aiknowsys query-sessions --plan PLAN_context_query_system --json
-
-# Sessions in date range
-npx aiknowsys query-sessions --date 2026-02-06 --json
+npx aiknowsys search-context "TDD" --scope all --json
+npx aiknowsys rebuild-index
 ```
 
-**JSON Output Format:**
-```typescript
-{
-  count: number;
-  sessions: Array<{
-    date: string;        // "2026-02-06"
-    topic: string;       // "Context Query Implementation"
-    plan?: string;       // "PLAN_context_query_system"
-    duration?: string;   // "4h 30m"
-    phases?: string[];   // ["Phase 1", "Phase 2"]
-    file: string;        // "sessions/2026-02-06-session.md"
-    created: string;     // ISO 8601 date
-    updated: string;     // ISO 8601 date
-  }>;
-}
-```
-
-#### search-context
-Full-text search across all knowledge:
-```bash
-# Search across all content types
-npx aiknowsys search-context "authentication" --json
-
-# Search only in plans
-npx aiknowsys search-context "TDD workflow" --scope plans --json
-
-# Search only in sessions
-npx aiknowsys search-context "bug fix" --scope sessions --json
-
-# Search only in learned patterns
-npx aiknowsys search-context "VSCode hooks" --scope learned --json
-```
-
-**JSON Output Format:**
-```typescript
-{
-  query: string;
-  scope: 'all' | 'plans' | 'sessions' | 'learned';
-  count: number;
-  matches: Array<{
-    type: 'plan' | 'session' | 'learned' | 'essentials';
-    file: string;        // Relative path to file
-    context: string;     // Snippet showing match
-    relevance: number;   // 0-100 (higher = more relevant)
-    line?: number;       // Line number of match
-  }>;
-}
-```
-
-**Relevance Scoring:**
-- Exact word matches score higher than partial matches
-- Multiple occurrences boost relevance
-- Title/heading matches score higher than body matches
-- Results sorted by relevance (highest first)
-
-#### rebuild-index
-Rebuild context index from markdown files:
-```bash
-# Rebuild index (runs automatically during queries)
-npx aiknowsys rebuild-index --json
-```
-
-**JSON Output Format:**  
-```typescript
-{
-  plansIndexed: number;     // Number of plan files indexed
-  sessionsIndexed: number;  // Number of session files indexed
-  learnedIndexed: number;   // Number of learned pattern files indexed
-}
-```
-
-**Note:** Index is automatically rebuilt during queries if stale. Manual rebuild rarely needed.
-
-### Storage Architecture
-
-**Team Index (.aiknowsys/context-index.json):**
-- **Committed to git** (like CURRENT_PLAN.md)
-- Sources: plans/, sessions/, learned/ (committed team data)
-- Auto-syncs between developers via git pull
-- Auto-rebuilds on queries if stale
-
-**Query Performance:**
-- Initial query: ~50-100ms (includes index rebuild if needed)
-- Subsequent queries: ~5-10ms (index cached in memory)
-- Scales to 10,000+ items without noticeable delay
-- For >10k items, consider pagination or more specific filters
-- Index rebuild time grows linearly with file count (~1ms per file)
-
-### Error Messages
-
-All query commands provide helpful error messages:
-```javascript
-// Invalid status
-❌ Invalid status: RUNNING
-Valid statuses: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED
-
-// Empty query
-❌ Search query cannot be empty
-
-// Invalid scope
-❌ Invalid scope: all-plans
-Must be one of: all, plans, sessions, learned
-```
-
-### Usage from AI Agents
-
-**Pattern:** Use query-* commands BEFORE file reading for faster context gathering
-
-**Example workflow:**
-```javascript
-// ❌ Slow: Read multiple files
-const plan1 = await read_file('PLAN_xyz.md');
-const plan2 = await read_file('PLAN_abc.md');
-// ... parse markdown, extract metadata
-
-// ✅ Fast: Query index first
-const result = await run_terminal('npx aiknowsys query-plans --status ACTIVE --json');
-const plans = JSON.parse(result.output);
-// Then read only the specific files needed
-```
-
-**See:** [context-query skill](.github/skills/context-query/SKILL.md) for detailed AI agent usage patterns.
+**Full documentation + workflow:** [.github/skills/context-query/SKILL.md](.github/skills/context-query/SKILL.md)
 
 ---
 
-## 5. Critical Invariants
-
-1. **ES Modules Only**
-   - All **internal** files use `import`/`export`, never `require()`
-   - package.json has `"type": "module"`
-   - **Exception:** Templates distributed to user projects may use `.cjs` for compatibility
-     - Example: VSCode hooks, git hook installer
-     - Reason: User projects may not use ES modules
-
-2. **Absolute Paths Required**
-   - Always use `path.resolve()` for user-provided paths
-   - Use `getPackageDir()` for template paths
-
-3. **Graceful Failures**
-   - All commands must handle missing files/directories
-   - Show helpful error messages, not stack traces
-
-4. **Template Preservation**
-   - Never modify files in `templates/` - they're the source of truth
-   - User customization happens in generated files
-
-5. **Template Structure Integrity**
-   - When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
-   - Replace `{{PLACEHOLDERS}}` with real values, not generic placeholders
-   - Preserve template structure exactly (don't rename sections)
-   - Example: Keep "Testing Patterns" as-is, don't change to "Testing Guidelines"
-   - Example: Replace `{{TEST_ORGANIZATION}}` with actual test structure, not "Manual testing only"
-
-6. **Backwards Compatibility**
-   - Bash scripts in `scripts/` must remain functional
-   - npm CLI is additive, not replacement
-
-7. **Test-Driven Development (TDD)**
-   - **For new features:** Write tests BEFORE implementation (RED → GREEN → REFACTOR)
-   - **For bugfixes:** Write test that reproduces bug FIRST (should fail), then fix bug (test passes), then refactor
-   - Follow RED-GREEN-REFACTOR cycle for both features and bugs
-   - Keep tests fast and focused
-   - **Why TDD for bugs:** Ensures bug is reproducible, confirms fix works, prevents regression
-   - **Exception:** Configuration-only changes (e.g., adding properties to const objects) don't require new tests if existing tests already cover the logic using that configuration
-   - See `.github/skills/tdd-workflow/SKILL.md` for detailed guidance
-   - See [Test-Driven Bugfixing](https://evolveum.com/test-driven-bugfixing/) for bugfix workflow
-
-8. **Deliverables Consistency**
-   - Templates (`templates/` directory) are **deliverables** distributed to users
-   - ANY change to core functionality MUST update corresponding templates
-   - Templates must match non-template equivalents (agents, workflows, docs)
-   - Breaking changes MUST be reflected in all deliverables before release
-   - **Validation:**
-     - Run `npx aiknowsys validate-deliverables` before commits/releases
-     - Pre-commit hook automatically validates when templates/ changed
-     - quality-check command includes deliverables validation
-     - Use `--fix` flag to auto-fix simple pattern issues
-   - **Critical:** Shipping broken templates breaks user experience
-   - See [.aiknowsys/learned/deliverables-validation.md](.aiknowsys/learned/deliverables-validation.md) for patterns
-
----
-
-## 6. Common Gotchas
-
-See [learned skill](.aiknowsys/learned/common-gotchas.md) for detailed solutions to common issues:
-- ESM `__dirname` not available (use `fileURLToPath(import.meta.url)`)
-- Chalk 5.x is ESM-only (must use `import`, not `require()`)
-- Template variables in markdown (use regex escaping)
-- Path separators (always use `path.join()`, never string concatenation)
-- Import extensions required (must include `.js`)
-- JSON import syntax (use import assertions)
-- **CommonJS in ES module projects**: Use `.cjs` extension when you need CommonJS (require/module.exports) in a project with `"type": "module"` in package.json. Example: VSCode hooks use `.cjs` because stdin JSON parsing is simpler with CommonJS than ES module async imports.
-
----
-
-## 7. Extending AIKnowSys
-
-For adding new commands or skills, see [learned skill](.aiknowsys/learned/extending-aiknowsys.md).
-
-**Quick reference:**
-- Commands: Create `lib/commands/my-command.js`, register in `bin/cli.js`, add tests
-- Skills: Create `templates/skills/my-skill/SKILL.md`, register in `install-skills.js`
-- Follow existing patterns, write tests first (TDD)
-
-**Universal Learned Skills:**
-- `plan-management.md` - Multi-plan concurrent workflow pattern
-- `essentials-compression.md` - ESSENTIALS bloat detection and compression
-
-### When to Document Where
+## 10. When to Document Where
 
 **Add to CODEBASE_ESSENTIALS.md when:**
 - Core architecture decision (technology choice)
-- Universal pattern (all files of type X follow this)
 - Critical invariant (cannot be violated)
-- Project structure change (new directories, file organization)
-- Core command/feature that ships with aiknowsys
+- Project structure change
+
+**Add to .github/skills/ when:**
+- Repeatable workflow (refactoring, testing, deployment)
+- Multi-step process requiring guidance
+- Pattern that prevents common mistakes
 
 **Add to .aiknowsys/learned/ when:**
-- Project-specific discovery (specific to this codebase)
-- Workaround for library/framework quirk
-- Optional technique that improves quality
-- Pattern that emerged from practice (not designed upfront)
+- Project-specific discovery
+- Workaround for library quirk
 - Error resolution that might recur
 
-**Why this matters:** Keeps ESSENTIALS focused on architecture while allowing learned skills to capture project evolution. Target: ESSENTIALS <800 lines.
-
 ---
 
-## 8. Testing Philosophy
-
-We practice **Test-Driven Development (TDD)** for all new features. See [.github/skills/tdd-workflow/SKILL.md](.github/skills/tdd-workflow/SKILL.md) for detailed guidance.
-
-**Quick summary:**
-1. Write test first (RED) - Define expected behavior
-2. Watch it fail - Verify test catches the issue
-3. Implement minimal code (GREEN) - Make the test pass  
-4. Refactor - Clean up while tests stay green
-
-**Testing Standards:**
-- **Test Runner:** Vitest 4.x - Modern TypeScript-native test framework
-- **Assertion Library:** Vitest assertions (`expect()`)
-- **Structure:** `describe()` for test suites, `it()` or `test()` for individual tests
-- **Assertions:** Use `expect(value).toBe()`, `expect(value).toEqual()`, `expect(value).toMatch()`, etc.
-- **Mocking:** Use `vi.mock()`, `vi.spyOn()` for powerful mocking including namespace imports
-
-**Why Vitest?**
-After completing the TypeScript migration (v0.9.0), we discovered Node's built-in test runner (`node:test`) had critical limitations:
-- ❌ Cannot mock namespace imports (`import * as fs from 'node:fs'`) - 12 tests skipped
-- ❌ Requires pre-compilation with `tsc` before testing (~20-30s)
-- ❌ No watch mode, coverage tools, or modern dev features
-
-Vitest solves these issues:
-- ✅ Powerful mocking system (Jest-compatible, works with namespace imports)
-- ✅ Direct TypeScript execution (no pre-compilation needed)
-- ✅ Fast (~5s vs ~30s), watch mode, coverage reports, UI
-- ✅ Vite-powered (same transform pipeline as modern web apps)
-
-**Trade-off:** Added external dependency (Vitest), but gained essential TypeScript testing capabilities and significantly improved developer experience.
-
-**Example test structure:**
-```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-describe('Feature Name', () => {
-  beforeEach(() => {
-    // Setup
-  });
-
-  it('should do something specific', () => {
-    const result = functionUnderTest();
-    expect(result).toBe(expectedValue);
-  });
-
-  afterEach(() => {
-    // Cleanup
-  });
-});
-```
-
-**Running tests:**
-```bash
-npm test                   # Run all tests once
-npm run test:watch         # Watch mode (re-run on changes)
-npm run test:ui            # Visual UI in browser
-npm run test:coverage      # Generate coverage report
-```
-
-**Bash Scripts:**
-For testing bash utilities, see [bash-script-tdd](.aiknowsys/learned/bash-script-tdd.md) for comprehensive workflow using Node.js test runner (bash scripts still use node:test via execSync, not Vitest).
-
-### TDD Compliance Check (CI Workflow)
-
-The `.github/workflows/tdd-compliance.yml` GitHub Action enforces TDD by detecting logic changes without corresponding tests. As of v0.9.0+, it includes **smart refactor detection** to prevent false positives.
-
-**What it checks:**
-- ✅ **New logic** (functions, classes, control flow) → **requires tests**
-- ✅ **Refactors** (renames, operator equivalence, imports, docs) → **no tests needed**
-- ✅ **Config-only** changes (const object properties) → **no tests needed**
-
-**Refactor Detection Patterns:**
-
-| Pattern | Score | Example | Why Safe |
-|---------|-------|---------|----------|
-| **Docs/comments only** | 100 | JSDoc updates, comment fixes | Never affects behavior |
-| **Import reordering** | 100 | Moving imports, reordering statements | No logic change |
-| **Operator equivalence** | +15 | `\|\|` → `??` for defaults | Equivalent for non-falsy values |
-| **Variable rename** | +10 | `log` → `_log` (eslint fix) | Same function, new name |
-
-**Threshold:** Score ≥ 30 = "likely refactor" → skip test requirement
-
-**How it works:**
-1. Detects lib/ changes
-2. For each file, calculates refactor score
-3. If score ≥ 30 → refactor (no tests needed)
-4. If score < 30 + logic keywords → new logic (tests required)
-5. Provides clear feedback (refactor vs logic)
-
-**Example outputs:**
-```bash
-# Refactor detected (PASS)
-✅ REFACTOR DETECTED - TDD check passed!
-  - lib/commands/archive-plans.js: operator
-  💡 TIP: Existing tests cover refactored code.
-
-# New logic without tests (FAIL)
-❌ TDD VIOLATION DETECTED
-Files with NEW LOGIC (need tests):
-  - lib/commands/new-feature.js
-```
-
-**Testing the workflow:**
-```bash
-bash test/ci/tdd-check-test.sh  # Validate detection patterns
-```
-
-**See:** [Plan: Smart TDD Compliance Check](.aiknowsys/PLAN_tdd_check_refactor_detection.md) for implementation details
-
----
-
-## 9. Release Checklist
-
-- [ ] Bump version: `npm version patch/minor/major` (auto-updates package.json)
-- [ ] Test all commands locally
-- [ ] Run `npm pack --dry-run` to verify package contents
-- [ ] Update CODEBASE_CHANGELOG.md
-- [ ] `npm publish`
-
----
-
-*This file is the single source of truth for AI assistants working on aiknowsys.*
+**Target:** ESSENTIALS <400 lines (achieved: ~330 lines, 68% reduction from 1039 lines)  
+**Full workflows:** [.github/skills/](.github/skills/) (auto-loaded on trigger detection)
