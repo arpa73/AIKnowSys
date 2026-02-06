@@ -1,6 +1,6 @@
 # Current Team Plans
 
-**Last Synced:** Feb 6, 2026, 05:28 PM  
+**Last Synced:** Feb 6, 2026, 05:30 PM  
 **Developer Count:** 1
 
 > ⚠️ **AUTO-GENERATED FILE**  
@@ -14,7 +14,7 @@
 
 | Developer | Plan | Status | Last Updated |
 |-----------|------|--------|--------------|
-| arno-paffen | None (paused for v0.10.0 planning) | ⏸️ PAUSED | Feb 2, 2026 |
+| arno-paffen | [Context Query System](PLAN_context_query_system.md) | 🎯 ACTIVE | Feb 2, 2026 |
 
 ---
 
