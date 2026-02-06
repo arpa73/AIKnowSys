@@ -448,26 +448,26 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
   // Make all hook scripts executable (required by GitHub Copilot)
   // https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/use-hooks
   // Generate list from TEMPLATE_PATHS constants (DRY principle)
-  const hookPaths = [
-    TEMPLATE_PATHS.VSCODE_SESSION_START,
-    TEMPLATE_PATHS.VSCODE_SESSION_END,
-    TEMPLATE_PATHS.VSCODE_VALIDATION_REMINDER,
-    TEMPLATE_PATHS.VSCODE_TDD_REMINDER,
-    TEMPLATE_PATHS.VSCODE_SKILL_DETECTOR,
-    TEMPLATE_PATHS.VSCODE_SKILL_PREREQ_CHECK,
-    TEMPLATE_PATHS.VSCODE_WORKSPACE_HEALTH,
-    TEMPLATE_PATHS.VSCODE_QUALITY_HEALTH,
-    TEMPLATE_PATHS.VSCODE_COLLABORATION_CHECK,
-    TEMPLATE_PATHS.VSCODE_DOC_SYNC,
-    TEMPLATE_PATHS.VSCODE_MIGRATION_CHECK,
-    TEMPLATE_PATHS.VSCODE_PERFORMANCE_MONITOR,
-    TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER,
-    TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER,
-    TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS
+  const hookEntries = [
+    { name: 'VSCODE_SESSION_START', path: TEMPLATE_PATHS.VSCODE_SESSION_START },
+    { name: 'VSCODE_SESSION_END', path: TEMPLATE_PATHS.VSCODE_SESSION_END },
+    { name: 'VSCODE_VALIDATION_REMINDER', path: TEMPLATE_PATHS.VSCODE_VALIDATION_REMINDER },
+    { name: 'VSCODE_TDD_REMINDER', path: TEMPLATE_PATHS.VSCODE_TDD_REMINDER },
+    { name: 'VSCODE_SKILL_DETECTOR', path: TEMPLATE_PATHS.VSCODE_SKILL_DETECTOR },
+    { name: 'VSCODE_SKILL_PREREQ_CHECK', path: TEMPLATE_PATHS.VSCODE_SKILL_PREREQ_CHECK },
+    { name: 'VSCODE_WORKSPACE_HEALTH', path: TEMPLATE_PATHS.VSCODE_WORKSPACE_HEALTH },
+    { name: 'VSCODE_QUALITY_HEALTH', path: TEMPLATE_PATHS.VSCODE_QUALITY_HEALTH },
+    { name: 'VSCODE_COLLABORATION_CHECK', path: TEMPLATE_PATHS.VSCODE_COLLABORATION_CHECK },
+    { name: 'VSCODE_DOC_SYNC', path: TEMPLATE_PATHS.VSCODE_DOC_SYNC },
+    { name: 'VSCODE_MIGRATION_CHECK', path: TEMPLATE_PATHS.VSCODE_MIGRATION_CHECK },
+    { name: 'VSCODE_PERFORMANCE_MONITOR', path: TEMPLATE_PATHS.VSCODE_PERFORMANCE_MONITOR },
+    { name: 'GIT_HOOK_LEARNED_REMINDER', path: TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER },
+    { name: 'GIT_HOOK_PLAN_REMINDER', path: TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER },
+    { name: 'GIT_HOOK_SYNC_PLANS', path: TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS }
   ];
   
   // Make hooks executable (best effort - may fail on Windows/restricted filesystems)
-  for (const hookPath of hookPaths) {
+  for (const { path: hookPath } of hookEntries) {
     const filename = path.basename(hookPath);
     try {
       await fs.promises.chmod(path.join(hooksDir, filename), 0o755);
@@ -480,8 +480,8 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
     }
   }
   
-  // Auto-calculate counts for accurate reporting
-  const vscodeCount = hookPaths.filter(p => p.includes('VSCODE_')).length;
-  const gitCount = hookPaths.filter(p => p.includes('GIT_HOOK_')).length;
-  if (hooksSpinner) hooksSpinner.succeed(`Hooks installed (${vscodeCount} VSCode + ${gitCount} Git = ${hookPaths.length} total)`);
+  // Auto-calculate counts for accurate reporting (filter on constant names, not paths)
+  const vscodeCount = hookEntries.filter(e => e.name.startsWith('VSCODE_')).length;
+  const gitCount = hookEntries.filter(e => e.name.startsWith('GIT_HOOK_')).length;
+  if (hooksSpinner) hooksSpinner.succeed(`Hooks installed (${vscodeCount} VSCode + ${gitCount} Git = ${hookEntries.length} total)`);
 }
