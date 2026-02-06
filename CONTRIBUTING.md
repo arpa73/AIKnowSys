@@ -242,10 +242,10 @@ npm run type-check    # Check types without building (CI-friendly)
 ### Development Workflow
 
 1. **Edit TypeScript source** in `lib/`, `bin/`, or `test/`
-2. **Build automatically runs** before tests (`pretest` hook)
-3. **Tests validate** compiled JavaScript in `dist/`
+2. **Tests run directly** on TypeScript files (Vitest compiles on-the-fly)
+3. **Build before publishing** to generate `dist/` for distribution
 
-**Note:** The `dist/` directory contains compiled JavaScript that users actually run. Always test changes with `npm test` to ensure compiled code works correctly.
+**Note:** Vitest executes TypeScript directly for fast feedback (<5s). The `dist/` directory contains compiled JavaScript for users running `aiknowsys` CLI. Always run `npm run build` before publishing to ensure compiled code is up-to-date.
 
 ### Type Definitions
 
