@@ -41,6 +41,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "postbuild": "mkdir -p dist/scripts && cp package.json dist/ && cp scripts/*.js scripts/*.cjs scripts/*.mjs dist/scripts/ 2>/dev/null || true",
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",
