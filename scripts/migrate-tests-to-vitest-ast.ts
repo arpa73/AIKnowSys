@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Project, SyntaxKind, type SourceFile, type CallExpression, type Identifier } from 'ts-morph';
+import { Project, SyntaxKind, type SourceFile, type CallExpression } from 'ts-morph';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';
@@ -27,69 +27,69 @@ type AssertionMapper = (args: string[]) => string;
 
 const ASSERTION_MAP: Record<string, AssertionMapper> = {
   'strictEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).toBe(${expected})`;
   },
   'deepStrictEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).toStrictEqual(${expected})`;
   },
   'equal': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).toEqual(${expected})`;
   },
   'deepEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).toEqual(${expected})`;
   },
   'ok': (args) => {
-    const [value, ...rest] = args;
+    const [value] = args;
     return `expect(${value}).toBeTruthy()`;
   },
   'match': (args) => {
-    const [string, regex, ...rest] = args;
+    const [string, regex] = args;
     return `expect(${string}).toMatch(${regex})`;
   },
   'doesNotMatch': (args) => {
-    const [string, regex, ...rest] = args;
+    const [string, regex] = args;
     return `expect(${string}).not.toMatch(${regex})`;
   },
   'notStrictEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).not.toBe(${expected})`;
   },
   'notEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).not.toEqual(${expected})`;
   },
   'notDeepStrictEqual': (args) => {
-    const [actual, expected, ...rest] = args;
+    const [actual, expected] = args;
     return `expect(${actual}).not.toStrictEqual(${expected})`;
   },
   'throws': (args) => {
-    const [fn, error, ...rest] = args;
+    const [fn, error] = args;
     if (error) {
       return `expect(${fn}).toThrow(${error})`;
     }
     return `expect(${fn}).toThrow()`;
   },
   'doesNotThrow': (args) => {
-    const [fn, ...rest] = args;
+    const [fn] = args;
     return `expect(${fn}).not.toThrow()`;
   },
   'rejects': (args) => {
-    const [promise, error, ...rest] = args;
+    const [promise, error] = args;
     if (error) {
       return `await expect(${promise}).rejects.toThrow(${error})`;
     }
     return `await expect(${promise}).rejects.toThrow()`;
   },
   'doesNotReject': (args) => {
-    const [promise, ...rest] = args;
+    const [promise] = args;
     return `await expect(${promise}).resolves.not.toThrow()`;
   },
   'fail': (args) => {
-    const [message, ...rest] = args;
+    const [message] = args;
     if (message) {
       return `expect.fail(${message})`;
     }
@@ -154,7 +154,7 @@ function migrateFile(sourceFile: SourceFile): boolean {
     
     // Check if this is an assert.method() call
     if (expression.getKind() === SyntaxKind.PropertyAccessExpression) {
-      const propAccess = expression;
+      const propAccess = expression as any;
       const object = propAccess.getExpression();
       const property = propAccess.getName();
       
@@ -187,7 +187,7 @@ function migrateFile(sourceFile: SourceFile): boolean {
               property
             });
           } catch (error) {
-            console.error(`  ✗ Failed to convert assert.${property}():`, error.message);
+            console.error(`  ✗ Failed to convert assert.${property}():`, (error as Error).message);
           }
         } else {
           console.warn(`  ⚠ Unknown assert method: assert.${property}()`);
@@ -204,7 +204,7 @@ function migrateFile(sourceFile: SourceFile): boolean {
       modified = true;
       console.log(`  ✓ Converted assert.${property}() to Vitest expect()`);
     } catch (error) {
-      console.error(`  ✗ Failed to replace assert.${property}():`, error.message);
+      console.error(`  ✗ Failed to replace assert.${property}():`, (error as Error).message);
     }
   }
 
@@ -216,7 +216,7 @@ function migrateFile(sourceFile: SourceFile): boolean {
     
     // Check if this is a CallExpression with 'before' or 'after'
     if (parent && parent.getKind() === SyntaxKind.CallExpression) {
-      const callExpr = parent;
+      const callExpr = parent as any;
       if (callExpr.getExpression() === identifier) {
         if (name === 'before') {
           identifier.replaceWithText('beforeAll');
@@ -290,8 +290,9 @@ async function main() {
         console.log('  ⏭️  No changes needed');
       }
     } catch (error) {
-      console.error(`  ❌ Error: ${error.message}`);
-      errors.push({ file: filePath, error: error.message });
+      const errorMsg = (error as Error).message;
+      console.error(`  ❌ Error: ${errorMsg}`);
+      errors.push({ file: filePath, error: errorMsg });
     }
   }
 

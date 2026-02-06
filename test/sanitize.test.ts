@@ -120,7 +120,7 @@ describe('sanitizeDirectoryPath', () => {
     expect(result.errors.some(e => e.includes('invalid characters'))).toBeTruthy();
   });
 
-  await t.test('should handle Windows paths', { skip: os.platform() !== 'win32' }, () => {
+  it.skipIf(os.platform() !== 'win32')('should handle Windows paths', () => {
     // This test only runs on Windows since the path validation is platform-specific
     // On Unix systems, colons are invalid in paths, but on Windows C:\ is valid
     const result = sanitizeDirectoryPath('C:\\Users\\Name\\projects');

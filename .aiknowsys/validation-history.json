@@ -1,9 +1,9 @@
 {
   "2026-02-06": {
     "standalone": {
-      "runs": 8,
+      "runs": 18,
       "failures": 0,
-      "avgDuration": 57
+      "avgDuration": 164
     }
   }
 }
