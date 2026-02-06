@@ -6,10 +6,10 @@
 
 # Active Plan Pointer
 
-**Currently Working On:** [Vitest Migration](../PLAN_vitest_migration.md)  
+**Currently Working On:** [v0.9.0 Release Notes Validation](../PLAN_v0.9.0_release_notes_validation.md)  
 **Status:** 🎯 ACTIVE  
 **Started:** 2026-02-06  
-**Last Completed:** [TypeScript Migration & Type-Safe Architecture](../PLAN_typescript_migration.md) - 2026-02-06
+**Last Completed:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
 
 This file is now a lightweight index pointing to actual plans. See individual `PLAN_*.md` files for full details.
 
