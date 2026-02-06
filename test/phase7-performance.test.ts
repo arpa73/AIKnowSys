@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { depsHealth } from '../lib/commands/deps-health.js';
@@ -37,9 +36,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       const content = await fs.readFile(perfHistoryPath, 'utf8');
       const data = JSON.parse(content);
 
-      assert.ok(Array.isArray(data.testRuns));
-      assert.ok(Array.isArray(data.buildTimes));
-      assert.ok(Array.isArray(data.slowestTests));
+      expect(Array.isArray(data.testRuns)).toBeTruthy();
+      expect(Array.isArray(data.buildTimes)).toBeTruthy();
+      expect(Array.isArray(data.slowestTests)).toBeTruthy();
     });
 
     it('should record test run performance', async () => {
@@ -59,9 +58,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       await fs.writeFile(perfHistoryPath, JSON.stringify(data, null, 2));
 
       const result = JSON.parse(await fs.readFile(perfHistoryPath, 'utf8'));
-      assert.strictEqual(result.testRuns.length, 1);
-      assert.strictEqual(result.testRuns[0].duration, 25300);
-      assert.strictEqual(result.testRuns[0].tests, 422);
+      expect(result.testRuns.length).toBe(1);
+      expect(result.testRuns[0].duration).toBe(25300);
+      expect(result.testRuns[0].tests).toBe(422);
     });
 
     it('should maintain limited history (last 100 runs)', () => {
@@ -81,13 +80,13 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       // Keep only last 100
       data.testRuns = data.testRuns.slice(0, 100);
 
-      assert.strictEqual(data.testRuns.length, 100);
+      expect(data.testRuns.length).toBe(100);
     });
   });
 
   describe('deps-health Command', () => {
     it('should check if deps-health command exists', () => {
-      assert.strictEqual(typeof depsHealth, 'function');
+      expect(typeof depsHealth).toBe('function');
     });
 
     it('should run without errors in silent mode', async () => {
@@ -101,16 +100,16 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       }, null, 2));
 
       const result = await depsHealth({ dir: testDir, _silent: true });
-      assert.ok(result);
-      assert.strictEqual(typeof result, 'object');
+      expect(result).toBeTruthy();
+      expect(typeof result).toBe('object');
     });
 
     it('should detect missing package.json', async () => {
       try {
         await depsHealth({ dir: testDir, _silent: true });
-        assert.fail('Should throw error for missing package.json');
+        expect.fail('Should throw error for missing package.json');
       } catch (error) {
-        assert.ok((error as Error).message.includes('package.json'));
+        expect((error as Error).message.includes('package.json')).toBeTruthy();
       }
     });
 
@@ -127,9 +126,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
 
       const result = await depsHealth({ dir: testDir, _silent: true });
       
-      assert.ok(Object.hasOwn(result, 'securityAdvisories'));
-      assert.ok(Object.hasOwn(result, 'outdated'));
-      assert.ok(Object.hasOwn(result, 'totalDependencies'));
+      expect(Object.hasOwn(result, 'securityAdvisories')).toBeTruthy();
+      expect(Object.hasOwn(result, 'outdated')).toBeTruthy();
+      expect(Object.hasOwn(result, 'totalDependencies')).toBeTruthy();
     });
 
     it('should count total dependencies correctly', async () => {
@@ -148,7 +147,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       }, null, 2));
 
       const result = await depsHealth({ dir: testDir, _silent: true });
-      assert.strictEqual(result.totalDependencies, 4);
+      expect(result.totalDependencies).toBe(4);
     });
 
     it('should handle projects with no dependencies', async () => {
@@ -159,7 +158,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       }, null, 2));
 
       const result = await depsHealth({ dir: testDir, _silent: true });
-      assert.strictEqual(result.totalDependencies, 0);
+      expect(result.totalDependencies).toBe(0);
     });
   });
 
@@ -169,9 +168,9 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
     it('should have performance-monitor.cjs hook file', async () => {
       try {
         await fs.access(hookPath);
-        assert.ok(true, 'Hook file exists');
+        expect(true).toBeTruthy();
       } catch {
-        assert.fail('performance-monitor.cjs should exist');
+        expect.fail('performance-monitor.cjs should exist');
       }
     });
 
@@ -179,47 +178,38 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should use module.exports
-      assert.ok(content.includes('module.exports'), 'Should export as CommonJS');
+      expect(content.includes('module.exports')).toBeTruthy();
       
       // Should not use ES module syntax
-      assert.ok(!content.includes('export default'), 'Should not use ES module syntax');
+      expect(!content.includes('export default')).toBeTruthy();
     });
 
     it('should accept sessionEnd data', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have async function signature
-      assert.ok(content.match(/async\s+function.*\(.*data.*\)/), 'Should accept data parameter');
+      expect(content.match(/async\s+function.*\(.*data.*\)/)).toBeTruthy();
     });
 
     it('should track test duration from sessionEnd data', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should reference duration or time tracking
-      assert.ok(
-        content.includes('duration') || content.includes('time'),
-        'Should track performance timing'
-      );
+      expect(content.includes('duration') || content.includes('time')).toBeTruthy();
     });
 
     it('should detect performance regressions (>20% slower)', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have regression detection logic
-      assert.ok(
-        content.includes('1.2') || content.includes('20%') || content.includes('regression'),
-        'Should detect performance regressions'
-      );
+      expect(content.includes('1.2') || content.includes('20%') || content.includes('regression')).toBeTruthy();
     });
 
     it('should warn about slow tests', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should log warnings
-      assert.ok(
-        content.includes('console.error') || content.includes('console.warn'),
-        'Should warn about performance issues'
-      );
+      expect(content.includes('console.error') || content.includes('console.warn')).toBeTruthy();
     });
   });
 
@@ -236,7 +226,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       ];
 
       const avg = recentRuns.reduce((sum, run) => sum + run.duration, 0) / recentRuns.length;
-      assert.strictEqual(Math.round(avg), 20571);
+      expect(Math.round(avg)).toBe(20571);
     });
 
     it('should detect when current run is >20% slower than average', () => {
@@ -245,7 +235,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       const threshold = 1.2;
 
       const isRegression = currentRun > (average * threshold);
-      assert.ok(isRegression, 'Should detect 25% slowdown as regression');
+      expect(isRegression).toBeTruthy();
     });
 
     it('should not flag runs within 20% threshold', () => {
@@ -254,7 +244,7 @@ describe('Phase 7: Performance & Dependency Monitoring', () => {
       const threshold = 1.2;
 
       const isRegression = currentRun > (average * threshold);
-      assert.ok(!isRegression, 'Should not flag 10% slowdown');
+      expect(!isRegression).toBeTruthy();
     });
   });
 });

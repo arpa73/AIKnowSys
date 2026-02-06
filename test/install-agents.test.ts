@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import { installAgents } from '../lib/commands/install-agents.js';
@@ -45,10 +44,7 @@ describe('install-agents command', () => {
     assertFileExists(agentsDir);
     
     // Should not throw
-    await assert.doesNotReject(
-      async () => await installAgents({ dir: testDir, _silent: true }),
-      'Should not fail when directory already exists'
-    );
+    await await expect(async () => await installAgents({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   // ========================================
@@ -111,11 +107,7 @@ describe('install-agents command', () => {
     const content = fs.readFileSync(developerPath, 'utf-8');
     
     const placeholders = content.match(/{{[A-Z_]+}}/g);
-    assert.strictEqual(
-      placeholders, 
-      null, 
-      `Found unreplaced placeholders: ${placeholders?.join(', ')}`
-    );
+    expect(placeholders).toBe(null);
   });
 
   it('should not leave any {{PLACEHOLDERS}} in architect.agent.md', async () => {
@@ -125,11 +117,7 @@ describe('install-agents command', () => {
     const content = fs.readFileSync(architectPath, 'utf-8');
     
     const placeholders = content.match(/{{[A-Z_]+}}/g);
-    assert.strictEqual(
-      placeholders,
-      null,
-      `Found unreplaced placeholders: ${placeholders?.join(', ')}`
-    );
+    expect(placeholders).toBe(null);
   });
 
   // ========================================
@@ -146,10 +134,7 @@ describe('install-agents command', () => {
       await installAgents({ dir: testDir, _silent: true });
       
       // In silent mode, should have minimal/no console output
-      assert.ok(
-        logs.length === 0 || logs.every(log => !log.join('').includes('Installing')),
-        'Should not show "Installing" messages in silent mode'
-      );
+      expect(logs.length === 0 || logs.every(log => !log.join('').includes('Installing'))).toBeTruthy();
     } finally {
       console.log = originalLog;
     }
@@ -168,7 +153,7 @@ describe('install-agents command', () => {
       const hasOutput = logs.some(log => 
         log.join('').includes('Installing') || log.join('').includes('Custom Agents')
       );
-      assert.ok(hasOutput, 'Should show console output in normal mode');
+      expect(hasOutput).toBeTruthy();
     } finally {
       console.log = originalLog;
     }

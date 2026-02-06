@@ -11,7 +11,8 @@
 | Component | Technology |
 |-----------|------------|
 | Runtime | Node.js 20+ |
-| Language | JavaScript (ES Modules) → TypeScript migration in progress |
+| Language | TypeScript (ES Modules, compiles to JavaScript) |
+| Test Framework | Vitest 4.x |
 | CLI Framework | Commander.js 14.x |
 | User Prompts | Inquirer.js 13.x |
 | Terminal UI | Chalk 5.x, Ora 9.x |
@@ -24,7 +25,7 @@
 
 | Command | Purpose | Expected |
 |---------|---------|----------|
-| `npm test` | Run unit tests | All 255+ tests pass |
+| `npm test` | Run unit tests | All 580+ tests pass (Vitest output) |
 | `npm run lint` | Lint codebase | No errors or warnings |
 | `npm run test:coverage` | Code coverage | >80% coverage on lib/ |
 | `node bin/cli.js --help` | CLI works | Shows help without errors |
@@ -710,16 +711,29 @@ We practice **Test-Driven Development (TDD)** for all new features. See [.github
 4. Refactor - Clean up while tests stay green
 
 **Testing Standards:**
-- **Test Runner:** Node.js built-in (`node:test`) - ZERO external dependencies
-- **Assertion Library:** `node:assert` module
-- **Structure:** `describe()` for test suites, `it()` for individual tests
-- **Assertions:** Use `assert.strictEqual()`, `assert.ok()`, `assert.match()`, etc.
-- **Mocking:** Use `beforeEach()` / `afterEach()` for setup/teardown
+- **Test Runner:** Vitest 4.x - Modern TypeScript-native test framework
+- **Assertion Library:** Vitest assertions (`expect()`)
+- **Structure:** `describe()` for test suites, `it()` or `test()` for individual tests
+- **Assertions:** Use `expect(value).toBe()`, `expect(value).toEqual()`, `expect(value).toMatch()`, etc.
+- **Mocking:** Use `vi.mock()`, `vi.spyOn()` for powerful mocking including namespace imports
+
+**Why Vitest?**
+After completing the TypeScript migration (v0.9.0), we discovered Node's built-in test runner (`node:test`) had critical limitations:
+- ❌ Cannot mock namespace imports (`import * as fs from 'node:fs'`) - 12 tests skipped
+- ❌ Requires pre-compilation with `tsc` before testing (~20-30s)
+- ❌ No watch mode, coverage tools, or modern dev features
+
+Vitest solves these issues:
+- ✅ Powerful mocking system (Jest-compatible, works with namespace imports)
+- ✅ Direct TypeScript execution (no pre-compilation needed)
+- ✅ Fast (~5s vs ~30s), watch mode, coverage reports, UI
+- ✅ Vite-powered (same transform pipeline as modern web apps)
+
+**Trade-off:** Added external dependency (Vitest), but gained essential TypeScript testing capabilities and significantly improved developer experience.
 
 **Example test structure:**
-```javascript
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+```typescript
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('Feature Name', () => {
   beforeEach(() => {
@@ -728,7 +742,7 @@ describe('Feature Name', () => {
 
   it('should do something specific', () => {
     const result = functionUnderTest();
-    assert.strictEqual(result, expectedValue);
+    expect(result).toBe(expectedValue);
   });
 
   afterEach(() => {
@@ -739,12 +753,14 @@ describe('Feature Name', () => {
 
 **Running tests:**
 ```bash
-npm test                             # Run all tests
-node --test test/init.test.js --watch  # Watch mode
+npm test                   # Run all tests once
+npm run test:watch         # Watch mode (re-run on changes)
+npm run test:ui            # Visual UI in browser
+npm run test:coverage      # Generate coverage report
 ```
 
 **Bash Scripts:**
-For testing bash utilities, see [bash-script-tdd](.aiknowsys/learned/bash-script-tdd.md) for comprehensive workflow using Node.js test runner.
+For testing bash utilities, see [bash-script-tdd](.aiknowsys/learned/bash-script-tdd.md) for comprehensive workflow using Node.js test runner (bash scripts still use node:test via execSync, not Vitest).
 
 ### TDD Compliance Check (CI Workflow)
 

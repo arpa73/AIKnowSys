@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
@@ -27,9 +26,9 @@ describe('Phase 8: Advanced Intelligence', () => {
     it('should have migration-check.cjs hook file', async () => {
       try {
         await fs.access(hookPath);
-        assert.ok(true, 'Hook file exists');
+        expect(true).toBeTruthy();
       } catch {
-        assert.fail('migration-check.cjs should exist');
+        expect.fail('migration-check.cjs should exist');
       }
     });
 
@@ -37,47 +36,38 @@ describe('Phase 8: Advanced Intelligence', () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should use module.exports
-      assert.ok(content.includes('module.exports'), 'Should export as CommonJS');
+      expect(content.includes('module.exports')).toBeTruthy();
       
       // Should not use ES module syntax
-      assert.ok(!content.includes('export default'), 'Should not use ES module syntax');
+      expect(!content.includes('export default')).toBeTruthy();
     });
 
     it('should accept sessionStart data', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have async function signature
-      assert.ok(content.match(/async\s+function.*\(.*data.*\)/), 'Should accept data parameter');
+      expect(content.match(/async\s+function.*\(.*data.*\)/)).toBeTruthy();
     });
 
     it('should check for version mismatches', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should check versions
-      assert.ok(
-        content.includes('version') || content.includes('Version'),
-        'Should check version information'
-      );
+      expect(content.includes('version') || content.includes('Version')).toBeTruthy();
     });
 
     it('should suggest migration when versions differ', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should suggest migration command
-      assert.ok(
-        content.includes('migrate') || content.includes('Migration'),
-        'Should suggest migration'
-      );
+      expect(content.includes('migrate') || content.includes('Migration')).toBeTruthy();
     });
 
     it('should fail silently to avoid blocking workflow', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have error handling
-      assert.ok(
-        content.includes('try') && content.includes('catch'),
-        'Should have try/catch for silent failures'
-      );
+      expect(content.includes('try') && content.includes('catch')).toBeTruthy();
     });
   });
 
@@ -87,9 +77,9 @@ describe('Phase 8: Advanced Intelligence', () => {
     it('should have doc-sync.cjs hook file', async () => {
       try {
         await fs.access(hookPath);
-        assert.ok(true, 'Hook file exists');
+        expect(true).toBeTruthy();
       } catch {
-        assert.fail('doc-sync.cjs should exist');
+        expect.fail('doc-sync.cjs should exist');
       }
     });
 
@@ -97,57 +87,45 @@ describe('Phase 8: Advanced Intelligence', () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should use module.exports
-      assert.ok(content.includes('module.exports'), 'Should export as CommonJS');
+      expect(content.includes('module.exports')).toBeTruthy();
       
       // Should not use ES module syntax
-      assert.ok(!content.includes('export default'), 'Should not use ES module syntax');
+      expect(!content.includes('export default')).toBeTruthy();
     });
 
     it('should accept preToolUse or sessionStart data', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have async function signature
-      assert.ok(content.match(/async\s+function.*\(.*data.*\)/), 'Should accept data parameter');
+      expect(content.match(/async\s+function.*\(.*data.*\)/)).toBeTruthy();
     });
 
     it('should track code-to-doc relationships', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have mapping of code to docs
-      assert.ok(
-        content.includes('README') || content.includes('doc') || content.includes('Doc'),
-        'Should reference documentation files'
-      );
+      expect(content.includes('README') || content.includes('doc') || content.includes('Doc')).toBeTruthy();
     });
 
     it('should detect stale documentation', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should check file ages or modification times
-      assert.ok(
-        content.includes('age') || content.includes('time') || content.includes('stale'),
-        'Should detect documentation staleness'
-      );
+      expect(content.includes('age') || content.includes('time') || content.includes('stale')).toBeTruthy();
     });
 
     it('should warn about outdated docs', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should log warnings
-      assert.ok(
-        content.includes('console.error') || content.includes('console.warn'),
-        'Should warn about outdated documentation'
-      );
+      expect(content.includes('console.error') || content.includes('console.warn')).toBeTruthy();
     });
 
     it('should fail silently to avoid blocking workflow', async () => {
       const content = await fs.readFile(hookPath, 'utf8');
       
       // Should have error handling
-      assert.ok(
-        content.includes('try') && content.includes('catch'),
-        'Should have try/catch for silent failures'
-      );
+      expect(content.includes('try') && content.includes('catch')).toBeTruthy();
     });
   });
 
@@ -164,9 +142,9 @@ describe('Phase 8: Advanced Intelligence', () => {
         return 0;
       };
 
-      assert.strictEqual(compareVersions('0.8.0', '0.8.0'), 0);
-      assert.strictEqual(compareVersions('0.9.0', '0.8.0'), 1);
-      assert.strictEqual(compareVersions('0.7.0', '0.8.0'), -1);
+      expect(compareVersions('0.8.0', '0.8.0')).toBe(0);
+      expect(compareVersions('0.9.0', '0.8.0')).toBe(1);
+      expect(compareVersions('0.7.0', '0.8.0')).toBe(-1);
     });
 
     it('should detect major version differences', () => {
@@ -176,8 +154,8 @@ describe('Phase 8: Advanced Intelligence', () => {
         return major1 !== major2;
       };
 
-      assert.ok(isMajorDiff('1.0.0', '0.8.0'));
-      assert.ok(!isMajorDiff('0.8.0', '0.7.0'));
+      expect(isMajorDiff('1.0.0', '0.8.0')).toBeTruthy();
+      expect(!isMajorDiff('0.8.0', '0.7.0')).toBeTruthy();
     });
   });
 
@@ -190,7 +168,7 @@ describe('Phase 8: Advanced Intelligence', () => {
       const ageMs = Date.now() - stats.mtime.getTime();
       const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
       
-      assert.ok(ageDays <= 1, `File age should be 0 or 1 day for newly created files, got ${ageDays}`);
+      expect(ageDays <= 1).toBeTruthy();
     });
 
     it('should identify files older than threshold', () => {
@@ -198,7 +176,7 @@ describe('Phase 8: Advanced Intelligence', () => {
       const fileAge = 10; // days
       
       const isStale = fileAge > threshold;
-      assert.ok(isStale);
+      expect(isStale).toBeTruthy();
     });
 
     it('should not flag recently updated files', () => {
@@ -206,7 +184,7 @@ describe('Phase 8: Advanced Intelligence', () => {
       const fileAge = 2; // days
       
       const isStale = fileAge > threshold;
-      assert.ok(!isStale);
+      expect(!isStale).toBeTruthy();
     });
   });
 
@@ -218,8 +196,8 @@ describe('Phase 8: Advanced Intelligence', () => {
         'lib/commands/migrate.js': ['docs/migration-guide.md']
       };
 
-      assert.ok(Array.isArray(codeToDoc['lib/commands/init.js']));
-      assert.strictEqual(codeToDoc['lib/commands/init.js'].length, 2);
+      expect(Array.isArray(codeToDoc['lib/commands/init.js'])).toBeTruthy();
+      expect(codeToDoc['lib/commands/init.js'].length).toBe(2);
     });
 
     it('should support multiple docs per code file', () => {
@@ -228,7 +206,7 @@ describe('Phase 8: Advanced Intelligence', () => {
       };
 
       const docs = codeToDoc['lib/commands/init.js'];
-      assert.ok(docs.length > 1);
+      expect(docs.length > 1).toBeTruthy();
     });
   });
 });

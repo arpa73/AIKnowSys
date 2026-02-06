@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { checkEssentialsBloat } from '../lib/quality-checkers/essentials-bloat.js';
@@ -30,14 +29,14 @@ describe('quality-check command', () => {
 
       const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
-      assert.strictEqual(result.passed, false);
-      assert.strictEqual(result.severity, 'warning');
-      assert.ok(result.message.includes('900 lines'));
-      assert.ok(result.message.includes('800'));
-      assert.ok(result.fix.includes('compress-essentials'));
-      assert.strictEqual(result.details.current, 900);
-      assert.strictEqual(result.details.threshold, 800);
-      assert.strictEqual(result.details.excess, 100);
+      expect(result.passed).toBe(false);
+      expect(result.severity).toBe('warning');
+      expect(result.message.includes('900 lines')).toBeTruthy();
+      expect(result.message.includes('800')).toBeTruthy();
+      expect(result.fix.includes('compress-essentials')).toBeTruthy();
+      expect(result.details.current).toBe(900);
+      expect(result.details.threshold).toBe(800);
+      expect(result.details.excess).toBe(100);
     });
 
     it('should pass when ESSENTIALS under threshold', async () => {
@@ -50,9 +49,9 @@ describe('quality-check command', () => {
 
       const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
-      assert.strictEqual(result.passed, true);
-      assert.ok(result.message.includes('650 lines'));
-      assert.ok(result.message.includes('under 800'));
+      expect(result.passed).toBe(true);
+      expect(result.message.includes('650 lines')).toBeTruthy();
+      expect(result.message.includes('under 800')).toBeTruthy();
     });
 
     it('should respect custom threshold from config', async () => {
@@ -65,7 +64,7 @@ describe('quality-check command', () => {
 
       const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 1000 });
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
 
     it('should suggest compress-essentials when bloated', async () => {
@@ -77,15 +76,15 @@ describe('quality-check command', () => {
 
       const result: any = await checkEssentialsBloat(TEST_DIR);
 
-      assert.ok(result.fix.includes('compress-essentials'));
-      assert.ok(result.fix.includes('--analyze'));
+      expect(result.fix.includes('compress-essentials')).toBeTruthy();
+      expect(result.fix.includes('--analyze')).toBeTruthy();
     });
 
     it('should handle missing ESSENTIALS.md gracefully', async () => {
       const result: any = await checkEssentialsBloat(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
-      assert.ok(result.message.includes('not found'));
+      expect(result.passed).toBe(true);
+      expect(result.message.includes('not found')).toBeTruthy();
     });
   });
 
@@ -98,14 +97,14 @@ describe('quality-check command', () => {
 
       const result: any = await validateTemplates(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.strictEqual(result.severity, 'error');
-      assert.ok(result.message.includes('2 unresolved'));
-      assert.strictEqual(result.violations.length, 2);
-      assert.strictEqual(result.violations[0].variable, 'PROJECT_NAME');
-      assert.strictEqual(result.violations[0].line, 1);
-      assert.strictEqual(result.violations[1].variable, 'APP_NAME');
-      assert.strictEqual(result.violations[1].line, 3);
+      expect(result.passed).toBe(false);
+      expect(result.severity).toBe('error');
+      expect(result.message.includes('2 unresolved')).toBeTruthy();
+      expect(result.violations.length).toBe(2);
+      expect(result.violations[0].variable).toBe('PROJECT_NAME');
+      expect(result.violations[0].line).toBe(1);
+      expect(result.violations[1].variable).toBe('APP_NAME');
+      expect(result.violations[1].line).toBe(3);
     });
 
     it('should ignore variables in templates directory', async () => {
@@ -117,7 +116,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateTemplates(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
 
     it('should report file location of unresolved vars', async () => {
@@ -128,10 +127,10 @@ describe('quality-check command', () => {
 
       const result: any = await validateTemplates(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.ok(result.violations[0].file.includes('docs.md'));
-      assert.strictEqual(result.violations[0].line, 2);
-      assert.ok(result.violations[0].context.includes('{{VAR}}'));
+      expect(result.passed).toBe(false);
+      expect(result.violations[0].file.includes('docs.md')).toBeTruthy();
+      expect(result.violations[0].line).toBe(2);
+      expect(result.violations[0].context.includes('{{VAR}}')).toBeTruthy();
     });
 
     it('should handle multiple variables on same line', async () => {
@@ -142,8 +141,8 @@ describe('quality-check command', () => {
 
       const result: any = await validateTemplates(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.strictEqual(result.violations.length, 2);
+      expect(result.passed).toBe(false);
+      expect(result.violations.length).toBe(2);
     });
 
     it('should pass when no unresolved variables found', async () => {
@@ -154,7 +153,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateTemplates(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
   });
 
@@ -167,11 +166,11 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.strictEqual(result.severity, 'warning');
-      assert.strictEqual(result.violations.length, 1);
-      assert.strictEqual(result.violations[0].link, 'missing-file.md');
-      assert.strictEqual(result.violations[0].reason, 'Target file not found');
+      expect(result.passed).toBe(false);
+      expect(result.severity).toBe('warning');
+      expect(result.violations.length).toBe(1);
+      expect(result.violations[0].link).toBe('missing-file.md');
+      expect(result.violations[0].reason).toBe('Target file not found');
     });
 
     it('should validate anchor links', async () => {
@@ -186,9 +185,9 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.ok(result.violations[0].reason.includes('Anchor'));
-      assert.ok(result.violations[0].reason.includes('section-two'));
+      expect(result.passed).toBe(false);
+      expect(result.violations[0].reason.includes('Anchor')).toBeTruthy();
+      expect(result.violations[0].reason.includes('section-two')).toBeTruthy();
     });
 
     it('should skip external URLs', async () => {
@@ -199,7 +198,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
 
     it('should handle relative paths correctly', async () => {
@@ -215,7 +214,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
 
     it('should pass when all links valid', async () => {
@@ -227,7 +226,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
 
     it('should skip mailto links', async () => {
@@ -238,7 +237,7 @@ describe('quality-check command', () => {
 
       const result: any = await validateLinks(TEST_DIR);
 
-      assert.strictEqual(result.passed, true);
+      expect(result.passed).toBe(true);
     });
   });
 
@@ -251,8 +250,8 @@ describe('quality-check command', () => {
 
       const result: any = await scanPatterns(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
-      assert.ok(result.violations.some((v: any) => v.rule === 'no-hardcoded-paths'));
+      expect(result.passed).toBe(false);
+      expect(result.violations.some((v: any) => v.rule === 'no-hardcoded-paths')).toBeTruthy();
     });
 
     it('should detect require() in ES module project', async () => {
@@ -267,10 +266,10 @@ describe('quality-check command', () => {
 
       const result: any = await scanPatterns(TEST_DIR);
 
-      assert.strictEqual(result.passed, false);
+      expect(result.passed).toBe(false);
       const violation: any = result.violations.find((v: any) => v.rule === 'no-require-in-esm');
-      assert.ok(violation);
-      assert.ok(violation.fix.includes('import'));
+      expect(violation).toBeTruthy();
+      expect(violation.fix.includes('import')).toBeTruthy();
     });
 
     it('should allow require() in .cjs files', async () => {
@@ -288,7 +287,7 @@ describe('quality-check command', () => {
       const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('hook.cjs')
       );
-      assert.strictEqual(hasRequireViolation, false);
+      expect(hasRequireViolation).toBe(false);
     });
 
     it('should detect missing test files', async () => {
@@ -314,7 +313,7 @@ describe('quality-check command', () => {
       const result: any = await scanPatterns(TEST_DIR);
 
       const hasViolations: boolean = result.violations && result.violations.length > 0;
-      assert.strictEqual(hasViolations, false);
+      expect(hasViolations).toBe(false);
     });
 
     it('should not flag error messages containing require()', async () => {
@@ -334,7 +333,7 @@ describe('quality-check command', () => {
       const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('checker.js')
       );
-      assert.strictEqual(hasRequireViolation, false);
+      expect(hasRequireViolation).toBe(false);
     });
 
     it('should allow require() in test files', async () => {
@@ -355,7 +354,7 @@ describe('quality-check command', () => {
       const hasRequireViolation: boolean = result.violations?.some((v: any) => 
         v.rule === 'no-require-in-esm' && v.file.includes('test')
       );
-      assert.strictEqual(hasRequireViolation, false);
+      expect(hasRequireViolation).toBe(false);
     });
   });
 
@@ -373,11 +372,11 @@ describe('quality-check command', () => {
 
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
-      assert.ok(result.checks);
-      assert.ok(result.checks.essentials);
-      assert.ok(result.checks.templates);
-      assert.strictEqual(result.passed, false);
-      assert.ok(result.totalIssues >= 2);
+      expect(result.checks).toBeTruthy();
+      expect(result.checks.essentials).toBeTruthy();
+      expect(result.checks.templates).toBeTruthy();
+      expect(result.passed).toBe(false);
+      expect(result.totalIssues >= 2).toBeTruthy();
     });
 
     it('should support dry-run mode', async () => {
@@ -387,9 +386,9 @@ describe('quality-check command', () => {
         _silent: true 
       });
 
-      assert.ok(result);
+      expect(result).toBeTruthy();
       // Dry-run should still execute checks
-      assert.ok(result.checks);
+      expect(result.checks).toBeTruthy();
     });
 
     it('should pass when all checks pass', async () => {
@@ -404,8 +403,8 @@ describe('quality-check command', () => {
 
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
-      assert.strictEqual(result.passed, true);
-      assert.strictEqual(result.totalIssues, 0);
+      expect(result.passed).toBe(true);
+      expect(result.totalIssues).toBe(0);
     });
 
     it('should load config from config.json if available', async () => {
@@ -426,7 +425,7 @@ describe('quality-check command', () => {
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Should pass because threshold is 1000, not default 800
-      assert.ok(result.checks.essentials.passed);
+      expect(result.checks.essentials.passed).toBeTruthy();
     });
 
     it('should include deliverables validation check', async () => {
@@ -439,9 +438,9 @@ describe('quality-check command', () => {
 
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
-      assert.ok(result.checks.deliverables, 'Should have deliverables check');
-      assert.ok('passed' in result.checks.deliverables, 'Should have passed property');
-      assert.ok('summary' in result.checks.deliverables, 'Should have summary');
+      expect(result.checks.deliverables).toBeTruthy();
+      expect('passed' in result.checks.deliverables).toBeTruthy();
+      expect('summary' in result.checks.deliverables).toBeTruthy();
     });
 
     it('should fail when deliverables validation fails', async () => {
@@ -455,9 +454,9 @@ describe('quality-check command', () => {
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Deliverables check should detect legacy pattern
-      assert.ok(result.checks.deliverables);
+      expect(result.checks.deliverables).toBeTruthy();
       // Note: Might pass or fail depending on other checks, just verify it ran
-      assert.ok('passed' in result.checks.deliverables);
+      expect('passed' in result.checks.deliverables).toBeTruthy();
     });
 
     it('should run deliverables validation in full mode', async () => {
@@ -471,15 +470,15 @@ describe('quality-check command', () => {
       const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Verify full mode ran (should have all 6 checks, not just 4)
-      assert.ok(result.checks.deliverables.checks, 'Should have individual checks');
+      expect(result.checks.deliverables.checks).toBeTruthy();
       const checkNames: string[] = result.checks.deliverables.checks.map((c: any) => c.name);
-      assert.ok(checkNames.includes('Template Execution'), 'Should run Template Execution (full mode)');
-      assert.ok(checkNames.includes('Fresh Init'), 'Should run Fresh Init (full mode)');
+      expect(checkNames.includes('Template Execution')).toBeTruthy();
+      expect(checkNames.includes('Fresh Init')).toBeTruthy();
       
       // Verify metrics exist
-      assert.ok(result.checks.deliverables.metrics, 'Should have metrics');
-      assert.ok('templatesChecked' in result.checks.deliverables.metrics, 'Should track templates checked');
-      assert.ok('duration' in result.checks.deliverables.metrics, 'Should track duration');
+      expect(result.checks.deliverables.metrics).toBeTruthy();
+      expect('templatesChecked' in result.checks.deliverables.metrics).toBeTruthy();
+      expect('duration' in result.checks.deliverables.metrics).toBeTruthy();
     });
   });
 });

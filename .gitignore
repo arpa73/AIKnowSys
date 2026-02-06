@@ -67,6 +67,9 @@ coverage/
 .coverage
 htmlcov/
 
+# Vitest
+.vitest/
+
 # Test temporary files
 test/tmp/
 

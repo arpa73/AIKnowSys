@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { listPatterns } from '../lib/commands/list-patterns.js';
@@ -25,10 +24,10 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 2);
-    assert.ok(result.personal.some((p: any) => p.name === 'api-retry.md'));
-    assert.ok(result.personal.some((p: any) => p.name === 'vue-composable.md'));
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(2);
+    expect(result.personal.some((p: any) => p.name === 'api-retry.md')).toBeTruthy();
+    expect(result.personal.some((p: any) => p.name === 'vue-composable.md')).toBeTruthy();
   });
 
   it('should list team patterns from learned directory', async () => {
@@ -40,10 +39,10 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.learned.length, 2);
-    assert.ok(result.learned.some((p: any) => p.name === 'database-pooling.md'));
-    assert.ok(result.learned.some((p: any) => p.name === 'error-handling.md'));
+    expect(result.success).toBe(true);
+    expect(result.learned.length).toBe(2);
+    expect(result.learned.some((p: any) => p.name === 'database-pooling.md')).toBeTruthy();
+    expect(result.learned.some((p: any) => p.name === 'error-handling.md')).toBeTruthy();
   });
 
   it('should show both personal and team patterns', async () => {
@@ -58,9 +57,9 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 1);
-    assert.strictEqual(result.learned.length, 1);
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(1);
+    expect(result.learned.length).toBe(1);
   });
 
   it('should handle empty state (no patterns)', async () => {
@@ -72,26 +71,26 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 0);
-    assert.strictEqual(result.learned.length, 0);
-    assert.ok(result.message.includes('No patterns found'));
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(0);
+    expect(result.learned.length).toBe(0);
+    expect(result.message.includes('No patterns found')).toBeTruthy();
   });
 
   it('should handle missing directories gracefully', async () => {
     // No .aiknowsys directory at all
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 0);
-    assert.strictEqual(result.learned.length, 0);
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(0);
+    expect(result.learned.length).toBe(0);
   });
 
   it('should error if no git username available', async () => {
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: null });
 
-    assert.strictEqual(result.success, false);
-    assert.ok(result.message.includes('No git username'));
+    expect(result.success).toBe(false);
+    expect(result.message.includes('No git username')).toBeTruthy();
   });
 
   it('should filter out non-markdown files', async () => {
@@ -104,9 +103,9 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 1);
-    assert.strictEqual(result.personal[0].name, 'valid-pattern.md');
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(1);
+    expect(result.personal[0].name).toBe('valid-pattern.md');
   });
 
   it('should extract trigger words from patterns', async () => {
@@ -120,8 +119,8 @@ describe('list-patterns command', () => {
 
     const result: any = await listPatterns({ dir: testDir, _silent: true, _username: 'test-user' });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.personal.length, 1);
-    assert.deepStrictEqual(result.personal[0].keywords, ['api', 'retry', 'error', 'handling']);
+    expect(result.success).toBe(true);
+    expect(result.personal.length).toBe(1);
+    expect(result.personal[0].keywords).toStrictEqual(['api', 'retry', 'error', 'handling']);
   });
 });

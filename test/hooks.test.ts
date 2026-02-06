@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -39,9 +38,9 @@ describe('VSCode Hooks', () => {
           env: { ...process.env, SESSIONS_DIR: nonExistentDir },
           stdio: 'pipe'
         });
-        assert.ok(true); // Should not throw
+        expect(true).toBeTruthy(); // Should not throw
       } catch (error) {
-        assert.fail('Should not throw when sessions directory does not exist');
+        expect.fail('Should not throw when sessions directory does not exist');
       }
     });
 
@@ -51,9 +50,9 @@ describe('VSCode Hooks', () => {
           env: { ...process.env, SESSIONS_DIR: testSessionsDir },
           stdio: 'pipe'
         });
-        assert.ok(true); // Should not throw
+        expect(true).toBeTruthy(); // Should not throw
       } catch (error) {
-        assert.fail('Should not throw when sessions directory is empty');
+        expect.fail('Should not throw when sessions directory is empty');
       }
     });
 
@@ -76,7 +75,7 @@ describe('VSCode Hooks', () => {
         stdio: ['pipe', 'pipe', 'pipe']
       });
 
-      assert.ok(!result.includes('[SessionStart] Found recent session'));
+      expect(!result.includes('[SessionStart] Found recent session')).toBeTruthy();
     });
 
     it('should output session filename when recent session exists (<7 days)', () => {
@@ -96,8 +95,8 @@ describe('VSCode Hooks', () => {
       } catch (error) {
         // stderr output causes non-zero exit in some cases
         const stderr = (error as any).stderr?.toString() || '';
-        assert.ok(stderr.includes('[SessionStart] Found recent session'));
-        assert.ok(stderr.includes(recentFileName));
+        expect(stderr.includes('[SessionStart] Found recent session')).toBeTruthy();
+        expect(stderr.includes(recentFileName)).toBeTruthy();
       }
     });
 
@@ -121,7 +120,7 @@ describe('VSCode Hooks', () => {
         });
       } catch (error) {
         const stderr = (error as any).stderr?.toString() || '';
-        assert.ok(stderr.includes(todayFile)); // Should reference most recent
+        expect(stderr.includes(todayFile)).toBeTruthy(); // Should reference most recent
       }
     });
   });
@@ -136,7 +135,7 @@ describe('VSCode Hooks', () => {
           stdio: 'pipe'
         });
 
-        assert.strictEqual(fs.existsSync(newSessionsDir), true);
+        expect(fs.existsSync(newSessionsDir)).toBe(true);
       } finally {
         // Clean up
         if (fs.existsSync(newSessionsDir)) {
@@ -154,17 +153,17 @@ describe('VSCode Hooks', () => {
       const today = new Date().toISOString().split('T')[0];
       const sessionFile = path.join(testSessionsDir, `${today}-session.md`);
       
-      assert.strictEqual(fs.existsSync(sessionFile), true);
+      expect(fs.existsSync(sessionFile)).toBe(true);
       
       const content = fs.readFileSync(sessionFile, 'utf-8');
-      assert.ok(content.includes('# Session:'));
-      assert.ok(content.includes('**Date:**'));
-      assert.ok(content.includes('**Started:**'));
-      assert.ok(content.includes('**Last Updated:**'));
-      assert.ok(content.includes('## Current State'));
-      assert.ok(content.includes('### Completed'));
-      assert.ok(content.includes('### In Progress'));
-      assert.ok(content.includes('### Notes for Next Session'));
+      expect(content.includes('# Session:')).toBeTruthy();
+      expect(content.includes('**Date:**')).toBeTruthy();
+      expect(content.includes('**Started:**')).toBeTruthy();
+      expect(content.includes('**Last Updated:**')).toBeTruthy();
+      expect(content.includes('## Current State')).toBeTruthy();
+      expect(content.includes('### Completed')).toBeTruthy();
+      expect(content.includes('### In Progress')).toBeTruthy();
+      expect(content.includes('### Notes for Next Session')).toBeTruthy();
     });
 
     it('should UPDATE timestamp (preserve content) when file exists', () => {
@@ -192,10 +191,10 @@ Working on features
       const updatedContent = fs.readFileSync(sessionFile, 'utf-8');
       
       // Should update Last Updated timestamp but preserve other content
-      assert.ok(updatedContent.includes('Working on features'));
-      assert.ok(updatedContent.includes('**Started:** 10:00'));
+      expect(updatedContent.includes('Working on features')).toBeTruthy();
+      expect(updatedContent.includes('**Started:** 10:00')).toBeTruthy();
       // Last Updated should be different from original
-      assert.match(updatedContent, /\*\*Last Updated:\*\* \d{2}:\d{2}/);
+      expect(updatedContent).toMatch(/\*\*Last Updated:\*\* \d{2}:\d{2}/);
     });
 
     it('should exit cleanly (code 0) on successful operation', () => {
@@ -204,9 +203,9 @@ Working on features
           env: { ...process.env, SESSIONS_DIR: testSessionsDir },
           stdio: 'pipe'
         });
-        assert.ok(true); // Should not throw
+        expect(true).toBeTruthy(); // Should not throw
       } catch (error) {
-        assert.fail('Should exit with code 0 on success');
+        expect.fail('Should exit with code 0 on success');
       }
     });
 
@@ -219,7 +218,7 @@ Working on features
         });
       } catch (error) {
         const stderr = (error as any).stderr?.toString() || '';
-        assert.ok(stderr.includes('[SessionEnd]'));
+        expect(stderr.includes('[SessionEnd]')).toBeTruthy();
       }
     });
   });

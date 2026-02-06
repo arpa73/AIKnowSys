@@ -1,5 +1,4 @@
-import {describe, it} from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 import {validateDeliverables} from '../../lib/commands/validate-deliverables.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -14,14 +13,14 @@ describe('validate-deliverables', () => {
       // Test that templates without required placeholders are caught
       const result = await validateDeliverables({_silent: true, _testMode: true});
       const schemaCheck = result.checks.find(c => c.name === 'Template Schema');
-      assert.ok(schemaCheck, 'Template Schema check should exist');
+      expect(schemaCheck).toBeTruthy();
     });
 
     it('should detect forbidden patterns', async () => {
       // Test that forbidden patterns are caught
       const result = await validateDeliverables({_silent: true, _testMode: true});
       const schemaCheck = result.checks.find(c => c.name === 'Template Schema');
-      assert.ok(schemaCheck, 'Template Schema check should exist');
+      expect(schemaCheck).toBeTruthy();
     });
   });
 
@@ -35,12 +34,9 @@ describe('validate-deliverables', () => {
       const result = await validateDeliverables({_silent: true});
       const patternCheck = result.checks.find(c => c.name === 'Legacy Patterns');
       
-      assert.ok(patternCheck, 'Legacy Patterns check should exist');
+      expect(patternCheck).toBeTruthy();
       if (patternCheck && !patternCheck.passed) {
-        assert.ok(
-          patternCheck.issues.some(i => i.includes('PENDING_REVIEW.md')),
-          'Should detect PENDING_REVIEW.md pattern'
-        );
+        expect(patternCheck.issues.some(i => i.includes('PENDING_REVIEW.md'))).toBeTruthy();
       }
 
       // Cleanup
@@ -55,12 +51,9 @@ describe('validate-deliverables', () => {
       const result = await validateDeliverables({_silent: true});
       const patternCheck = result.checks.find(c => c.name === 'Legacy Patterns');
       
-      assert.ok(patternCheck, 'Legacy Patterns check should exist');
+      expect(patternCheck).toBeTruthy();
       if (patternCheck && !patternCheck.passed) {
-        assert.ok(
-          patternCheck.issues.some(i => i.includes('CURRENT_PLAN.md')),
-          'Should detect CURRENT_PLAN.md pattern'
-        );
+        expect(patternCheck.issues.some(i => i.includes('CURRENT_PLAN.md'))).toBeTruthy();
       }
 
       await fs.rm(testDir, {recursive: true, force: true});
@@ -72,7 +65,7 @@ describe('validate-deliverables', () => {
       
       // Should have pattern check
       const patternCheck = result.checks.find(c => c.name === 'Pattern Consistency');
-      assert.ok(patternCheck, 'Pattern Consistency check should exist');
+      expect(patternCheck).toBeTruthy();
     });
   });
 
@@ -85,7 +78,7 @@ describe('validate-deliverables', () => {
       const result = await validateDeliverables({_silent: true});
       const placeholderCheck = result.checks.find(c => c.name === 'Placeholders');
       
-      assert.ok(placeholderCheck, 'Placeholders check should exist');
+      expect(placeholderCheck).toBeTruthy();
       
       await fs.rm(testDir, {recursive: true, force: true});
     });
@@ -97,10 +90,7 @@ describe('validate-deliverables', () => {
       // Template exceptions should not be flagged
       const placeholderCheck = result.checks.find(c => c.name === 'Placeholders');
       if (placeholderCheck && placeholderCheck.issues) {
-        assert.ok(
-          placeholderCheck.issues.every(i => !i.includes('.template.md')),
-          'Should not flag .template.md files'
-        );
+        expect(placeholderCheck.issues.every(i => !i.includes('.template.md'))).toBeTruthy();
       }
     });
   });
@@ -109,8 +99,8 @@ describe('validate-deliverables', () => {
     it('should show visual diff when patterns mismatch', async () => {
       // This is tested implicitly when errors are shown
       const result = await validateDeliverables({_silent: true});
-      assert.ok('checks' in result, 'Result should have checks property');
-      assert.ok(Array.isArray(result.checks), 'Checks should be an array');
+      expect('checks' in result).toBeTruthy();
+      expect(Array.isArray(result.checks)).toBeTruthy();
     });
   });
 
@@ -122,7 +112,7 @@ describe('validate-deliverables', () => {
 
       const result = await validateDeliverables({_silent: true, fix: true});
       
-      assert.ok('fixed' in result, 'Result should have fixed property');
+      expect('fixed' in result).toBeTruthy();
       
       await fs.rm(testDir, {recursive: true, force: true});
     });
@@ -130,7 +120,7 @@ describe('validate-deliverables', () => {
     it('should not break complex patterns during auto-fix', async () => {
       // Auto-fix should only handle simple replacements
       const result = await validateDeliverables({_silent: true, fix: true});
-      assert.ok('checks' in result, 'Result should have checks property');
+      expect('checks' in result).toBeTruthy();
     });
   });
 
@@ -139,7 +129,7 @@ describe('validate-deliverables', () => {
       const result = await validateDeliverables({_silent: true, full: true});
       
       const executionCheck = result.checks.find(c => c.name === 'Template Execution');
-      assert.ok(executionCheck, 'Template Execution check should exist');
+      expect(executionCheck).toBeTruthy();
     });
 
     it('should catch syntax errors in templates', async () => {
@@ -153,7 +143,7 @@ describe('validate-deliverables', () => {
       const executionCheck = result.checks.find(c => c.name === 'Template Execution');
       if (executionCheck) {
         // May or may not catch this depending on implementation
-        assert.ok('passed' in executionCheck, 'Execution check should have passed property');
+        expect('passed' in executionCheck).toBeTruthy();
       }
 
       await fs.rm(testDir, {recursive: true, force: true});
@@ -165,7 +155,7 @@ describe('validate-deliverables', () => {
       const result = await validateDeliverables({_silent: true, full: true});
       
       const initCheck = result.checks.find(c => c.name === 'Fresh Init');
-      assert.ok(initCheck, 'Fresh Init check should exist');
+      expect(initCheck).toBeTruthy();
     });
   });
 
@@ -173,16 +163,16 @@ describe('validate-deliverables', () => {
     it('should log validation metrics', async () => {
       const result = await validateDeliverables({_silent: true, metrics: true});
       
-      assert.ok('metrics' in result, 'Result should have metrics property');
-      assert.ok('templatesChecked' in result.metrics, 'Metrics should have templatesChecked');
-      assert.ok('duration' in result.metrics, 'Metrics should have duration');
+      expect('metrics' in result).toBeTruthy();
+      expect('templatesChecked' in result.metrics).toBeTruthy();
+      expect('duration' in result.metrics).toBeTruthy();
     });
 
     it('should track validation history', async () => {
       const result = await validateDeliverables({_silent: true, metrics: true});
       
       // Metrics should be logged
-      assert.ok(result.metrics, 'Result should have metrics');
+      expect(result.metrics).toBeTruthy();
     });
   });
 
@@ -190,23 +180,23 @@ describe('validate-deliverables', () => {
     it('should handle missing templates directory gracefully', async () => {
       // This tests resilience
       const result = await validateDeliverables({_silent: true});
-      assert.ok('passed' in result, 'Result should have passed property');
-      assert.ok('checks' in result, 'Result should have checks property');
+      expect('passed' in result).toBeTruthy();
+      expect('checks' in result).toBeTruthy();
     });
 
     it('should report multiple issues clearly', async () => {
       const result = await validateDeliverables({_silent: true});
       
-      assert.ok('summary' in result, 'Result should have summary property');
-      assert.strictEqual(typeof result.summary, 'string', 'Summary should be a string');
+      expect('summary' in result).toBeTruthy();
+      expect(typeof result.summary).toBe('string');
     });
 
     it('should work in silent mode for programmatic use', async () => {
       const result = await validateDeliverables({_silent: true});
       
-      assert.ok('passed' in result, 'Result should have passed property');
-      assert.ok('checks' in result, 'Result should have checks property');
-      assert.ok('exitCode' in result, 'Result should have exitCode property');
+      expect('passed' in result).toBeTruthy();
+      expect('checks' in result).toBeTruthy();
+      expect('exitCode' in result).toBeTruthy();
     });
   });
 
@@ -228,9 +218,9 @@ describe('validate-deliverables', () => {
       });
 
       const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
-      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
-      assert.strictEqual(boundaryCheck.passed, true, 'Should pass when maintainer skill not in templates');
-      assert.strictEqual(boundaryCheck.issues.length, 0, 'Should have no issues');
+      expect(boundaryCheck).toBeTruthy();
+      expect(boundaryCheck.passed).toBe(true);
+      expect(boundaryCheck.issues.length).toBe(0);
 
       // Cleanup
       await fs.rm(testDir, {recursive: true, force: true});
@@ -256,12 +246,9 @@ describe('validate-deliverables', () => {
       });
 
       const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
-      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
-      assert.strictEqual(boundaryCheck.passed, false, 'Should fail when maintainer skill in templates');
-      assert.ok(
-        boundaryCheck.issues.some(i => i.includes('test-maintainer')),
-        'Should report which maintainer skill violated boundary'
-      );
+      expect(boundaryCheck).toBeTruthy();
+      expect(boundaryCheck.passed).toBe(false);
+      expect(boundaryCheck.issues.some(i => i.includes('test-maintainer'))).toBeTruthy();
 
       // Cleanup
       await fs.rm(testDir, {recursive: true, force: true});
@@ -287,9 +274,9 @@ describe('validate-deliverables', () => {
       });
 
       const boundaryCheck = result.checks.find(c => c.name === 'Maintainer Skill Boundary');
-      assert.ok(boundaryCheck, 'Maintainer Skill Boundary check should exist');
-      assert.strictEqual(boundaryCheck.passed, true, 'Should pass when regular skill in both locations');
-      assert.strictEqual(boundaryCheck.issues.length, 0, 'Should have no issues');
+      expect(boundaryCheck).toBeTruthy();
+      expect(boundaryCheck.passed).toBe(true);
+      expect(boundaryCheck.issues.length).toBe(0);
 
       // Cleanup
       await fs.rm(testDir, {recursive: true, force: true});
@@ -300,27 +287,27 @@ describe('validate-deliverables', () => {
     it('should return expected structure', async () => {
       const result = await validateDeliverables({_silent: true});
       
-      assert.ok('passed' in result, 'Result should have passed property');
-      assert.strictEqual(typeof result.passed, 'boolean', 'Passed should be boolean');
+      expect('passed' in result).toBeTruthy();
+      expect(typeof result.passed).toBe('boolean');
       
-      assert.ok('checks' in result, 'Result should have checks property');
-      assert.ok(Array.isArray(result.checks), 'Checks should be an array');
+      expect('checks' in result).toBeTruthy();
+      expect(Array.isArray(result.checks)).toBeTruthy();
       
-      assert.ok('summary' in result, 'Result should have summary property');
-      assert.strictEqual(typeof result.summary, 'string', 'Summary should be string');
+      expect('summary' in result).toBeTruthy();
+      expect(typeof result.summary).toBe('string');
       
-      assert.ok('exitCode' in result, 'Result should have exitCode property');
-      assert.strictEqual(typeof result.exitCode, 'number', 'ExitCode should be number');
+      expect('exitCode' in result).toBeTruthy();
+      expect(typeof result.exitCode).toBe('number');
     });
 
     it('should include check details', async () => {
       const result = await validateDeliverables({_silent: true});
       
       result.checks.forEach(check => {
-        assert.ok('name' in check, 'Check should have name property');
-        assert.ok('passed' in check, 'Check should have passed property');
-        assert.ok('issues' in check, 'Check should have issues property');
-        assert.ok(Array.isArray(check.issues), 'Issues should be an array');
+        expect('name' in check).toBeTruthy();
+        expect('passed' in check).toBeTruthy();
+        expect('issues' in check).toBeTruthy();
+        expect(Array.isArray(check.issues)).toBeTruthy();
       });
     });
   });

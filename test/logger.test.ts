@@ -1,5 +1,4 @@
-import { describe, it, after, beforeEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, afterAll, beforeEach, expect } from 'vitest';
 import { createLogger, logger } from '../lib/logger.js';
 
 // Helper to capture console output
@@ -56,16 +55,16 @@ describe('logger', () => {
     capture = new ConsoleCapture();
   });
 
-  after(() => {
+  afterAll(() => {
     if (capture) capture.stop();
   });
 
   describe('createLogger', () => {
     it('should create a logger instance', () => {
       const log = createLogger();
-      assert.ok(log, 'Logger instance should be created');
-      assert.strictEqual(typeof log.log, 'function', 'Should have log method');
-      assert.strictEqual(typeof log.error, 'function', 'Should have error method');
+      expect(log).toBeTruthy();
+      expect(typeof log.log).toBe('function');
+      expect(typeof log.error).toBe('function');
     });
 
     it('should create silent logger when silent=true', () => {
@@ -77,7 +76,7 @@ describe('logger', () => {
       log.info('This should not appear');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Silent logger should not log');
+      expect(capture.getLogs().length).toBe(0);
     });
 
     it('should create non-silent logger when silent=false', () => {
@@ -87,7 +86,7 @@ describe('logger', () => {
       log.log('This should appear');
       
       capture.stop();
-      assert.ok(capture.hasLog('This should appear'), 'Non-silent logger should log');
+      expect(capture.hasLog('This should appear')).toBeTruthy();
     });
   });
 
@@ -99,7 +98,7 @@ describe('logger', () => {
       log.log('Test message');
       
       capture.stop();
-      assert.ok(capture.hasLog('Test message'), 'Should log plain message');
+      expect(capture.hasLog('Test message')).toBeTruthy();
     });
 
     it('should not log when silent', () => {
@@ -109,7 +108,7 @@ describe('logger', () => {
       log.log('Test message');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -121,7 +120,7 @@ describe('logger', () => {
       log.error('Critical error');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Errors should respect silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
 
     it('should format errors with ❌ icon when not silent', () => {
@@ -131,7 +130,7 @@ describe('logger', () => {
       log.error('Something went wrong');
       
       capture.stop();
-      assert.ok(capture.hasError('❌ Something went wrong'), 'Should format with ❌ icon');
+      expect(capture.hasError('❌ Something went wrong')).toBeTruthy();
     });
   });
 
@@ -143,8 +142,8 @@ describe('logger', () => {
       log.warn('Warning message');
       
       capture.stop();
-      assert.ok(capture.hasLog('⚠️'), 'Should include ⚠️ icon');
-      assert.ok(capture.hasLog('Warning message'), 'Should include warning text');
+      expect(capture.hasLog('⚠️')).toBeTruthy();
+      expect(capture.hasLog('Warning message')).toBeTruthy();
     });
 
     it('should not log warnings when silent', () => {
@@ -154,7 +153,7 @@ describe('logger', () => {
       log.warn('Warning message');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log warnings in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -166,8 +165,8 @@ describe('logger', () => {
       log.info('Info message');
       
       capture.stop();
-      assert.ok(capture.hasLog('ℹ️'), 'Should include ℹ️ icon');
-      assert.ok(capture.hasLog('Info message'), 'Should include info text');
+      expect(capture.hasLog('ℹ️')).toBeTruthy();
+      expect(capture.hasLog('Info message')).toBeTruthy();
     });
 
     it('should not log info when silent', () => {
@@ -177,7 +176,7 @@ describe('logger', () => {
       log.info('Info message');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log info in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -189,8 +188,8 @@ describe('logger', () => {
       log.success('Success message');
       
       capture.stop();
-      assert.ok(capture.hasLog('✅'), 'Should include ✅ icon');
-      assert.ok(capture.hasLog('Success message'), 'Should include success text');
+      expect(capture.hasLog('✅')).toBeTruthy();
+      expect(capture.hasLog('Success message')).toBeTruthy();
     });
 
     it('should not log success when silent', () => {
@@ -200,7 +199,7 @@ describe('logger', () => {
       log.success('Success message');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log success in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -212,8 +211,8 @@ describe('logger', () => {
       log.blank();
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 1, 'Should log one blank line');
-      assert.strictEqual(capture.getLogs()[0], '', 'Blank line should be empty string');
+      expect(capture.getLogs().length).toBe(1);
+      expect(capture.getLogs()[0]).toBe('');
     });
 
     it('should not log blank lines when silent', () => {
@@ -223,7 +222,7 @@ describe('logger', () => {
       log.blank();
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log blank in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -235,9 +234,9 @@ describe('logger', () => {
       log.header('Test Header');
       
       capture.stop();
-      assert.ok(capture.hasLog('🎯 Test Header'), 'Should include default icon and text');
+      expect(capture.hasLog('🎯 Test Header')).toBeTruthy();
       // Should have 3 lines: blank + header + blank
-      assert.ok(capture.getLogs().length >= 3, 'Should log header with surrounding blanks');
+      expect(capture.getLogs().length >= 3).toBeTruthy();
     });
 
     it('should log header with custom icon', () => {
@@ -247,7 +246,7 @@ describe('logger', () => {
       log.header('Custom Header', '🚀');
       
       capture.stop();
-      assert.ok(capture.hasLog('🚀 Custom Header'), 'Should include custom icon');
+      expect(capture.hasLog('🚀 Custom Header')).toBeTruthy();
     });
 
     it('should not log header when silent', () => {
@@ -257,7 +256,7 @@ describe('logger', () => {
       log.header('Test Header');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log header in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -269,7 +268,7 @@ describe('logger', () => {
       log.dim('Dimmed text');
       
       capture.stop();
-      assert.ok(capture.hasLog('Dimmed text'), 'Should log dimmed text');
+      expect(capture.hasLog('Dimmed text')).toBeTruthy();
     });
 
     it('should not log dimmed text when silent', () => {
@@ -279,7 +278,7 @@ describe('logger', () => {
       log.dim('Dimmed text');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log dim in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -291,7 +290,7 @@ describe('logger', () => {
       log.cyan('Cyan text');
       
       capture.stop();
-      assert.ok(capture.hasLog('Cyan text'), 'Should log cyan text');
+      expect(capture.hasLog('Cyan text')).toBeTruthy();
     });
 
     it('should not log cyan text when silent', () => {
@@ -301,7 +300,7 @@ describe('logger', () => {
       log.cyan('Cyan text');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log cyan in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -313,7 +312,7 @@ describe('logger', () => {
       log.white('White text');
       
       capture.stop();
-      assert.ok(capture.hasLog('White text'), 'Should log white text');
+      expect(capture.hasLog('White text')).toBeTruthy();
     });
 
     it('should not log white text when silent', () => {
@@ -323,7 +322,7 @@ describe('logger', () => {
       log.white('White text');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log white in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -335,7 +334,7 @@ describe('logger', () => {
       log.section('Test Section');
       
       capture.stop();
-      assert.ok(capture.hasLog('📋 Test Section:'), 'Should include default icon and colon');
+      expect(capture.hasLog('📋 Test Section:')).toBeTruthy();
     });
 
     it('should log section with custom icon', () => {
@@ -345,7 +344,7 @@ describe('logger', () => {
       log.section('Custom Section', '📝');
       
       capture.stop();
-      assert.ok(capture.hasLog('📝 Custom Section:'), 'Should include custom icon');
+      expect(capture.hasLog('📝 Custom Section:')).toBeTruthy();
     });
 
     it('should not log section when silent', () => {
@@ -355,7 +354,7 @@ describe('logger', () => {
       log.section('Test Section');
       
       capture.stop();
-      assert.strictEqual(capture.getLogs().length, 0, 'Should not log section in silent mode');
+      expect(capture.getLogs().length).toBe(0);
     });
   });
 
@@ -371,9 +370,9 @@ describe('logger', () => {
       log.log('Should appear again');
       
       capture.stop();
-      assert.ok(capture.hasLog('Should appear'), 'First message should appear');
-      assert.ok(!capture.hasLog('Should not appear'), 'Middle message should not appear');
-      assert.ok(capture.hasLog('Should appear again'), 'Last message should appear');
+      expect(capture.hasLog('Should appear')).toBeTruthy();
+      expect(!capture.hasLog('Should not appear')).toBeTruthy();
+      expect(capture.hasLog('Should appear again')).toBeTruthy();
     });
   });
 
@@ -381,11 +380,11 @@ describe('logger', () => {
     it('should export a default non-silent logger', () => {
       capture.start();
       
-      assert.ok(logger, 'Default logger should exist');
+      expect(logger).toBeTruthy();
       logger.log('Test');
       
       capture.stop();
-      assert.ok(capture.hasLog('Test'), 'Default logger should not be silent');
+      expect(capture.hasLog('Test')).toBeTruthy();
     });
   });
 });

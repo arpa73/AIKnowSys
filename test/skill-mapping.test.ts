@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,8 +27,8 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       
       const metadata: SkillMetadata = parseSkillMetadata(skillContent);
       
-      assert.strictEqual(metadata.name, 'code-refactoring');
-      assert.strictEqual(metadata.description, 'Safe code refactoring guide. Use when refactoring components, removing duplication.');
+      expect(metadata.name).toBe('code-refactoring');
+      expect(metadata.description).toBe('Safe code refactoring guide. Use when refactoring components, removing duplication.');
     });
     
     it('should handle skills without YAML frontmatter', () => {
@@ -41,8 +40,8 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       
       const metadata: SkillMetadata = parseSkillMetadata(skillContent);
       
-      assert.strictEqual(metadata.name, null);
-      assert.ok(metadata.description.includes('Test-Driven Development'));
+      expect(metadata.name).toBe(null);
+      expect(metadata.description.includes('Test-Driven Development')).toBeTruthy();
     });
     
     it('should extract description from Purpose section if no YAML', () => {
@@ -54,7 +53,7 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       
       const metadata: SkillMetadata = parseSkillMetadata(skillContent);
       
-      assert.ok(metadata.description.includes('database optimization'));
+      expect(metadata.description.includes('database optimization')).toBeTruthy();
     });
   });
   
@@ -65,9 +64,9 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       const triggers: string[] = extractTriggerWords(description);
       
       // Should extract base verb and action phrases
-      assert.ok(triggers.includes('refactor') || triggers.includes('refactoring'));
-      assert.ok(triggers.some(t => t.includes('duplication')));
-      assert.ok(triggers.some(t => t.includes('simplify') || t.includes('simplifying')));
+      expect(triggers.includes('refactor') || triggers.includes('refactoring')).toBeTruthy();
+      expect(triggers.some(t => t.includes('duplication'))).toBeTruthy();
+      expect(triggers.some(t => t.includes('simplify') || t.includes('simplifying'))).toBeTruthy();
     });
     
     it('should extract trigger words from "When to use" section', () => {
@@ -76,9 +75,9 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       const triggers: string[] = extractTriggerWords(skillContent);
       
       // Should extract object phrases and actions
-      assert.ok(triggers.some(t => t.includes('features') || t.includes('implementing')));
-      assert.ok(triggers.some(t => t.includes('bug') || t.includes('fixing')));
-      assert.ok(triggers.some(t => t.includes('test') || t.includes('writing')));
+      expect(triggers.some(t => t.includes('features') || t.includes('implementing'))).toBeTruthy();
+      expect(triggers.some(t => t.includes('bug') || t.includes('fixing'))).toBeTruthy();
+      expect(triggers.some(t => t.includes('test') || t.includes('writing'))).toBeTruthy();
     });
     
     it('should handle quoted trigger words', () => {
@@ -86,9 +85,9 @@ description: Safe code refactoring guide. Use when refactoring components, remov
       
       const triggers: string[] = extractTriggerWords(description);
       
-      assert.ok(triggers.includes('"refactor"'));
-      assert.ok(triggers.includes('"clean up"'));
-      assert.ok(triggers.includes('"simplify"'));
+      expect(triggers.includes('"refactor"')).toBeTruthy();
+      expect(triggers.includes('"clean up"')).toBeTruthy();
+      expect(triggers.includes('"simplify"')).toBeTruthy();
     });
   });
   
@@ -131,9 +130,9 @@ description: Test skill for refactoring code
     it('should scan and return all skills in directory', async () => {
       const skills: Skill[] = await scanSkillsDirectory(fixturesDir);
       
-      assert.strictEqual(skills.length, 2);
-      assert.ok(skills.some(s => s.name === 'test-skill-1'));
-      assert.ok(skills.some(s => s.name === 'test-skill-2'));
+      expect(skills.length).toBe(2);
+      expect(skills.some(s => s.name === 'test-skill-1')).toBeTruthy();
+      expect(skills.some(s => s.name === 'test-skill-2')).toBeTruthy();
     });
     
     it('should ignore directories without SKILL.md', async () => {
@@ -141,7 +140,7 @@ description: Test skill for refactoring code
       
       const skills: Skill[] = await scanSkillsDirectory(fixturesDir);
       
-      assert.strictEqual(skills.length, 2);
+      expect(skills.length).toBe(2);
     });
   });
   
@@ -162,8 +161,8 @@ description: Test skill for refactoring code
       
       const table: string = generateSkillMapping(skills);
       
-      assert.ok(table.includes('| "refactor", "clean up" | code-refactoring |'));
-      assert.ok(table.includes('| "update deps", "upgrade packages" | dependency-updates |'));
+      expect(table.includes('| "refactor", "clean up" | code-refactoring |')).toBeTruthy();
+      expect(table.includes('| "update deps", "upgrade packages" | dependency-updates |')).toBeTruthy();
     });
     
     it('should handle skills with long descriptions', () => {
@@ -178,7 +177,7 @@ description: Test skill for refactoring code
       const table: string = generateSkillMapping(skills);
       
       // Should truncate description to ~50 chars
-      assert.ok(table.includes('...'));
+      expect(table.includes('...')).toBeTruthy();
     });
   });
 });

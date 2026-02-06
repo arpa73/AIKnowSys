@@ -3,8 +3,7 @@
  * Validates structured error handling with helpful suggestions
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import { AIKnowSysError, ErrorTemplates } from '../lib/error-helpers.js';
 
 interface LogEntry {
@@ -28,10 +27,10 @@ describe('AIKnowSysError', () => {
       'https://example.com/docs'
     );
     
-    assert.strictEqual(error.message, 'Test error');
-    assert.strictEqual(error.suggestion, 'Fix it this way');
-    assert.strictEqual(error.learnMore, 'https://example.com/docs');
-    assert.strictEqual(error.name, 'AIKnowSysError');
+    expect(error.message).toBe('Test error');
+    expect(error.suggestion).toBe('Fix it this way');
+    expect(error.learnMore).toBe('https://example.com/docs');
+    expect(error.name).toBe('AIKnowSysError');
   });
   
   it('should work without learn more link', () => {
@@ -40,15 +39,15 @@ describe('AIKnowSysError', () => {
       'Fix it this way'
     );
     
-    assert.strictEqual(error.message, 'Test error');
-    assert.strictEqual(error.suggestion, 'Fix it this way');
-    assert.strictEqual(error.learnMore, null);
+    expect(error.message).toBe('Test error');
+    expect(error.suggestion).toBe('Fix it this way');
+    expect(error.learnMore).toBe(null);
   });
   
   it('should be instanceof Error', () => {
     const error = new AIKnowSysError('Test', 'Fix');
-    assert.ok(error instanceof Error);
-    assert.ok(error instanceof AIKnowSysError);
+    expect(error instanceof Error).toBeTruthy();
+    expect(error instanceof AIKnowSysError).toBeTruthy();
   });
   
   it('should format error with logger', () => {
@@ -70,10 +69,10 @@ describe('AIKnowSysError', () => {
     error.format(mockLog);
     
     // Should have error, suggestion, and learn more
-    assert.ok(logs.some(l => l.type === 'error' && l.msg === 'File not found'));
-    assert.ok(logs.some(l => l.type === 'info' && l.msg === '💡 How to fix:'));
-    assert.ok(logs.some(l => l.type === 'white' && l.msg?.includes('aiknowsys init')));
-    assert.ok(logs.some(l => l.type === 'cyan' && l.msg?.includes('https://docs.example.com')));
+    expect(logs.some(l => l.type === 'error' && l.msg === 'File not found')).toBeTruthy();
+    expect(logs.some(l => l.type === 'info' && l.msg === '💡 How to fix:')).toBeTruthy();
+    expect(logs.some(l => l.type === 'white' && l.msg?.includes('aiknowsys init'))).toBeTruthy();
+    expect(logs.some(l => l.type === 'cyan' && l.msg?.includes('https://docs.example.com'))).toBeTruthy();
   });
   
   it('should convert to plain text', () => {
@@ -85,11 +84,11 @@ describe('AIKnowSysError', () => {
     
     const text = error.toPlainText();
     
-    assert.ok(text.includes('✗ Test error'));
-    assert.ok(text.includes('💡 How to fix:'));
-    assert.ok(text.includes('Fix suggestion'));
-    assert.ok(text.includes('📚 Learn more:'));
-    assert.ok(text.includes('https://example.com'));
+    expect(text.includes('✗ Test error')).toBeTruthy();
+    expect(text.includes('💡 How to fix:')).toBeTruthy();
+    expect(text.includes('Fix suggestion')).toBeTruthy();
+    expect(text.includes('📚 Learn more:')).toBeTruthy();
+    expect(text.includes('https://example.com')).toBeTruthy();
   });
   
   it('should handle multi-line suggestions', () => {
@@ -110,10 +109,10 @@ describe('AIKnowSysError', () => {
     error.format(mockLog);
     
     const whiteLines = logs.filter(l => l.type === 'white');
-    assert.strictEqual(whiteLines.length, 3);
-    assert.ok(whiteLines[0].msg?.includes('Line 1'));
-    assert.ok(whiteLines[1].msg?.includes('Line 2'));
-    assert.ok(whiteLines[2].msg?.includes('Line 3'));
+    expect(whiteLines.length).toBe(3);
+    expect(whiteLines[0].msg?.includes('Line 1')).toBeTruthy();
+    expect(whiteLines[1].msg?.includes('Line 2')).toBeTruthy();
+    expect(whiteLines[2].msg?.includes('Line 3')).toBeTruthy();
   });
 });
 
@@ -122,11 +121,11 @@ describe('ErrorTemplates', () => {
     it('should create file not found error with default suggestions', () => {
       const error = ErrorTemplates.fileNotFound('CODEBASE_ESSENTIALS.md');
       
-      assert.ok(error instanceof AIKnowSysError);
-      assert.ok(error.message.includes('CODEBASE_ESSENTIALS.md not found'));
-      assert.ok(error.suggestion.includes('aiknowsys scan'));
-      assert.ok(error.suggestion.includes('aiknowsys init'));
-      assert.ok(error.learnMore && error.learnMore.includes('github.com'));
+      expect(error instanceof AIKnowSysError).toBeTruthy();
+      expect(error.message.includes('CODEBASE_ESSENTIALS.md not found')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys scan')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys init')).toBeTruthy();
+      expect(error.learnMore && error.learnMore.includes('github.com')).toBeTruthy();
     });
     
     it('should accept custom suggestions', () => {
@@ -135,9 +134,9 @@ describe('ErrorTemplates', () => {
         ['custom command 1', 'custom command 2']
       );
       
-      assert.ok(error.suggestion.includes('custom command 1'));
-      assert.ok(error.suggestion.includes('custom command 2'));
-      assert.ok(!error.suggestion.includes('aiknowsys scan'));
+      expect(error.suggestion.includes('custom command 1')).toBeTruthy();
+      expect(error.suggestion.includes('custom command 2')).toBeTruthy();
+      expect(!error.suggestion.includes('aiknowsys scan')).toBeTruthy();
     });
   });
   
@@ -145,10 +144,10 @@ describe('ErrorTemplates', () => {
     it('should create empty file error', () => {
       const error = ErrorTemplates.emptyFile('AGENTS.md');
       
-      assert.ok(error.message.includes('AGENTS.md'));
-      assert.ok(error.message.includes('empty'));
-      assert.ok(error.suggestion.includes('aiknowsys scan'));
-      assert.ok(error.learnMore);
+      expect(error.message.includes('AGENTS.md')).toBeTruthy();
+      expect(error.message.includes('empty')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys scan')).toBeTruthy();
+      expect(error.learnMore).toBeTruthy();
     });
   });
   
@@ -156,10 +155,10 @@ describe('ErrorTemplates', () => {
     it('should create file too large error with size', () => {
       const error = ErrorTemplates.fileTooLarge('HUGE.md', 75.5);
       
-      assert.ok(error.message.includes('HUGE.md'));
-      assert.ok(error.message.includes('75.5MB'));
-      assert.ok(error.suggestion.includes('Split content'));
-      assert.ok(error.learnMore);
+      expect(error.message.includes('HUGE.md')).toBeTruthy();
+      expect(error.message.includes('75.5MB')).toBeTruthy();
+      expect(error.suggestion.includes('Split content')).toBeTruthy();
+      expect(error.learnMore).toBeTruthy();
     });
   });
   
@@ -170,10 +169,10 @@ describe('ErrorTemplates', () => {
         'CODEBASE_ESSENTIALS.md'
       );
       
-      assert.ok(error.message.includes('Validation Matrix'));
-      assert.ok(error.message.includes('CODEBASE_ESSENTIALS.md'));
-      assert.ok(error.suggestion.includes('aiknowsys update'));
-      assert.ok(error.learnMore);
+      expect(error.message.includes('Validation Matrix')).toBeTruthy();
+      expect(error.message.includes('CODEBASE_ESSENTIALS.md')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys update')).toBeTruthy();
+      expect(error.learnMore).toBeTruthy();
     });
   });
   
@@ -181,9 +180,9 @@ describe('ErrorTemplates', () => {
     it('should create validation failed error with count', () => {
       const error = ErrorTemplates.validationFailed(3);
       
-      assert.ok(error.message.includes('3 check(s) failed'));
-      assert.ok(error.suggestion.includes('aiknowsys check'));
-      assert.ok(error.learnMore);
+      expect(error.message.includes('3 check(s) failed')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys check')).toBeTruthy();
+      expect(error.learnMore).toBeTruthy();
     });
     
     it('should include failure list when provided', () => {
@@ -192,8 +191,8 @@ describe('ErrorTemplates', () => {
         'Empty CHANGELOG.md'
       ]);
       
-      assert.ok(error.suggestion.includes('Missing AGENTS.md'));
-      assert.ok(error.suggestion.includes('Empty CHANGELOG.md'));
+      expect(error.suggestion.includes('Missing AGENTS.md')).toBeTruthy();
+      expect(error.suggestion.includes('Empty CHANGELOG.md')).toBeTruthy();
     });
   });
   
@@ -201,10 +200,10 @@ describe('ErrorTemplates', () => {
     it('should create no knowledge system error', () => {
       const error = ErrorTemplates.noKnowledgeSystem();
       
-      assert.ok(error.message.includes('No knowledge system found'));
-      assert.ok(error.suggestion.includes('aiknowsys init'));
-      assert.ok(error.suggestion.includes('aiknowsys migrate'));
-      assert.ok(error.learnMore);
+      expect(error.message.includes('No knowledge system found')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys init')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys migrate')).toBeTruthy();
+      expect(error.learnMore).toBeTruthy();
     });
   });
 });

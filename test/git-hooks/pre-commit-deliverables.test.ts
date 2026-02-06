@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir, readFile, chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -103,9 +102,9 @@ exit 1
     // Commit should fail and show our marker (validation triggered)
     try {
       await execAsync('git commit -m "test"');
-      assert.fail('Commit should have failed');
+      expect.fail('Commit should have failed');
     } catch (error) {
-      assert.match((error as Error).message, /VALIDATION_TRIGGERED/);
+      expect((error as Error).message).toMatch(/VALIDATION_TRIGGERED/);
     }
   });
 
@@ -132,11 +131,11 @@ exit 1
     // Commit should fail with helpful message
     try {
       await execAsync('git commit -m "test"');
-      assert.fail('Commit should have failed');
+      expect.fail('Commit should have failed');
     } catch (error) {
-      assert.match((error as Error).message, /Deliverables validation failed/);
-      assert.match((error as Error).message, /npx aiknowsys validate-deliverables/);
-      assert.match((error as Error).message, /--no-verify/);
+      expect((error as Error).message).toMatch(/Deliverables validation failed/);
+      expect((error as Error).message).toMatch(/npx aiknowsys validate-deliverables/);
+      expect((error as Error).message).toMatch(/--no-verify/);
     }
   });
 
@@ -225,10 +224,10 @@ exit 0
     // Should fail with actual deliverables validation error
     try {
       await execAsync('git commit -m "test"');
-      assert.fail('Should have blocked commit due to validation failure');
+      expect.fail('Should have blocked commit due to validation failure');
     } catch (error) {
       // Verify it's the deliverables validation that failed
-      assert.match((error as Error).message, /Deliverables validation failed/);
+      expect((error as Error).message).toMatch(/Deliverables validation failed/);
     }
   });
 });

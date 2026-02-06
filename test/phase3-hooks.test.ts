@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -14,35 +13,35 @@ describe('Phase 3 collaboration hooks', () => {
 
   it('should have learned-reminder hook template', () => {
     const hookPath = path.join(packageDir, TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER);
-    assert.ok(fs.existsSync(hookPath), `${hookPath} should exist`);
+    expect(fs.existsSync(hookPath)).toBeTruthy();
     
     const content = fs.readFileSync(hookPath, 'utf-8');
-    assert.ok(content.includes('#!/usr/bin/env node'), 'Should have node shebang');
-    assert.ok(content.toLowerCase().includes('learned'), 'Should reference learned patterns');
+    expect(content.includes('#!/usr/bin/env node')).toBeTruthy();
+    expect(content.toLowerCase().includes('learned')).toBeTruthy();
   });
 
   it('should have plan-reminder hook template', () => {
     const hookPath = path.join(packageDir, TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER);
-    assert.ok(fs.existsSync(hookPath), `${hookPath} should exist`);
+    expect(fs.existsSync(hookPath)).toBeTruthy();
     
     const content = fs.readFileSync(hookPath, 'utf-8');
-    assert.ok(content.includes('#!/usr/bin/env node'), 'Should have node shebang');
-    assert.ok(content.includes('plans'), 'Should reference plans directory');
+    expect(content.includes('#!/usr/bin/env node')).toBeTruthy();
+    expect(content.includes('plans')).toBeTruthy();
   });
 
   it('should have sync-plans hook template', () => {
     const hookPath = path.join(packageDir, TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS);
-    assert.ok(fs.existsSync(hookPath), `${hookPath} should exist`);
+    expect(fs.existsSync(hookPath)).toBeTruthy();
     
     const content = fs.readFileSync(hookPath, 'utf-8');
-    assert.ok(content.includes('#!/usr/bin/env node'), 'Should have node shebang');
-    assert.ok(content.includes('sync-plans'), 'Should run sync-plans command');
+    expect(content.includes('#!/usr/bin/env node')).toBeTruthy();
+    expect(content.includes('sync-plans')).toBeTruthy();
   });
 
   it('should have all hook template paths defined in constants', () => {
-    assert.ok(TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER, 'Should have LEARNED_REMINDER path');
-    assert.ok(TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER, 'Should have PLAN_REMINDER path');
-    assert.ok(TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS, 'Should have SYNC_PLANS path');
+    expect(TEMPLATE_PATHS.GIT_HOOK_LEARNED_REMINDER).toBeTruthy();
+    expect(TEMPLATE_PATHS.GIT_HOOK_PLAN_REMINDER).toBeTruthy();
+    expect(TEMPLATE_PATHS.GIT_HOOK_SYNC_PLANS).toBeTruthy();
   });
 
   it('should copy collaboration hooks during setupHooks', async () => {
@@ -52,25 +51,16 @@ describe('Phase 3 collaboration hooks', () => {
       await setupHooks(tempDir, true);
       
       const hooksDir = path.join(tempDir, '.github', 'hooks');
-      assert.ok(fs.existsSync(hooksDir), 'Hooks directory should be created');
+      expect(fs.existsSync(hooksDir)).toBeTruthy();
       
       // Verify all three collaboration hooks were copied
-      assert.ok(
-        fs.existsSync(path.join(hooksDir, 'learned-reminder.cjs')),
-        'learned-reminder.cjs should be copied'
-      );
-      assert.ok(
-        fs.existsSync(path.join(hooksDir, 'plan-reminder.cjs')),
-        'plan-reminder.cjs should be copied'
-      );
-      assert.ok(
-        fs.existsSync(path.join(hooksDir, 'sync-plans.cjs')),
-        'sync-plans.cjs should be copied'
-      );
+      expect(fs.existsSync(path.join(hooksDir, 'learned-reminder.cjs'))).toBeTruthy();
+      expect(fs.existsSync(path.join(hooksDir, 'plan-reminder.cjs'))).toBeTruthy();
+      expect(fs.existsSync(path.join(hooksDir, 'sync-plans.cjs'))).toBeTruthy();
       
       // Verify content is correct (check one hook as smoke test)
       const content = fs.readFileSync(path.join(hooksDir, 'learned-reminder.cjs'), 'utf-8');
-      assert.ok(content.includes('#!/usr/bin/env node'), 'Hook should have node shebang');
+      expect(content.includes('#!/usr/bin/env node')).toBeTruthy();
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -107,12 +97,12 @@ describe('Phase 3 collaboration hooks', () => {
     const correctGitCount = hookEntries.filter(e => e.name.startsWith('GIT_HOOK_')).length;
     
     // GREEN phase: These assertions should pass with corrected logic
-    assert.strictEqual(correctVscodeCount, 12, 'Should correctly count 12 VSCode hooks');
-    assert.strictEqual(correctGitCount, 3, 'Should correctly count 3 Git hooks');
-    assert.strictEqual(hookEntries.length, 15, 'Total hooks should be 15');
+    expect(correctVscodeCount).toBe(12);
+    expect(correctGitCount).toBe(3);
+    expect(hookEntries.length).toBe(15);
     
     // Verify the message would show correct counts
     const expectedMessage = `Hooks installed (${correctVscodeCount} VSCode + ${correctGitCount} Git = ${hookEntries.length} total)`;
-    assert.strictEqual(expectedMessage, 'Hooks installed (12 VSCode + 3 Git = 15 total)', 'Success message should show correct counts');
+    expect(expectedMessage).toBe('Hooks installed (12 VSCode + 3 Git = 15 total)');
   });
 });

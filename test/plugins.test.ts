@@ -4,8 +4,7 @@
  * Validates plugin discovery, loading, validation, and command registration.
  */
 
-import { describe, test, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, test, beforeEach, afterEach, expect } from 'vitest';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -52,8 +51,8 @@ describe('Plugin System', () => {
 		// Load plugins (should return empty array, not crash)
 		const plugins: any[] = await loadPlugins(program, testDir);
 
-		assert.strictEqual(plugins.length, 0, 'Should return empty array when no plugins');
-		assert.strictEqual(program.commands.length, 1, 'Should only have core command');
+		expect(plugins.length).toBe(0);
+		expect(program.commands.length).toBe(1);
 	});
 
 	test('Discovers plugin packages', async () => {
@@ -74,9 +73,9 @@ describe('Plugin System', () => {
 
 		const installed: string[] = await listInstalledPlugins(testDir);
 		
-		assert.strictEqual(installed.length, 2, 'Should find 2 plugins');
-		assert.ok(installed.includes('aiknowsys-plugin-test'), 'Should include test plugin');
-		assert.ok(installed.includes('aiknowsys-plugin-another'), 'Should include another plugin');
+		expect(installed.length).toBe(2);
+		expect(installed.includes('aiknowsys-plugin-test')).toBeTruthy();
+		expect(installed.includes('aiknowsys-plugin-another')).toBeTruthy();
 	});
 
 	test('Plugin exports metadata correctly', () => {
@@ -95,10 +94,10 @@ describe('Plugin System', () => {
 
 		const info: any[] = getPluginInfo([mockPlugin]);
 
-		assert.strictEqual(info.length, 1);
-		assert.strictEqual(info[0].name, 'test-plugin');
-		assert.strictEqual(info[0].version, '1.0.0');
-		assert.strictEqual(info[0].commands, 'test-cmd');
+		expect(info.length).toBe(1);
+		expect(info[0].name).toBe('test-plugin');
+		expect(info[0].version).toBe('1.0.0');
+		expect(info[0].commands).toBe('test-cmd');
 	});
 
 	test('Multiple commands in plugin metadata', () => {
@@ -114,7 +113,7 @@ describe('Plugin System', () => {
 
 		const info: any[] = getPluginInfo([mockPlugin]);
 
-		assert.strictEqual(info[0].commands, 'cmd1, cmd2, cmd3');
+		expect(info[0].commands).toBe('cmd1, cmd2, cmd3');
 	});
 
 	test('Handles package.json not found gracefully', async () => {
@@ -129,7 +128,7 @@ describe('Plugin System', () => {
 		// Should not throw, just return empty array
 		const plugins: any[] = await loadPlugins(program, emptyDir);
 
-		assert.strictEqual(plugins.length, 0);
+		expect(plugins.length).toBe(0);
 
 		await rm(emptyDir, { recursive: true, force: true });
 	});
@@ -150,8 +149,8 @@ describe('Plugin System', () => {
 
 		const installed: string[] = await listInstalledPlugins(testDir);
 
-		assert.strictEqual(installed.length, 1);
-		assert.strictEqual(installed[0], 'aiknowsys-plugin-valid');
+		expect(installed.length).toBe(1);
+		expect(installed[0]).toBe('aiknowsys-plugin-valid');
 	});
 
 	test('Plugin info handles missing version', () => {
@@ -164,7 +163,7 @@ describe('Plugin System', () => {
 
 		const info: any[] = getPluginInfo([mockPlugin]);
 
-		assert.strictEqual(info[0].version, 'unknown');
+		expect(info[0].version).toBe('unknown');
 	});
 
 	test('Plugin info handles missing description', () => {
@@ -176,7 +175,7 @@ describe('Plugin System', () => {
 
 		const info: any[] = getPluginInfo([mockPlugin]);
 
-		assert.strictEqual(info[0].description, 'No description');
+		expect(info[0].description).toBe('No description');
 	});
 });
 
@@ -191,8 +190,8 @@ describe('CLI Integration', () => {
 		const plugins: any[] = await loadPlugins(program);
 		
 		// Verify no errors and plugins array returned
-		assert.ok(Array.isArray(plugins), 'Should return array');
-		assert.strictEqual(program.commands.length >= 1, true, 'Should preserve core commands');
+		expect(Array.isArray(plugins)).toBeTruthy();
+		expect(program.commands.length >= 1).toBe(true);
 	});
 });
 
@@ -215,47 +214,47 @@ describe('Plugin Validation (Error Cases)', () => {
 		};
 
 		// Valid plugin
-		assert.doesNotThrow(() => {
-			validatePlugin({
-				name: 'valid',
-				commands: []
-			}, 'valid-plugin');
-		});
+		expect(() => {
+        			validatePlugin({
+        				name: 'valid',
+        				commands: []
+        			}, 'valid-plugin');
+        		}).not.toThrow();
 
 		// Invalid: not an object
-		assert.throws(() => {
-			validatePlugin(null, 'null-plugin');
-		}, /Plugin must export default object/);
+		expect(() => {
+        			validatePlugin(null, 'null-plugin');
+        		}).toThrow(/Plugin must export default object/);
 
 		// Invalid: missing name
-		assert.throws(() => {
-			validatePlugin({
-				commands: []
-			}, 'no-name-plugin');
-		}, /Plugin must have "name" property/);
+		expect(() => {
+        			validatePlugin({
+        				commands: []
+        			}, 'no-name-plugin');
+        		}).toThrow(/Plugin must have "name" property/);
 
 		// Invalid: name not a string
-		assert.throws(() => {
-			validatePlugin({
-				name: 123,
-				commands: []
-			}, 'bad-name-plugin');
-		}, /Plugin must have "name" property/);
+		expect(() => {
+        			validatePlugin({
+        				name: 123,
+        				commands: []
+        			}, 'bad-name-plugin');
+        		}).toThrow(/Plugin must have "name" property/);
 
 		// Invalid: missing commands
-		assert.throws(() => {
-			validatePlugin({
-				name: 'test'
-			}, 'no-commands-plugin');
-		}, /Plugin must have "commands" property/);
+		expect(() => {
+        			validatePlugin({
+        				name: 'test'
+        			}, 'no-commands-plugin');
+        		}).toThrow(/Plugin must have "commands" property/);
 
 		// Invalid: commands not an array
-		assert.throws(() => {
-			validatePlugin({
-				name: 'test',
-				commands: 'not-array'
-			}, 'bad-commands-plugin');
-		}, /Plugin must have "commands" property/);
+		expect(() => {
+        			validatePlugin({
+        				name: 'test',
+        				commands: 'not-array'
+        			}, 'bad-commands-plugin');
+        		}).toThrow(/Plugin must have "commands" property/);
 	});
 
 	test('Command validation logic', () => {
@@ -269,33 +268,33 @@ describe('Plugin Validation (Error Cases)', () => {
 		};
 
 		// Valid command
-		assert.doesNotThrow(() => {
-			validateCommand({
-				name: 'test-cmd',
-				action: async () => {}
-			}, 'test-plugin');
-		});
+		expect(() => {
+        			validateCommand({
+        				name: 'test-cmd',
+        				action: async () => {}
+        			}, 'test-plugin');
+        		}).not.toThrow();
 
 		// Valid command without action
-		assert.doesNotThrow(() => {
-			validateCommand({
-				name: 'no-action-cmd'
-			}, 'test-plugin');
-		});
+		expect(() => {
+        			validateCommand({
+        				name: 'no-action-cmd'
+        			}, 'test-plugin');
+        		}).not.toThrow();
 
 		// Invalid: missing name
-		assert.throws(() => {
-			validateCommand({
-				action: async () => {}
-			}, 'test-plugin');
-		}, /Command missing "name" property/);
+		expect(() => {
+        			validateCommand({
+        				action: async () => {}
+        			}, 'test-plugin');
+        		}).toThrow(/Command missing "name" property/);
 
 		// Invalid: action not a function
-		assert.throws(() => {
-			validateCommand({
-				name: 'bad-action',
-				action: 'not-a-function'
-			}, 'test-plugin');
-		}, /action must be a function/);
+		expect(() => {
+        			validateCommand({
+        				name: 'bad-action',
+        				action: 'not-a-function'
+        			}, 'test-plugin');
+        		}).toThrow(/action must be a function/);
 	});
 });

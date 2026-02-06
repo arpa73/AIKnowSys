@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -22,7 +21,7 @@ describe('Context Learning - Session Summarizer', () => {
   let tmpDir: string;
   let sessionSummarizer: any;
 
-  before(async () => {
+  beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Dynamic import to test module
@@ -30,7 +29,7 @@ describe('Context Learning - Session Summarizer', () => {
     sessionSummarizer = module as any;
   });
 
-  after(async () => {
+  afterAll(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -38,34 +37,34 @@ describe('Context Learning - Session Summarizer', () => {
     const { extractFileChanges } = sessionSummarizer;
     const files = extractFileChanges(mockConversationData);
     
-    assert.ok(Array.isArray(files));
-    assert.ok(files.includes('lib/logger.js'));
+    expect(Array.isArray(files)).toBeTruthy();
+    expect(files.includes('lib/logger.js')).toBeTruthy();
   });
 
   it('should extract commands run from tool calls', async () => {
     const { extractCommands } = sessionSummarizer;
     const commands = extractCommands(mockConversationData);
     
-    assert.ok(Array.isArray(commands));
-    assert.ok(commands.includes('npm test'));
+    expect(Array.isArray(commands)).toBeTruthy();
+    expect(commands.includes('npm test')).toBeTruthy();
   });
 
   it('should infer next steps from context', async () => {
     const { inferNextSteps } = sessionSummarizer;
     const steps = inferNextSteps(mockConversationData);
     
-    assert.ok(Array.isArray(steps));
-    assert.ok(steps.length >= 0); // May suggest steps or not
+    expect(Array.isArray(steps)).toBeTruthy();
+    expect(steps.length >= 0).toBeTruthy(); // May suggest steps or not
   });
 
   it('should generate complete session summary', async () => {
     const { generateSessionSummary } = sessionSummarizer;
     const summary = await generateSessionSummary(mockConversationData);
     
-    assert.ok(summary.filesModified);
-    assert.ok(summary.commandsRun);
-    assert.ok(Array.isArray(summary.filesModified));
-    assert.ok(Array.isArray(summary.commandsRun));
+    expect(summary.filesModified).toBeTruthy();
+    expect(summary.commandsRun).toBeTruthy();
+    expect(Array.isArray(summary.filesModified)).toBeTruthy();
+    expect(Array.isArray(summary.commandsRun)).toBeTruthy();
   });
 });
 
@@ -73,7 +72,7 @@ describe('Context Learning - Pattern Detector', () => {
   let tmpDir: string;
   let patternDetector: any;
 
-  before(async () => {
+  beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Create mock session files
@@ -102,7 +101,7 @@ describe('Context Learning - Pattern Detector', () => {
     patternDetector = module as any;
   });
 
-  after(async () => {
+  afterAll(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -110,8 +109,8 @@ describe('Context Learning - Pattern Detector', () => {
     const { loadRecentSessions } = patternDetector;
     const sessions = await loadRecentSessions(tmpDir, 30);
     
-    assert.ok(Array.isArray(sessions));
-    assert.equal(sessions.length, 3);
+    expect(Array.isArray(sessions)).toBeTruthy();
+    expect(sessions.length).toEqual(3);
   });
 
   it('should extract error patterns from sessions', async () => {
@@ -119,17 +118,17 @@ describe('Context Learning - Pattern Detector', () => {
     const sessions = await patternDetector.loadRecentSessions(tmpDir, 30);
     const patterns = extractErrorPatterns(sessions);
     
-    assert.ok(Array.isArray(patterns));
+    expect(Array.isArray(patterns)).toBeTruthy();
     // With Jaccard similarity (40% threshold), patterns may group differently
-    assert.ok(patterns.length >= 1);
+    expect(patterns.length >= 1).toBeTruthy();
   });
 
   it('should detect patterns that repeat >= 3 times', async () => {
     const { detectPatterns } = patternDetector;
     const patterns = await detectPatterns(tmpDir, { threshold: 2 }); // Lower threshold for test
-    assert.ok(Array.isArray(patterns));
+    expect(Array.isArray(patterns)).toBeTruthy();
     // Should find at least one pattern with our test data
-    assert.ok(patterns.length >= 0); // May or may not group based on similarity
+    expect(patterns.length >= 0).toBeTruthy(); // May or may not group based on similarity
   });
 
   it('should not document patterns seen only once', async () => {
@@ -145,7 +144,7 @@ describe('Context Learning - Pattern Detector', () => {
     
     // Should NOT include the unique error
     const uniquePattern = patterns.find((p: any) => p.error.includes('Very rare'));
-    assert.equal(uniquePattern, undefined);
+    expect(uniquePattern).toEqual(undefined);
   });
 });
 
@@ -153,7 +152,7 @@ describe('Context Learning - Skill Creator', () => {
   let tmpDir: string;
   let skillCreator: any;
 
-  before(async () => {
+  beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     await fs.mkdir(path.join(tmpDir, '.aiknowsys', 'learned'), { recursive: true });
     
@@ -161,7 +160,7 @@ describe('Context Learning - Skill Creator', () => {
     skillCreator = module as any;
   });
 
-  after(async () => {
+  afterAll(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -181,18 +180,18 @@ describe('Context Learning - Skill Creator', () => {
     const result = await createLearnedSkill(mockPattern, tmpDir);
     
     // Verify result structure
-    assert.ok(result.path);
-    assert.equal(result.existed, false);
+    expect(result.path).toBeTruthy();
+    expect(result.existed).toEqual(false);
     
     // Verify file created
     const exists = await fs.access(result.path).then(() => true).catch(() => false);
-    assert.ok(exists);
+    expect(exists).toBeTruthy();
     
     // Verify content
     const content = await fs.readFile(result.path, 'utf-8');
-    assert.ok(content.includes('chalk import error'));
-    assert.ok(content.includes('Use dynamic import'));
-    assert.ok(content.includes('## Trigger Words'));
+    expect(content.includes('chalk import error')).toBeTruthy();
+    expect(content.includes('Use dynamic import')).toBeTruthy();
+    expect(content.includes('## Trigger Words')).toBeTruthy();
   });
 
   it('should slugify skill filename', async () => {
@@ -209,7 +208,7 @@ describe('Context Learning - Skill Creator', () => {
     const filename = path.basename(result.path);
     
     // Should be slugified (lowercase, no special chars)
-    assert.ok(filename.match(/^[a-z0-9-]+\.md$/));
+    expect(filename.match(/^[a-z0-9-]+\.md$/)).toBeTruthy();
   });
 
   it('should generate proper skill template format', async () => {
@@ -223,10 +222,10 @@ describe('Context Learning - Skill Creator', () => {
       examples: [{ before: 'bad', after: 'good' }],
     });
     
-    assert.ok(template.includes('# Learned Skill:'));
-    assert.ok(template.includes('## Trigger Words'));
-    assert.ok(template.includes('## Resolution'));
-    assert.ok(template.includes('## Examples'));
+    expect(template.includes('# Learned Skill:')).toBeTruthy();
+    expect(template.includes('## Trigger Words')).toBeTruthy();
+    expect(template.includes('## Resolution')).toBeTruthy();
+    expect(template.includes('## Examples')).toBeTruthy();
   });
 });
 
@@ -234,7 +233,7 @@ describe('Context Learning - Learn Command', () => {
   let tmpDir: string;
   let learnCommand: any;
 
-  before(async () => {
+  beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Create mock sessions and patterns
@@ -258,7 +257,7 @@ describe('Context Learning - Learn Command', () => {
     learnCommand = module as any;
   });
 
-  after(async () => {
+  afterAll(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -268,10 +267,10 @@ describe('Context Learning - Learn Command', () => {
     // Use lower threshold since Jaccard similarity is stricter
     const result = await listPatterns({ dir: tmpDir, threshold: 2, _silent: true });
     
-    assert.ok(result.success);
-    assert.ok(Array.isArray(result.patterns));
+    expect(result.success).toBeTruthy();
+    expect(Array.isArray(result.patterns)).toBeTruthy();
     // May or may not find patterns based on similarity grouping
-    assert.ok(result.patterns.length >= 0);
+    expect(result.patterns.length >= 0).toBeTruthy();
   });
 
   it('should extract specific pattern to learned skill', async () => {
@@ -283,12 +282,12 @@ describe('Context Learning - Learn Command', () => {
       _silent: true,
     });
     
-    assert.ok(result.success);
-    assert.ok(result.skillPath);
+    expect(result.success).toBeTruthy();
+    expect(result.skillPath).toBeTruthy();
     
     // Verify file created
     const exists = await fs.access(result.skillPath).then(() => true).catch(() => false);
-    assert.ok(exists);
+    expect(exists).toBeTruthy();
   });
 
   it('should auto-create skills for high-frequency patterns', async () => {
@@ -300,10 +299,10 @@ describe('Context Learning - Learn Command', () => {
       _silent: true,
     });
     
-    assert.ok(result.success);
-    assert.ok(Array.isArray(result.created));
+    expect(result.success).toBeTruthy();
+    expect(Array.isArray(result.created)).toBeTruthy();
     // May create 0 or more based on similarity grouping
-    assert.ok(result.created.length >= 0);
+    expect(result.created.length >= 0).toBeTruthy();
   });
 
   it('should not create duplicate skills', async () => {
@@ -315,21 +314,21 @@ describe('Context Learning - Learn Command', () => {
     // Try to create again
     const result = await extractPattern({ dir: tmpDir, pattern: 'chalk', _silent: true });
     
-    assert.ok(result.success);
+    expect(result.success).toBeTruthy();
     // Check for existed property (new return format)
-    assert.ok(result.existed === true || result.created === false);
+    expect(result.existed === true || result.created === false).toBeTruthy();
   });
 });
 
 describe('Context Learning - Pattern Tracking', () => {
   let tmpDir: string;
 
-  before(async () => {
+  beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     await fs.mkdir(path.join(tmpDir, '.aiknowsys'), { recursive: true });
   });
 
-  after(async () => {
+  afterAll(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -341,7 +340,7 @@ describe('Context Learning - Pattern Tracking', () => {
     
     const historyPath = path.join(tmpDir, '.aiknowsys', 'pattern-history.json');
     const exists = await fs.access(historyPath).then(() => true).catch(() => false);
-    assert.ok(exists);
+    expect(exists).toBeTruthy();
   });
 
   it('should track pattern occurrences', async () => {
@@ -357,12 +356,12 @@ describe('Context Learning - Pattern Tracking', () => {
     const content = await fs.readFile(historyPath, 'utf-8');
     const data = JSON.parse(content);
     
-    assert.ok(data.patterns);
-    assert.ok(data.patterns.length >= 1);
+    expect(data.patterns).toBeTruthy();
+    expect(data.patterns.length >= 1).toBeTruthy();
     
     const chalkPattern = data.patterns.find((p: any) => p.error === 'chalk import error');
-    assert.ok(chalkPattern);
-    assert.equal(chalkPattern.frequency, 1);
+    expect(chalkPattern).toBeTruthy();
+    expect(chalkPattern.frequency).toEqual(1);
   });
 
   it('should increment frequency for repeated patterns', async () => {
@@ -378,8 +377,8 @@ describe('Context Learning - Pattern Tracking', () => {
     const data = JSON.parse(content);
     
     const pattern = data.patterns.find((p: any) => p.error === 'repeated error');
-    assert.ok(pattern);
-    assert.equal(pattern.frequency, 2);
+    expect(pattern).toBeTruthy();
+    expect(pattern.frequency).toEqual(2);
   });
 
   it('should mark pattern as documented when skill created', async () => {
@@ -393,7 +392,7 @@ describe('Context Learning - Pattern Tracking', () => {
     const data = JSON.parse(content);
     
     const pattern = data.patterns.find((p: any) => p.error === 'chalk import error');
-    assert.ok(pattern);
-    assert.equal(pattern.documented, true);
+    expect(pattern).toBeTruthy();
+    expect(pattern.documented).toEqual(true);
   });
 });

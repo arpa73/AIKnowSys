@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -27,8 +26,8 @@ describe('migrate-to-multidev command', () => {
 
       const result: any = await migrateToMultidev({ dir: testDir, _silent: true });
 
-      assert.equal(result.alreadyMigrated, true);
-      assert.equal(result.success, true);
+      expect(result.alreadyMigrated).toEqual(true);
+      expect(result.success).toEqual(true);
     });
 
     it('should migrate if plans/ directory does not exist', async () => {
@@ -40,8 +39,8 @@ describe('migrate-to-multidev command', () => {
 
       const result: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'testuser' });
 
-      assert.equal(result.migrated, true);
-      assert.equal(result.success, true);
+      expect(result.migrated).toEqual(true);
+      expect(result.success).toEqual(true);
     });
   });
 
@@ -49,35 +48,35 @@ describe('migrate-to-multidev command', () => {
     it('should create plans/ directory', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'testuser' });
 
-      assert.equal(existsSync(path.join(testDir, '.aiknowsys', 'plans')), true);
+      expect(existsSync(path.join(testDir, '.aiknowsys', 'plans'))).toEqual(true);
     });
 
     it('should create reviews/ directory', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'testuser' });
 
-      assert.equal(existsSync(path.join(testDir, '.aiknowsys', 'reviews')), true);
+      expect(existsSync(path.join(testDir, '.aiknowsys', 'reviews'))).toEqual(true);
     });
 
     it('should create plans/README.md explaining workflow', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'testuser' });
 
       const readmePath: string = path.join(testDir, '.aiknowsys', 'plans', 'README.md');
-      assert.equal(existsSync(readmePath), true);
+      expect(existsSync(readmePath)).toEqual(true);
 
       const content: string = readFileSync(readmePath, 'utf-8');
-      assert.match(content, /Multi-Developer Plan Management/);
-      assert.match(content, /active-<username>\.md/);
+      expect(content).toMatch(/Multi-Developer Plan Management/);
+      expect(content).toMatch(/active-<username>\.md/);
     });
 
     it('should create reviews/README.md explaining workflow', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'testuser' });
 
       const readmePath: string = path.join(testDir, '.aiknowsys', 'reviews', 'README.md');
-      assert.equal(existsSync(readmePath), true);
+      expect(existsSync(readmePath)).toEqual(true);
 
       const content: string = readFileSync(readmePath, 'utf-8');
-      assert.match(content, /Code Review Workflow/);
-      assert.match(content, /PENDING_<username>\.md/);
+      expect(content).toMatch(/Code Review Workflow/);
+      expect(content).toMatch(/PENDING_<username>\.md/);
     });
   });
 
@@ -89,10 +88,10 @@ describe('migrate-to-multidev command', () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'alice' });
 
       const newPath: string = path.join(testDir, '.aiknowsys', 'plans', 'active-alice.md');
-      assert.equal(existsSync(newPath), true);
+      expect(existsSync(newPath)).toEqual(true);
 
       const content: string = readFileSync(newPath, 'utf-8');
-      assert.match(content, /Feature X/);
+      expect(content).toMatch(/Feature X/);
     });
 
     it('should migrate PENDING_REVIEW.md to reviews/PENDING_<username>.md', async () => {
@@ -102,25 +101,25 @@ describe('migrate-to-multidev command', () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'bob' });
 
       const newPath: string = path.join(testDir, '.aiknowsys', 'reviews', 'PENDING_bob.md');
-      assert.equal(existsSync(newPath), true);
+      expect(existsSync(newPath)).toEqual(true);
 
       const content: string = readFileSync(newPath, 'utf-8');
-      assert.match(content, /Issues found/);
+      expect(content).toMatch(/Issues found/);
     });
 
     it('should handle missing CURRENT_PLAN.md gracefully', async () => {
       const result: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'charlie' });
 
-      assert.equal(result.success, true);
-      assert.equal(result.createdDefaultPlan, true);
+      expect(result.success).toEqual(true);
+      expect(result.createdDefaultPlan).toEqual(true);
     });
 
     it('should handle missing PENDING_REVIEW.md gracefully', async () => {
       const result: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'diana' });
 
-      assert.equal(result.success, true);
+      expect(result.success).toEqual(true);
       // Should not create PENDING_ review if none existed
-      assert.equal(existsSync(path.join(testDir, '.aiknowsys', 'reviews', 'PENDING_diana.md')), false);
+      expect(existsSync(path.join(testDir, '.aiknowsys', 'reviews', 'PENDING_diana.md'))).toEqual(false);
     });
   });
 
@@ -134,8 +133,8 @@ describe('migrate-to-multidev command', () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'eve' });
 
       const newContent: string = readFileSync(path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md'), 'utf-8');
-      assert.match(newContent, /Current Team Plans/);
-      assert.match(newContent, /AUTO-GENERATED FILE/);
+      expect(newContent).toMatch(/Current Team Plans/);
+      expect(newContent).toMatch(/AUTO-GENERATED FILE/);
     });
   });
 
@@ -146,8 +145,8 @@ describe('migrate-to-multidev command', () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'frank' });
 
       const gitignore: string = readFileSync(path.join(testDir, '.gitignore'), 'utf-8');
-      assert.match(gitignore, /\.aiknowsys\/reviews\//);
-      assert.match(gitignore, /\.aiknowsys\/personal\//);
+      expect(gitignore).toMatch(/\.aiknowsys\/reviews\//);
+      expect(gitignore).toMatch(/\.aiknowsys\/personal\//);
     });
 
     it('should not duplicate .gitignore entries if already present', async () => {
@@ -162,16 +161,16 @@ describe('migrate-to-multidev command', () => {
       const reviewMatches: number = (gitignore.match(/\.aiknowsys\/reviews\//g) || []).length;
       const personalMatches: number = (gitignore.match(/\.aiknowsys\/personal\//g) || []).length;
 
-      assert.equal(reviewMatches, 1);
-      assert.equal(personalMatches, 1);
+      expect(reviewMatches).toEqual(1);
+      expect(personalMatches).toEqual(1);
     });
 
     it('should create .gitignore if it does not exist', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'henry' });
 
-      assert.equal(existsSync(path.join(testDir, '.gitignore')), true);
+      expect(existsSync(path.join(testDir, '.gitignore'))).toEqual(true);
       const gitignore: string = readFileSync(path.join(testDir, '.gitignore'), 'utf-8');
-      assert.match(gitignore, /\.aiknowsys\/reviews\//);
+      expect(gitignore).toMatch(/\.aiknowsys\/reviews\//);
     });
   });
 
@@ -179,12 +178,12 @@ describe('migrate-to-multidev command', () => {
     it('should be safe to run multiple times', async () => {
       // First run
       const result1: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'iris' });
-      assert.equal(result1.migrated, true);
+      expect(result1.migrated).toEqual(true);
 
       // Second run
       const result2: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'iris' });
-      assert.equal(result2.alreadyMigrated, true);
-      assert.equal(result2.success, true);
+      expect(result2.alreadyMigrated).toEqual(true);
+      expect(result2.success).toEqual(true);
     });
   });
 
@@ -193,14 +192,14 @@ describe('migrate-to-multidev command', () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'John Doe' });
 
       const planPath: string = path.join(testDir, '.aiknowsys', 'plans', 'active-john-doe.md');
-      assert.equal(existsSync(planPath), true);
+      expect(existsSync(planPath)).toEqual(true);
     });
 
     it('should normalize username to lowercase', async () => {
       await migrateToMultidev({ dir: testDir, _silent: true, username: 'Alice_Smith' });
 
       const planPath: string = path.join(testDir, '.aiknowsys', 'plans', 'active-alice-smith.md');
-      assert.equal(existsSync(planPath), true);
+      expect(existsSync(planPath)).toEqual(true);
     });
   });
 
@@ -210,11 +209,11 @@ describe('migrate-to-multidev command', () => {
 
       const result: any = await migrateToMultidev({ dir: testDir, _silent: true, username: 'jack' });
 
-      assert.equal(result.success, true);
-      assert.equal(result.migrated, true);
-      assert.equal(result.username, 'jack');
-      assert.equal(typeof result.plansCreated, 'number');
-      assert.equal(typeof result.reviewsMigrated, 'boolean');
+      expect(result.success).toEqual(true);
+      expect(result.migrated).toEqual(true);
+      expect(result.username).toEqual('jack');
+      expect(typeof result.plansCreated).toEqual('number');
+      expect(typeof result.reviewsMigrated).toEqual('boolean');
     });
   });
 });

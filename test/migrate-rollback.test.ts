@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -44,10 +43,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
       'utf-8'
     );
     
-    assert.ok(
-      migrateSource.includes('FileTracker'),
-      'migrate.ts should import FileTracker from utils.js'
-    );
+    expect(migrateSource.includes('FileTracker')).toBeTruthy();
   });
 
   it('should create FileTracker instance in migrate function', async () => {
@@ -60,10 +56,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
       'utf-8'
     );
     
-    assert.ok(
-      migrateSource.includes('new FileTracker()'),
-      'migrate.ts should create FileTracker instance'
-    );
+    expect(migrateSource.includes('new FileTracker()')).toBeTruthy();
   });
 
   it('should track AGENTS.md file creation', async () => {
@@ -80,10 +73,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
       migrateSource.includes('tracker.trackFile(agentsPath)') ||
       migrateSource.match(/tracker\.trackFile\([^)]*AGENTS/i);
     
-    assert.ok(
-      hasAgentsTracking,
-      'migrate.ts should track AGENTS.md creation'
-    );
+    expect(hasAgentsTracking).toBeTruthy();
   });
 
   it('should track CODEBASE_CHANGELOG.md file creation', async () => {
@@ -100,10 +90,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
       migrateSource.includes('tracker.trackFile(changelogPath)') ||
       migrateSource.match(/tracker\.trackFile\([^)]*CHANGELOG/i);
     
-    assert.ok(
-      hasChangelogTracking,
-      'migrate.ts should track CODEBASE_CHANGELOG.md creation'
-    );
+    expect(hasChangelogTracking).toBeTruthy();
   });
 
   it('should have try-catch block with rollback in migrate function', async () => {
@@ -119,10 +106,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     const hasTryCatch = migrateSource.includes('try {') && migrateSource.includes('} catch');
     const hasRollback = migrateSource.includes('tracker.rollback');
     
-    assert.ok(
-      hasTryCatch && hasRollback,
-      'migrate.ts should have try-catch with tracker.rollback() on error'
-    );
+    expect(hasTryCatch && hasRollback).toBeTruthy();
   });
 
   it('should track CODEBASE_ESSENTIALS.draft.md from scan output', async () => {
@@ -138,10 +122,7 @@ describe('migrate command rollback (FileTracker integration)', () => {
     const hasDraftTracking = 
       migrateSource.match(/tracker\.trackFile\([^)]*draft/i);
     
-    assert.ok(
-      hasDraftTracking,
-      'migrate.js should track CODEBASE_ESSENTIALS.draft.md from scan()'
-    );
+    expect(hasDraftTracking).toBeTruthy();
   });
 
   it('should show progress indicators for migration phases', async () => {
@@ -160,9 +141,6 @@ describe('migrate command rollback (FileTracker integration)', () => {
     // Should create spinner
     const hasSpinner = migrateSource.includes('ora(') || migrateSource.includes('spinner');
     
-    assert.ok(
-      hasOraImport && hasSpinner,
-      'migrate.ts should use ora spinner for progress indicators'
-    );
+    expect(hasOraImport && hasSpinner).toBeTruthy();
   });
 });

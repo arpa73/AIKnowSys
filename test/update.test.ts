@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { update } from '../lib/commands/update.js';
@@ -33,7 +32,7 @@ describe('update command', () => {
     
     // Should read version and compare with latest
     // Test scaffold - needs execution with version check
-    assert.ok(true, 'Test scaffold - needs version detection logic');
+    expect(true).toBeTruthy();
   });
 
   it('should show "Unknown" when version file missing', async () => {
@@ -46,7 +45,7 @@ describe('update command', () => {
     assertFileNotExists(versionPath);
     
     // update should handle missing version gracefully
-    assert.ok(true, 'Test scaffold - needs version handling');
+    expect(true).toBeTruthy();
   });
 
   it('should exit if no knowledge system found', async () => {
@@ -55,14 +54,10 @@ describe('update command', () => {
     
     try {
       // Should exit with error message
-      await assert.rejects(
-        async () => await update({ dir: emptyDir }),
-        /No knowledge system found/,
-        'Should reject when no knowledge system exists'
-      );
+      await expect(async () => await update({ dir: emptyDir })).rejects.toThrow(/No knowledge system found/);
     } catch (err) {
       // If command uses process.exit instead of throwing
-      assert.ok(true, 'Command may use process.exit');
+      expect(true).toBeTruthy();
     } finally {
       cleanupTestDir(emptyDir);
     }
@@ -84,7 +79,7 @@ describe('update command', () => {
     });
     
     // Should exit early with "Already up to date!"
-    assert.ok(true, 'Test scaffold - needs up-to-date check');
+    expect(true).toBeTruthy();
   });
 
   it('should allow update when --force flag used even if up to date', async () => {
@@ -98,7 +93,7 @@ describe('update command', () => {
     });
     
     // With --force, should proceed anyway
-    assert.ok(true, 'Test scaffold - needs --force handling');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -118,7 +113,7 @@ describe('update command', () => {
     // assertFileExists(backupDir);
     // assertFileExists(path.join(backupDir, 'old-file.md'));
     
-    assert.ok(true, 'Test scaffold - needs backup logic execution');
+    expect(true).toBeTruthy();
   });
 
   it('should create backup of skills before updating', async () => {
@@ -132,7 +127,7 @@ describe('update command', () => {
     // const backupDir = path.join(testDir, '.github', 'skills.backup');
     // assertFileExists(backupDir);
     
-    assert.ok(true, 'Test scaffold - needs backup creation');
+    expect(true).toBeTruthy();
   });
 
   it('should remove old backup before creating new one', async () => {
@@ -145,7 +140,7 @@ describe('update command', () => {
     // Run update
     // Old backup should be removed, new backup created
     
-    assert.ok(true, 'Test scaffold - needs backup replacement logic');
+    expect(true).toBeTruthy();
   });
 
   it('should not fail if no existing backup directory', async () => {
@@ -157,7 +152,7 @@ describe('update command', () => {
     // First-time update, no backup exists yet
     // Should create backup without error
     
-    assert.ok(true, 'Test scaffold - first-time backup');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -170,7 +165,7 @@ describe('update command', () => {
     // Mock user selecting 'templates'
     // Should update AGENTS.template.md, ESSENTIALS.template.md, etc.
     
-    assert.ok(true, 'Test scaffold - needs template update execution');
+    expect(true).toBeTruthy();
   });
 
   it('should update agents when selected', async () => {
@@ -179,7 +174,7 @@ describe('update command', () => {
     // Mock user selecting 'agents'
     // Should update .github/agents/
     
-    assert.ok(true, 'Test scaffold - needs agents update');
+    expect(true).toBeTruthy();
   });
 
   it('should update skills when selected', async () => {
@@ -188,7 +183,7 @@ describe('update command', () => {
     // Mock user selecting 'skills'
     // Should update .github/skills/
     
-    assert.ok(true, 'Test scaffold - needs skills update');
+    expect(true).toBeTruthy();
   });
 
   it('should update all components when all selected', async () => {
@@ -197,7 +192,7 @@ describe('update command', () => {
     // Mock user selecting templates + agents + skills
     // All should be updated
     
-    assert.ok(true, 'Test scaffold - needs multi-component update');
+    expect(true).toBeTruthy();
   });
 
   it('should skip update when nothing selected', async () => {
@@ -206,7 +201,7 @@ describe('update command', () => {
     // Mock user unchecking all options
     // Should show "No updates selected" and exit
     
-    assert.ok(true, 'Test scaffold - needs empty selection handling');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -224,7 +219,7 @@ describe('update command', () => {
     // const newVersion = fs.readFileSync(versionPath, 'utf-8').trim();
     // assert.ok(newVersion !== '0.3.0', 'Version should be updated');
     
-    assert.ok(true, 'Test scaffold - needs version file write');
+    expect(true).toBeTruthy();
   });
 
   it('should preserve version file if update fails', async () => {
@@ -233,7 +228,7 @@ describe('update command', () => {
     // Mock copyDirectory to throw error
     // Version file should not change
     
-    assert.ok(true, 'Test scaffold - needs error handling test');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -246,7 +241,7 @@ describe('update command', () => {
     // With --yes, should skip inquirer prompt and update all
     // await update({ dir: testDir, yes: true });
     
-    assert.ok(true, 'Test scaffold - needs --yes flag handling');
+    expect(true).toBeTruthy();
   });
 
   it('should work with --yes and --force together', async () => {
@@ -259,7 +254,7 @@ describe('update command', () => {
     // Should force update and skip prompts
     // await update({ dir: testDir, yes: true, force: true });
     
-    assert.ok(true, 'Test scaffold - needs --yes + --force');
+    expect(true).toBeTruthy();
   });
 
   it('should work with --dir option', async () => {
@@ -270,7 +265,7 @@ describe('update command', () => {
       
       // await update({ dir: customDir, yes: true });
       
-      assert.ok(true, 'Test scaffold - needs --dir handling');
+      expect(true).toBeTruthy();
     } finally {
       cleanupTestDir(customDir);
     }
@@ -286,7 +281,7 @@ describe('update command', () => {
     // Mock copyTemplate to throw error
     // Should show "Failed to update templates" and continue
     
-    assert.ok(true, 'Test scaffold - needs copyTemplate error mock');
+    expect(true).toBeTruthy();
   });
 
   it('should show error if agents copy fails', async () => {
@@ -295,7 +290,7 @@ describe('update command', () => {
     // Mock copyDirectory to throw error
     // Should show "Failed to update agents"
     
-    assert.ok(true, 'Test scaffold - needs copyDirectory error mock');
+    expect(true).toBeTruthy();
   });
 
   it('should continue if one component fails but others succeed', async () => {
@@ -304,7 +299,7 @@ describe('update command', () => {
     // Mock agents update to fail, but templates succeed
     // Should show partial success
     
-    assert.ok(true, 'Test scaffold - needs partial failure handling');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -317,7 +312,7 @@ describe('update command', () => {
     // After update
     // Should show something like "Updated 2/3 components"
     
-    assert.ok(true, 'Test scaffold - needs summary display');
+    expect(true).toBeTruthy();
   });
 
   it('should not copy template source files to .github/agents/', async () => {
@@ -344,7 +339,7 @@ describe('update command', () => {
     
     // Verify bug exists (6 files before fix)
     const filesBefore: string[] = fs.readdirSync(agentsDir);
-    assert.strictEqual(filesBefore.length, 6, 'Setup: should have 6 files including templates');
+    expect(filesBefore.length).toBe(6);
     
     // After manual cleanup of source files (simulating the fix)
     // In real update, the fix prevents these from being created
@@ -356,15 +351,15 @@ describe('update command', () => {
     const filesAfter: string[] = fs.readdirSync(agentsDir);
     
     // Should only have these 3 files
-    assert.ok(filesAfter.includes('developer.agent.md'), 'Should have developer.agent.md');
-    assert.ok(filesAfter.includes('architect.agent.md'), 'Should have architect.agent.md');
-    assert.ok(filesAfter.includes('USAGE.txt'), 'Should have USAGE.txt');
+    expect(filesAfter.includes('developer.agent.md')).toBeTruthy();
+    expect(filesAfter.includes('architect.agent.md')).toBeTruthy();
+    expect(filesAfter.includes('USAGE.txt')).toBeTruthy();
     
     // Should NOT have template source files
-    assert.ok(!filesAfter.includes('developer.agent.template.md'), 'Should NOT have .template.md');
-    assert.ok(!filesAfter.includes('architect.agent.template.md'), 'Should NOT have .template.md');
-    assert.ok(!filesAfter.includes('setup-agents.sh'), 'Should NOT have .sh script');
+    expect(!filesAfter.includes('developer.agent.template.md')).toBeTruthy();
+    expect(!filesAfter.includes('architect.agent.template.md')).toBeTruthy();
+    expect(!filesAfter.includes('setup-agents.sh')).toBeTruthy();
     
-    assert.strictEqual(filesAfter.length, 3, 'Should have exactly 3 files after cleanup');
+    expect(filesAfter.length).toBe(3);
   });
 });

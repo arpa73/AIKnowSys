@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -13,12 +12,12 @@ const rootDir: string = process.env.PROJECT_ROOT || path.join(__dirname, '..');
 describe('scan command', () => {
   let testDir: string;
   
-  before(() => {
+  beforeAll(() => {
     testDir = path.join(rootDir, 'test-scan-' + Date.now());
     fs.mkdirSync(testDir, { recursive: true });
   });
   
-  after(() => {
+  afterAll(() => {
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
@@ -52,12 +51,12 @@ describe('scan command', () => {
     
     // Check that scan completed successfully by checking file was created
     const scanFile: string = path.join(testDir, 'SCAN_OUTPUT.md');
-    assert.ok(fs.existsSync(scanFile), 'Should create output file');
-    assert.ok(output.includes('Scanning') || output.length > 100, 'Should show output');
+    expect(fs.existsSync(scanFile)).toBeTruthy();
+    expect(output.includes('Scanning') || output.length > 100).toBeTruthy();
     
     const content: string = fs.readFileSync(scanFile, 'utf-8');
-    assert.ok(content.includes('# ') && content.includes(' - Codebase Essentials'), 'Should have title with project name');
-    assert.ok(content.includes('Package Manager | npm'), 'Should detect npm');
+    expect(content.includes('# ') && content.includes(' - Codebase Essentials')).toBeTruthy();
+    expect(content.includes('Package Manager | npm')).toBeTruthy();
   });
   
   it('should detect database from dependencies', () => {
@@ -79,11 +78,11 @@ describe('scan command', () => {
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('Database:'), 'Should detect database');
-    assert.ok(output.includes('PostgreSQL'), 'Should detect PostgreSQL');
+    expect(output.includes('Database:')).toBeTruthy();
+    expect(output.includes('PostgreSQL')).toBeTruthy();
     
     const content: string = fs.readFileSync(path.join(testDir, 'DB_SCAN.md'), 'utf-8');
-    assert.ok(content.includes('Database | PostgreSQL'), 'Should include database in tech stack');
+    expect(content.includes('Database | PostgreSQL')).toBeTruthy();
   });
   
   it('should detect ORM from dependencies', () => {
@@ -105,11 +104,11 @@ describe('scan command', () => {
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('ORM:'), 'Should detect ORM');
-    assert.ok(output.includes('Prisma'), 'Should detect Prisma');
+    expect(output.includes('ORM:')).toBeTruthy();
+    expect(output.includes('Prisma')).toBeTruthy();
     
     const content: string = fs.readFileSync(path.join(testDir, 'ORM_SCAN.md'), 'utf-8');
-    assert.ok(content.includes('ORM | Prisma'), 'Should include ORM in tech stack');
+    expect(content.includes('ORM | Prisma')).toBeTruthy();
   });
   
   it('should detect frontend framework and state management', () => {
@@ -132,16 +131,16 @@ describe('scan command', () => {
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('Frontend:'), 'Should detect frontend framework');
-    assert.ok(output.includes('Vue'), 'Should detect Vue');
-    assert.ok(output.includes('State Mgmt:'), 'Should detect state management');
-    assert.ok(output.includes('Pinia'), 'Should detect Pinia');
-    assert.ok(output.includes('API Client:'), 'Should detect API client');
-    assert.ok(output.includes('Axios'), 'Should detect Axios');
+    expect(output.includes('Frontend:')).toBeTruthy();
+    expect(output.includes('Vue')).toBeTruthy();
+    expect(output.includes('State Mgmt:')).toBeTruthy();
+    expect(output.includes('Pinia')).toBeTruthy();
+    expect(output.includes('API Client:')).toBeTruthy();
+    expect(output.includes('Axios')).toBeTruthy();
     
     const content: string = fs.readFileSync(path.join(testDir, 'VUE_SCAN.md'), 'utf-8');
-    assert.ok(content.includes('State Management | Pinia'), 'Should include state management');
-    assert.ok(content.includes('API Client | Axios'), 'Should include API client');
+    expect(content.includes('State Management | Pinia')).toBeTruthy();
+    expect(content.includes('API Client | Axios')).toBeTruthy();
   });
   
   it('should detect authentication libraries', () => {
@@ -163,11 +162,11 @@ describe('scan command', () => {
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('Auth:'), 'Should detect authentication');
-    assert.ok(output.includes('NextAuth'), 'Should detect NextAuth');
+    expect(output.includes('Auth:')).toBeTruthy();
+    expect(output.includes('NextAuth')).toBeTruthy();
     
     const content: string = fs.readFileSync(path.join(testDir, 'AUTH_SCAN.md'), 'utf-8');
-    assert.ok(content.includes('Authentication | NextAuth'), 'Should include auth in tech stack');
+    expect(content.includes('Authentication | NextAuth')).toBeTruthy();
   });
   
   it('should detect styling framework', () => {
@@ -189,8 +188,8 @@ describe('scan command', () => {
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('Styling:'), 'Should detect styling');
-    assert.ok(output.includes('Tailwind'), 'Should detect Tailwind');
+    expect(output.includes('Styling:')).toBeTruthy();
+    expect(output.includes('Tailwind')).toBeTruthy();
   });
   
   it('should generate validation matrix from scripts', () => {
@@ -222,10 +221,10 @@ describe('scan command', () => {
     
     const content: string = fs.readFileSync(path.join(testDir, 'VALIDATION_SCAN.md'), 'utf-8');
     
-    assert.ok(content.includes('npm test'), 'Should include test command');
-    assert.ok(content.includes('npm run lint'), 'Should include lint command');
-    assert.ok(content.includes('npm run type-check'), 'Should include type-check command');
-    assert.ok(content.includes('## 2. Validation Matrix'), 'Should have validation matrix section');
+    expect(content.includes('npm test')).toBeTruthy();
+    expect(content.includes('npm run lint')).toBeTruthy();
+    expect(content.includes('npm run type-check')).toBeTruthy();
+    expect(content.includes('## 2. Validation Matrix')).toBeTruthy();
   });
   
   it('should detect code patterns from file scanning', () => {
@@ -268,10 +267,7 @@ export default router;
     const content: string = fs.readFileSync(path.join(testDir, 'PATTERN_SCAN.md'), 'utf-8');
     
     // Should detect API routes pattern
-    assert.ok(
-      content.includes('Detected:') || content.includes('TODO:'),
-      'Should include pattern detection hints'
-    );
+    expect(content.includes('Detected:') || content.includes('TODO:')).toBeTruthy();
   });
   
   it('should detect Python projects', () => {
@@ -301,14 +297,14 @@ ruff = "^0.1"
     
     // Check scan completed by verifying file exists
     const scanFile: string = path.join(testDir, 'PYTHON_SCAN.md');
-    assert.ok(fs.existsSync(scanFile), 'Should create Python scan file');
+    expect(fs.existsSync(scanFile)).toBeTruthy();
     
     const content: string = fs.readFileSync(scanFile, 'utf-8');
-    assert.ok(content.includes('Language | Python') || content.includes('python'), 'Should detect Python in tech stack');
-    assert.ok(content.includes('Django') || content.includes('django'), 'Should detect Django');
-    assert.ok(content.includes('python manage.py test'), 'Should include Django test command');
-    assert.ok(content.includes('mypy .'), 'Should include mypy command');
-    assert.ok(content.includes('ruff check .'), 'Should include ruff command');
+    expect(content.includes('Language | Python') || content.includes('python')).toBeTruthy();
+    expect(content.includes('Django') || content.includes('django')).toBeTruthy();
+    expect(content.includes('python manage.py test')).toBeTruthy();
+    expect(content.includes('mypy .')).toBeTruthy();
+    expect(content.includes('ruff check .')).toBeTruthy();
   });
   
   it('should handle projects without package.json gracefully', () => {
@@ -322,10 +318,10 @@ ruff = "^0.1"
     );
     
     const scanFile: string = path.join(emptyDir, 'EMPTY_SCAN.md');
-    assert.ok(fs.existsSync(scanFile), 'Should create file even without package.json');
+    expect(fs.existsSync(scanFile)).toBeTruthy();
     
     const content: string = fs.readFileSync(scanFile, 'utf-8');
-    assert.ok(content.includes('TODO: Add test command'), 'Should have TODO for missing test command');
+    expect(content.includes('TODO: Add test command')).toBeTruthy();
     
     fs.rmSync(emptyDir, { recursive: true, force: true });
   });
@@ -342,9 +338,9 @@ ruff = "^0.1"
       { encoding: 'utf-8' }
     );
     
-    assert.ok(output.includes('AI Assistant Prompt'), 'Should provide AI prompt');
-    assert.ok(output.includes('Filling in all TODO sections'), 'Should mention TODO completion');
-    assert.ok(output.includes('install-agents'), 'Should mention next step');
+    expect(output.includes('AI Assistant Prompt')).toBeTruthy();
+    expect(output.includes('Filling in all TODO sections')).toBeTruthy();
+    expect(output.includes('install-agents')).toBeTruthy();
   });
   
   it('should show file count progress during scan', () => {
@@ -368,8 +364,7 @@ ruff = "^0.1"
     );
     
     // Should complete successfully (progress updates don't break scanning)
-    assert.ok(output.includes('Project analysis complete') || output.includes('AI Assistant Prompt'), 
-              'Should complete analysis with progress tracking');
-    assert.ok(fs.existsSync(path.join(testDir, 'PROGRESS_SCAN.md')), 'Should create output file');
+    expect(output.includes('Project analysis complete') || output.includes('AI Assistant Prompt')).toBeTruthy();
+    expect(fs.existsSync(path.join(testDir, 'PROGRESS_SCAN.md'))).toBeTruthy();
   });
 });

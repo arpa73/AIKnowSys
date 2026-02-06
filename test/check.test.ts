@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,12 +12,12 @@ const projectRoot: string = process.env.PROJECT_ROOT || path.join(__dirname, '..
 describe('check command', () => {
   let testDir: string;
 
-  before(() => {
+  beforeAll(() => {
     testDir = path.join(__dirname, 'tmp', `check-test-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
-  after(() => {
+  afterAll(() => {
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
@@ -59,9 +58,9 @@ describe('check command', () => {
     });
 
     // Should detect placeholders in AGENTS.md
-    assert.ok(output.includes('AGENTS.md'), 'Should mention AGENTS.md file');
-    assert.ok(output.includes('SKILL_MAPPING') || output.includes('placeholders'), 'Should detect SKILL_MAPPING placeholder');
-    assert.ok(output.includes('⚠') || output.includes('warnings'), 'Should show warning for placeholders');
+    expect(output.includes('AGENTS.md')).toBeTruthy();
+    expect(output.includes('SKILL_MAPPING') || output.includes('placeholders')).toBeTruthy();
+    expect(output.includes('⚠') || output.includes('warnings')).toBeTruthy();
   });
 
   it('should pass when no placeholders remain', () => {
@@ -96,7 +95,7 @@ describe('check command', () => {
     });
 
     // Should pass placeholder check
-    assert.ok(output.includes('✓') || output.includes('No placeholders'), 'Should pass when no placeholders remain');
+    expect(output.includes('✓') || output.includes('No placeholders')).toBeTruthy();
   });
 
   it('should detect bloated ESSENTIALS (>800 lines)', () => {
@@ -131,8 +130,8 @@ ${Array.from({ length: 900 }, (_, i) => `Line ${i + 1} of content\n`).join('')}
     });
 
     // Should warn about file size
-    assert.ok(output.includes('⚠') || output.includes('warning'), 'Should show warning');
-    assert.ok(output.includes('800') || output.includes('lines') || output.includes('size'), 'Should mention line count or file size');
+    expect(output.includes('⚠') || output.includes('warning')).toBeTruthy();
+    expect(output.includes('800') || output.includes('lines') || output.includes('size')).toBeTruthy();
   });
 
   it('should detect verbose sections (>150 lines)', () => {
@@ -171,8 +170,8 @@ Small section.
     });
 
     // Should warn about verbose section
-    assert.ok(output.includes('⚠') || output.includes('Verbose'), 'Should warn about verbose section');
-    assert.ok(output.includes('150') || output.includes('section'), 'Should mention section size limit');
+    expect(output.includes('⚠') || output.includes('Verbose')).toBeTruthy();
+    expect(output.includes('150') || output.includes('section')).toBeTruthy();
   });
 
   it('should suggest compression command when bloated', () => {
@@ -201,7 +200,7 @@ ${Array.from({ length: 990 }, (_, i) => `Line ${i + 1}\n`).join('')}
     });
 
     // Should suggest compression
-    assert.ok(output.includes('compress') || output.includes('Compress'), 'Should suggest compression command');
+    expect(output.includes('compress') || output.includes('Compress')).toBeTruthy();
   });
 
   it('should not warn for reasonably-sized ESSENTIALS (<800 lines)', () => {
@@ -245,6 +244,6 @@ ${Array.from({ length: 450 }, (_, i) => `Line ${i + 1}\n`).join('')}
       (l.includes('size') || l.includes('lines') || l.includes('800'))
     );
     
-    assert.ok(!hasEssentialsWarning, 'Should not warn about ESSENTIALS size when under 800 lines');
+    expect(!hasEssentialsWarning).toBeTruthy();
   });
 });

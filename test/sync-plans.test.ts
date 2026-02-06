@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import * as path from 'node:path';
 
@@ -41,11 +40,11 @@ See: PLAN_feature_x.md for details
 
     // Verify CURRENT_PLAN.md was created
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
-    assert.ok(existsSync(currentPlanPath), 'CURRENT_PLAN.md should be created');
+    expect(existsSync(currentPlanPath)).toBeTruthy();
 
     const content: string = readFileSync(currentPlanPath, 'utf-8');
-    assert.match(content, /john-doe/, 'Should include developer username');
-    assert.match(content, /Feature implementation/, 'Should include plan name');
+    expect(content).toMatch(/john-doe/);
+    expect(content).toMatch(/Feature implementation/);
   });
 
   it('should aggregate multiple developer plans into team index', async () => {
@@ -77,12 +76,12 @@ See: PLAN_feature_x.md for details
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
-    assert.match(content, /alice/, 'Should include alice');
-    assert.match(content, /bob/, 'Should include bob');
-    assert.match(content, /charlie/, 'Should include charlie');
-    assert.match(content, /PLAN_backend_api\.md/, 'Should include alice\'s plan');
-    assert.match(content, /PLAN_frontend_ui\.md/, 'Should include bob\'s plan');
-    assert.match(content, /PLAN_database_schema\.md/, 'Should include charlie\'s plan');
+    expect(content).toMatch(/alice/);
+    expect(content).toMatch(/bob/);
+    expect(content).toMatch(/charlie/);
+    expect(content).toMatch(/PLAN_backend_api\.md/);
+    expect(content).toMatch(/PLAN_frontend_ui\.md/);
+    expect(content).toMatch(/PLAN_database_schema\.md/);
   });
 
   it('should handle plans with no active work', async () => {
@@ -102,10 +101,10 @@ No active plan currently.
 
     // Verify it doesn't crash
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
-    assert.ok(existsSync(currentPlanPath), 'CURRENT_PLAN.md should be created');
+    expect(existsSync(currentPlanPath)).toBeTruthy();
 
     const content: string = readFileSync(currentPlanPath, 'utf-8');
-    assert.match(content, /john-doe/, 'Should include developer username');
+    expect(content).toMatch(/john-doe/);
   });
 
   it('should extract plan status from plan files', async () => {
@@ -124,7 +123,7 @@ No active plan currently.
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
-    assert.match(content, /🎯 ACTIVE/, 'Should preserve status emoji');
+    expect(content).toMatch(/🎯 ACTIVE/);
   });
 
   it('should create table format for team index', async () => {
@@ -148,8 +147,8 @@ No active plan currently.
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
     // Should have markdown table structure
-    assert.match(content, /\| Developer \| Plan \| Status \| Last Updated \|/, 'Should have table header');
-    assert.match(content, /\|[-\s]+\|/, 'Should have table separator');
+    expect(content).toMatch(/\| Developer \| Plan \| Status \| Last Updated \|/);
+    expect(content).toMatch(/\|[-\s]+\|/);
   });
 
   it('should handle empty plans directory gracefully', async () => {
@@ -157,10 +156,10 @@ No active plan currently.
     await syncPlans({ dir: testDir, _silent: true });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
-    assert.ok(existsSync(currentPlanPath), 'Should create CURRENT_PLAN.md even with no plans');
+    expect(existsSync(currentPlanPath)).toBeTruthy();
 
     const content: string = readFileSync(currentPlanPath, 'utf-8');
-    assert.match(content, /no active plans/i, 'Should indicate no active plans');
+    expect(content).toMatch(/no active plans/i);
   });
 
   it('should normalize usernames from filenames', async () => {
@@ -176,7 +175,7 @@ No active plan currently.
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
-    assert.match(content, /john-doe-smith/, 'Should preserve hyphenated username');
+    expect(content).toMatch(/john-doe-smith/);
   });
 
   it('should include timestamp and auto-generated notice', async () => {
@@ -191,8 +190,8 @@ No active plan currently.
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
-    assert.match(content, /auto-generated/i, 'Should have auto-generated notice');
-    assert.match(content, /sync-plans/i, 'Should mention sync-plans command');
+    expect(content).toMatch(/auto-generated/i);
+    expect(content).toMatch(/sync-plans/i);
   });
 
   it('should return success status with plan count', async () => {
@@ -206,8 +205,8 @@ No active plan currently.
 
     const result: any = await syncPlans({ dir: testDir, _silent: true });
 
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.planCount, 2);
-    assert.ok(result.outputPath);
+    expect(result.success).toBe(true);
+    expect(result.planCount).toBe(2);
+    expect(result.outputPath).toBeTruthy();
   });
 });

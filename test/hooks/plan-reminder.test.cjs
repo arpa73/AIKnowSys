@@ -29,7 +29,7 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.ok(result !== undefined, 'Hook should execute successfully');
+      expect(result !== undefined).toBeTruthy();
     });
 
     it('should exit successfully when plans directory is empty', () => {
@@ -41,7 +41,7 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.ok(result !== undefined, 'Hook should execute successfully');
+      expect(result !== undefined).toBeTruthy();
     });
 
     it('should exit successfully when only user\'s own plan exists', () => {
@@ -60,7 +60,7 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.strictEqual(result, '', 'Should skip when only own plan exists');
+      expect(result).toBe('');
     });
   });
 
@@ -81,9 +81,9 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.match(result, /Team Plans Reminder/, 'Should show reminder header');
-      assert.match(result, /alice-smith/, 'Should show teammate name');
-      assert.match(result, /Login System/, 'Should show teammate\'s current work');
+      expect(result).toMatch(/Team Plans Reminder/);
+      expect(result).toMatch(/alice-smith/);
+      expect(result).toMatch(/Login System/);
     });
 
     it('should detect multiple teammate plans', () => {
@@ -106,10 +106,10 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.match(result, /alice-smith/, 'Should show first teammate');
-      assert.match(result, /Login System/, 'Should show first teammate\'s work');
-      assert.match(result, /bob-jones/, 'Should show second teammate');
-      assert.match(result, /Payment API/, 'Should show second teammate\'s work');
+      expect(result).toMatch(/alice-smith/);
+      expect(result).toMatch(/Login System/);
+      expect(result).toMatch(/bob-jones/);
+      expect(result).toMatch(/Payment API/);
     });
   });
 
@@ -129,9 +129,9 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.match(result, /📋 Team Plans Reminder/, 'Should have header with icon');
-      assert.match(result, /─+/, 'Should have separator line');
-      assert.match(result, /Your teammates are currently working on:/, 'Should have description');
+      expect(result).toMatch(/📋 Team Plans Reminder/);
+      expect(result).toMatch(/─+/);
+      expect(result).toMatch(/Your teammates are currently working on:/);
     });
 
     it('should provide helpful commands', () => {
@@ -149,7 +149,7 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
-      assert.match(result, /npx aiknowsys/, 'Should mention CLI command');
+      expect(result).toMatch(/npx aiknowsys/);
     });
   });
 
@@ -172,8 +172,8 @@ describe('plan-reminder hook', () => {
         stdio: 'pipe',
         env: { ...process.env, GIT_AUTHOR_NAME: 'John Doe' }
       });
-      assert.match(result, /alice-smith/, 'Should show other user');
-      assert.doesNotMatch(result, /john-doe/, 'Should not show normalized own username');
+      expect(result).toMatch(/alice-smith/);
+      expect(result).not.toMatch(/john-doe/);
     });
   });
 });

@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,32 +36,32 @@ describe('cleanup-test-dirs.sh', () => {
       encoding: 'utf-8'
     });
     
-    assert.match(output, /test-12345/, 'Should find test-* directory');
-    assert.match(output, /temp-abc/, 'Should find temp-* directory');
-    assert.match(output, /Found: 3/, 'Should find 3 directories');
-    assert.match(output, /Would delete/, 'Should show dry-run message');
+    expect(output).toMatch(/test-12345/);
+    expect(output).toMatch(/temp-abc/);
+    expect(output).toMatch(/Found: 3/);
+    expect(output).toMatch(/Would delete/);
   });
 
   it('should NOT delete in dry-run mode', () => {
     execSync(`bash ${scriptPath} --dry-run ${tempWorkspace}`);
     
-    assert.ok(fs.existsSync(path.join(tempWorkspace, 'test-12345')), 'Directory should still exist');
-    assert.ok(fs.existsSync(path.join(tempWorkspace, 'temp-abc')), 'Directory should still exist');
+    expect(fs.existsSync(path.join(tempWorkspace, 'test-12345'))).toBeTruthy();
+    expect(fs.existsSync(path.join(tempWorkspace, 'temp-abc'))).toBeTruthy();
   });
 
   it('should delete test directories when run without dry-run', () => {
     execSync(`bash ${scriptPath} --force ${tempWorkspace}`);
     
-    assert.ok(!fs.existsSync(path.join(tempWorkspace, 'test-12345')), 'test-* should be deleted');
-    assert.ok(!fs.existsSync(path.join(tempWorkspace, 'temp-abc')), 'temp-* should be deleted');
-    assert.ok(!fs.existsSync(path.join(tempWorkspace, 'tmp-xyz')), 'tmp-* should be deleted');
+    expect(!fs.existsSync(path.join(tempWorkspace, 'test-12345'))).toBeTruthy();
+    expect(!fs.existsSync(path.join(tempWorkspace, 'temp-abc'))).toBeTruthy();
+    expect(!fs.existsSync(path.join(tempWorkspace, 'tmp-xyz'))).toBeTruthy();
   });
 
   it('should protect actual test/ directory', () => {
     execSync(`bash ${scriptPath} --force ${tempWorkspace}`);
     
-    assert.ok(fs.existsSync(path.join(tempWorkspace, 'test')), 'test/ should NOT be deleted');
-    assert.ok(fs.existsSync(path.join(tempWorkspace, 'test', 'important.test.js')), 'test files should be safe');
+    expect(fs.existsSync(path.join(tempWorkspace, 'test'))).toBeTruthy();
+    expect(fs.existsSync(path.join(tempWorkspace, 'test', 'important.test.js'))).toBeTruthy();
   });
 
   it('should report correct deletion count', () => {
@@ -70,7 +69,7 @@ describe('cleanup-test-dirs.sh', () => {
       encoding: 'utf-8'
     });
     
-    assert.match(output, /Deleted: 3/, 'Should report 3 deletions');
+    expect(output).toMatch(/Deleted: 3/);
   });
 
   it('should handle empty workspace gracefully', () => {
@@ -82,7 +81,7 @@ describe('cleanup-test-dirs.sh', () => {
         encoding: 'utf-8'
       });
       
-      assert.match(output, /Workspace is clean/, 'Should show clean message');
+      expect(output).toMatch(/Workspace is clean/);
     } finally {
       fs.rmSync(cleanWorkspace, { recursive: true, force: true });
     }
@@ -96,7 +95,7 @@ describe('cleanup-test-dirs.sh', () => {
     const testDirExists = fs.existsSync(path.join(tempWorkspace, 'test'));
     const testFileExists = fs.existsSync(path.join(tempWorkspace, 'test', 'important.test.js'));
     
-    assert.ok(testDirExists, 'test/ directory should be protected');
-    assert.ok(testFileExists, 'Files in test/ should be preserved');
+    expect(testDirExists).toBeTruthy();
+    expect(testFileExists).toBeTruthy();
   });
 });

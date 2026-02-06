@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
@@ -31,7 +30,7 @@ describe('learned-reminder hook', () => {
         stdio: 'pipe'
       });
 
-      assert.ok(result !== undefined, 'Hook should execute successfully');
+      expect(result !== undefined).toBeTruthy();
     });
 
     it('should exit 0 when personal directory is empty', () => {
@@ -46,7 +45,7 @@ describe('learned-reminder hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
 
-      assert.ok(result !== undefined, 'Hook should execute successfully');
+      expect(result !== undefined).toBeTruthy();
     });
   });
 
@@ -66,9 +65,9 @@ describe('learned-reminder hook', () => {
       env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
     });
 
-    assert.ok(output.includes('Learned Patterns Reminder'), 'Should show reminder header');
-    assert.ok(output.includes('unshared personal patterns'), 'Should mention unshared patterns');
-    assert.ok(output.includes('share-pattern'), 'Should mention share command');
+    expect(output.includes('Learned Patterns Reminder')).toBeTruthy();
+    expect(output.includes('unshared personal patterns')).toBeTruthy();
+    expect(output.includes('share-pattern')).toBeTruthy();
     });
 
     it('should detect high-value patterns (5+ uses)', () => {
@@ -85,9 +84,9 @@ describe('learned-reminder hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
 
-      assert.ok(output.includes('High-value patterns'), 'Should show high-value section');
-      assert.ok(output.includes('popular-pattern'), 'Should list high-value pattern');
-      assert.ok(output.includes('used 7 times'), 'Should show usage count');
+      expect(output.includes('High-value patterns')).toBeTruthy();
+      expect(output.includes('popular-pattern')).toBeTruthy();
+      expect(output.includes('used 7 times')).toBeTruthy();
     });
 
     it('should skip README.md files', () => {
@@ -105,8 +104,8 @@ describe('learned-reminder hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
       });
 
-      assert.ok(!output.includes('README'), 'Should not count README.md');
-      assert.ok(output.includes('3 unshared'), 'Should count only actual patterns');
+      expect(!output.includes('README')).toBeTruthy();
+      expect(output.includes('3 unshared')).toBeTruthy();
     });
   });
 
@@ -125,9 +124,9 @@ describe('learned-reminder hook', () => {
       env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
     });
 
-    assert.ok(output.includes('api-retry'), 'Should show pattern name without extension');
-    assert.ok(output.includes('database-pool'), 'Should show pattern name without extension');
-    assert.ok(!output.includes('.md'), 'Should not include .md extension');
+    expect(output.includes('api-retry')).toBeTruthy();
+    expect(output.includes('database-pool')).toBeTruthy();
+    expect(!output.includes('.md')).toBeTruthy();
     });
 
     it('should limit displayed patterns to 5', () => {
@@ -145,8 +144,8 @@ describe('learned-reminder hook', () => {
       env: { ...process.env, GIT_AUTHOR_NAME: 'Test User' }
     });
 
-    assert.ok(output.includes('8 unshared'), 'Should show total count');
-    assert.ok(output.includes('(3 more)'), 'Should show "more" indicator');
+    expect(output.includes('8 unshared')).toBeTruthy();
+    expect(output.includes('(3 more)')).toBeTruthy();
     });
   });
 
@@ -165,7 +164,7 @@ describe('learned-reminder hook', () => {
       env: { ...process.env, GIT_AUTHOR_NAME: 'John Doe' }
     });
 
-    assert.ok(output.includes('unshared personal patterns'), 'Should find patterns for normalized username');
+    expect(output.includes('unshared personal patterns')).toBeTruthy();
     });
   });
 });

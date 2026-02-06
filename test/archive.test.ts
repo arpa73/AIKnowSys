@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { archiveSessions } from '../lib/commands/archive-sessions.js';
@@ -41,8 +40,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.dryRun, 1, 'Should find 1 old session');
-      assert.strictEqual(result.kept, 1, 'Should keep 1 recent session');
+      expect(result.dryRun).toBe(1);
+      expect(result.kept).toBe(1);
     });
 
     it('should move old sessions to archive/YYYY/MM/', async () => {
@@ -58,12 +57,12 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 1);
+      expect(result.archived).toBe(1);
       
       // Verify file moved
       const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'sessions', '2025', '12', '2025-12-15-session.md');
       const exists = await fs.access(archivePath).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true, 'Session should be in archive/2025/12/');
+      expect(exists).toBe(true);
     });
 
     it('should preserve recent sessions', async () => {
@@ -76,12 +75,12 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.kept, 1);
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(1);
       
       // Verify file still in sessions/
       const exists = await fs.access(recentFile).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true, 'Recent session should remain');
+      expect(exists).toBe(true);
     });
 
     it('should create archive directories if missing', async () => {
@@ -98,7 +97,7 @@ describe('Archive Commands', () => {
       
       const archiveDir = path.join(TEST_DIR, '.aiknowsys', 'archive', 'sessions', '2024', '05');
       const exists = await fs.access(archiveDir).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true, 'Should create archive/2024/05/ directory');
+      expect(exists).toBe(true);
     });
 
     it('should handle --dry-run mode', async () => {
@@ -116,12 +115,12 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0, 'Should not archive in dry-run');
-      assert.strictEqual(result.dryRun, 1, 'Should report would archive 1');
+      expect(result.archived).toBe(0);
+      expect(result.dryRun).toBe(1);
       
       // File should still exist in original location
       const exists = await fs.access(oldFile).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true, 'File should not move in dry-run');
+      expect(exists).toBe(true);
     });
 
     it('should respect --threshold flag', async () => {
@@ -139,7 +138,7 @@ describe('Archive Commands', () => {
         dryRun: true,
         _silent: true
       });
-      assert.strictEqual(result1.kept, 1, 'Should keep with 60-day threshold');
+      expect(result1.kept).toBe(1);
       
       // Threshold 30 days - should archive
       const result2 = await archiveSessions({
@@ -148,7 +147,7 @@ describe('Archive Commands', () => {
         dryRun: true,
         _silent: true
       });
-      assert.strictEqual(result2.dryRun, 1, 'Should archive with 30-day threshold');
+      expect(result2.dryRun).toBe(1);
     });
 
     it('should skip if no old sessions found', async () => {
@@ -161,8 +160,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.kept, 1);
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(1);
     });
 
     it('should handle malformed session files', async () => {
@@ -176,8 +175,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.kept, 0);
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(0);
     });
 
     it('should handle missing sessions directory', async () => {
@@ -189,8 +188,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.kept, 0);
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(0);
     });
   });
 
@@ -228,7 +227,7 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.dryRun, 1, 'Should find 1 completed plan to archive');
+      expect(result.dryRun).toBe(1);
     });
 
     it('should move completed plans to archive/plans/', async () => {
@@ -253,17 +252,17 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 1);
-      assert.strictEqual(result.updated, 1, 'Should update 1 plan pointer');
+      expect(result.archived).toBe(1);
+      expect(result.updated).toBe(1);
       
       // Verify file moved
       const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'plans', 'PLAN_old.md');
       const exists = await fs.access(archivePath).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true, 'Plan should be in archive/plans/');
+      expect(exists).toBe(true);
       
       // Verify pointer file updated
       const pointerContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
-      assert.strictEqual(pointerContent.includes('../archive/plans/PLAN_old.md'), true, 'Pointer should reference archive path');
+      expect(pointerContent.includes('../archive/plans/PLAN_old.md')).toBe(true);
     });
 
     it('should preserve active and paused plans', async () => {
@@ -285,7 +284,7 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0, 'Should not archive active/paused plans');
+      expect(result.archived).toBe(0);
     });
 
     it('should update plan pointer with archive links', async () => {
@@ -311,7 +310,7 @@ describe('Archive Commands', () => {
       });
       
       const updatedContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
-      assert.match(updatedContent, /\.\.\/archive\/plans\/PLAN_old\.md/, 'Should update link to archive location');
+      expect(updatedContent).toMatch(/\.\.\/archive\/plans\/PLAN_old\.md/);
     });
 
     it('should handle --dry-run mode', async () => {
@@ -337,12 +336,12 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.dryRun, 1);
+      expect(result.archived).toBe(0);
+      expect(result.dryRun).toBe(1);
       
       // File should still exist
       const exists = await fs.access(oldPlanFile).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true);
+      expect(exists).toBe(true);
     });
 
     it('should handle missing plans/ directory', async () => {
@@ -355,8 +354,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0);
-      assert.strictEqual(result.kept, 0);
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(0);
     });
   });
 
@@ -394,8 +393,8 @@ describe('Archive Commands', () => {
         _silent: true
       } as any);  // Type definition missing _silent property
       
-      assert.strictEqual(result.sessionsArchived, 1);
-      assert.strictEqual(result.plansArchived, 1);
+      expect(result.sessionsArchived).toBe(1);
+      expect(result.plansArchived).toBe(1);
     });
 
     it('should remove temp files', async () => {
@@ -407,7 +406,7 @@ describe('Archive Commands', () => {
         _silent: true
       } as any);  // Type definition missing _silent property
       
-      assert.ok(result.tempFilesRemoved >= 0, 'Should report temp files removed');
+      expect(result.tempFilesRemoved >= 0).toBeTruthy();
     });
 
     it('should handle --dry-run mode', async () => {
@@ -424,11 +423,11 @@ describe('Archive Commands', () => {
         _silent: true
       } as any);  // Type definition missing _silent property
       
-      assert.strictEqual(result.sessionsArchived, 0);
+      expect(result.sessionsArchived).toBe(0);
       
       // File should still exist
       const exists = await fs.access(sessionFile).then(() => true).catch(() => false);
-      assert.strictEqual(exists, true);
+      expect(exists).toBe(true);
     });
   });
 
@@ -458,7 +457,7 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 1, 'Should archive plan immediately with threshold=0');
+      expect(result.archived).toBe(1);
     });
 
     it('should return zero archived when threshold=0 but no matching plans', async () => {
@@ -485,8 +484,8 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 0, 'Should not archive non-COMPLETE plans');
-      assert.strictEqual(result.kept, 1, 'Should keep 1 active plan');
+      expect(result.archived).toBe(0);
+      expect(result.kept).toBe(1);
     });
   });
 
@@ -525,11 +524,11 @@ describe('Archive Commands', () => {
         _silent: true
       });
       
-      assert.strictEqual(result.archived, 1, 'Should archive 1 cancelled plan');
+      expect(result.archived).toBe(1);
       
       // Active plan should still exist
       const activeExists = await fs.access(activePath).then(() => true).catch(() => false);
-      assert.strictEqual(activeExists, true, 'Active plan should not be archived');
+      expect(activeExists).toBe(true);
     });
   });
 });

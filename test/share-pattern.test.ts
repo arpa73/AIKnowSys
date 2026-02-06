@@ -1,5 +1,4 @@
-import { describe, it, before, after, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeAll, afterAll, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -8,7 +7,7 @@ describe('share-pattern command', () => {
   let testDir: string;
   let testDirsToCleanup: string[] = [];
 
-  before(() => {
+  beforeAll(() => {
     testDir = path.join(import.meta.dirname, 'tmp', `test-share-pattern-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
@@ -22,7 +21,7 @@ describe('share-pattern command', () => {
     testDirsToCleanup = [];
   });
 
-  after(() => {
+  afterAll(() => {
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
@@ -54,7 +53,7 @@ describe('share-pattern command', () => {
     fs.writeFileSync(path.join(personalDir, 'test-pattern.md'), patternContent);
 
     // Verify source exists
-    assert.ok(fs.existsSync(path.join(personalDir, 'test-pattern.md')), 'Source pattern should exist');
+    expect(fs.existsSync(path.join(personalDir, 'test-pattern.md'))).toBeTruthy();
 
     // After share command (will implement):
     // - Pattern should be in learned/
@@ -65,8 +64,8 @@ describe('share-pattern command', () => {
     const destPath = path.join(learnedDir, 'test-pattern.md');
     fs.renameSync(sourcePath, destPath);
 
-    assert.ok(fs.existsSync(destPath), 'Pattern should exist in learned directory');
-    assert.ok(!fs.existsSync(sourcePath), 'Pattern should be removed from personal directory');
+    expect(fs.existsSync(destPath)).toBeTruthy();
+    expect(!fs.existsSync(sourcePath)).toBeTruthy();
   });
 
   it('should detect exact duplicate patterns by title', () => {
@@ -102,7 +101,7 @@ describe('share-pattern command', () => {
     const learnedFiles = fs.readdirSync(learnedDir);
     
     const isDuplicate = learnedFiles.includes(personalFile);
-    assert.ok(isDuplicate, 'Should detect exact duplicate by filename');
+    expect(isDuplicate).toBeTruthy();
   });
 
   it('should detect similar patterns by keyword overlap', () => {
@@ -140,7 +139,7 @@ describe('share-pattern command', () => {
     const overlap = keywords1.filter(k => keywords2.includes(k));
     const overlapPercent = overlap.length / Math.max(keywords1.length, keywords2.length);
 
-    assert.ok(overlapPercent > 0.5, 'Should detect >50% keyword overlap as similar');
+    expect(overlapPercent > 0.5).toBeTruthy();
   });
 
   it('should error if pattern does not exist in personal directory', () => {
@@ -164,7 +163,7 @@ describe('share-pattern command', () => {
     // Try to share non-existent pattern
     const patternPath = path.join(personalDir, 'nonexistent-pattern.md');
     
-    assert.ok(!fs.existsSync(patternPath), 'Pattern should not exist');
+    expect(!fs.existsSync(patternPath)).toBeTruthy();
     // share-pattern command should throw/return error
   });
 
@@ -193,7 +192,7 @@ describe('share-pattern command', () => {
     fs.writeFileSync(path.join(personalDir, 'simple-pattern.md'), patternContent);
 
     // Should still be shareable (trigger words are optional)
-    assert.ok(fs.existsSync(path.join(personalDir, 'simple-pattern.md')), 'Pattern should exist and be valid');
+    expect(fs.existsSync(path.join(personalDir, 'simple-pattern.md'))).toBeTruthy();
   });
 
   it('should handle missing git username gracefully', () => {
@@ -207,6 +206,6 @@ describe('share-pattern command', () => {
     fs.mkdirSync(learnedDir, { recursive: true });
 
     // share-pattern should fail gracefully with helpful message
-    assert.ok(fs.existsSync(learnedDir), 'Learned directory should exist as fallback');
+    expect(fs.existsSync(learnedDir)).toBeTruthy();
   });
 });

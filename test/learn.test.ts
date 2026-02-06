@@ -1,5 +1,4 @@
-import { describe, it, before, after, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeAll, afterAll, afterEach, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -8,7 +7,7 @@ describe('learn command', () => {
   let testDir: string;
   let testDirsToCleanup: string[] = [];
 
-  before(() => {
+  beforeAll(() => {
     // Create base temporary test directory
     testDir = path.join(import.meta.dirname, 'tmp', `test-learn-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
@@ -24,7 +23,7 @@ describe('learn command', () => {
     testDirsToCleanup = [];
   });
 
-  after(() => {
+  afterAll(() => {
     // Cleanup base test directory
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
@@ -51,10 +50,10 @@ describe('learn command', () => {
     fs.mkdirSync(personalDir, { recursive: true });
 
     // Verify personal directory exists and is ready for patterns
-    assert.ok(fs.existsSync(personalDir), 'Personal directory should exist by default');
+    expect(fs.existsSync(personalDir)).toBeTruthy();
     
     // Verify path includes username
-    assert.ok(personalDir.includes(username), 'Personal directory should include normalized username');
+    expect(personalDir.includes(username)).toBeTruthy();
   });
 
   it('should use personal directory with explicit --personal flag', async () => {
@@ -80,7 +79,7 @@ describe('learn command', () => {
     const patternFile = path.join(personalDir, 'test-pattern.md');
     fs.writeFileSync(patternFile, '# Test Pattern\n\n## Trigger Words\ntest, pattern\n\n## Solution\nTest solution');
 
-    assert.ok(fs.existsSync(patternFile), 'Pattern should exist in personal directory');
+    expect(fs.existsSync(patternFile)).toBeTruthy();
   });
 
   it('should use learned directory with --shared flag', async () => {
@@ -95,7 +94,7 @@ describe('learn command', () => {
     const patternFile = path.join(learnedDir, 'shared-pattern.md');
     fs.writeFileSync(patternFile, '# Shared Pattern\n\n## Trigger Words\nshared, team\n\n## Solution\nShared solution');
 
-    assert.ok(fs.existsSync(patternFile), 'Pattern should exist in learned directory when using --shared');
+    expect(fs.existsSync(patternFile)).toBeTruthy();
   });
 
   it('should search both personal and learned directories for patterns', async () => {
@@ -124,8 +123,8 @@ describe('learn command', () => {
     fs.writeFileSync(path.join(learnedDir, 'learned-pattern.md'), '# Learned Pattern');
 
     // Verify both directories have patterns
-    assert.ok(fs.existsSync(path.join(personalDir, 'personal-pattern.md')), 'Personal pattern should exist');
-    assert.ok(fs.existsSync(path.join(learnedDir, 'learned-pattern.md')), 'Learned pattern should exist');
+    expect(fs.existsSync(path.join(personalDir, 'personal-pattern.md'))).toBeTruthy();
+    expect(fs.existsSync(path.join(learnedDir, 'learned-pattern.md'))).toBeTruthy();
   });
 
   it('should handle missing personal directory gracefully', async () => {
@@ -138,7 +137,7 @@ describe('learn command', () => {
     fs.mkdirSync(learnedDir, { recursive: true });
 
     // Should not throw error when personal directory doesn't exist
-    assert.ok(fs.existsSync(learnedDir), 'Should continue working with learned directory only');
+    expect(fs.existsSync(learnedDir)).toBeTruthy();
   });
 
   it('should handle missing git username gracefully', async () => {
@@ -151,7 +150,7 @@ describe('learn command', () => {
     const learnedDir = path.join(testNoGit, '.aiknowsys', 'learned');
     fs.mkdirSync(learnedDir, { recursive: true });
 
-    assert.ok(fs.existsSync(learnedDir), 'Should fallback to learned directory');
+    expect(fs.existsSync(learnedDir)).toBeTruthy();
   });
 
   it('should validate pattern file format', async () => {
@@ -183,9 +182,9 @@ Test solution description
     fs.writeFileSync(patternFile, validPattern);
 
     const content = fs.readFileSync(patternFile, 'utf-8');
-    assert.ok(content.includes('# test-pattern'), 'Pattern should have heading');
-    assert.ok(content.includes('Trigger Words:'), 'Pattern should have trigger words');
-    assert.ok(content.includes('## Problem'), 'Pattern should have problem section');
-    assert.ok(content.includes('## Solution'), 'Pattern should have solution section');
+    expect(content.includes('# test-pattern')).toBeTruthy();
+    expect(content.includes('Trigger Words:')).toBeTruthy();
+    expect(content.includes('## Problem')).toBeTruthy();
+    expect(content.includes('## Solution')).toBeTruthy();
   });
 });

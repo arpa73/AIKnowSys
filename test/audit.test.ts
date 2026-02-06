@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { audit } from '../lib/commands/audit.js';
@@ -34,9 +33,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.strictEqual(result.clean, true, 'Should be clean');
-    assert.strictEqual(result.warnings, 0, 'Should have 0 warnings');
-    assert.strictEqual(result.issues.length, 0, 'Should have 0 issues');
+    expect(result.clean).toBe(true);
+    expect(result.warnings).toBe(0);
+    expect(result.issues.length).toBe(0);
   });
 
   // ========================================
@@ -53,11 +52,11 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.strictEqual(result.clean, false, 'Should not be clean');
-    assert.strictEqual(result.warnings > 0, true, 'Should have warnings');
+    expect(result.clean).toBe(false);
+    expect(result.warnings > 0).toBe(true);
     const dupIssue = result.issues.find(i => i.category.includes('DRY'));
-    assert.ok(dupIssue, 'Should have DRY violation issue');
-    assert.ok(dupIssue.fix.includes('sync'), 'Should suggest sync command');
+    expect(dupIssue).toBeTruthy();
+    expect(dupIssue.fix.includes('sync')).toBeTruthy();
   });
 
   it('should pass when validation matrix only in ESSENTIALS', async () => {
@@ -70,8 +69,8 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.strictEqual(result.clean, true, 'Should be clean');
-    assert.strictEqual(result.warnings, 0, 'Should have 0 warnings');
+    expect(result.clean).toBe(true);
+    expect(result.warnings).toBe(0);
   });
 
   // ========================================
@@ -91,8 +90,8 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const tbdIssue = result.issues.find(i => i.message.includes('TBD'));
-    assert.ok(tbdIssue, 'Should detect TBD markers');
-    assert.strictEqual(tbdIssue.type, 'info', 'Should be info type');
+    expect(tbdIssue).toBeTruthy();
+    expect(tbdIssue.type).toBe('info');
   });
 
   it('should detect excessive TODO comments', async () => {
@@ -107,8 +106,8 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const todoIssue = result.issues.find(i => i.message.includes('TODO'));
-    assert.ok(todoIssue, 'Should detect TODO comments');
-    assert.strictEqual(todoIssue.type, 'info', 'Should be info type');
+    expect(todoIssue).toBeTruthy();
+    expect(todoIssue.type).toBe('info');
   });
 
   it('should detect [FILL] instruction markers', async () => {
@@ -123,8 +122,8 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const fillIssue = result.issues.find(i => i.message.includes('FILL'));
-    assert.ok(fillIssue, 'Should detect [FILL] markers');
-    assert.strictEqual(fillIssue.type, 'warning', 'Should be warning type');
+    expect(fillIssue).toBeTruthy();
+    expect(fillIssue.type).toBe('warning');
   });
 
   // Note: "generic placeholder text" detection removed due to too many false positives
@@ -144,7 +143,7 @@ describe('audit command', () => {
     
     // Should not have TBD/TODO issue since below threshold
     const hasLowTbdWarning = result.issues.some(i => i.message.includes('TBD') || i.message.includes('TODO'));
-    assert.strictEqual(hasLowTbdWarning, false, 'Should not warn when below threshold');
+    expect(hasLowTbdWarning).toBe(false);
   });
 
   it('should detect unfilled {{PLACEHOLDERS}}', async () => {
@@ -159,8 +158,8 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'));
-    assert.ok(placeholderIssue, 'Should detect unfilled placeholders');
-    assert.strictEqual(placeholderIssue.type, 'warning', 'Should be warning type');
+    expect(placeholderIssue).toBeTruthy();
+    expect(placeholderIssue.type).toBe('warning');
   });
 
   it('should list unique placeholders without duplicates', async () => {
@@ -176,9 +175,9 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'));
-    assert.ok(placeholderIssue, 'Should detect placeholders');
+    expect(placeholderIssue).toBeTruthy();
     // Message should mention "1 unfilled placeholder" or similar, not count duplicates
-    assert.ok(placeholderIssue.message.includes('1') || placeholderIssue.message.includes('PROJECT_NAME'), 'Should report unique count');
+    expect(placeholderIssue.message.includes('1') || placeholderIssue.message.includes('PROJECT_NAME')).toBeTruthy();
   });
 
   it('should pass when all placeholders filled', async () => {
@@ -188,7 +187,7 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const placeholderIssue = result.issues.find(i => i.message.includes('{{'));
-    assert.strictEqual(placeholderIssue, undefined, 'Should not detect placeholder issues');
+    expect(placeholderIssue).toBe(undefined);
   });
 
   // ========================================
@@ -204,8 +203,8 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const sizeIssue = result.issues.find(i => i.category === 'File Size' || i.message.includes('lines (consider splitting)'));
-    assert.ok(sizeIssue, 'Should warn about file size');
-    assert.ok(sizeIssue.fix.includes('archive') || sizeIssue.fix.includes('minimal'), 'Should suggest archiving or minimal template');
+    expect(sizeIssue).toBeTruthy();
+    expect(sizeIssue.fix.includes('archive') || sizeIssue.fix.includes('minimal')).toBeTruthy();
   });
 
   it('should not warn when ESSENTIALS < 350 lines', async () => {
@@ -217,7 +216,7 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const sizeIssue = result.issues.find(i => i.message.includes('350 lines') || i.message.includes('large'));
-    assert.strictEqual(sizeIssue, undefined, 'Should not warn about file size');
+    expect(sizeIssue).toBe(undefined);
   });
 
   // ========================================
@@ -233,7 +232,7 @@ describe('audit command', () => {
     const result = await audit({ dir: testDir, _silent: true });
     
     const matrixIssue = result.issues.find(i => i.message.includes('Validation Matrix') && i.message.includes('missing'));
-    assert.ok(matrixIssue, 'Should warn about missing section');
+    expect(matrixIssue).toBeTruthy();
   });
 
   // ========================================
@@ -245,8 +244,8 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.ok(result.warnings > 0 || result.info > 0, 'Should have issue counts');
-    assert.ok(result.issues.length > 0, 'Should have issues array');
+    expect(result.warnings > 0 || result.info > 0).toBeTruthy();
+    expect(result.issues.length > 0).toBeTruthy();
   });
 
   it('should show suggested fixes for each issue', async () => {
@@ -254,10 +253,10 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.ok(result.issues.length > 0, 'Should have issues');
+    expect(result.issues.length > 0).toBeTruthy();
     result.issues.forEach(issue => {
-      assert.ok(issue.fix, 'Each issue should have a fix suggestion');
-      assert.ok(issue.fix.length > 0, 'Fix suggestion should not be empty');
+      expect(issue.fix).toBeTruthy();
+      expect(issue.fix.length > 0).toBeTruthy();
     });
   });
 
@@ -274,7 +273,7 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    assert.strictEqual(result.clean, true, 'Should be clean (exit 0)');
+    expect(result.clean).toBe(true);
   });
 
   it('should exit with code 0 for warnings only (non-critical)', async () => {
@@ -290,7 +289,7 @@ describe('audit command', () => {
     
     // Warnings don't fail audit → exit 0 (clean stays true for warnings)
     // The command itself doesn't throw, which means exit 0
-    assert.ok(result, 'Should complete without throwing');
+    expect(result).toBeTruthy();
   });
 
   // ========================================
@@ -305,8 +304,8 @@ describe('audit command', () => {
       
       const result = await audit({ dir: customDir, _silent: true });
       
-      assert.ok(result, 'Should run audit in custom directory');
-      assert.ok(result.issues !== undefined, 'Should return audit results');
+      expect(result).toBeTruthy();
+      expect(result.issues !== undefined).toBeTruthy();
     } finally {
       cleanupTestDir(customDir);
     }
@@ -315,11 +314,7 @@ describe('audit command', () => {
   it('should exit gracefully when no knowledge system found', async () => {
     // Empty directory - no ESSENTIALS, no AGENTS
     
-    await assert.rejects(
-      async () => audit({ dir: testDir, _silent: true }),
-      { message: /No knowledge system found/i },
-      'Should throw error when no knowledge system found'
-    );
+    await expect(async () => audit({ dir: testDir, _silent: true })).rejects.toThrow({ message: /No knowledge system found/i });
   });
 
   // ========================================
@@ -349,7 +344,7 @@ describe('audit command', () => {
       i.category === 'Gitignore Configuration' || 
       i.message.includes('gitignored')
     );
-    assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when gitignore configured correctly');
+    expect(gitignoreIssue).toBe(undefined);
   });
 
   it('should warn when .aiknowsys/ exists but sessions not gitignored', async () => {
@@ -370,8 +365,8 @@ describe('audit command', () => {
       i.category === 'Gitignore Configuration' && 
       i.message.includes('Session files')
     );
-    assert.ok(gitignoreIssue, 'Should warn when sessions not gitignored');
-    assert.ok(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md'), 'Should suggest adding gitignore pattern');
+    expect(gitignoreIssue).toBeTruthy();
+    expect(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
   });
 
   it('should warn about missing .gitignore when .aiknowsys/ exists', async () => {
@@ -388,8 +383,8 @@ describe('audit command', () => {
       i.category === 'Missing Configuration' && 
       i.message.includes('.gitignore')
     );
-    assert.ok(gitignoreIssue, 'Should warn when no .gitignore exists');
-    assert.ok(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md'), 'Should suggest creating gitignore');
+    expect(gitignoreIssue).toBeTruthy();
+    expect(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
   });
 
   it('should not warn when .aiknowsys/ directory does not exist', async () => {
@@ -402,7 +397,7 @@ describe('audit command', () => {
       i.message.includes('.aiknowsys') && 
       i.type === 'warning'
     );
-    assert.strictEqual(gitignoreIssue, undefined, 'Should not warn when .aiknowsys does not exist');
+    expect(gitignoreIssue).toBe(undefined);
   });
 
   it('should warn when reviews/ directory not gitignored', async () => {
@@ -421,8 +416,8 @@ describe('audit command', () => {
     const reviewsIssue = result.issues.find(i => 
       i.message && i.message.includes('reviews/')
     );
-    assert.ok(reviewsIssue, 'Should warn when reviews/ not gitignored');
-    assert.strictEqual(result.warnings > 0, true, 'Should increment warning counter');
+    expect(reviewsIssue).toBeTruthy();
+    expect(result.warnings > 0).toBe(true);
   });
 
   it('should show progress during multi-step audit', async () => {
@@ -437,7 +432,7 @@ describe('audit command', () => {
     // Progress indicators should not break the audit process
     const result = await audit({ dir: testDir, _silent: false });
     
-    assert.ok(result !== undefined, 'Should complete audit with progress tracking');
-    assert.ok(typeof result.clean === 'boolean', 'Should return result object');
+    expect(result !== undefined).toBeTruthy();
+    expect(typeof result.clean === 'boolean').toBeTruthy();
   });
 });

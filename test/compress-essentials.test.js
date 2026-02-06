@@ -1,5 +1,4 @@
-import { describe, test, mock, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, test, mock, beforeEach, afterEach, expect } from 'vitest';
 import { compressEssentials } from '../dist/lib/commands/compress-essentials.js';
 import * as fs from 'node:fs';  // Fixed: Match implementation's import style
 import path from 'path';
@@ -63,11 +62,11 @@ When you change X, run Y.
       });
       
       // Should have parsed 3 sections
-      assert.ok(result.sections, 'Should return sections');
-      assert.equal(result.sections.length, 3, 'Should parse 3 sections');
-      assert.equal(result.sections[0].name, 'Architecture Patterns');
-      assert.equal(result.sections[1].name, 'API Calls');
-      assert.equal(result.sections[2].name, 'Validation Matrix');
+      expect(result.sections).toBeTruthy();
+      expect(result.sections.length).toEqual(3);
+      expect(result.sections[0].name).toEqual('Architecture Patterns');
+      expect(result.sections[1].name).toEqual('API Calls');
+      expect(result.sections[2].name).toEqual('Validation Matrix');
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -108,11 +107,11 @@ Just a few lines here.
       });
       
       // Should identify 1 compression opportunity
-      assert.ok(result.opportunities, 'Should return opportunities');
-      assert.equal(result.opportunities.length, 1, 'Should find 1 verbose section');
-      assert.equal(result.opportunities[0].section, 'Verbose Section with Examples');
-      assert.ok(result.opportunities[0].currentLines > 150, 'Should be >150 lines');
-      assert.ok(result.opportunities[0].estimatedSavings > 0, 'Should estimate savings');
+      expect(result.opportunities).toBeTruthy();
+      expect(result.opportunities.length).toEqual(1);
+      expect(result.opportunities[0].section).toEqual('Verbose Section with Examples');
+      expect(result.opportunities[0].currentLines > 150).toBeTruthy();
+      expect(result.opportunities[0].estimatedSavings > 0).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -148,11 +147,10 @@ ${verboseSection}
       });
       
       // Should recommend extraction
-      assert.ok(result.opportunities.length > 0, 'Should find opportunities');
+      expect(result.opportunities.length > 0).toBeTruthy();
       const opp = result.opportunities[0];
-      assert.ok(opp.recommendedAction.includes('Extract to docs/patterns/'), 
-        'Should recommend extraction to docs/patterns/');
-      assert.ok(opp.estimatedSavings > 50, 'Should estimate significant savings');
+      expect(opp.recommendedAction.includes('Extract to docs/patterns/')).toBeTruthy();
+      expect(opp.estimatedSavings > 50).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -186,8 +184,8 @@ ${'Content line\n'.repeat(35)}
       });
       
       // Should have no compression opportunities
-      assert.equal(result.opportunities.length, 0, 'Should find no opportunities');
-      assert.equal(result.potentialSavings, 0, 'Should have zero savings');
+      expect(result.opportunities.length).toEqual(0);
+      expect(result.potentialSavings).toEqual(0);
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -198,19 +196,16 @@ ${'Content line\n'.repeat(35)}
       
       const existsSync = mock.method(fs, 'existsSync', () => false);
       
-      await assert.rejects(
-        async () => {
-          await compressEssentials({
-            dir: mockDir,
-            analyze: true,
-            _silent: true
-          });
-        },
-        {
-          name: 'AIKnowSysError',
-          message: 'CODEBASE_ESSENTIALS.md not found'
-        }
-      );
+      await expect(async () => {
+                await compressEssentials({
+                  dir: mockDir,
+                  analyze: true,
+                  _silent: true
+                });
+              }).rejects.toThrow({
+                name: 'AIKnowSysError',
+                message: 'CODEBASE_ESSENTIALS.md not found'
+              });
       
       existsSync.mock.restore();
     });
@@ -258,17 +253,17 @@ Just a bit.
       });
       
       // Should find 2 opportunities
-      assert.equal(result.opportunities.length, 2, 'Should find 2 verbose sections');
+      expect(result.opportunities.length).toEqual(2);
       
       // Total savings should be sum of both
       const expectedSavings = result.opportunities[0].estimatedSavings + 
                              result.opportunities[1].estimatedSavings;
-      assert.equal(result.potentialSavings, expectedSavings, 'Should sum savings correctly');
+      expect(result.potentialSavings).toEqual(expectedSavings);
       
       // Should calculate projected size
       const projectedSize = result.totalLines - result.potentialSavings;
-      assert.ok(projectedSize > 0, 'Projected size should be positive');
-      assert.ok(projectedSize < result.totalLines, 'Projected size should be smaller');
+      expect(projectedSize > 0).toBeTruthy();
+      expect(projectedSize < result.totalLines).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -313,10 +308,10 @@ Just a bit.
       });
       
       // Should have created directory with recursive flag
-      assert.ok(mkdirSync.mock.calls.length > 0, 'Should call mkdirSync');
+      expect(mkdirSync.mock.calls.length > 0).toBeTruthy();
       const mkdirCall = mkdirSync.mock.calls.find(call => call.arguments[0].includes('patterns'));
-      assert.ok(mkdirCall, 'Should create patterns directory');
-      assert.deepEqual(mkdirCall.arguments[1], { recursive: true }, 'Should use recursive option');
+      expect(mkdirCall).toBeTruthy();
+      expect(mkdirCall.arguments[1]).toEqual({ recursive: true });
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -342,17 +337,17 @@ Just a bit.
       });
       
       // Should write extracted content to docs/patterns/
-      assert.ok(writeFileSync.mock.calls.length >= 2, 'Should write at least 2 files (extracted + updated ESSENTIALS)');
+      expect(writeFileSync.mock.calls.length >= 2).toBeTruthy();
       
       const extractedFileCall = writeFileSync.mock.calls.find(call => 
         call.arguments[0].includes('docs/patterns/api-examples.md')
       );
-      assert.ok(extractedFileCall, 'Should write to docs/patterns/api-examples.md');
+      expect(extractedFileCall).toBeTruthy();
       
       // Extracted file should contain section content
       const extractedContent = extractedFileCall.arguments[1];
-      assert.ok(extractedContent.includes('API Examples'), 'Should include section name as header');
-      assert.ok(extractedContent.includes('const example'), 'Should preserve code blocks');
+      expect(extractedContent.includes('API Examples')).toBeTruthy();
+      expect(extractedContent.includes('const example')).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -380,24 +375,21 @@ Just a bit.
       const essentialsCall = writeFileSync.mock.calls.find(call => 
         call.arguments[0].includes('CODEBASE_ESSENTIALS.md')
       );
-      assert.ok(essentialsCall, 'Should update ESSENTIALS file');
+      expect(essentialsCall).toBeTruthy();
       
       const updatedContent = essentialsCall.arguments[1];
       
       // Should have summary
-      assert.ok(updatedContent.includes('API Examples'), 'Should keep section header');
-      assert.ok(!updatedContent.includes('Line\nLine\nLine'), 'Should remove verbose content');
+      expect(updatedContent.includes('API Examples')).toBeTruthy();
+      expect(!updatedContent.includes('Line\nLine\nLine')).toBeTruthy();
       
       // Should have link to extracted file
-      assert.ok(
-        updatedContent.includes('docs/patterns/api-examples.md') || 
-        updatedContent.includes('[details](docs/patterns/api-examples.md)') ||
-        updatedContent.includes('[See details]'),
-        'Should link to extracted file'
-      );
+      expect(updatedContent.includes('docs/patterns/api-examples.md') || 
+                updatedContent.includes('[details](docs/patterns/api-examples.md)') ||
+                updatedContent.includes('[See details]')).toBeTruthy();
       
       // Should still have other sections
-      assert.ok(updatedContent.includes('Small Section'), 'Should preserve other sections');
+      expect(updatedContent.includes('Small Section')).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -427,11 +419,11 @@ Just a bit.
         call.arguments[0].includes('docs/patterns/')
       );
       
-      assert.ok(extractedFileCall, 'Should extract content');
+      expect(extractedFileCall).toBeTruthy();
       
       // Unique marker should be in extracted file (not lost)
       const extractedContent = extractedFileCall.arguments[1];
-      assert.ok(extractedContent.includes(uniqueMarker), 'Should preserve all original content in extracted file');
+      expect(extractedContent.includes(uniqueMarker)).toBeTruthy();
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -460,29 +452,27 @@ Just a bit.
       const apiCall = writeFileSync.mock.calls.find(call => call.arguments[0].includes('api-examples.md'));
       const testCall = writeFileSync.mock.calls.find(call => call.arguments[0].includes('testing-patterns.md'));
       
-      assert.ok(apiCall, 'Should extract API examples');
-      assert.ok(testCall, 'Should extract Testing patterns');
+      expect(apiCall).toBeTruthy();
+      expect(testCall).toBeTruthy();
       
       // Verify updated ESSENTIALS contains both summaries
       const essentialsCall = writeFileSync.mock.calls.find(call => 
         call.arguments[0].includes('CODEBASE_ESSENTIALS.md')
       );
-      assert.ok(essentialsCall, 'Should update ESSENTIALS file');
+      expect(essentialsCall).toBeTruthy();
       
       const updatedContent = essentialsCall.arguments[1];
       
       // Both sections should have links
-      assert.ok(updatedContent.includes('docs/patterns/api-examples.md'), 
-        'Should link to API examples');
-      assert.ok(updatedContent.includes('docs/patterns/testing-patterns.md'), 
-        'Should link to Testing patterns');
+      expect(updatedContent.includes('docs/patterns/api-examples.md')).toBeTruthy();
+      expect(updatedContent.includes('docs/patterns/testing-patterns.md')).toBeTruthy();
       
       // Verbose content should be removed from both sections
       const lineCount = (updatedContent.match(/Line\n/g) || []).length;
-      assert.ok(lineCount < 10, 'Should remove verbose content from both sections');
+      expect(lineCount < 10).toBeTruthy();
       
       // Both should be separate files
-      assert.notEqual(apiCall.arguments[0], testCall.arguments[0], 'Should create separate files');
+      expect(apiCall.arguments[0]).not.toEqual(testCall.arguments[0]);
       
       existsSync.mock.restore();
       readFileSync.mock.restore();
@@ -509,7 +499,7 @@ Just a bit.
       const extractCalls = writeFileSync.mock.calls.filter(call => 
         call.arguments[0].includes('docs/patterns/')
       );
-      assert.equal(extractCalls.length, 0, 'Should not extract well-sized sections');
+      expect(extractCalls.length).toEqual(0);
       
       existsSync.mock.restore();
       readFileSync.mock.restore();

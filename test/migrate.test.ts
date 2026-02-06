@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
@@ -34,7 +33,7 @@ describe('migrate command', () => {
     // For now, we'll test the basic structure
     
     // This test requires mocking which we'll implement in next iteration
-    assert.ok(true, 'Test scaffold - needs inquirer mocking');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -53,7 +52,7 @@ describe('migrate command', () => {
     // await migrate({ dir: testDir, /* mock confirms */ });
     
     // For now, verify the test structure is correct
-    assert.ok(!fs.existsSync(agentsPath), 'File should not exist yet');
+    expect(!fs.existsSync(agentsPath)).toBeTruthy();
   });
 
   it('should create CODEBASE_CHANGELOG.md from template', async () => {
@@ -66,7 +65,7 @@ describe('migrate command', () => {
     // After migration, file should exist and contain initial entry
     // TODO: Implement after adding inquirer mocking
     
-    assert.ok(true, 'Test scaffold ready');
+    expect(true).toBeTruthy();
   });
 
   it('should create .github/agents/ directory via install-agents', async () => {
@@ -79,7 +78,7 @@ describe('migrate command', () => {
     // After migrate completes
     // assertFileExists(agentsDir, 'Agents dir should be created');
     
-    assert.ok(true, 'Test scaffold - requires migrate execution');
+    expect(true).toBeTruthy();
   });
 
   it('should create .github/skills/ directory via install-skills', async () => {
@@ -92,7 +91,7 @@ describe('migrate command', () => {
     // After migrate completes
     // assertFileExists(skillsDir);
     
-    assert.ok(true, 'Test scaffold - requires migrate execution');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -107,7 +106,7 @@ describe('migrate command', () => {
     // assertFileExists(agentsPath);
     // assertPlaceholderReplaced(agentsPath, 'DATE');
     
-    assert.ok(true, 'Test scaffold - needs migration execution');
+    expect(true).toBeTruthy();
   });
 
   it('should not leave {{PLACEHOLDERS}} in CHANGELOG.md', async () => {
@@ -117,7 +116,7 @@ describe('migrate command', () => {
     // assertFileExists(changelogPath);
     // assertFileNotContains(changelogPath, /{{[A-Z_]+}}/);
     
-    assert.ok(true, 'Test scaffold - needs migration execution');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -139,7 +138,7 @@ describe('migrate command', () => {
     // 2. Continue anyway (not recommended)
     // 3. Exit and complete the file first
     
-    assert.ok(true, 'Test scaffold - requires inquirer mocking for action prompt');
+    expect(true).toBeTruthy();
   });
 
   it('should rename draft when user chooses rename action', async () => {
@@ -159,7 +158,7 @@ describe('migrate command', () => {
     // assertFileNotExists(draftPath, 'Draft should be gone');
     // assertFileExists(finalPath, 'Final should exist');
     
-    assert.ok(true, 'Test scaffold - needs rename logic execution');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -174,7 +173,7 @@ describe('migrate command', () => {
     
     // We need to spy on installAgents to verify it was called with _silent
     
-    assert.ok(true, 'Test scaffold - requires function mocking/spying');
+    expect(true).toBeTruthy();
   });
 
   it('should pass _silent: true to install-skills', async () => {
@@ -183,7 +182,7 @@ describe('migrate command', () => {
     // migrate should call:
     // await installSkills({ dir: targetDir, _silent: true })
     
-    assert.ok(true, 'Test scaffold - requires function mocking/spying');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -204,7 +203,7 @@ describe('migrate command', () => {
       // const agentsPath = path.join(customDir, 'AGENTS.md');
       // assertFileExists(agentsPath);
       
-      assert.ok(true, 'Test scaffold - needs migrate execution with custom dir');
+      expect(true).toBeTruthy();
     } finally {
       cleanupTestDir(customDir);
     }
@@ -216,7 +215,7 @@ describe('migrate command', () => {
     // When options.dir is undefined, should use process.cwd()
     // We'll need to change working directory for this test
     
-    assert.ok(true, 'Test scaffold - requires process.cwd() handling');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -230,7 +229,7 @@ describe('migrate command', () => {
     // migrate should catch it and display error message
     // Should not propagate error (no unhandled rejection)
     
-    assert.ok(true, 'Test scaffold - requires scan mocking to throw error');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -243,7 +242,7 @@ describe('migrate command', () => {
     // Need to capture console.log output
     // Look for "Step 1/5", "Step 2/5", ... "Step 5/5"
     
-    assert.ok(true, 'Test scaffold - requires console output capture');
+    expect(true).toBeTruthy();
   });
 
   it('should display next steps with AI prompt at completion', async () => {
@@ -252,7 +251,7 @@ describe('migrate command', () => {
     // After migration completes successfully
     // Should show "Next steps:" section with AI prompt
     
-    assert.ok(true, 'Test scaffold - requires console capture or prompt mocking');
+    expect(true).toBeTruthy();
   });
 
   // ========================================
@@ -296,6 +295,6 @@ describe('migrate command', () => {
     // assertFileContains(agents, '## 🚨 MANDATORY SESSION START PROTOCOL');
     // assertFileContains(changelog, '## Session: Initial Setup');
     
-    assert.ok(true, 'Full integration test scaffold - requires migrate execution with mocked prompts');
+    expect(true).toBeTruthy();
   });
 });

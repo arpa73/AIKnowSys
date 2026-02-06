@@ -1,11 +1,9 @@
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
-
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 describe('Feature Preferences Prompts', () => {
   let originalInquirer: any;
   let mockPrompt: any;
 
-  before(async () => {
+  beforeAll(async () => {
     // Save original inquirer
     const inquirerModule = await import('inquirer');
     originalInquirer = inquirerModule.default.prompt;
@@ -30,7 +28,7 @@ describe('Feature Preferences Prompts', () => {
     inquirerModule.default.prompt = mockPrompt;
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Restore original
     const inquirerModule = await import('inquirer');
     inquirerModule.default.prompt = originalInquirer;
@@ -39,7 +37,7 @@ describe('Feature Preferences Prompts', () => {
   describe('getFeaturePreferences', () => {
     it('should export getFeaturePreferences function', async () => {
       const prompts = await import('../lib/commands/init/prompts.js');
-      assert.ok(typeof prompts.getFeaturePreferences === 'function', 'getFeaturePreferences should be a function');
+      expect(typeof prompts.getFeaturePreferences === 'function').toBeTruthy();
     });
 
     it('should return feature selections', async () => {
@@ -47,9 +45,9 @@ describe('Feature Preferences Prompts', () => {
       const { getFeaturePreferences } = prompts as any;
       
       const result = await getFeaturePreferences();
-      assert.ok(result, 'Should return result');
-      assert.ok(result.features, 'Should have features property');
-      assert.ok(Array.isArray(result.features), 'features should be an array');
+      expect(result).toBeTruthy();
+      expect(result.features).toBeTruthy();
+      expect(Array.isArray(result.features)).toBeTruthy();
     });
 
     it('should include core features in defaults', async () => {
@@ -59,11 +57,11 @@ describe('Feature Preferences Prompts', () => {
       const result = await getFeaturePreferences();
       
       // Default features should be selected
-      assert.ok(result.features.includes('agents'), 'agents should be in defaults');
-      assert.ok(result.features.includes('skills'), 'skills should be in defaults');
-      assert.ok(result.features.includes('vscodeHooks'), 'vscodeHooks should be in defaults');
-      assert.ok(result.features.includes('sessionPersistence'), 'sessionPersistence should be in defaults');
-      assert.ok(result.features.includes('tddEnforcement'), 'tddEnforcement should be in defaults');
+      expect(result.features.includes('agents')).toBeTruthy();
+      expect(result.features.includes('skills')).toBeTruthy();
+      expect(result.features.includes('vscodeHooks')).toBeTruthy();
+      expect(result.features.includes('sessionPersistence')).toBeTruthy();
+      expect(result.features.includes('tddEnforcement')).toBeTruthy();
     });
   });
 });

@@ -1,5 +1,4 @@
-import { describe, it, before, after } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,12 +13,12 @@ const __dirname = path.dirname(__filename);
 describe('--essentials flag consistency across commands', () => {
   let testDir: string;
 
-  before(() => {
+  beforeAll(() => {
     testDir = path.join(__dirname, 'tmp', `essentials-flag-test-${Date.now()}`);
     fs.mkdirSync(testDir, { recursive: true });
   });
 
-  after(() => {
+  afterAll(() => {
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
     }
@@ -35,15 +34,9 @@ describe('--essentials flag consistency across commands', () => {
     });
 
     // Verify custom filename was created instead of default
-    assert.ok(
-      fs.existsSync(path.join(testDir, customEssentials)),
-      'Custom essentials file should exist'
-    );
+    expect(fs.existsSync(path.join(testDir, customEssentials))).toBeTruthy();
     
-    assert.ok(
-      !fs.existsSync(path.join(testDir, 'CODEBASE_ESSENTIALS.md')),
-      'Default essentials file should not exist'
-    );
+    expect(!fs.existsSync(path.join(testDir, 'CODEBASE_ESSENTIALS.md'))).toBeTruthy();
   });
 
   it('should validate custom essentials filename with check command', async () => {
@@ -65,9 +58,9 @@ describe('--essentials flag consistency across commands', () => {
         _silent: true
       });
       // If we get here, check passed (didn't throw)
-      assert.ok(true, 'Check should complete successfully');
+      expect(true).toBeTruthy();
     } catch (error) {
-      assert.fail(`Check should not throw: ${(error as Error).message}`);
+      expect.fail(`Check should not throw: ${(error as Error).message}`);
     }
   });
 
@@ -104,10 +97,7 @@ Some duplicated content here.
 
     // Verify AGENTS.md was updated to reference custom filename
     const agentsContent = fs.readFileSync(agentsPath, 'utf-8');
-    assert.ok(
-      agentsContent.includes(customEssentials),
-      'AGENTS.md should reference custom essentials filename after sync'
-    );
+    expect(agentsContent.includes(customEssentials)).toBeTruthy();
   });
 
   it('should audit files with custom essentials filename', async () => {
@@ -127,7 +117,7 @@ Some duplicated content here.
     });
 
     // Should complete successfully
-    assert.ok(result, 'Audit should complete with custom filename');
+    expect(result).toBeTruthy();
   });
 
   it('should default to CODEBASE_ESSENTIALS.md when --essentials not provided', async () => {
@@ -142,10 +132,7 @@ Some duplicated content here.
       });
 
       // Should create default filename
-      assert.ok(
-        fs.existsSync(path.join(defaultTestDir, 'CODEBASE_ESSENTIALS.md')),
-        'Should create default CODEBASE_ESSENTIALS.md when flag not provided'
-      );
+      expect(fs.existsSync(path.join(defaultTestDir, 'CODEBASE_ESSENTIALS.md'))).toBeTruthy();
     } finally {
       if (fs.existsSync(defaultTestDir)) {
         fs.rmSync(defaultTestDir, { recursive: true, force: true });
@@ -171,18 +158,12 @@ Some duplicated content here.
 
       if (fs.existsSync(developerPath)) {
         const developerContent = fs.readFileSync(developerPath, 'utf-8');
-        assert.ok(
-          developerContent.includes(customEssentials),
-          'Developer agent should reference custom essentials filename'
-        );
+        expect(developerContent.includes(customEssentials)).toBeTruthy();
       }
 
       if (fs.existsSync(architectPath)) {
         const architectContent = fs.readFileSync(architectPath, 'utf-8');
-        assert.ok(
-          architectContent.includes(customEssentials),
-          'Architect agent should reference custom essentials filename'
-        );
+        expect(architectContent.includes(customEssentials)).toBeTruthy();
       }
     } finally {
       if (fs.existsSync(agentTestDir)) {
@@ -202,13 +183,10 @@ Some duplicated content here.
         essentials: customEssentials,
         _silent: true
       });
-      assert.fail('Should have thrown an error');
+      expect.fail('Should have thrown an error');
     } catch (error) {
       // Error should be thrown (health check failed)
-      assert.ok(
-        (error as Error).message.includes('Health check failed') || (error as Error).message.includes('failed'),
-        'Error should be thrown when essentials file is missing'
-      );
+      expect((error as Error).message.includes('Health check failed') || (error as Error).message.includes('failed')).toBeTruthy();
     }
   });
 });

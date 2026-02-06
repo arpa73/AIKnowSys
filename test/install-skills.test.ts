@@ -1,5 +1,4 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { installSkills } from '../lib/commands/install-skills.js';
@@ -41,10 +40,7 @@ describe('install-skills command', () => {
     
     assertFileExists(skillsDir);
     
-    await assert.doesNotReject(
-      async () => await installSkills({ dir: testDir, _silent: true }),
-      'Should not fail when directory already exists'
-    );
+    await await expect(async () => await installSkills({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   // ========================================
@@ -147,14 +143,11 @@ describe('install-skills command', () => {
 
   it('should skip invalid skill name gracefully', async () => {
     // When user provides a skill that doesn't exist
-    await assert.doesNotReject(
-      async () => await installSkills({
-        dir: testDir,
-        skills: ['refactoring-workflow', 'nonexistent-skill', 'tdd-workflow'],
-        _silent: true
-      }),
-      'Should not throw when skill not found'
-    );
+    await await expect(async () => await installSkills({
+            dir: testDir,
+            skills: ['refactoring-workflow', 'nonexistent-skill', 'tdd-workflow'],
+            _silent: true
+          })).resolves.not.toThrow();
     
     const skillsDir: string = path.join(testDir, '.github', 'skills');
     
@@ -179,10 +172,7 @@ describe('install-skills command', () => {
       await installSkills({ dir: testDir, _silent: true });
       
       // Should have minimal/no output in silent mode
-      assert.ok(
-        logs.length === 0 || logs.every((log: any[]) => !log.join('').includes('Installing')),
-        'Should not show "Installing" messages in silent mode'
-      );
+      expect(logs.length === 0 || logs.every((log: any[]) => !log.join('').includes('Installing'))).toBeTruthy();
     } finally {
       console.log = originalLog;
     }
@@ -199,7 +189,7 @@ describe('install-skills command', () => {
       const hasOutput: boolean = logs.some((log: any[]) =>
         log.join('').includes('Installing') || log.join('').includes('Skills')
       );
-      assert.ok(hasOutput, 'Should show console output in normal mode');
+      expect(hasOutput).toBeTruthy();
     } finally {
       console.log = originalLog;
     }
@@ -236,8 +226,8 @@ describe('install-skills command', () => {
     const content: string = fs.readFileSync(skillMdPath, 'utf-8');
     
     // Verify structure is preserved
-    assert.ok(content.includes('# TDD Workflow Skill'), 'Should have title');
-    assert.ok(content.includes('**Purpose:**'), 'Should have purpose section');
+    expect(content.includes('# TDD Workflow Skill')).toBeTruthy();
+    expect(content.includes('**Purpose:**')).toBeTruthy();
   });
 
   it('should copy entire skill directory structure', async () => {
@@ -266,11 +256,7 @@ describe('install-skills command', () => {
     const installedSkills: string[] = fs.readdirSync(skillsDir);
     
     // Should have 10 skills
-    assert.strictEqual(
-      installedSkills.length,
-      10,
-      'Should install exactly 10 default skills'
-    );
+    expect(installedSkills.length).toBe(10);
   });
 
   it('should track skipped count when invalid skills provided', async () => {
@@ -285,10 +271,6 @@ describe('install-skills command', () => {
     const installedSkills: string[] = fs.readdirSync(skillsDir);
     
     // Should have 2 valid skills installed
-    assert.strictEqual(
-      installedSkills.length,
-      2,
-      'Should only install valid skills'
-    );
+    expect(installedSkills.length).toBe(2);
   });
 });

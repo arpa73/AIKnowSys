@@ -1,5 +1,4 @@
-import { describe, it, after, beforeEach } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, afterAll, beforeEach, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -22,7 +21,7 @@ describe('FileTracker', () => {
     tracker = new FileTracker();
   });
 
-  after(async () => {
+  afterAll(async () => {
     // Cleanup test directory
     if (testDir && await fs.access(testDir).then(() => true).catch(() => false)) {
       await fs.rm(testDir, { recursive: true, force: true });
@@ -31,11 +30,11 @@ describe('FileTracker', () => {
 
   describe('constructor', () => {
     it('should create instance with empty tracking arrays', async () => {
-      assert.ok(tracker, 'FileTracker should be instantiated');
-      assert.ok(Array.isArray(tracker.createdFiles), 'Should have createdFiles array');
-      assert.ok(Array.isArray(tracker.createdDirs), 'Should have createdDirs array');
-      assert.strictEqual(tracker.createdFiles.length, 0, 'Should start with no tracked files');
-      assert.strictEqual(tracker.createdDirs.length, 0, 'Should start with no tracked dirs');
+      expect(tracker).toBeTruthy();
+      expect(Array.isArray(tracker.createdFiles)).toBeTruthy();
+      expect(Array.isArray(tracker.createdDirs)).toBeTruthy();
+      expect(tracker.createdFiles.length).toBe(0);
+      expect(tracker.createdDirs.length).toBe(0);
     });
   });
 
@@ -44,8 +43,8 @@ describe('FileTracker', () => {
       const filePath = path.join(testDir, 'test.txt');
       tracker.trackFile(filePath);
       
-      assert.strictEqual(tracker.createdFiles.length, 1, 'Should have 1 tracked file');
-      assert.strictEqual(tracker.createdFiles[0], filePath, 'Should track correct file path');
+      expect(tracker.createdFiles.length).toBe(1);
+      expect(tracker.createdFiles[0]).toBe(filePath);
     });
 
     it('should track multiple files in order', async () => {
@@ -55,9 +54,9 @@ describe('FileTracker', () => {
       tracker.trackFile(file1);
       tracker.trackFile(file2);
       
-      assert.strictEqual(tracker.createdFiles.length, 2, 'Should track 2 files');
-      assert.strictEqual(tracker.createdFiles[0], file1, 'First file should be file1');
-      assert.strictEqual(tracker.createdFiles[1], file2, 'Second file should be file2');
+      expect(tracker.createdFiles.length).toBe(2);
+      expect(tracker.createdFiles[0]).toBe(file1);
+      expect(tracker.createdFiles[1]).toBe(file2);
     });
   });
 
@@ -66,8 +65,8 @@ describe('FileTracker', () => {
       const dirPath = path.join(testDir, 'subdir');
       tracker.trackDir(dirPath);
       
-      assert.strictEqual(tracker.createdDirs.length, 1, 'Should have 1 tracked directory');
-      assert.strictEqual(tracker.createdDirs[0], dirPath, 'Should track correct directory path');
+      expect(tracker.createdDirs.length).toBe(1);
+      expect(tracker.createdDirs[0]).toBe(dirPath);
     });
 
     it('should track multiple directories in order', async () => {
@@ -77,9 +76,9 @@ describe('FileTracker', () => {
       tracker.trackDir(dir1);
       tracker.trackDir(dir2);
       
-      assert.strictEqual(tracker.createdDirs.length, 2, 'Should track 2 directories');
-      assert.strictEqual(tracker.createdDirs[0], dir1, 'First dir should be dir1');
-      assert.strictEqual(tracker.createdDirs[1], dir2, 'Second dir should be dir2');
+      expect(tracker.createdDirs.length).toBe(2);
+      expect(tracker.createdDirs[0]).toBe(dir1);
+      expect(tracker.createdDirs[1]).toBe(dir2);
     });
   });
 
@@ -97,8 +96,8 @@ describe('FileTracker', () => {
       tracker.trackFile(file2);
       
       // Verify files exist
-      assert.ok(await fs.access(file1).then(() => true).catch(() => false), 'file1 should exist');
-      assert.ok(await fs.access(file2).then(() => true).catch(() => false), 'file2 should exist');
+      expect(await fs.access(file1).then(() => true).catch(() => false)).toBeTruthy();
+      expect(await fs.access(file2).then(() => true).catch(() => false)).toBeTruthy();
       
       // Rollback
       const mockLog = {
@@ -108,8 +107,8 @@ describe('FileTracker', () => {
       await tracker.rollback(mockLog);
       
       // Verify files are deleted
-      assert.ok(!await fs.access(file1).then(() => true).catch(() => false), 'file1 should be deleted');
-      assert.ok(!await fs.access(file2).then(() => true).catch(() => false), 'file2 should be deleted');
+      expect(!await fs.access(file1).then(() => true).catch(() => false)).toBeTruthy();
+      expect(!await fs.access(file2).then(() => true).catch(() => false)).toBeTruthy();
     });
 
     it('should delete tracked directories in reverse order if empty', async () => {
@@ -125,8 +124,8 @@ describe('FileTracker', () => {
       tracker.trackDir(dir2);
       
       // Verify directories exist
-      assert.ok(await fs.access(dir1).then(() => true).catch(() => false), 'dir1 should exist');
-      assert.ok(await fs.access(dir2).then(() => true).catch(() => false), 'dir2 should exist');
+      expect(await fs.access(dir1).then(() => true).catch(() => false)).toBeTruthy();
+      expect(await fs.access(dir2).then(() => true).catch(() => false)).toBeTruthy();
       
       // Rollback
       const mockLog = {
@@ -136,8 +135,8 @@ describe('FileTracker', () => {
       await tracker.rollback(mockLog);
       
       // Verify empty directories are deleted
-      assert.ok(!await fs.access(dir1).then(() => true).catch(() => false), 'dir1 should be deleted');
-      assert.ok(!await fs.access(dir2).then(() => true).catch(() => false), 'dir2 should be deleted');
+      expect(!await fs.access(dir1).then(() => true).catch(() => false)).toBeTruthy();
+      expect(!await fs.access(dir2).then(() => true).catch(() => false)).toBeTruthy();
     });
 
     it('should NOT delete directories that still contain files', async () => {
@@ -159,8 +158,8 @@ describe('FileTracker', () => {
       await tracker.rollback(mockLog);
       
       // Directory should still exist because it has a file
-      assert.ok(await fs.access(dir).then(() => true).catch(() => false), 'dir should still exist');
-      assert.ok(await fs.access(file).then(() => true).catch(() => false), 'file should still exist');
+      expect(await fs.access(dir).then(() => true).catch(() => false)).toBeTruthy();
+      expect(await fs.access(file).then(() => true).catch(() => false)).toBeTruthy();
       
       // Cleanup
       await fs.rm(dir, { recursive: true, force: true });
@@ -178,10 +177,7 @@ describe('FileTracker', () => {
         info: () => {}
       };
       
-      await assert.doesNotReject(
-        async () => await tracker.rollback(mockLog),
-        'Should handle missing files gracefully'
-      );
+      await await expect(async () => await tracker.rollback(mockLog)).resolves.not.toThrow();
     });
 
     it('should log each deletion', async () => {
@@ -198,11 +194,8 @@ describe('FileTracker', () => {
       await tracker.rollback(mockLog);
       
       // Should have logged the deletion
-      assert.ok(logs.length > 0, 'Should have logged something');
-      assert.ok(
-        logs.some(log => log.msg.includes('log-test.txt')),
-        'Should log file name being deleted'
-      );
+      expect(logs.length > 0).toBeTruthy();
+      expect(logs.some(log => log.msg.includes('log-test.txt'))).toBeTruthy();
     });
 
     it('should delete files and directories together in correct order', async () => {
@@ -228,11 +221,11 @@ describe('FileTracker', () => {
       await tracker.rollback(mockLog);
       
       // Files should be deleted first (reverse order)
-      assert.ok(!await fs.access(file2).then(() => true).catch(() => false), 'file2 deleted');
-      assert.ok(!await fs.access(file1).then(() => true).catch(() => false), 'file1 deleted');
+      expect(!await fs.access(file2).then(() => true).catch(() => false)).toBeTruthy();
+      expect(!await fs.access(file1).then(() => true).catch(() => false)).toBeTruthy();
       
       // Then empty directory should be deleted
-      assert.ok(!await fs.access(dir).then(() => true).catch(() => false), 'dir deleted');
+      expect(!await fs.access(dir).then(() => true).catch(() => false)).toBeTruthy();
     });
   });
 });

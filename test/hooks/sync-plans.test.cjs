@@ -30,7 +30,7 @@ describe('sync-plans hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'test-user' }
       });
 
-      assert.ok(result !== undefined, 'Hook should complete without error');
+      expect(result !== undefined).toBeTruthy();
     });
 
     it('should exit successfully when sync-plans command does not exist', () => {
@@ -56,7 +56,7 @@ describe('sync-plans hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'test-user' }
       });
 
-      assert.ok(result !== undefined, 'Hook should complete without error');
+      expect(result !== undefined).toBeTruthy();
     });
 
     it('should be non-blocking even if sync fails', () => {
@@ -80,7 +80,7 @@ describe('sync-plans hook', () => {
         env: { ...process.env, GIT_AUTHOR_NAME: 'test-user', PATH: `${binDir}:${process.env.PATH}` }
       });
 
-      assert.ok(result !== undefined, 'Hook should not fail merge even if sync fails');
+      expect(result !== undefined).toBeTruthy();
     });
   });
 
@@ -124,7 +124,7 @@ process.exit(1);
       });
 
       // Verify sync was executed
-      assert.ok(fs.existsSync(markerFile), 'sync-plans command should have been executed');
+      expect(fs.existsSync(markerFile)).toBeTruthy();
     });
 
     it('should run silently without user prompts', () => {
@@ -160,7 +160,7 @@ process.exit(1);
       });
 
       // Verify --silent flag was used
-      assert.ok(output.includes('SILENT_MODE_ACTIVE'), 'Should run sync-plans with --silent flag');
+      expect(output.includes('SILENT_MODE_ACTIVE')).toBeTruthy();
     });
   });
 
@@ -168,7 +168,7 @@ process.exit(1);
     it('should be executable as a post-merge git hook', () => {
       // Verify hook file exists and has shebang
       const hookContent = fs.readFileSync(hookScript, 'utf-8');
-      assert.ok(hookContent.startsWith('#!/usr/bin/env node'), 'Hook should have node shebang');
+      expect(hookContent.startsWith('#!/usr/bin/env node')).toBeTruthy();
     });
 
     it('should skip gracefully in non-Phase-2 projects', () => {
@@ -187,7 +187,7 @@ process.exit(1);
         env: { ...process.env, GIT_AUTHOR_NAME: 'test-user' }
       });
 
-      assert.ok(result !== undefined, 'Hook should skip gracefully in single-dev projects');
+      expect(result !== undefined).toBeTruthy();
     });
   });
 });

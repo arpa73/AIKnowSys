@@ -3,8 +3,7 @@
  * Prevents regression: files needed by commands but missing from npm package
  */
 
-import { describe, it } from 'node:test';
-import * as assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,11 +17,8 @@ describe('Package Files Validation', () => {
     const packageJsonPath = path.join(rootDir, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     
-    assert.ok(packageJson.files, 'package.json should have files array');
-    assert.ok(
-      packageJson.files.includes('SETUP_GUIDE.md'),
-      'SETUP_GUIDE.md must be in files array (referenced in init/templates.js)'
-    );
+    expect(packageJson.files).toBeTruthy();
+    expect(packageJson.files.includes('SETUP_GUIDE.md')).toBeTruthy();
   });
   
   it('should include all template files referenced in init/templates.js', () => {
@@ -63,11 +59,7 @@ describe('Package Files Validation', () => {
       });
     });
     
-    assert.strictEqual(
-      missingFiles.length,
-      0,
-      `Missing files in package.json: ${missingFiles.join(', ')}`
-    );
+    expect(missingFiles.length).toBe(0);
   });
   
   it('should include all files that npm pack would include', async () => {
@@ -86,14 +78,8 @@ describe('Package Files Validation', () => {
       const fileExists = fs.existsSync(path.join(rootDir, file));
       const fileIncluded = packageJson.files.includes(file);
       
-      assert.ok(
-        fileExists,
-        `Critical file ${file} must exist in repository`
-      );
-      assert.ok(
-        fileIncluded,
-        `Critical file ${file} must be in package.json files array`
-      );
+      expect(fileExists).toBeTruthy();
+      expect(fileIncluded).toBeTruthy();
     }
   });
 });

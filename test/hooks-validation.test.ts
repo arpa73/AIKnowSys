@@ -5,8 +5,7 @@
  * Using node:test (built-in test runner, zero external dependencies)
  */
 
-import { describe, it, beforeEach, afterEach } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -52,7 +51,7 @@ describe('Validation Reminder Hook', () => {
     const result = await runHook(hookPath, {});
     
     // Hook should always exit 0 (non-blocking)
-    assert.strictEqual(result.code, 0, 'Hook should exit with code 0');
+    expect(result.code).toBe(0);
   });
   
   it('should detect code changes in lib/ directory', async () => {
@@ -66,7 +65,7 @@ describe('Validation Reminder Hook', () => {
     const result = await runHook(hookPath, input);
     
     // Should detect code change (this test will fail initially)
-    assert.strictEqual(result.code, 0);
+    expect(result.code).toBe(0);
     // Hook should output validation reminder if no npm test found
   });
   
@@ -81,10 +80,9 @@ describe('Validation Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0, 'Should exit 0');
-    assert.ok(result.stderr.includes('[Hook]'), 'Should output to stderr');
-    assert.ok(result.stderr.includes('Validation') || result.stderr.includes('test'), 
-      'Should mention validation/testing');
+    expect(result.code).toBe(0);
+    expect(result.stderr.includes('[Hook]')).toBeTruthy();
+    expect(result.stderr.includes('Validation') || result.stderr.includes('test')).toBeTruthy();
   });
   
   it('should remain silent when validation already run', async () => {
@@ -98,9 +96,8 @@ describe('Validation Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0, 'Should exit 0');
-    assert.ok(!result.stderr.includes('Validation check'), 
-      'Should not warn if validation was run');
+    expect(result.code).toBe(0);
+    expect(!result.stderr.includes('Validation check')).toBeTruthy();
   });
   
   it('should complete within timeout (2 seconds)', async () => {
@@ -108,8 +105,8 @@ describe('Validation Reminder Hook', () => {
     const result = await runHook(hookPath, {});
     const elapsed: number = Date.now() - startTime;
     
-    assert.strictEqual(result.code, 0);
-    assert.ok(elapsed < 2000, `Should complete in <2s, took ${elapsed}ms`);
+    expect(result.code).toBe(0);
+    expect(elapsed < 2000).toBeTruthy();
   });
 });
 
@@ -143,7 +140,7 @@ describe('TDD Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0, 'Should exit 0');
+    expect(result.code).toBe(0);
     // Hook should recognize this as implementation file
   });
   
@@ -157,7 +154,7 @@ describe('TDD Reminder Hook', () => {
     const result = await runHook(hookPath, input);
     
     // Should check for test/audit.test.js
-    assert.strictEqual(result.code, 0);
+    expect(result.code).toBe(0);
   });
   
   it('should warn when test file missing or not recently edited', async () => {
@@ -169,10 +166,9 @@ describe('TDD Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0, 'Should exit 0');
-    assert.ok(result.stderr.includes('[Hook]'), 'Should output to stderr');
-    assert.ok(result.stderr.includes('TDD') || result.stderr.includes('test'), 
-      'Should mention TDD/testing');
+    expect(result.code).toBe(0);
+    expect(result.stderr.includes('[Hook]')).toBeTruthy();
+    expect(result.stderr.includes('TDD') || result.stderr.includes('test')).toBeTruthy();
   });
   
   it('should remain silent when test file exists and was recently edited', async () => {
@@ -187,7 +183,7 @@ describe('TDD Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0);
+    expect(result.code).toBe(0);
     // Should not warn for test files themselves
   });
   
@@ -200,10 +196,9 @@ describe('TDD Reminder Hook', () => {
     
     const result = await runHook(hookPath, input);
     
-    assert.strictEqual(result.code, 0);
+    expect(result.code).toBe(0);
     if (result.stderr.includes('TDD')) {
-      assert.ok(result.stderr.includes('tdd-workflow') || result.stderr.includes('.github/skills'), 
-        'Should reference TDD skill');
+      expect(result.stderr.includes('tdd-workflow') || result.stderr.includes('.github/skills')).toBeTruthy();
     }
   });
 });
@@ -217,14 +212,14 @@ describe('Hook Error Handling', () => {
     const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'validation-reminder.cjs');
     const result = await runHook(hookPath, {});
     
-    assert.strictEqual(result.code, 0, 'Should not crash on empty input');
+    expect(result.code).toBe(0);
   });
   
   it('tdd hook should handle empty input gracefully', async () => {
     const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'tdd-reminder.cjs');
     const result = await runHook(hookPath, {});
     
-    assert.strictEqual(result.code, 0, 'Should not crash on empty input');
+    expect(result.code).toBe(0);
   });
   
   it('validation hook should handle malformed input', async () => {
@@ -234,7 +229,7 @@ describe('Hook Error Handling', () => {
       const proc = spawn('node', [hookPath]);
       
       proc.on('close', (code: number | null) => {
-        assert.strictEqual(code, 0, 'Should exit 0 even with malformed input');
+        expect(code).toBe(0);
         resolve();
       });
       

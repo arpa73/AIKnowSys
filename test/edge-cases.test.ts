@@ -12,8 +12,7 @@
  * 5. Permission errors
  */
 
-import { describe, it, before, after } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, beforeAll, afterAll, expect } from 'vitest';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -31,11 +30,11 @@ interface AuditResult {
 
 let testDir: string;
 
-before(async () => {
+beforeAll(async () => {
   testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-edge-test-'));
 });
 
-after(async () => {
+afterAll(async () => {
   await fs.rm(testDir, { recursive: true, force: true });
 });
 
@@ -50,13 +49,11 @@ describe('Edge Case 1: Empty File Handling', () => {
 
     try {
       await check({ dir: emptyDir, _silent: true });
-      assert.fail('Should have thrown error for empty ESSENTIALS file');
+      expect.fail('Should have thrown error for empty ESSENTIALS file');
     } catch (error) {
       const err = error as Error;
-      assert.match(err.message, /empty|no content|blank/i, 
-        'Error should mention file is empty');
-      assert.match(err.message, /scan|generate|content/i, 
-        'Error should suggest how to fix (scan command)');
+      expect(err.message).toMatch(/empty|no content|blank/i);
+      expect(err.message).toMatch(/scan|generate|content/i);
     }
   });
 
@@ -70,11 +67,10 @@ describe('Edge Case 1: Empty File Handling', () => {
 
     try {
       await check({ dir: emptyDir, _silent: true });
-      assert.fail('Should have thrown error for empty AGENTS file');
+      expect.fail('Should have thrown error for empty AGENTS file');
     } catch (error) {
       const err = error as Error;
-      assert.match(err.message, /empty|no content|blank/i,
-        'Error should mention file is empty');
+      expect(err.message).toMatch(/empty|no content|blank/i);
     }
   });
 
@@ -87,11 +83,10 @@ describe('Edge Case 1: Empty File Handling', () => {
 
     try {
       await audit({ dir: emptyDir, _silent: true });
-      assert.fail('Should have thrown error for empty files');
+      expect.fail('Should have thrown error for empty files');
     } catch (error) {
       const err = error as Error;
-      assert.match(err.message, /empty|no content|blank/i,
-        'Error should mention files are empty');
+      expect(err.message).toMatch(/empty|no content|blank/i);
     }
   });
 });
@@ -114,12 +109,12 @@ describe('Edge Case 2: Huge File Handling', () => {
     const result: CheckResult = await check({ dir: hugeDir, _silent: true }) as CheckResult;
     
     // Should complete but with warnings
-    assert.ok(result.warnings, 'Should have warnings object');
-    assert.ok(result.warnings && result.warnings.length > 0, 'Should have at least one warning');
+    expect(result.warnings).toBeTruthy();
+    expect(result.warnings && result.warnings.length > 0).toBeTruthy();
     const hasLargeFileWarning: boolean = result.warnings ? result.warnings.some(w => 
       w.toLowerCase().includes('large') || w.toLowerCase().includes('size')
     ) : false;
-    assert.ok(hasLargeFileWarning, 'Should warn about large file size');
+    expect(hasLargeFileWarning).toBeTruthy();
   });
 
   it('audit command should error on files >50MB', async () => {
@@ -142,21 +137,18 @@ describe('Edge Case 2: Huge File Handling', () => {
 
     try {
       await audit({ dir: massiveDir, _silent: true });
-      assert.fail('Should have thrown error for massive file');
+      expect.fail('Should have thrown error for massive file');
     } catch (error) {
       const err = error as { message: string; suggestion?: string };
       // Check message for file size info
-      assert.match(err.message, /too large|file size|limit/i,
-        'Error should mention file size limit');
+      expect(err.message).toMatch(/too large|file size|limit/i);
       
       // AIKnowSysError stores suggestions separately
       if (err.suggestion) {
-        assert.match(err.suggestion, /streaming|split|reduce/i,
-          'Error should suggest alternative approach');
+        expect(err.suggestion).toMatch(/streaming|split|reduce/i);
       } else {
         // Fallback for regular Error
-        assert.match(err.message, /streaming|split|reduce/i,
-          'Error should suggest alternative approach');
+        expect(err.message).toMatch(/streaming|split|reduce/i);
       }
     }
   });
@@ -167,13 +159,13 @@ describe('Edge Case 3: Special Characters in Project Names', () => {
     // RED: May already work, but ensure error message is helpful
     const result = sanitizeProjectName('my-app-🚀');
     
-    assert.strictEqual(result.valid, false, 'Should reject emoji');
+    expect(result.valid).toBe(false);
     const hasEmojiError: boolean = result.errors.some(e => 
       e.toLowerCase().includes('emoji') || 
       e.toLowerCase().includes('unicode') ||
       e.toLowerCase().includes('special')
     );
-    assert.ok(hasEmojiError, 'Error should specifically mention emoji/unicode');
+    expect(hasEmojiError).toBeTruthy();
   });
 
   it('should reject project names with spaces', () => {
@@ -182,8 +174,7 @@ describe('Edge Case 3: Special Characters in Project Names', () => {
     
     // Note: sanitize might convert spaces to hyphens (check existing behavior)
     // If it auto-fixes, that's OK - just verify it works
-    assert.ok(result.sanitized === 'my-cool-app' || !result.valid,
-      'Should either sanitize spaces to hyphens or reject');
+    expect(result.sanitized === 'my-cool-app' || !result.valid).toBeTruthy();
   });
 
   it('should reject very long project names (>214 chars)', () => {
@@ -191,11 +182,11 @@ describe('Edge Case 3: Special Characters in Project Names', () => {
     const longName: string = 'a'.repeat(215);
     const result = sanitizeProjectName(longName);
     
-    assert.strictEqual(result.valid, false, 'Should reject names >214 chars');
+    expect(result.valid).toBe(false);
     const hasLengthError: boolean = result.errors.some(e => 
       e.toLowerCase().includes('long') || e.toLowerCase().includes('length')
     );
-    assert.ok(hasLengthError, 'Error should mention length limit');
+    expect(hasLengthError).toBeTruthy();
   });
 
   it('should reject npm reserved names', () => {
@@ -204,8 +195,7 @@ describe('Edge Case 3: Special Characters in Project Names', () => {
     
     for (const name of reservedNames) {
       const result = sanitizeProjectName(name);
-      assert.strictEqual(result.valid, false, 
-        `Should reject reserved name: ${name}`);
+      expect(result.valid).toBe(false);
     }
   });
 });
@@ -218,7 +208,7 @@ describe('Edge Case 4: Git Not Available', () => {
     
     // Manual test: Temporarily rename git binary and run init
     // Expected: Should skip git hooks with warning, not crash
-    assert.ok(true, 'Manual test: Run init without git installed');
+    expect(true).toBeTruthy();
   });
 });
 
@@ -232,7 +222,7 @@ describe('Edge Case 5: Permission Errors', () => {
     // 2. aiknowsys init --dir /tmp/readonly
     // Expected: Clear error about permissions, not generic EACCES
     
-    assert.ok(true, 'Manual test: Run init in read-only directory');
+    expect(true).toBeTruthy();
   });
 });
 
@@ -264,7 +254,7 @@ Some content without proper structure
     
     // Might pass with warnings, or fail with helpful error
     // Either is acceptable as long as it doesn't crash
-    assert.ok(result !== undefined, 'Should return result, not crash');
+    expect(result !== undefined).toBeTruthy();
   });
 
   it('audit command should handle files with no validation matrix', async () => {
@@ -290,12 +280,12 @@ Content here
     const result: AuditResult = await audit({ dir: noMatrixDir, _silent: true }) as AuditResult;
     
     // Should report this as an issue, not crash
-    assert.ok(result.issues, 'Should have issues array');
+    expect(result.issues).toBeTruthy();
     const hasMissingMatrixIssue: boolean = result.issues ? result.issues.some(issue => 
       issue.message.toLowerCase().includes('validation matrix') ||
       issue.message.toLowerCase().includes('missing section')
     ) : false;
-    assert.ok(hasMissingMatrixIssue, 'Should report missing validation matrix');
+    expect(hasMissingMatrixIssue).toBeTruthy();
   });
 });
 
@@ -309,6 +299,6 @@ describe('Edge Case 7: Network/Slow Filesystem', () => {
     // 2. Run scan on slow USB drive
     // Expected: Should show progress, not appear frozen
     
-    assert.ok(true, 'Manual test: Run scan on slow filesystem');
+    expect(true).toBeTruthy();
   });
 });

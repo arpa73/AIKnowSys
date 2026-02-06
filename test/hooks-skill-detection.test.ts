@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -16,22 +15,22 @@ const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '
 describe('Hook Configuration', () => {
   it('should load config.json if it exists', async () => {
     // This will be implemented when we have the config loading function
-    assert.ok(true, 'Placeholder for config loading test');
+    expect(true).toBeTruthy();
   });
   
   it('should use defaults if config missing', async () => {
     // Test that hooks work without config.json
-    assert.ok(true, 'Placeholder for default config test');
+    expect(true).toBeTruthy();
   });
   
   it('should validate skill triggers format', async () => {
     // Test that invalid trigger format falls back to defaults
-    assert.ok(true, 'Placeholder for schema validation test');
+    expect(true).toBeTruthy();
   });
   
   it('should merge custom config with defaults', async () => {
     // Partial config should merge with defaults
-    assert.ok(true, 'Placeholder for config merging test');
+    expect(true).toBeTruthy();
   });
 });
 
@@ -54,8 +53,8 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       });
       
       // Verify skill detected in output
-      assert.match(result, /code-refactoring/, 'Should mention code-refactoring skill');
-      assert.match(result, /refactoring workflow/i, 'Should show skill description');
+      expect(result).toMatch(/code-refactoring/);
+      expect(result).toMatch(/refactoring workflow/i);
     } finally {
       // Cleanup
       if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
@@ -78,10 +77,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       });
       
       // Should detect both feature-implementation and tdd-workflow
-      assert.ok(
-        result.includes('feature-implementation') || result.includes('tdd-workflow'),
-        'Should detect at least one relevant skill from prompt'
-      );
+      expect(result.includes('feature-implementation') || result.includes('tdd-workflow')).toBeTruthy();
     } finally {
       if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
     }
@@ -104,13 +100,11 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       
       // dependency-updates should be in "Requires confirmation" section, not "Auto-loaded"
       if (result.includes('dependency-updates')) {
-        assert.match(result, /Requires confirmation.*dependency-updates/s, 
-          'dependency-updates should require confirmation, not auto-load');
+        expect(result).toMatch(/Requires confirmation.*dependency-updates/s);
       }
     } catch (err: any) {
       if (err.stderr && err.stderr.includes('dependency-updates')) {
-        assert.match(err.stderr, /Requires confirmation.*dependency-updates/s,
-          'dependency-updates should require confirmation');
+        expect(err.stderr).toMatch(/Requires confirmation.*dependency-updates/s);
       }
       // If hook doesn't output anything, that's also valid (no exact match)
     }
@@ -118,7 +112,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   
   it('should suggest skills on fuzzy match', async () => {
     // When no exact match, hook should use fuzzy matching for suggestions
-    assert.ok(true, 'Fuzzy matching tested via Levenshtein distance function');
+    expect(true).toBeTruthy();
   });
   
   it('should track conversation context for continuity', async () => {
@@ -140,11 +134,11 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       
       // Should detect context continuity
       if (result) {
-        assert.match(result, /code-refactoring/, 'Should continue with code-refactoring from context');
+        expect(result).toMatch(/code-refactoring/);
       }
     } catch (err: any) {
       if (err.stderr) {
-        assert.match(err.stderr, /code-refactoring/, 'Should detect skill from conversation context');
+        expect(err.stderr).toMatch(/code-refactoring/);
       }
       // No error means hook exited cleanly with no output (also valid)
     }
@@ -164,10 +158,10 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       });
       
       // Should either have no output or show recommendations
-      assert.ok(true, 'Hook handled irrelevant prompt without crashing');
+      expect(true).toBeTruthy();
     } catch (err: any) {
       // Hook should exit 0 even with no matches
-      assert.strictEqual(err.status, 0, 'Hook should exit with code 0');
+      expect(err.status).toBe(0);
     }
   });
 });
@@ -188,11 +182,11 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       
       // Should warn about dependency-updates skill
       if (result) {
-        assert.match(result, /dependency-updates|package\.json/, 'Should mention dependency skill for package.json');
+        expect(result).toMatch(/dependency-updates|package\.json/);
       }
     } catch (err: any) {
       if (err.stderr) {
-        assert.match(err.stderr, /dependency-updates|package\.json/, 'Should suggest dependency skill');
+        expect(err.stderr).toMatch(/dependency-updates|package\.json/);
       }
       // Hook exits with 0 even when warning, so no error expected
     }
@@ -216,17 +210,17 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       
       // Should NOT warn if skill was already loaded
       // Empty or minimal output is expected
-      assert.ok(true, 'Hook should remain silent when skill already loaded');
+      expect(true).toBeTruthy();
     } catch (err: any) {
       // Hook should always exit 0
-      assert.strictEqual(err.status, 0, 'Hook should exit cleanly');
+      expect(err.status).toBe(0);
     }
   });
   
   it('should use custom skill mapping from config', async () => {
     // Config loading is tested by the hook's own logic
     // This test verifies the hook doesn't crash with custom config
-    assert.ok(true, 'Custom config support verified via hook implementation');
+    expect(true).toBeTruthy();
   });
   
   it('should detect multiple skill requirements', async () => {
@@ -244,9 +238,9 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       });
       
       // Hook might suggest TDD skill for test files
-      assert.ok(true, 'Hook processed test file without crashing');
+      expect(true).toBeTruthy();
     } catch (err: any) {
-      assert.strictEqual(err.status, 0, 'Hook should exit cleanly');
+      expect(err.status).toBe(0);
     }
   });
   
@@ -263,10 +257,10 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'pipe']
       });
-      assert.ok(true, 'Hook works without config.json');
+      expect(true).toBeTruthy();
     } catch (err: any) {
       // Exit code 0 is success
-      assert.strictEqual(err.status, 0, 'Hook should work with defaults');
+      expect(err.status).toBe(0);
     }
   });
 });
@@ -274,23 +268,23 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
 describe('Analytics Tracking', () => {
   it('should track skill usage to .aiknowsys/skill-usage.json', async () => {
     // Test analytics file creation and updates
-    assert.ok(true, 'Placeholder - will test analytics tracking');
+    expect(true).toBeTruthy();
   });
   
   it('should respect trackUsage configuration', async () => {
     // Test that tracking can be disabled
-    assert.ok(true, 'Placeholder - will test analytics opt-out');
+    expect(true).toBeTruthy();
   });
 });
 
 describe('Smart Recommendations', () => {
   it('should use Levenshtein distance for fuzzy matching', async () => {
     // Test similarity algorithm
-    assert.ok(true, 'Placeholder - will test Levenshtein distance');
+    expect(true).toBeTruthy();
   });
   
   it('should return top 3 recommendations only', async () => {
     // Test recommendation limit
-    assert.ok(true, 'Placeholder - will test recommendation limit');
+    expect(true).toBeTruthy();
   });
 });
