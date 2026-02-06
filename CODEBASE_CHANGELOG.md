@@ -7,6 +7,82 @@
 
 ---
 
+## Session: Enable Compress-Essentials Tests - 12 More Tests Passing (Feb 6, 2026)
+
+**Goal:** Enable all skipped compress-essentials tests using Vitest mocking (motivated by "you migrated to Vitest for better mocking!")
+
+**Changes:**
+
+**1. Vitest Module Mocking (Commit ef17e50):**
+- [test/compress-essentials.test.js](test/compress-essentials.test.js): Complete rewrite from node:test to Vitest
+  * **Root Issue**: Cannot use `vi.spyOn()` on ESM namespace imports (`import * as fs`)
+  * **Solution**: Use `vi.mock('node:fs')` to mock entire module
+  * Replaced `mock.method(fs, 'existsSync', ...)` → `fs.existsSync.mockReturnValue(...)`
+  * Replaced all 20+ `vi.spyOn(fs, ...)` calls with direct mock calls
+  * All analysis mode tests (6 tests) now passing
+  * All extraction logic tests (6 tests) now passing
+  * 2 tests intentionally skipped (interactive/auto modes - future phases 3.4-3.5)
+
+**2. ESM Mocking Pattern:**
+```javascript
+// Top-level module mock (before imports)
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  writeFileSync: vi.fn()
+}));
+
+// Import after mocking
+const { compressEssentials } = await import('../dist/lib/commands/compress-essentials.js');
+const fs = await import('node:fs');
+
+// Use in tests
+fs.existsSync.mockReturnValue(true);
+fs.readFileSync.mockReturnValue(mockContent);
+```
+
+**3. Test Coverage:**
+- **Analysis Mode** (6 tests passing):
+  * Parse ESSENTIALS into sections correctly
+  * Identify verbose sections (>150 lines)
+  * Report compression recommendations
+  * Handle well-sized ESSENTIALS without recommendations
+  * Throw error if ESSENTIALS not found
+  * Calculate total potential savings correctly
+- **Extraction Logic** (6 tests passing):
+  * Create docs/patterns directory if not exists
+  * Extract verbose section to separate file
+  * Replace verbose section with summary and link
+  * Preserve all content (nothing deleted)
+  * Handle multiple sections extraction
+  * Not extract well-sized sections
+- **Future Work** (2 tests skipped):
+  * Interactive mode (Phase 3.4)
+  * Auto mode (Phase 3.5)
+
+**Validation:**
+- ✅ npm run build: Clean compilation
+- ✅ npm test: 640 passed | 3 skipped | 0 failed (643 total)
+- ✅ Test Files: 44 passed | 0 skipped (44 total)
+- ✅ Exit code: 0
+
+**Key Learning:**
+- **ESM Limitation**: Cannot `vi.spyOn()` on namespace imports in ES modules
+- **Solution Pattern**: Use `vi.mock()` at top level, import dynamically
+- Vitest migration WAS worth it - proper mocking infrastructure now active
+- Original node:test `mock.method()` API incompatible with ESM modules
+- All previously "impossible to test" code now testable with Vitest
+
+**Progress Metrics:**
+- Start: 628 passing | 15 skipped | 0 failed (643 total)
+- End: 640 passing | 3 skipped | 0 failed (643 total)
+- **Enabled**: 12 compress-essentials tests (analysis + extraction logic)
+- **Remaining skipped**: 3 intentional (2 future work, 1 platform-specific)
+- **Test file coverage**: 44/44 files active (100%)
+
+---
+
 ## Session: Test Suite Fixes - From 19 Failures to 0 (Feb 6, 2026)
 
 **Goal:** Fix all test failures blocking Context Query System development
