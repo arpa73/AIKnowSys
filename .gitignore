@@ -70,6 +70,13 @@ htmlcov/
 # Test temporary files
 test/tmp/
 
+# Temporary test/scan directories (created during development)
+test-*/
+temp-*/
+tmp-*/
+*-test-*/
+scan-test-*/
+
 # Rust
 target/
 Cargo.lock

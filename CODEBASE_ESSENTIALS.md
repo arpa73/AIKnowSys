@@ -105,7 +105,7 @@ aiknowsys/
 │   ├── personal/           # Personal patterns (gitignored)
 │   │   └── <username>/     # Per-developer personal patterns
 │   └── sessions/           # Session notes (gitignored)
-├── scripts/                # Bash alternatives (legacy)
+├── scripts/                # Utility bash scripts (cleanup, maintenance)
 ├── examples/               # Stack-specific examples
 ├── docs/                   # Documentation
 └── package.json
@@ -742,6 +742,9 @@ describe('Feature Name', () => {
 npm test                             # Run all tests
 node --test test/init.test.js --watch  # Watch mode
 ```
+
+**Bash Scripts:**
+For testing bash utilities, see [bash-script-tdd](.aiknowsys/learned/bash-script-tdd.md) for comprehensive workflow using Node.js test runner.
 
 ### TDD Compliance Check (CI Workflow)
 

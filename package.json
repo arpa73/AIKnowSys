@@ -44,6 +44,8 @@
     "build:watch": "tsc --watch",
     "dev": "tsc --watch",
     "type-check": "tsc --noEmit",
+    "clean": "bash scripts/cleanup-test-dirs.sh",
+    "clean:dry-run": "bash scripts/cleanup-test-dirs.sh --dry-run",
     "pretest": "npm run build",
     "test": "PROJECT_ROOT=$PWD node --test dist/test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
     "test:coverage": "PROJECT_ROOT=$PWD node --test --experimental-test-coverage dist/test/*.test.js test/hooks/*.test.js test/hooks/*.test.cjs",
