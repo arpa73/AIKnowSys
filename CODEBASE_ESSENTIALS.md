@@ -629,11 +629,14 @@ const result = runCommand(options);  // Error: result is Promise<ValidationResul
    - npm CLI is additive, not replacement
 
 7. **Test-Driven Development (TDD)**
-   - Write tests BEFORE implementation for new features
-   - Follow RED-GREEN-REFACTOR cycle
+   - **For new features:** Write tests BEFORE implementation (RED → GREEN → REFACTOR)
+   - **For bugfixes:** Write test that reproduces bug FIRST (should fail), then fix bug (test passes), then refactor
+   - Follow RED-GREEN-REFACTOR cycle for both features and bugs
    - Keep tests fast and focused
+   - **Why TDD for bugs:** Ensures bug is reproducible, confirms fix works, prevents regression
    - **Exception:** Configuration-only changes (e.g., adding properties to const objects) don't require new tests if existing tests already cover the logic using that configuration
    - See `.github/skills/tdd-workflow/SKILL.md` for detailed guidance
+   - See [Test-Driven Bugfixing](https://evolveum.com/test-driven-bugfixing/) for bugfix workflow
 
 8. **Deliverables Consistency**
    - Templates (`templates/` directory) are **deliverables** distributed to users
