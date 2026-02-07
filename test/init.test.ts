@@ -254,8 +254,8 @@ describe('init command', () => {
     const content: string = fs.readFileSync(stackTemplatePath, 'utf-8');
     expect(content.length > 1000).toBeTruthy();
     expect(content.includes('Next.js')).toBeTruthy();
-    expect(content.includes('{{PROJECT_NAME}}')).toBeTruthy();
-    expect(content.includes('{{DATE}}')).toBeTruthy();
+    expect(content.includes('v0.10.0')).toBeTruthy();
+    expect(content.includes('Skill-Indexed Architecture')).toBeTruthy();
   });
 
   it('should create files with vue-express stack template', async () => {
@@ -268,7 +268,8 @@ describe('init command', () => {
     expect(content.length > 1000).toBeTruthy();
     expect(content.includes('Vue')).toBeTruthy();
     expect(content.includes('Express')).toBeTruthy();
-    expect(content.toLowerCase().includes('monorepo')).toBeTruthy();
+    expect(content.includes('v0.10.0')).toBeTruthy();
+    expect(content.includes('npm (workspaces)')).toBeTruthy();
   });
 
   it('should show error for invalid stack name', () => {
@@ -295,7 +296,8 @@ describe('init command', () => {
     // Check Next.js template
     const nextjsContent: string = fs.readFileSync(nextjsTemplate, 'utf-8');
     const nextjsPlaceholders: string[] = nextjsContent.match(/{{[^}]+}}/g) || [];
-    const allowedPlaceholders: string[] = ['{{PROJECT_NAME}}', '{{PROJECT_DESCRIPTION}}', '{{DATE}}', '{{YEAR}}'];
+    // Allow meta-placeholders used in documentation/examples
+    const allowedPlaceholders: string[] = ['{{PROJECT_NAME}}', '{{PROJECT_DESCRIPTION}}', '{{DATE}}', '{{YEAR}}', '{{PLACEHOLDERS}}'];
     
     nextjsPlaceholders.forEach((placeholder: string) => {
       expect(allowedPlaceholders.includes(placeholder)).toBeTruthy();
