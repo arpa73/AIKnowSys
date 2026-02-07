@@ -7,6 +7,114 @@
 
 ---
 
+## Session: Context Query Completion - Phase B Mini Mutation Commands (Feb 7, 2026)
+
+**Goal:** Enable command-first workflow with schema validation and atomic updates
+
+**Status:** ✅ **COMPLETE** - Phase B Mini implemented, 929/932 tests passing
+
+**Problem We Solved:**
+- Phase A (queries) + A.6 (auto-indexing) enabled reading context
+- Still required manual file editing for creating/modifying sessions and plans
+- Manual editing prone to YAML format errors and schema violations
+- No atomic updates (file + index could get out of sync)
+
+**Implementation (TDD Workflow - RED → GREEN → REFACTOR):**
+
+**Phase B Mini: Mutation Commands (4 hours actual)**
+
+**Step B.1: Design session schema (30 min)**
+- Designed YAML frontmatter schema for sessions and plans
+- [lib/templates/session-template.ts](lib/templates/session-template.ts): Session template generator
+- [lib/templates/plan-template.ts](lib/templates/plan-template.ts): Plan template generator
+- [lib/utils/yaml-frontmatter.ts](lib/utils/yaml-frontmatter.ts): YAML parser utilities
+- **TDD Results:** 🔴 RED (tests fail) → 🟢 GREEN (30/30 pass) → 🔵 REFACTOR (extracted detectUsername)
+
+**Step B.2: Implement create-session (1 hour)**
+- [lib/commands/create-session.ts](lib/commands/create-session.ts): Create session files with YAML frontmatter
+- [test/commands/create-session.test.ts](test/commands/create-session.test.ts): 10 comprehensive tests
+- **Features:** Duplicate detection, directory creation, index update, JSON output
+- **Architect Review:** Found 1 CRITICAL + 3 RECOMMENDED issues (all addressed in 10 min)
+- **TDD Results:** 🔴 RED → 🟢 GREEN (10/10 pass) → 🔵 REFACTOR (extracted git-utils.ts)
+
+**Step B.3: Implement update-session (1 hour)**
+- [lib/commands/update-session.ts](lib/commands/update-session.ts): Modify session YAML without rewriting entire file
+- [test/commands/update-session.test.ts](test/commands/update-session.test.ts): 13 comprehensive tests
+- **Features:** Add topic/file, set status, duplicate prevention, validation
+- **TDD Results:** 🔴 RED → 🟢 GREEN (13/13 pass) → 🔵 REFACTOR (code cleanup)
+
+**Step B.4: Implement create-plan (1.5 hours)**
+- [lib/commands/create-plan.ts](lib/commands/create-plan.ts): Generate plan files + active pointers
+- [test/commands/create-plan.test.ts](test/commands/create-plan.test.ts): 12 comprehensive tests
+- [lib/utils/plan-utils.ts](lib/utils/plan-utils.ts): Shared plan ID utilities (NEW)
+- [test/utils/plan-utils.test.ts](test/utils/plan-utils.test.ts): 15 utility tests (NEW)
+- **Bug Fix:** parsePlanPointer now correctly extracts plan IDs from filenames
+- **Architect Review:** 0 CRITICAL, 1 RECOMMENDED (DRY violation - addressed with plan-utils)
+- **TDD Results:** 🔴 RED → 🟢 GREEN (12/12 pass) → 🔵 REFACTOR (extracted plan-utils)
+
+**Step B.5: Update documentation (30 min)**
+- [.github/skills/context-query/SKILL.md](.github/skills/context-query/SKILL.md): Added mutation commands section
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L289-L318): Updated Section 9 with mutation commands
+- [CODEBASE_CHANGELOG.md](CODEBASE_CHANGELOG.md): This entry
+
+**Changes:**
+
+**New Commands:**
+- `create-session` - Create session files with YAML frontmatter
+- `update-session` - Modify session metadata (topics, files, status)
+- `create-plan` - Generate implementation plans with active pointers
+
+**New Files:**
+- [lib/commands/create-session.ts](lib/commands/create-session.ts) - Session creation (124 lines)
+- [lib/commands/update-session.ts](lib/commands/update-session.ts) - Session updates (155 lines)
+- [lib/commands/create-plan.ts](lib/commands/create-plan.ts) - Plan creation (134 lines)
+- [lib/templates/session-template.ts](lib/templates/session-template.ts) - Session template generator (70 lines)
+- [lib/templates/plan-template.ts](lib/templates/plan-template.ts) - Plan template generator (86 lines)
+- [lib/utils/yaml-frontmatter.ts](lib/utils/yaml-frontmatter.ts) - YAML frontmatter parser (130 lines)
+- [lib/utils/git-utils.ts](lib/utils/git-utils.ts) - Shared git utilities (35 lines)
+- [lib/utils/plan-utils.ts](lib/utils/plan-utils.ts) - Shared plan ID utilities (42 lines)
+
+**Tests Created:**
+- [test/commands/create-session.test.ts](test/commands/create-session.test.ts) - 10 tests
+- [test/commands/update-session.test.ts](test/commands/update-session.test.ts) - 13 tests
+- [test/commands/create-plan.test.ts](test/commands/create-plan.test.ts) - 12 tests
+- [test/utils/git-utils.test.ts](test/utils/git-utils.test.ts) - 7 tests
+- [test/utils/plan-utils.test.ts](test/utils/plan-utils.test.ts) - 15 tests
+
+**Modified Files:**
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L340-L365) - Fixed parsePlanPointer ID extraction
+- [lib/context/types.ts](lib/context/types.ts#L41-L67) - Added topics field to SessionMetadata
+
+**Validation:**
+- ✅ 929/932 tests passing (3 skipped, 57 new tests added)
+- ✅ All mutation commands validate input (required fields, enum values)
+- ✅ Atomic updates (file + index rebuild together)
+- ✅ No regressions (existing query commands unaffected)
+- ✅ TDD compliance: All features test-first (RED → GREEN → REFACTOR)
+- ✅ Architect review: All issues addressed
+
+**Key Patterns Applied:**
+- **DRY Principle:** Extracted shared utilities (git-utils.ts, plan-utils.ts)
+- **Atomic Operations:** File write + index rebuild in single function
+- **YAML Frontmatter:** Standard format (Jekyll/Hugo compatible)
+- **Graceful Failures:** Helpful error messages, duplicate detection
+- **Template Pattern:** Code-defined templates (consistent, version-controlled)
+
+**Key Learning:**
+- Mutation commands complete the "command-first" workflow
+- YAML frontmatter enables schema validation at creation time
+- Atomic updates prevent index staleness issues
+- Test-driven development caught edge cases early (duplicates, validation)
+- Architect reviews identify DRY violations and guide refactoring
+
+**Impact:**
+- AI agents can now create/modify context files via commands
+- Reduces YAML format errors (template-generated)
+- Index always updated atomically (no manual rebuild needed)
+- Foundation for future mutation commands (update-plan, set-active-plan, etc.)
+
+---
+
 ## Session: Context Query Completion - Phase A.6 Auto-Indexing (Feb 7, 2026)
 
 **Goal:** Fix index staleness issue with auto-rebuild logic

@@ -298,15 +298,46 @@ import { fn } from './utils';     // ❌ Won't resolve
 
 ## 9. Context Query Commands (v0.10.0+)
 
-**Purpose:** Query plans/sessions/context via CLI instead of file searching
+**Purpose:** Query and mutate plans/sessions/context via CLI instead of file searching
 
-**Available commands:**
+### Query Commands (Read-Only)
+
 ```bash
+# Query plans
 npx aiknowsys query-plans --status ACTIVE --json
+
+# Query sessions
 npx aiknowsys query-sessions --days 7 --json
+
+# Search all context
 npx aiknowsys search-context "TDD" --scope all --json
+
+# Rebuild index manually
 npx aiknowsys rebuild-index
 ```
+
+### Mutation Commands (Write Operations - v0.10.0+)
+
+**Create session file:**
+```bash
+npx aiknowsys create-session --topics "TDD,validation" --plan PLAN_xyz
+```
+
+**Update session metadata:**
+```bash
+npx aiknowsys update-session --add-topic "debugging" --set-status complete
+```
+
+**Create implementation plan:**
+```bash
+npx aiknowsys create-plan --title "Feature Implementation"
+```
+
+**Benefits:**
+- YAML frontmatter validation
+- Atomic updates (file + index together)
+- AI-friendly structured I/O
+- Prevents schema violations
 
 **Auto-Indexing (Phase A.6):**
 - Index auto-rebuilds when stale (files newer than index)
