@@ -34,16 +34,16 @@ export function generateSessionTemplate(metadata: SessionTemplateMetadata = {}):
   // Build YAML frontmatter (manual to control formatting)
   let frontmatter = `---
 date: "${date}"
-topics: [${topics.map(t => t).join(', ')}]`;
+topics: [${topics.map(t => `"${t}"`).join(', ')}]`;
 
   if (plan) {
-    frontmatter += `\nplan: ${plan}`;
+    frontmatter += `\nplan: "${plan}"`;
   }
 
   frontmatter += `
-author: ${author}
-files: [${files.map(f => f).join(', ')}]
-status: ${status}
+author: "${author}"
+files: [${files.map(f => `"${f}"`).join(', ')}]
+status: "${status}"
 ---`;
 
   return `${frontmatter}

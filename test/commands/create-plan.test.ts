@@ -40,10 +40,10 @@ describe('create-plan command', () => {
     // Verify content has YAML frontmatter
     const content = await fs.readFile(filepath, 'utf-8');
     expect(content).toMatch(/^---\n/);
-    expect(content).toContain('id: PLAN_test_feature_implementation');
-    expect(content).toContain('title: "Test Feature Implementation"');
-    expect(content).toContain('author: test-user');
-    expect(content).toContain('status: PLANNED');
+    expect(content).toContain('id: \"PLAN_test_feature_implementation\"');
+    expect(content).toContain('title: \"Test Feature Implementation\"');
+    expect(content).toContain('author: "test-user"');
+    expect(content).toContain('status: \"PLANNED\"');
   });
 
   it('generates plan ID from title', async () => {
@@ -138,7 +138,7 @@ describe('create-plan command', () => {
 
     const filepath = path.join(testDir, '.aiknowsys', 'PLAN_status_test.md');
     const content = await fs.readFile(filepath, 'utf-8');
-    expect(content).toContain('status: PLANNED');
+    expect(content).toContain('status: "PLANNED"');
   });
 
   it('includes topics in frontmatter if provided', async () => {
@@ -152,7 +152,7 @@ describe('create-plan command', () => {
 
     const filepath = path.join(testDir, '.aiknowsys', 'PLAN_topics_test.md');
     const content = await fs.readFile(filepath, 'utf-8');
-    expect(content).toContain('topics: [testing, validation]');
+    expect(content).toContain('topics: ["testing", "validation"]');
   });
 
   it('auto-detects author if not provided', async () => {

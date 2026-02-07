@@ -35,7 +35,7 @@ describe('Session Template Generator', () => {
       topics: ['TDD', 'validation', 'TypeScript']
     });
 
-    expect(template).toContain('topics: [TDD, validation, TypeScript]');
+    expect(template).toContain('topics: ["TDD", "validation", "TypeScript"]');
   });
 
   it('includes plan reference when provided', () => {
@@ -43,7 +43,7 @@ describe('Session Template Generator', () => {
       plan: 'PLAN_context_query'
     });
 
-    expect(template).toContain('plan: PLAN_context_query');
+    expect(template).toContain('plan: "PLAN_context_query"');
   });
 
   it('omits plan field when not provided', () => {
@@ -79,7 +79,7 @@ describe('Session Template Generator', () => {
   it('defaults status to in-progress', () => {
     const template = generateSessionTemplate({});
 
-    expect(template).toContain('status: in-progress');
+    expect(template).toContain('status: "in-progress"');
   });
 
   it('uses provided status', () => {
@@ -87,7 +87,7 @@ describe('Session Template Generator', () => {
       status: 'complete'
     });
 
-    expect(template).toContain('status: complete');
+    expect(template).toContain('status: "complete"');
   });
 
   it('includes author from git config', () => {
@@ -109,7 +109,7 @@ describe('Session Template Generator', () => {
       files: ['lib/init.js', 'test/init.test.js']
     });
 
-    expect(template).toContain('files: [lib/init.js, test/init.test.js]');
+    expect(template).toContain('files: ["lib/init.js", "test/init.test.js"]');
   });
 
   it('formats date correctly in heading', () => {
@@ -126,6 +126,6 @@ describe('Session Template Generator', () => {
     });
 
     const topicsLine = template.match(/topics: \[(.+)\]/)?.[1];
-    expect(topicsLine).toBe('first, second, third');
+    expect(topicsLine).toBe('"first", "second", "third"');
   });
 });

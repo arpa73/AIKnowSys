@@ -8,6 +8,7 @@ import path from 'path';
 import { generateSessionTemplate } from '../templates/session-template.js';
 import { JsonStorage } from '../context/json-storage.js';
 import { createLogger } from '../logger.js';
+import { checkFileExists } from '../utils/file-utils.js';
 
 export interface CreateSessionOptions {
   topics?: string[];
@@ -51,9 +52,8 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', 'sessions', filename);
 
   // Check if session already exists
-  try {
-    await fs.access(filepath);
-    
+  const exists = await checkFileExists(filepath);
+  if (exists) {
     // Session exists
     if (json) {
       console.log(JSON.stringify({
@@ -71,11 +71,6 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
       created: false,
       message: 'Session already exists'
     };
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
-      throw err; // Unexpected error
-    }
-    // Session doesn't exist, continue to create
   }
 
   // Generate session content

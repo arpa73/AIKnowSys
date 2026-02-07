@@ -44,7 +44,7 @@ describe('update-session command', () => {
 
     // Verify file content
     const content = await fs.readFile(sessionPath, 'utf-8');
-    expect(content).toContain('topics: [initial, TDD]');
+    expect(content).toContain('topics: ["initial", "TDD"]');
   });
 
   it('adds file to files array', async () => {
@@ -58,7 +58,7 @@ describe('update-session command', () => {
     expect(result.changes).toContain('Added file: lib/commands/update-session.ts');
 
     const content = await fs.readFile(sessionPath, 'utf-8');
-    expect(content).toContain('files: [lib/commands/update-session.ts]');
+    expect(content).toContain('files: ["lib/commands/update-session.ts"]');
   });
 
   it('updates session status', async () => {
@@ -72,7 +72,7 @@ describe('update-session command', () => {
     expect(result.changes).toContain('Status: in-progress → complete');
 
     const content = await fs.readFile(sessionPath, 'utf-8');
-    expect(content).toContain('status: complete');
+    expect(content).toContain('status: "complete"');
   });
 
   it('applies multiple updates at once', async () => {
@@ -89,9 +89,9 @@ describe('update-session command', () => {
     expect(result.changes!.length).toBe(3);
 
     const content = await fs.readFile(sessionPath, 'utf-8');
-    expect(content).toContain('topics: [initial, refactoring]');
-    expect(content).toContain('files: [lib/utils/yaml-frontmatter.ts]');
-    expect(content).toContain('status: complete');
+    expect(content).toContain('topics: ["initial", "refactoring"]');
+    expect(content).toContain('files: ["lib/utils/yaml-frontmatter.ts"]');
+    expect(content).toContain('status: "complete"');
   });
 
   it('does not duplicate topics', async () => {

@@ -8,6 +8,7 @@ import path from 'path';
 import { parseFrontmatter, updateFrontmatter } from '../utils/yaml-frontmatter.js';
 import { JsonStorage } from '../context/json-storage.js';
 import { createLogger } from '../logger.js';
+import { checkFileExists } from '../utils/file-utils.js';
 
 export interface UpdateSessionOptions {
   addTopic?: string;
@@ -48,9 +49,8 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', 'sessions', filename);
 
   // Check if session exists
-  try {
-    await fs.access(filepath);
-  } catch (err) {
+  const exists = await checkFileExists(filepath);
+  if (!exists) {
     const error = new Error(
       `No session file found for today (${date}). Create one first with: create-session`
     );

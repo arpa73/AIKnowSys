@@ -10,6 +10,7 @@ import { JsonStorage } from '../context/json-storage.js';
 import { detectUsername } from '../utils/git-utils.js';
 import { generatePlanId } from '../utils/plan-utils.js';
 import { createLogger } from '../logger.js';
+import { checkFileExists } from '../utils/file-utils.js';
 
 export interface CreatePlanOptions {
   title: string;
@@ -52,19 +53,10 @@ export async function createPlan(options: CreatePlanOptions): Promise<CreatePlan
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', filename);
 
   // Check if plan already exists
-  try {
-    await fs.access(filepath);
-    const error = new Error(`Plan already exists: ${filename}`);
-    if (!json && !_silent) {
-      log.error(error.message);
-    }
-    throw error;
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
-      throw err; // Re-throw if not "file doesn't exist" error
-    }
-    // Plan doesn't exist, continue to create
-  }
+  await checkFileExists(filepath, {
+    onExists: 'error',
+    message: `Plan already exists: ${filename}`
+  });
 
   // Generate plan content
   const content = generatePlanTemplate({

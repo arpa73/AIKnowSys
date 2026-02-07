@@ -38,10 +38,10 @@ describe('create-session command', () => {
     // Should have YAML frontmatter
     expect(content).toMatch(/^---\n/);
     expect(content).toContain('date:');
-    expect(content).toContain('topics: [TDD, validation]');
-    expect(content).toContain('plan: PLAN_xyz');
+    expect(content).toContain('topics: ["TDD", "validation"]');
+    expect(content).toContain('plan: "PLAN_xyz"');
     expect(content).toContain('author:');
-    expect(content).toContain('status: in-progress');
+    expect(content).toContain('status: "in-progress"');
     expect(content).toMatch(/\n---\n/);
     
     // Should have markdown structure
@@ -61,7 +61,7 @@ describe('create-session command', () => {
     const content = await fs.readFile(result.filePath, 'utf-8');
     expect(content).toContain('topics: []');
     expect(content).not.toContain('plan:');
-    expect(content).toContain('status: in-progress');
+    expect(content).toContain('status: "in-progress"');
   });
 
   it('uses today\'s date in filename', async () => {
@@ -153,7 +153,7 @@ describe('create-session command', () => {
     });
 
     const content = await fs.readFile(result.filePath, 'utf-8');
-    expect(content).toContain('plan: PLAN_context_query');
+    expect(content).toContain('plan: "PLAN_context_query"');
   });
 
   it('includes provided title in session heading', async () => {

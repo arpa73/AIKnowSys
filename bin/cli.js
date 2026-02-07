@@ -34,6 +34,9 @@ import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
 import { searchContext } from '../dist/lib/commands/search-context.js';
 import { rebuildIndex } from '../dist/lib/commands/rebuild-index.js';
+import { createSession } from '../dist/lib/commands/create-session.js';
+import { updateSession } from '../dist/lib/commands/update-session.js';
+import { createPlan } from '../dist/lib/commands/create-plan.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
 
 // Get version from package.json
@@ -340,6 +343,57 @@ program
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (options) => {
     await rebuildIndex(options);
+  });
+
+// Context mutation commands (v0.10.0+)
+program
+  .command('create-session')
+  .description('Create new session file with YAML frontmatter')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-t, --topics <topics>', 'Comma-separated topics (e.g., "TDD,validation")')
+  .option('-p, --plan <plan>', 'Link to active plan (e.g., PLAN_xyz)')
+  .option('--title <title>', 'Session title', 'Work Session')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    // Parse topics from comma-separated string
+    if (options.topics) {
+      options.topics = options.topics.split(',').map(t => t.trim());
+    }
+    await createSession(options);
+  });
+
+program
+  .command('update-session')
+  .description('Modify today\'s session metadata')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--add-topic <topic>', 'Add topic to session')
+  .option('--add-file <file>', 'Add file to session')
+  .option('--set-status <status>', 'Set status: in-progress, complete, abandoned')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    await updateSession(options);
+  });
+
+program
+  .command('create-plan')
+  .description('Create new implementation plan with active pointer')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-t, --title <title>', 'Plan title (REQUIRED)')
+  .option('-a, --author <author>', 'Plan author (auto-detected from git)')
+  .option('--topics <topics>', 'Comma-separated topics')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    // Parse topics from comma-separated string
+    if (options.topics) {
+      options.topics = options.topics.split(',').map(t => t.trim());
+    }
+    // title is required - error if missing
+    if (!options.title) {
+      console.error(chalk.red('Error: --title is required'));
+      console.error('Usage: aiknowsys create-plan --title "Plan Name"');
+      process.exit(1);
+    }
+    await createPlan(options);
   });
 
 // Config management commands

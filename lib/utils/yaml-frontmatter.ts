@@ -89,7 +89,14 @@ function parseSimpleYaml(yamlStr: string): Record<string, any> {
       const arrayContent = value.substring(1, value.length - 1);
       result[key] = arrayContent
         .split(',')
-        .map(item => item.trim())
+        .map(item => {
+          const trimmed = item.trim();
+          // Remove quotes from array items if present
+          if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+            return trimmed.substring(1, trimmed.length - 1);
+          }
+          return trimmed;
+        })
         .filter(item => item.length > 0);
     } else if (value.startsWith('"') && value.endsWith('"')) {
       // Quoted string
@@ -125,14 +132,14 @@ function stringifySimpleYaml(obj: Record<string, any>): string {
     if (value === null || value === undefined) continue;
 
     if (Array.isArray(value)) {
-      lines.push(`${key}: [${value.join(', ')}]`);
+      // Quote all string values in arrays for consistency
+      const quotedValues = value.map(item => 
+        typeof item === 'string' ? `"${item}"` : String(item)
+      );
+      lines.push(`${key}: [${quotedValues.join(', ')}]`);
     } else if (typeof value === 'string') {
-      // Always quote strings that look like dates or contain special chars
-      if (value.match(/^\d{4}-\d{2}-\d{2}/) || value.includes(':') || value.includes('#') || value.includes('[')) {
-        lines.push(`${key}: "${value}"`);
-      } else {
-        lines.push(`${key}: ${value}`);
-      }
+      // Always quote all strings for consistency
+      lines.push(`${key}: "${value}"`);
     } else if (typeof value === 'boolean') {
       lines.push(`${key}: ${value}`);
     } else if (typeof value === 'number') {

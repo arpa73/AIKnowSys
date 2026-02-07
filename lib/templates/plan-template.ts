@@ -30,14 +30,14 @@ export function generatePlanTemplate(metadata: PlanMetadata): string {
 
   // Build YAML frontmatter
   let frontmatter = `---
-id: ${id}
+id: "${id}"
 title: "${title}"
-status: ${status}
-author: ${author}
+status: "${status}"
+author: "${author}"
 created: "${created}"`;
 
   if (topics.length > 0) {
-    frontmatter += `\ntopics: [${topics.join(', ')}]`;
+    frontmatter += `\ntopics: [${topics.map(t => `"${t}"`).join(', ')}]`;
   }
 
   frontmatter += '\n---';

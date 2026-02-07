@@ -388,10 +388,17 @@ export class JsonStorage extends StorageAdapter {
           else if (k === 'created') created = value;
           else if (k === 'updated') updated = value;
           else if (k === 'topics') {
-            // Parse array format: [item1, item2]
+            // Parse array format: [item1, item2] or ["item1", "item2"]
             const topicsMatch = value.match(/\[(.*)\]/);
             if (topicsMatch) {
-              topics = topicsMatch[1].split(',').map((t:string) => t.trim());
+              topics = topicsMatch[1].split(',').map((t:string) => {
+                const trimmed = t.trim();
+                // Remove quotes if present
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                  return trimmed.substring(1, trimmed.length - 1);
+                }
+                return trimmed;
+              }).filter(Boolean);
             }
           }
         }
@@ -453,10 +460,17 @@ export class JsonStorage extends StorageAdapter {
           const k = key.trim();
           
           if (k === 'topics') {
-            // Parse array format: [item1, item2]
+            // Parse array format: [item1, item2] or ["item1", "item2"]
             const topicsMatch = value.match(/\[(.*)\]/);
             if (topicsMatch) {
-              topics = topicsMatch[1].split(',').map((t: string) => t.trim()).filter(Boolean);
+              topics = topicsMatch[1].split(',').map((t: string) => {
+                const trimmed = t.trim();
+                // Remove quotes if present
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                  return trimmed.substring(1, trimmed.length - 1);
+                }
+                return trimmed;
+              }).filter(Boolean);
             }
           } else if (k === 'plan') {
             plan = value;

@@ -176,7 +176,7 @@ status: in-progress
 
       const updated = updateFrontmatter(content, { status: 'complete' });
 
-      expect(updated).toContain('status: complete');
+      expect(updated).toContain('status: "complete"');
       expect(updated).not.toContain('status: in-progress');
     });
 
@@ -189,7 +189,7 @@ date: "2026-02-07"
 
       const updated = updateFrontmatter(content, { plan: 'PLAN_xyz' });
 
-      expect(updated).toContain('plan: PLAN_xyz');
+      expect(updated).toContain('plan: "PLAN_xyz"');
     });
 
     it('updates array by replacement', () => {
@@ -201,7 +201,7 @@ topics: [old]
 
       const updated = updateFrontmatter(content, { topics: ['new', 'items'] });
 
-      expect(updated).toContain('topics: [new, items]');
+      expect(updated).toContain('topics: ["new", "items"]');
       expect(updated).not.toContain('topics: [old]');
     });
 
@@ -217,8 +217,8 @@ status: in-progress
       const updated = updateFrontmatter(content, { status: 'complete' });
 
       expect(updated).toContain('date: "2026-02-07"');
-      expect(updated).toContain('author: arno-paffen');
-      expect(updated).toContain('status: complete');
+      expect(updated).toContain('author: "arno-paffen"');
+      expect(updated).toContain('status: "complete"');
     });
 
     it('preserves markdown content exactly', () => {
@@ -251,9 +251,9 @@ topics: []
         newField: 'value'
       });
 
-      expect(updated).toContain('status: complete');
-      expect(updated).toContain('topics: [TDD, validation]');
-      expect(updated).toContain('newField: value');
+      expect(updated).toContain('status: "complete"');
+      expect(updated).toContain('topics: ["TDD", "validation"]');
+      expect(updated).toContain('newField: "value"');
     });
   });
 });
