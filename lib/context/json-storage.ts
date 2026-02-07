@@ -352,14 +352,17 @@ export class JsonStorage extends StorageAdapter {
     
     if (!planMatch) return null;
     
+    const planFile = planMatch[2].replace('../', '');
+    const planId = planFile.replace('.md', ''); // Extract ID from filename (e.g., PLAN_index_test.md → PLAN_index_test)
+    
     return {
-      id: authorMatch[1] + '-plan',
+      id: planId,
       title: planMatch[1],
       status: (statusMatch ? statusMatch[1] as any : 'ACTIVE'),
       author,
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
-      file: planMatch[2].replace('../', '')
+      file: planFile
     };
   }
 

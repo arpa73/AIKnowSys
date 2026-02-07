@@ -84,11 +84,11 @@ created: "${created}"`;
 }
 
 /**
- * Generate plan ID from title (e.g., "Bug Fix Session" → "bug-fix-session")
+ * Generate plan ID from title (e.g., "Bug Fix Session" → "bug_fix_session")
  */
 function generatePlanId(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
