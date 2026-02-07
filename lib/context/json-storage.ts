@@ -91,11 +91,6 @@ export class JsonStorage extends StorageAdapter {
       }
     }
 
-    // Auto-rebuild if index is stale
-    if (this.autoIndexer) {
-      await this.autoIndexer.ensureFreshIndex(this, { verbose: false });
-    }
-
     return {
       count: plans.length,
       plans
@@ -103,6 +98,11 @@ export class JsonStorage extends StorageAdapter {
   }
 
   async querySessions(filters?: SessionFilters): Promise<{ count: number; sessions: SessionMetadata[] }> {
+    // Auto-rebuild if index is stale
+    if (this.autoIndexer) {
+      await this.autoIndexer.ensureFreshIndex(this, { verbose: false });
+    }
+
     let sessions = [...this.index.sessions];
 
     if (filters) {

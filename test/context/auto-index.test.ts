@@ -43,7 +43,7 @@ describe('AutoIndexer', () => {
 
       // Create new session file (newer than index)
       const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', '2026-02-07-session.md');
-      await fs.writeFile(sessionPath, `# Session: Test (Feb 7, 2026)\n\n## Goal\nTest auto-rebuild`);
+      await fs.writeFile(sessionPath, '# Session: Test (Feb 7, 2026)\n\n## Goal\nTest auto-rebuild');
 
       // Should detect staleness
       const stale = await autoIndexer.isIndexStale(storage);
@@ -69,7 +69,7 @@ describe('AutoIndexer', () => {
 
       // Create new plan file
       const planPath = path.join(testDir, '.aiknowsys', 'PLAN_test.md');
-      await fs.writeFile(planPath, `# Implementation Plan: Test\n\n**Status:** ACTIVE`);
+      await fs.writeFile(planPath, '# Implementation Plan: Test\n\n**Status:** ACTIVE');
 
       // Should detect staleness
       const stale = await autoIndexer.isIndexStale(storage);
@@ -108,7 +108,7 @@ describe('AutoIndexer', () => {
 
       // Create new session
       const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', '2026-02-07-new.md');
-      await fs.writeFile(sessionPath, `# Session: New (Feb 7, 2026)\n\n## Goal\nTest`);
+      await fs.writeFile(sessionPath, '# Session: New (Feb 7, 2026)\n\n## Goal\nTest');
 
       // Ensure fresh (should rebuild)
       const wasRebuilt = await autoIndexer.ensureFreshIndex(storage, { verbose: false });
@@ -156,7 +156,7 @@ describe('AutoIndexer', () => {
 
       // Create new file
       const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', '2026-02-07-test.md');
-      await fs.writeFile(sessionPath, `# Session: Test (Feb 7, 2026)\n\n## Goal\nTest`);
+      await fs.writeFile(sessionPath, '# Session: Test (Feb 7, 2026)\n\n## Goal\nTest');
 
       // Mock console to capture logs
       const logSpy = vi.spyOn(console, 'log');
@@ -221,7 +221,7 @@ Test integration
 
       // Create one more file
       const newSession = path.join(testDir, '.aiknowsys', 'sessions', '2026-03-01-new.md');
-      await fs.writeFile(newSession, `# Session: New (Mar 1, 2026)\n\n## Goal\nTest`);
+      await fs.writeFile(newSession, '# Session: New (Mar 1, 2026)\n\n## Goal\nTest');
 
       // Measure rebuild time
       const start = Date.now();

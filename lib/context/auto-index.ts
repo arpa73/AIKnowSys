@@ -40,7 +40,9 @@ export class AutoIndexer {
 
   /**
    * Ensure index is fresh, rebuild if stale
-   * @returns true if index was rebuilt, false if already fresh
+   * @param storage - JsonStorage instance to check/rebuild
+   * @param options - Auto-index configuration options
+   * @returns Promise resolving to true if index was rebuilt, false if already fresh
    */
   async ensureFreshIndex(storage: JsonStorage, options: AutoIndexOptions = {}): Promise<boolean> {
     const { force = false, verbose = false } = options;
@@ -81,7 +83,8 @@ export class AutoIndexer {
 
   /**
    * Check if index is stale (files newer than index)
-   * @returns true if index needs rebuild, false if fresh
+   * @param storage - JsonStorage instance to check staleness for
+   * @returns Promise resolving to true if index needs rebuild, false if fresh
    */
   async isIndexStale(storage: JsonStorage): Promise<boolean> {
     try {

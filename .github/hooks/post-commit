@@ -2,8 +2,8 @@
 # Git post-commit hook for AIKnowSys
 # Auto-rebuilds context index when context files are committed
 
-# Only rebuild if context files changed in this commit
-if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q '^\.aiknowsys/\(plans\|sessions\|learned\)/'; then
+# Only rebuild if .md files in context directories changed
+if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -Eq '^\.aiknowsys/(plans|sessions|learned)/.*\.md$'; then
   echo "📋 Context files changed in commit, rebuilding index..."
   npx aiknowsys rebuild-index --quiet 2>/dev/null || node bin/cli.js rebuild-index --quiet 2>/dev/null || true
   echo "✅ Context index updated"
