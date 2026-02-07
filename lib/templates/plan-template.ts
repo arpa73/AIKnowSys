@@ -4,6 +4,7 @@
  */
 
 import { detectUsername } from '../utils/git-utils.js';
+import { normalizePlanId } from '../utils/plan-utils.js';
 
 export interface PlanMetadata {
   id?: string;
@@ -19,7 +20,7 @@ export interface PlanMetadata {
  */
 export function generatePlanTemplate(metadata: PlanMetadata): string {
   const {
-    id = generatePlanId(metadata.title),
+    id = normalizePlanId(metadata.title),
     title,
     status = 'PLANNED',
     author = detectUsername(),
@@ -81,14 +82,4 @@ created: "${created}"`;
 
 [Potential issues and mitigation strategies]
 `;
-}
-
-/**
- * Generate plan ID from title (e.g., "Bug Fix Session" → "bug_fix_session")
- */
-function generatePlanId(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
 }

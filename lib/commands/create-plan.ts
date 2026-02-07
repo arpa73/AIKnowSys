@@ -8,6 +8,7 @@ import path from 'path';
 import { generatePlanTemplate } from '../templates/plan-template.js';
 import { JsonStorage } from '../context/json-storage.js';
 import { detectUsername } from '../utils/git-utils.js';
+import { generatePlanId } from '../utils/plan-utils.js';
 import { createLogger } from '../logger.js';
 
 export interface CreatePlanOptions {
@@ -24,17 +25,6 @@ export interface CreatePlanResult {
   filePath: string;
   pointerPath: string;
   created: boolean;
-}
-
-/**
- * Generate plan ID from title (e.g., "Bug Fix Session" → "PLAN_bug_fix_session")
- */
-function generatePlanId(title: string): string {
-  const normalized = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  return `PLAN_${normalized}`;
 }
 
 export async function createPlan(options: CreatePlanOptions): Promise<CreatePlanResult> {
@@ -136,7 +126,7 @@ export async function createPlan(options: CreatePlanOptions): Promise<CreatePlan
     log.success(`✅ Created plan: ${planId}`);
     log.info(`📄 Plan file: ${filepath}`);
     log.info(`🔗 Pointer: ${pointerPath}`);
-    log.info(`📝 Edit plan to add implementation steps`);
+    log.info('📝 Edit plan to add implementation steps');
   }
 
   return result;
