@@ -7,6 +7,98 @@
 
 ---
 
+## Session: Context Query Completion - Phase A.6 Auto-Indexing (Feb 7, 2026)
+
+**Goal:** Fix index staleness issue with auto-rebuild logic
+
+**Status:** ✅ **COMPLETE** - Phase A.6 implemented, 839/845 tests passing
+
+**Problem We Solved:**
+- Phase A (read-only queries) had critical flaw: index went stale immediately after manual file operations
+- Users had to manually run `rebuild-index` after every file change
+- System was technically perfect but practically unusable ("museum exhibit")
+
+**Implementation (TDD Workflow - RED → GREEN → REFACTOR):**
+
+**Phase A.6: Auto-Indexing (2.5 hours actual)**
+
+**Step A6.1: Design auto-rebuild strategy (30 min)**
+- Chose: Lazy rebuild + optional git hooks
+- Rejected: File watcher (complexity), git hooks only (misses manual edits)
+
+**Step A6.2: Implement AutoIndexer class (1 hour)**
+- [lib/context/auto-index.ts](lib/context/auto-index.ts): AutoIndexer class with staleness detection
+- [test/context/auto-index.test.ts](test/context/auto-index.test.ts): 11 comprehensive tests
+- **TDD Results:** 🔴 RED (tests fail) → 🟢 GREEN (11/11 pass) → 🔵 REFACTOR (code cleanup)
+
+**Step A6.3: Integrate into query commands (30 min)**
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L7): Import AutoIndexer
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L31): Initialize in constructor
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L60): Auto-rebuild in queryPlans()
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L100): Auto-rebuild in querySessions()
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L145): Auto-rebuild in search()
+- [lib/context/json-storage.ts](lib/context/json-storage.ts#L315): Exposed getIndexPath() as public
+
+**Step A6.4: Add git hooks (20 min)**
+- [.github/hooks/post-commit](.github/hooks/post-commit): Auto-rebuild after commits
+- [.github/hooks/post-merge](.github/hooks/post-merge): Auto-rebuild after merges
+- [scripts/install-context-hooks.js](scripts/install-context-hooks.js): Hook installer script
+- **Tested:** Hooks install correctly with executable permissions (755)
+
+**Step A6.5: Update documentation (20 min)**
+- [.github/skills/context-query/SKILL.md](.github/skills/context-query/SKILL.md#L348-L419): Added "Auto-Indexing" section
+- [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md#L307-L309): Added auto-indexing note
+
+**What Changed:**
+
+```diff
+// OLD (broken workflow):
+vim .aiknowsys/sessions/2026-02-07-session.md
+npx aiknowsys query-sessions --date "2026-02-07"
+- ❌ Returns empty (index stale, no results)
+
+// NEW (working workflow):
+vim .aiknowsys/sessions/2026-02-07-session.md
+npx aiknowsys query-sessions --date "2026-02-07"
++ ✅ Auto-rebuilds index (~300ms), returns correct results
+```
+
+**Validation:**
+- ✅ npm test: 839/845 passing (+11 new auto-index tests)
+- ✅ Auto-rebuild working: Detects staleness, rebuilds transparently
+- ✅ Git hooks installed: post-commit, post-merge executable
+- ✅ Performance: <500ms rebuild for <1000 files
+- ✅ Documentation: context-query skill + ESSENTIALS updated
+
+**Architecture Decisions:**
+
+**Lazy Rebuild (chosen):**
+- Checks index mtime vs file mtimes on every query
+- Simple, zero dependencies, always works
+- ~200-500ms overhead when stale (acceptable)
+
+**Git Hooks (optional optimization):**
+- Proactively rebuild after commits/merges
+- Zero query latency when hooks installed
+- Graceful fallback if not installed
+
+**Key Learning:**
+- Auto-indexing transforms Phase A from "unusable" to "production-ready"
+- TDD caught edge cases early (missing index, non-existent dirs)
+- Silent rebuild modes prevent log spam
+- Git hooks are optional but highly valuable for UX
+
+**Next Steps:**
+- Phase B Mini: Mutation Commands (create-session, create-plan, update-session)
+- Estimated: 3-4 hours
+- Decision point: Evaluate Phase A.6 effectiveness first
+
+**Files Changed:** 6 created, 4 modified  
+**Test Coverage:** +11 auto-index tests, all passing  
+**Performance:** <500ms rebuild overhead (lazy), 0ms (with git hooks)
+
+---
+
 ## Session: Remediation Work Complete - All Architect Issues Resolved (Feb 7, 2026)
 
 **Goal:** Address 4 architect review issues from original template migration

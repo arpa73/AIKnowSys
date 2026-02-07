@@ -6,6 +6,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { StorageAdapter } from './storage-adapter.js';
+import { AutoIndexer } from './auto-index.js';
 import type {
   PlanMetadata,
   SessionMetadata,
@@ -29,6 +30,7 @@ interface ContextIndex {
 
 export class JsonStorage extends StorageAdapter {
   private targetDir: string = '';
+  private autoIndexer: AutoIndexer | null = null;
   private index: ContextIndex = {
     version: 1,
     updated: new Date().toISOString(),
@@ -39,6 +41,7 @@ export class JsonStorage extends StorageAdapter {
 
   async init(targetDir: string): Promise<void> {
     this.targetDir = targetDir;
+    this.autoIndexer = new AutoIndexer(targetDir);
     const indexPath = this.getIndexPath();
     
     // Create .aiknowsys directory if it doesn't exist
@@ -56,6 +59,11 @@ export class JsonStorage extends StorageAdapter {
   }
 
   async queryPlans(filters?: PlanFilters): Promise<{ count: number; plans: PlanMetadata[] }> {
+    // Auto-rebuild if index is stale
+    if (this.autoIndexer) {
+      await this.autoIndexer.ensureFreshIndex(this, { verbose: false });
+    }
+
     let plans = [...this.index.plans];
 
     if (filters) {
@@ -81,6 +89,11 @@ export class JsonStorage extends StorageAdapter {
       if (filters.updatedBefore) {
         plans = plans.filter(p => p.updated < filters.updatedBefore!);
       }
+    }
+
+    // Auto-rebuild if index is stale
+    if (this.autoIndexer) {
+      await this.autoIndexer.ensureFreshIndex(this, { verbose: false });
     }
 
     return {
@@ -123,6 +136,11 @@ export class JsonStorage extends StorageAdapter {
   }
 
   async search(query: string, scope: SearchScope): Promise<{ query: string; count: number; results: SearchResult[] }> {
+    // Auto-rebuild if index is stale
+    if (this.autoIndexer) {
+      await this.autoIndexer.ensureFreshIndex(this, { verbose: false });
+    }
+
     const results: SearchResult[] = [];
     const searchPattern = new RegExp(query, 'gi');
     
@@ -307,7 +325,10 @@ export class JsonStorage extends StorageAdapter {
     // No resources to cleanup for JSON storage
   }
 
-  private getIndexPath(): string {
+  /**
+   * Get index file path (exposed for AutoIndexer)
+   */
+  getIndexPath(): string {
     return path.join(this.targetDir, '.aiknowsys', 'context-index.json');
   }
 

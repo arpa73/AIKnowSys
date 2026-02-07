@@ -1,0 +1,10 @@
+#!/bin/bash
+# Git post-merge hook for AIKnowSys
+# Auto-rebuilds context index when context files are merged from team
+
+# Check if context files changed in the merge
+if git diff --name-only HEAD@{1} HEAD 2>/dev/null | grep -q '^\.aiknowsys/'; then
+  echo "🔄 Context files merged, rebuilding index..."
+  npx aiknowsys rebuild-index --quiet 2>/dev/null || node bin/cli.js rebuild-index --quiet 2>/dev/null || true
+  echo "✅ Context index updated after merge"
+fi

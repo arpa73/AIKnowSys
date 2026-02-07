@@ -308,6 +308,11 @@ npx aiknowsys search-context "TDD" --scope all --json
 npx aiknowsys rebuild-index
 ```
 
+**Auto-Indexing (Phase A.6):**
+- Index auto-rebuilds when stale (files newer than index)
+- Transparent to users (~200-500ms overhead when needed)
+- Git hooks available: `node scripts/install-context-hooks.js`
+
 **Full documentation + workflow:** [.github/skills/context-query/SKILL.md](.github/skills/context-query/SKILL.md)
 
 ---

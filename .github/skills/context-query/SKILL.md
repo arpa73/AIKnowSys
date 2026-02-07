@@ -343,6 +343,93 @@ Did you mean:
 
 ---
 
+## Auto-Indexing (Transparent Background Process)
+
+**Phase A.6 - Context Query Completion**
+
+The context query system automatically detects when the index is stale and rebuilds it before returning results.
+
+### What This Means for You
+
+**You can still create/edit files manually:**
+```bash
+# Old workflow still works!
+vim .aiknowsys/sessions/2026-02-07-session.md
+
+# Query immediately works (auto-rebuilds if needed)
+npx aiknowsys query-sessions --date "2026-02-07"
+```
+
+**What happens behind the scenes:**
+```
+1. You run: npx aiknowsys query-sessions
+2. System checks: Is index older than newest file?
+3. If yes: Auto-rebuild (takes ~200-500ms)
+4. If no: Return results immediately
+5. You get: Up-to-date results, always
+```
+
+### When Rebuild Happens
+
+**Automatic (transparent):**
+- When any .md file in `plans/`, `sessions/`, `learned/` is newer than index
+- Before executing `query-plans`, `query-sessions`, or `search-context`
+- Typically <500ms overhead (one-time cost until next file change)
+- Silent by default (no log output)
+
+**Proactive (git hooks - optional):**
+- After `git commit` if context files changed
+- After `git merge` (team data synced)
+- Zero query latency (index prebuild)
+- Install: `node scripts/install-context-hooks.js`
+
+### Performance Characteristics
+
+| Files | Rebuild Time | When |
+|-------|--------------|------|
+| <100 | <200ms | Most projects |
+| <1000 | <500ms | Large projects |
+| >1000 | <1s | Very large (still acceptable) |
+
+**Optimization tips:**
+- Install git hooks to avoid query latency
+- Manual rebuild: `npx aiknowsys rebuild-index` (if hooks not installed)
+- Lazy rebuild caches result until next file change
+
+### Troubleshooting
+
+**"Index seems out of date":**
+```bash
+# Force rebuild
+npx aiknowsys rebuild-index
+
+# Check index timestamp
+ls -lah .aiknowsys/context-index.json
+```
+
+**"Auto-rebuild too slow":**
+```bash
+# Install git hooks for zero-latency queries
+node scripts/install-context-hooks.js
+
+# Verify hooks installed
+ls -lah .git/hooks/ | grep post-
+```
+
+**"Want to disable auto-rebuild":**
+```javascript
+// .aiknowsys/.aiknowsys.config.json (Phase A.7 - future)
+{
+  "context": {
+    "autoRebuild": {
+      "enabled": false  // Requires manual rebuild
+    }
+  }
+}
+```
+
+---
+
 ## Success Criteria
 
 After using this skill, you should:

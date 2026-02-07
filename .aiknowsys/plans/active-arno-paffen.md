@@ -6,8 +6,9 @@
 
 # Active Plan Pointer
 
-**Currently Working On:** No active plan  
-**Status:** 🎯 Available for new work  
+**Currently Working On:** [Context Query Completion](../PLAN_context_query_completion.md)  
+**Status:** 🎯 ACTIVE (Phase A.6 + B Mini)  
+**Started:** 2026-02-07  
 **Last Completed:** [Context Query System](../PLAN_context_query_system.md) - 2026-02-07 (Phase A + A.5)  
 **Previously:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
 
@@ -19,6 +20,7 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
+| [Context Query Completion](../PLAN_context_query_completion.md) | 🎯 ACTIVE | Fixing index staleness + adding mutations | 2026-02-07 |
 | [Vitest Migration](../PLAN_vitest_migration.md) | ✅ COMPLETE | All 4 phases complete | 2026-02-06 |
 | [TypeScript Migration & Type-Safe Architecture](../PLAN_typescript_migration.md) | ✅ COMPLETE | All 8 phases implemented, 581 tests passing | 2026-02-06 |
 | [Deliverables Validation Protocol](../PLAN_deliverables_validation_protocol.md) | ✅ COMPLETE | All 5 phases implemented, validation integrated | 2026-02-03 |
