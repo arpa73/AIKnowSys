@@ -375,4 +375,92 @@ describe('update-session command', () => {
     expect(sessionContent).toContain('First note');
     expect(sessionContent).toContain('Second note');
   });
+
+  // === Shortcuts Tests (Phase 4.2) ===
+
+  it('supports --done shortcut for completing session', async () => {
+    const result = await updateSession({
+      done: true,
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Status: in-progress → complete');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('status: "complete"');
+  });
+
+  it('supports --wip shortcut for marking session in-progress', async () => {
+    // First mark as complete
+    await updateSession({
+      setStatus: 'complete',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Then use wip shortcut
+    const result = await updateSession({
+      wip: true,
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Status: complete → in-progress');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('status: "in-progress"');
+  });
+
+  it('supports --append shortcut for adding Update section with content', async () => {
+    const result = await updateSession({
+      append: 'Completed refactoring',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Appended section: ## Update');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Update');
+    expect(sessionContent).toContain('Completed refactoring');
+  });
+
+  it('auto-detects file path in --append and reads content', async () => {
+    // Create a test markdown file
+    const testNotePath = path.join(testDir, 'test-note.md');
+    await fs.writeFile(testNotePath, '# Test Note\n\nFile content here', 'utf-8');
+
+    const result = await updateSession({
+      append: testNotePath,
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Update');
+    expect(sessionContent).toContain('# Test Note');
+    expect(sessionContent).toContain('File content here');
+  });
+
+  it('treats --append with newlines as markdown content', async () => {
+    const multilineContent = 'Line 1\n\nLine 2\n\n- Bullet';
+    const result = await updateSession({
+      append: multilineContent,
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('Line 1');
+    expect(sessionContent).toContain('Line 2');
+    expect(sessionContent).toContain('- Bullet');
+  });
 });

@@ -372,9 +372,42 @@ program
   .option('--appendSection <title>', 'Append markdown section header (e.g., "## Notes")')
   .option('--content <text>', 'Section body content (requires --appendSection)')
   .option('--appendFile <path>', 'Append content from markdown file')
+  // Shortcuts (Phase 4.2)
+  .option('--done', 'Shortcut for --set-status complete')
+  .option('--wip', 'Shortcut for --set-status in-progress')
+  .option('--append <content>', 'Shortcut: Add "Update" section with content/file (auto-detects file paths)')
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (options) => {
     await updateSession(options);
+  });
+
+// === Phase 4.4: Command Shortcuts (Aliases) ===
+
+program
+  .command('done')
+  .description('Mark today\'s session as complete (shortcut for update-session --done)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    await updateSession({ ...options, done: true });
+  });
+
+program
+  .command('wip')
+  .description('Mark today\'s session as in-progress (shortcut for update-session --wip)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (options) => {
+    await updateSession({ ...options, wip: true });
+  });
+
+program
+  .command('log <message>')
+  .description('Add quick note to session (shortcut for update-session --append)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (message, options) => {
+    await updateSession({ ...options, append: message });
   });
 
 program

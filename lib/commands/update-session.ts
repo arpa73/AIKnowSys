@@ -18,6 +18,10 @@ export interface UpdateSessionOptions {
   appendSection?: string;  // Section title (## Title)
   content?: string;         // Markdown content for section
   appendFile?: string;      // Path to markdown file to append
+  // Shortcuts (Phase 4.2)
+  done?: boolean;           // Shortcut for --set-status complete
+  wip?: boolean;            // Shortcut for --set-status in-progress
+  append?: string;          // Shortcut for --appendSection "Update" + content/file
   json?: boolean;
   targetDir?: string;
   _silent?: boolean;
@@ -33,6 +37,42 @@ export interface UpdateSessionResult {
 const VALID_STATUSES = ['in-progress', 'complete', 'abandoned'] as const;
 
 export async function updateSession(options: UpdateSessionOptions = {}): Promise<UpdateSessionResult> {
+  // === Phase 4.2: Expand shortcuts ===
+  const expandedOptions = { ...options };
+
+  // --done shortcut → --set-status complete
+  if (expandedOptions.done) {
+    expandedOptions.setStatus = 'complete';
+    delete expandedOptions.done;
+  }
+
+  // --wip shortcut → --set-status in-progress
+  if (expandedOptions.wip) {
+    expandedOptions.setStatus = 'in-progress';
+    delete expandedOptions.wip;
+  }
+
+  // --append shortcut → --appendSection "Update" + auto-detect content/file
+  if (expandedOptions.append) {
+    expandedOptions.appendSection = '## Update';
+    
+    // Auto-detect: is it a file path or content?
+    const appendValue = expandedOptions.append;
+    const looksLikeFile = appendValue.includes('/') || appendValue.includes('\\') || 
+                          appendValue.endsWith('.md') || appendValue.endsWith('.txt');
+    
+    if (looksLikeFile) {
+      // Try to read as file (will fail later if doesn't exist)
+      expandedOptions.appendFile = appendValue;
+    } else {
+      // Treat as inline content
+      expandedOptions.content = appendValue;
+    }
+    
+    delete expandedOptions.append;
+  }
+
+  // === Original destructuring (now using expanded options) ===
   const {
     addTopic,
     addFile,
@@ -43,7 +83,7 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     json = false,
     targetDir = process.cwd(),
     _silent = false
-  } = options;
+  } = expandedOptions;
 
   // Always resolve to absolute path (Invariant #2)
   const resolvedTargetDir = path.resolve(targetDir);
@@ -190,8 +230,11 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
   if (json) {
     console.log(JSON.stringify(result, null, 2));
   } else if (!_silent) {
-    log.success(`✅ Updated session: ${filename}`);
-    changes.forEach(change => log.info(`  • ${change}`));
+    // Phase 4.5: Visual output improvements
+    log.success('✅ Session Updated\n');
+    log.info('📝 Changes:');
+    changes.forEach(change => log.info(`   • ${change}`));
+    log.info(`\n📂 File: ${filename}`);
   }
 
   return result;

@@ -127,6 +127,21 @@ npx aiknowsys update-session \
 - `--appendFile <path>` - Append content from markdown file
 - `--json` - Structured JSON output
 
+**Shortcuts (v0.11.0):**
+- `--done` - Shortcut for `--set-status complete`
+- `--wip` - Shortcut for `--set-status in-progress`
+- `--append <content>` - Shortcut for `--appendSection "Update"` + auto-detect content/file
+  - If content looks like a file path (contains `/` or `.md`), reads from file
+  - Otherwise treats as inline markdown content
+
+**Command Aliases (v0.11.0):**
+```bash
+# Ultra-short commands for common operations
+npx aiknowsys done              # → update-session --done
+npx aiknowsys wip               # → update-session --wip
+npx aiknowsys log "message"     # → update-session --append "message"
+```
+
 **Features:**
 - Duplicate prevention (topics/files only added once)
 - Status validation (only accepts valid enum values)
@@ -160,6 +175,26 @@ npx aiknowsys update-session \
   --set-status complete \
   --appendSection "## Summary" \
   --content "Completed all enhancements."
+```
+
+**Shortcuts (v0.11.0):**
+```bash
+# Mark complete (shortcut)
+npx aiknowsys update-session --done
+# → Same as: --set-status complete
+
+# Quick note with auto-detection
+npx aiknowsys update-session --append "Fixed validation bug"
+# → Creates "## Update" section with content
+
+# Auto-detect file path
+npx aiknowsys update-session --append ./notes.md
+# → Reads file and appends (auto-detected from path)
+
+# Ultra-short command aliases
+npx aiknowsys done                    # Mark complete
+npx aiknowsys wip                     # Mark in-progress
+npx aiknowsys log "Fixed bug #123"    # Quick note
 ```
 
 ---
