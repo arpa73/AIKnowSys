@@ -181,18 +181,32 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ### 5️⃣ DOCUMENT: Update Changelog (MANDATORY for significant changes)
 
-**When to update** (automatic, don't ask):
-- After architectural changes, new features, performance fixes
-- After bug fixes that reveal design issues
-- When you discover missing/outdated patterns
+**When to update CODEBASE_CHANGELOG.md** (milestone entries only):
+- ✅ **Version releases** (v0.11.0, v0.12.0, etc.)
+- ✅ **Major architectural changes** (storage layer redesign, new subsystems)
+- ✅ **Breaking changes** (API changes, migration required)
+- ✅ **Critical security fixes** (CVEs, vulnerability patches)
+
+**When NOT to update CODEBASE_CHANGELOG.md** (use session files instead):
+- ❌ Daily feature work (goes in `.aiknowsys/sessions/YYYY-MM-DD-session.md`)
+- ❌ Bug fixes (unless revealing major design issue)
+- ❌ Refactoring (unless changing fundamental patterns)
+- ❌ Documentation updates (unless changing workflow)
 
 **What to update**:
 ```bash
-# Add session entry to CODEBASE_CHANGELOG.md at the TOP
-# Update CODEBASE_ESSENTIALS.md if patterns/invariants changed
+# For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
+# For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
+# For PATTERNS: Update CODEBASE_ESSENTIALS.md if invariants changed
 ```
 
-⚠️ **ALSO: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
+**Why this approach?** (v0.11.0+)
+- Session files are **indexed** in `.aiknowsys/context-index.json` (queryable via CLI)
+- Changelog stays **lean** (~500 lines) and scannable for major events
+- Use `query-sessions` / `search-context` to find historical work
+- See: [docs/milestone-changelog-format.md](docs/milestone-changelog-format.md)
+
+⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
 
 **Session entry template**:
 ```markdown

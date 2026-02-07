@@ -47,17 +47,19 @@ describe('install-skills command', () => {
   // DEFAULT SKILLS INSTALLATION TESTS
   // ========================================
 
-  it('should install all 10 default universal skills (excluding maintainer-only)', async () => {
+  it('should install all 12 default universal skills (excluding maintainer-only)', async () => {
     await installSkills({ dir: testDir, _silent: true });
     
     const skillsDir: string = path.join(testDir, '.github', 'skills');
     
-    // Verify all 10 default skills are installed
+    // Verify all 12 default skills are installed
     const expectedSkills: string[] = [
       'ai-friendly-documentation',
-      'context7-usage',
+      'context-mutation',
+      'context-query',
       'dependency-management',
       'feature-implementation',
+      'framework-docs',
       'pattern-sharing',
       'refactoring-workflow',
       'skill-creator',
@@ -255,8 +257,8 @@ describe('install-skills command', () => {
     const skillsDir: string = path.join(testDir, '.github', 'skills');
     const installedSkills: string[] = fs.readdirSync(skillsDir);
     
-    // Should have 10 skills
-    expect(installedSkills.length).toBe(10);
+    // Should have 12 skills
+    expect(installedSkills.length).toBe(12);
   });
 
   it('should track skipped count when invalid skills provided', async () => {

@@ -1,52 +1,73 @@
 # Codebase Changelog
 
-**Purpose:** Session-by-session record of changes, validations, and learnings.
+**Purpose:** Milestone-focused timeline of major project events (releases, breaking changes, architectural shifts).
 
-**Usage:** Read recent sessions to understand project evolution. Add new session after completing work.
+**Usage:** Scan for important milestones. For daily work history, use `.aiknowsys/sessions/` (queryable via CLI).
 
-⚠️ **AI REMINDER:** For multi-hour/multi-task work, ALSO maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`  
-📝 **Changelog** = Permanent history (committed) | **Sessions** = Working memory (gitignored)
+⚠️ **AI REMINDER:** Add entries ONLY for milestones (releases, arch changes), NOT daily work!  
+📝 **Changelog** = Milestones (lean, ~500 lines) | **Sessions** = Daily work (indexed, queryable)
+
+**See:** [docs/milestone-changelog-format.md](docs/milestone-changelog-format.md) for entry guidelines.
 
 ---
 
-## Session: Initial Knowledge System Setup ({{DATE}})
+## Milestone: Initial Knowledge System Setup ({{DATE}})
 
-**Goal**: Install knowledge system for {{PROJECT_NAME}}
+**Goal:** Install AIKnowSys for {{PROJECT_NAME}}
 
-**Changes**:
+**Changes:**
 - Created CODEBASE_ESSENTIALS.md with project patterns
 - Installed custom agents (Developer + Architect)
-- Added universal skills
-- Initialized this changelog
+- Added universal skills (refactoring, dependencies, TDD, etc.)
+- Initialized milestone-focused changelog
+- Configured context query system (session indexing)
 
-**Validation**:
+**Migration:**
+- Complete TODO sections in CODEBASE_ESSENTIALS.md
+- Start using @Developer workflow for feature implementation
+- Document daily work in `.aiknowsys/sessions/YYYY-MM-DD-session.md`
+
+**Validation:**
 - ✅ All template files created
 - ✅ Agent workflow configured
+- ✅ CLI commands functional
 
-**Next Steps**:
-- Complete TODO sections in CODEBASE_ESSENTIALS.md
-- Start using @Developer workflow
-- Document patterns as discovered
+**Impact:**
+- AI agents can now follow consistent patterns
+- Session work automatically indexed for queries
+- Team has structured workflow for development
 
 ---
 
-## Session Entry Template
+## Milestone Entry Template
 
-**Copy this template for new sessions:**
+**Copy this template for new MILESTONES only:**
 
 ```markdown
-## Session: [Brief Title] (MMM D, YYYY)
+## Milestone: [Brief Title] (Month Day, Year)
 
-**Goal**: [One sentence describing what you're trying to accomplish]
+**Goal:** [One sentence describing the milestone's purpose]
 
-**Changes**:
-- [file/path.ext](file/path.ext#L123): Description with line numbers
-- [another/file.ext](another/file.ext#L45-L67): What changed and why
+**Changes:**
+- [Major change 1 with rationale]
+- [Major change 2 with impact]
+- [Breaking change with migration guide if applicable]
 
-**Validation**:
-- ✅ [Test type]: X passed, Y skipped
-- ✅ [Type check]: No errors
-- ⚠️ [Known issue]: Description and plan
+**Migration:** (if breaking changes)
+- [Step 1 for users to migrate]
+- [Step 2 for users to migrate]
+
+**Validation:**
+- ✅ Tests: [X tests passing]
+- ✅ Deliverables: [All validation checks passed]
+- ✅ Performance: [Key metric improvement if applicable]
+
+**Impact:**
+- [Who benefits and how]
+- [What problems this solves]
+```
+
+**For daily work:** Use `.aiknowsys/sessions/YYYY-MM-DD-session.md` (see AGENTS.md)
 
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 

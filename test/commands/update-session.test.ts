@@ -231,4 +231,148 @@ describe('update-session command', () => {
     expect(result.updated).toBe(false);
     expect(result.message).toContain('No changes');
   });
+
+  // ====================================================================
+  // Phase 1: Content Manipulation Tests (v0.11.0)
+  // ====================================================================
+
+  it('appends section with inline content', async () => {
+    const result = await updateSession({
+      appendSection: '## Work Complete',
+      content: 'All polishing items finished.\n\nTests passing: 959/959',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Appended section: ## Work Complete');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Work Complete');
+    expect(sessionContent).toContain('All polishing items finished.');
+    expect(sessionContent).toContain('Tests passing: 959/959');
+  });
+
+  it('appends section without content (just header)', async () => {
+    const result = await updateSession({
+      appendSection: '## Notes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Notes');
+  });
+
+  it('appends content from file', async () => {
+    // Create a test markdown file
+    const contentFile = path.join(testDir, 'test-content.md');
+    await fs.writeFile(contentFile, '## Imported Section\n\nThis content came from a file.', 'utf-8');
+
+    const result = await updateSession({
+      appendFile: contentFile,
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain(`Appended content from: ${contentFile}`);
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Imported Section');
+    expect(sessionContent).toContain('This content came from a file.');
+
+    // Cleanup
+    await fs.rm(contentFile);
+  });
+
+  it('combines metadata and content updates', async () => {
+    const result = await updateSession({
+      addTopic: 'polishing',
+      setStatus: 'complete',
+      appendSection: '## Summary',
+      content: 'Completed all enhancements.',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Added topic: polishing');
+    expect(result.changes).toContain('Status: in-progress → complete');
+    expect(result.changes).toContain('Appended section: ## Summary');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    // Metadata changes
+    expect(sessionContent).toContain('topics: ["initial", "polishing"]');
+    expect(sessionContent).toContain('status: "complete"');
+    // Content changes
+    expect(sessionContent).toContain('## Summary');
+    expect(sessionContent).toContain('Completed all enhancements.');
+  });
+
+  it('rejects appendFile with non-existent file', async () => {
+    await expect(updateSession({
+      appendFile: path.join(testDir, 'nonexistent.md'),
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow();
+  });
+
+  it('rejects appendSection with content but no section title', async () => {
+    await expect(updateSession({
+      content: 'Content without section',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow('content requires appendSection');
+  });
+
+  it('preserves existing content when appending', async () => {
+    // Add initial content
+    await updateSession({
+      appendSection: '## First Section',
+      content: 'First content',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Append more content
+    await updateSession({
+      appendSection: '## Second Section',
+      content: 'Second content',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## First Section');
+    expect(sessionContent).toContain('First content');
+    expect(sessionContent).toContain('## Second Section');
+    expect(sessionContent).toContain('Second content');
+  });
+
+  it('allows duplicate section headers (markdown permits this)', async () => {
+    // Add first note
+    await updateSession({
+      appendSection: '## Test Notes',
+      content: 'First note',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Add second note with same header
+    await updateSession({
+      appendSection: '## Test Notes',
+      content: 'Second note',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    const notesSections = (sessionContent.match(/## Test Notes/g) || []).length;
+    expect(notesSections).toBe(2); // Explicitly allow duplicate headers
+    expect(sessionContent).toContain('First note');
+    expect(sessionContent).toContain('Second note');
+  });
 });

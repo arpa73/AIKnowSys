@@ -8,9 +8,11 @@ import { sanitizeSkillName } from '../sanitize.js';
 
 const AVAILABLE_SKILLS = [
   'ai-friendly-documentation',
-  'context7-usage',
+  'context-mutation',
+  'context-query',
   'dependency-management',
   'feature-implementation',
+  'framework-docs',
   'pattern-sharing',
   'refactoring-workflow',
   'skill-creator',

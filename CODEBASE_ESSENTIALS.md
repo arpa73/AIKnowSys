@@ -66,8 +66,13 @@ aiknowsys/
 │   ├── plans/              # Multi-developer plan tracking
 │   ├── learned/            # Project-specific learned patterns
 │   └── sessions/           # Session notes (gitignored)
+├── docs/archived/          # Archived changelog entries (v0.11.0+)
+│   ├── README.md           # Archive index and search guide
+│   └── changelog-2025-and-earlier.md # Pre-v0.11.0 sessions
 └── package.json
 ```
+
+**Note:** As of v0.11.0, `CODEBASE_CHANGELOG.md` contains **milestone entries only** (releases, breaking changes). Daily work is in `.aiknowsys/sessions/` (indexed and queryable via CLI).
 
 ---
 
@@ -176,9 +181,15 @@ These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 
 **[context-query](.github/skills/context-query/SKILL.md)**
 - **Triggers:** "find plan", "query sessions", "search context", "what's the current plan"
-- **Summary:** Query CLI commands instead of file searching - O(1) index lookup
+- **Summary:** Query CLI commands for READ operations - O(1) index lookup
 - **Why use:** 100x faster than grep_search for >100 items
 - **Output:** JSON with structured metadata, file paths
+
+**[context-mutation](.github/skills/context-mutation/SKILL.md)**
+- **Triggers:** "create session", "update session", "create plan", "document work"
+- **Summary:** Create and modify sessions/plans via YAML-validated commands (WRITE operations)
+- **Why use:** Easier than manual editing, ensures YAML validation and atomic index updates
+- **Output:** JSON with file paths, metadata changes, validation results
 
 #### Dependency Management
 **[dependency-management](.github/skills/dependency-management/SKILL.md)**
@@ -187,12 +198,12 @@ These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 - **Why use:** Prevents breaking changes from surprise dependencies
 - **Output:** Updated package.json, test results
 
-#### Context7 Integration
-**[context7-usage](.github/skills/context7-usage/SKILL.md)**
-- **Triggers:** "query framework docs", "Context7", "library documentation"
-- **Summary:** Query up-to-date documentation via Context7 MCP server
-- **Why use:** Always current docs instead of outdated web search
-- **Output:** Framework-specific code examples, API documentation
+#### Framework Documentation
+**[framework-docs](.github/skills/framework-docs/SKILL.md)**
+- **Triggers:** "query framework docs", "library documentation", "current API docs"
+- **Summary:** Query up-to-date framework/library documentation via Context7 MCP
+- **Why use:** Always current, version-specific docs optimized for AI consumption
+- **Output:** Framework-specific code examples, current API documentation
 
 #### Skill Management
 **[skill-creator](.github/skills/skill-creator/SKILL.md)**
@@ -240,12 +251,19 @@ node bin/cli.js --help  # CLI functional
 
 ### Common Patterns
 
-**Logger pattern (all commands):**
+**Logger pattern (CLI commands in lib/commands/):**
 ```typescript
 import { createLogger } from '../logger.js';
 const log = createLogger(options._silent);
 log.header('Title', '🎯');
 log.success('Done');
+```
+
+**Console output (standalone scripts in scripts/):**
+```javascript
+// Scripts use console.log for direct output (not integrated into CLI)
+console.log('📦 Script Name\n');
+console.log('✅ Task complete');
 ```
 
 **TypeScript imports (REQUIRED):**

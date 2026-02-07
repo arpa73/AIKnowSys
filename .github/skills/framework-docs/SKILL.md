@@ -1,15 +1,30 @@
-# Context7 Usage Skill
+---
+name: framework-docs
+description: Query up-to-date framework/library documentation using Context7 MCP
+triggers:
+  - "query framework docs"
+  - "library documentation"
+  - "current API docs"
+  - "latest docs for"
+  - "framework API"
+  - "check current docs"
+  - "context7"
+  - "version-specific docs"
+maintainer: false
+---
 
-**Trigger Words:** `context7`, `current docs`, `latest API`, `version-specific`, `use context7`, `query context7`
+# Framework Documentation Query Skill
 
-**What:** Guide for using Context7 MCP with AIKnowSys workflows
+**What:** Query current framework/library documentation using Context7 MCP
 
-**When to use this skill:**
-- AI needs current library documentation
-- Validating learned skills against latest APIs
-- Scaffolding with specific framework version
-- Planning with unfamiliar technologies
-- Checking if patterns are still recommended
+**When to use:**
+- Need current library API documentation
+- Validating learned patterns against latest APIs
+- Working with unfamiliar frameworks
+- Checking version-specific features
+- Planning with external dependencies
+
+**Why not web search:** Context7 provides structured, version-specific docs optimized for AI consumption
 
 ---
 

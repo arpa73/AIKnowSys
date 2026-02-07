@@ -14,6 +14,10 @@ export interface UpdateSessionOptions {
   addTopic?: string;
   addFile?: string;
   setStatus?: 'in-progress' | 'complete' | 'abandoned';
+  // Content manipulation options (v0.11.0)
+  appendSection?: string;  // Section title (## Title)
+  content?: string;         // Markdown content for section
+  appendFile?: string;      // Path to markdown file to append
   json?: boolean;
   targetDir?: string;
   _silent?: boolean;
@@ -33,6 +37,9 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     addTopic,
     addFile,
     setStatus,
+    appendSection,
+    content: sectionContent,  // Renamed from 'content' to avoid shadowing the file content variable (line 87)
+    appendFile: appendFileOption,
     json = false,
     targetDir = process.cwd(),
     _silent = false
@@ -42,6 +49,11 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
   const resolvedTargetDir = path.resolve(targetDir);
 
   const log = createLogger(_silent || json);
+
+  // Validation: content requires appendSection
+  if (sectionContent && !appendSection) {
+    throw new Error('content requires appendSection to be specified');
+  }
 
   // Find today's session
   const date = new Date().toISOString().split('T')[0];
@@ -106,6 +118,30 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     }
   }
 
+  // Content manipulation (v0.11.0)
+  let contentToAppend = '';
+
+  // Append section with content
+  if (appendSection) {
+    contentToAppend += `\n\n${appendSection}\n`;
+    if (sectionContent) {
+      contentToAppend += `\n${sectionContent}\n`;
+    }
+    changes.push(`Appended section: ${appendSection}`);
+  }
+
+  // Append content from file
+  if (appendFileOption) {
+    const resolvedFilePath = path.resolve(resolvedTargetDir, appendFileOption);
+    const fileExists = await checkFileExists(resolvedFilePath);
+    if (!fileExists) {
+      throw new Error(`File not found: ${appendFileOption}`);
+    }
+    const fileContent = await fs.readFile(resolvedFilePath, 'utf-8');
+    contentToAppend += `\n\n${fileContent}\n`;
+    changes.push(`Appended content from: ${appendFileOption}`);
+  }
+
   // Check if any changes
   if (changes.length === 0) {
     const result = {
@@ -124,7 +160,18 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
   }
 
   // Apply updates
-  const newContent = updateFrontmatter(content, updates);
+  let newContent = content as string; // Start with original file content
+
+  // Update frontmatter if there are metadata changes
+  if (Object.keys(updates).length > 0) {
+    newContent = updateFrontmatter(content as string, updates);
+  }
+
+  // Append content if specified
+  if (contentToAppend) {
+    newContent = newContent + contentToAppend;
+  }
+
   await fs.writeFile(filepath, newContent, 'utf-8');
 
   // Update index

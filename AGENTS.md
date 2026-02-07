@@ -62,7 +62,7 @@ Even for production-critical bugs:
 2. ✅ **STILL create todo list** (1 minute - prevents forgetting steps)
 3. ✅ **STILL follow TDD** (test first = confidence the fix works)
 4. ✅ **STILL request architectural review** (catches side effects)
-5. ✅ **STILL update CODEBASE_CHANGELOG.md** (documents the incident)
+5. ✅ **STILL document in session file** (documents the incident)
 
 **Shortcuts create more emergencies.**
 
@@ -157,8 +157,9 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 2. **@AGENTS.md** - This file for workflow reminders
 
 **When you need history:**
-- **@CODEBASE_CHANGELOG.md** - Session-by-session changes and validation notes
+- **@CODEBASE_CHANGELOG.md** - Milestone-focused timeline (releases, breaking changes)
 - **@.aiknowsys/learned/** - Project-specific patterns discovered over time
+- **Query commands:** Use `query-sessions`, `search-context` for historical work (faster than file reading)
 
 ### 2️⃣ PLAN: Check Skills Before Coding
 
@@ -170,6 +171,9 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 | "refactor", "clean up", "simplify" | `refactoring-workflow` | Test-driven refactoring |
 | "update deps", "upgrade packages" | `dependency-management` | Safe upgrade procedures |
 | "update docs", "changelog" | `ai-friendly-documentation` | AI-optimized docs |
+| "query plans", "find sessions", "search context" | `context-query` | CLI queries (READ operations) |
+| "create plan", "create session", "update session", "document work" | `context-mutation` | Mutation commands (WRITE operations) |
+| "query framework docs", "library documentation", "current API" | `framework-docs` | Up-to-date framework/library docs |
 | "ESSENTIALS bloat", "compress essentials", "compress-essentials" | `essentials-compression` (learned) | Compression workflow |
 | "create skill", "new skill" | `skill-creator` | Proper skill format |
 | "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
@@ -197,7 +201,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 **If NO to any:**
 - You violated Critical Invariant #7 (TDD requirement)
-- Document violation in CODEBASE_CHANGELOG.md under "Key Learning"
+- Document violation in session file under "Key Learning"
 - Explain why TDD wasn't followed (time pressure, uncertainty, etc.)
 - Note what was lost (design benefits, confidence, etc.)
 
@@ -216,18 +220,32 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ### 5️⃣ DOCUMENT: Update Changelog (MANDATORY for significant changes)
 
-**When to update** (automatic, don't ask):
-- After architectural changes, new features, performance fixes
-- After bug fixes that reveal design issues
-- When you discover missing/outdated patterns
+**When to update CODEBASE_CHANGELOG.md** (milestone entries only):
+- ✅ **Version releases** (v0.11.0, v0.12.0, etc.)
+- ✅ **Major architectural changes** (storage layer redesign, new subsystems)
+- ✅ **Breaking changes** (API changes, migration required)
+- ✅ **Critical security fixes** (CVEs, vulnerability patches)
+
+**When NOT to update CODEBASE_CHANGELOG.md** (use session files instead):
+- ❌ Daily feature work (goes in `.aiknowsys/sessions/YYYY-MM-DD-session.md`)
+- ❌ Bug fixes (unless revealing major design issue)
+- ❌ Refactoring (unless changing fundamental patterns)
+- ❌ Documentation updates (unless changing workflow)
 
 **What to update**:
 ```bash
-# Add session entry to CODEBASE_CHANGELOG.md at the TOP
-# Update CODEBASE_ESSENTIALS.md if patterns/invariants changed
+# For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
+# For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
+# For PATTERNS: Update CODEBASE_ESSENTIALS.md if invariants changed
 ```
 
-⚠️ **ALSO: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
+**Why this approach?** (v0.11.0+)
+- Session files are **indexed** in `.aiknowsys/context-index.json` (queryable via CLI)
+- Changelog stays **lean** (~500 lines) and scannable for major events
+- Use `query-sessions` / `search-context` to find historical work
+- See: [docs/milestone-changelog-format.md](docs/milestone-changelog-format.md)
+
+⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
 
 **Session entry template**:
 ```markdown
@@ -419,9 +437,10 @@ Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
 - `skill-creator` - How to create new skills
 - `tdd-workflow` - Test-driven development (mandatory for features)
 - `validation-troubleshooting` - Debug validation failures
-- `context7-usage` - Query framework documentation with Context7 MCP
+- `framework-docs` - Query framework/library documentation (Context7 MCP)
 - `skill-validation` - Validate skill format and content
-- `context-query` - Query plans/sessions/context via CLI instead of file searching
+- `context-query` - Query plans/sessions/context (READ operations)
+- `context-mutation` - Create/modify sessions and plans (WRITE operations)
 
 **To use a skill:**
 1. AI detects trigger words

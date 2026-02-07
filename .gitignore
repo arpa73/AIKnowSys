@@ -48,6 +48,9 @@ Thumbs.db
 .env.local
 *.local
 
+# Test artifacts
+test-fixtures/
+
 # Logs
 *.log
 
