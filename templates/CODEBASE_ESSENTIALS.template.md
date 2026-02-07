@@ -1,716 +1,195 @@
-# Codebase Essentials - {{PROJECT_NAME}}
+<!-- 
+DELIVERABLE TEMPLATE - DO NOT MODIFY DURING NORMAL DEVELOPMENT
 
-**Last Updated:** {{DATE}}  
-**Purpose:** Single-source reference for architecture, patterns, and critical invariants. Read this at session start before making any changes.
+This file is distributed to users via `npx <your-cli> init`.
+Template maintenance requires: Plan → Tests → Implementation → Review → Migration Guide
 
----
+See: ../.github/skills/template-maintenance/ (or similar) for workflow
+-->
 
-## 🚨 CRITICAL RULE: Never Rush - Always Follow Process
+# {{PROJECT_NAME}} - Codebase Essentials
 
-**"Never rush, just fix it well and ALWAYS follow knowledge system procedures"**
-
-**This applies to ALL changes, including:**
-- ✅ "Quick fixes" and "little bugs"
-- ✅ Urgent production issues
-- ✅ Simple one-line changes
-- ✅ Documentation updates
-- ✅ Configuration tweaks
-
-**Why this matters:**
-- Quick fixes often create inconsistencies
-- Skipping validation causes production bugs
-- Not documenting patterns means repeating mistakes
-- Rushing breaks the single source of truth
-
-**The process (non-negotiable):**
-1. Read CODEBASE_ESSENTIALS.md at session start
-2. Check for existing patterns before implementing
-3. Make changes + write/update tests
-4. Run validation (see matrix below)
-5. Update documentation if patterns changed
-6. Commit with proper message
-
-**Remember:** Taking 10 extra minutes to follow the process saves hours debugging later.
+> **Last Updated:** {{CURRENT_DATE}}  
+> **Purpose:** {{PROJECT_PURPOSE}}  
+> **Stack:** {{PRIMARY_STACK}}
 
 ---
 
-## 📚 Knowledge System: Document Roles
+## Knowledge System: Document Roles
 
-**Your project has three core knowledge files that work together:**
-
-### 1️⃣ CODEBASE_ESSENTIALS.md (This File)
-**Role:** Single source of truth for architecture, patterns, and invariants  
-**Read:** At the start of EVERY session before making changes  
-**Contains:**
-- Technology stack and versions
-- Validation commands (test, lint, build)
-- Project structure and file organization
-- Code patterns and conventions
-- Critical rules that must never be violated
-- Common gotchas and workarounds
-
-**Use this when:**
-- Starting a coding session (read first!)
-- Implementing new features (check existing patterns)
-- Debugging issues (review gotchas)
-- Onboarding new developers (comprehensive reference)
-
-### 2️⃣ AGENTS.md
-**Role:** AI assistant workflow and session procedures  
-**Read:** When working with AI coding assistants  
-**Contains:**
-- Mandatory session start protocol
-- Validation matrix (copy from this file)
-- Skill trigger words and workflows
-- Project-specific invariants for AI
-- Changelog update procedures
-
-**Use this when:**
-- Using GitHub Copilot, Claude, ChatGPT, etc.
-- Need workflow reminders (read → plan → implement → validate → document)
-- Looking for relevant skills for a task
-
-### 3️⃣ CODEBASE_CHANGELOG.md
-**Role:** Session-by-session development history  
-**Read:** When you need project history or context  
-**Contains:**
-- Session entries (what changed, when, why)
-- Validation results for each session
-- Key learnings and discoveries
-- Links to changed files with line numbers
-
-**Use this when:**
-- Understanding why a decision was made
-- Tracking down when a bug was introduced
-- Reviewing project evolution
-- After each session (add new entry)
-
-### 🔄 How They Work Together
+This project uses AI-assisted development with structured knowledge files:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ 1. Session Start: Read CODEBASE_ESSENTIALS.md          │
-│    (Get current architecture, patterns, invariants)     │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│ 2. Work Session: Follow AGENTS.md workflow             │
-│    (AI-guided: read → plan → code → validate → doc)    │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│ 3. Session End: Update CODEBASE_CHANGELOG.md           │
-│    (Document what changed, validation, learnings)       │
-└─────────────────────────────────────────────────────────┘
+CODEBASE_ESSENTIALS.md  ←  What the codebase IS (architecture, patterns, rules)
+AGENTS.md               ←  How AI should WORK (workflow, validation, skills)
+CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learnings)
 ```
 
-**Golden Rule:** ESSENTIALS = "what is", AGENTS = "how to work", CHANGELOG = "what happened"
+**Skill-Indexed Architecture:**
+- **Critical invariants** are ALWAYS loaded (mandatory rules)
+- **Detailed workflows** load on-demand from [.github/skills/](.github/skills/)
+- **Result:** 70-80% token reduction vs monolithic docs
 
 ---
 
-## Technology Stack
+## 1. Technology Snapshot
 
-**{{STACK_CATEGORY}}:**
-- **Framework:** {{FRAMEWORK}}
-- **Version:** {{VERSION}}
-- **Language:** {{LANGUAGE}}
-- **Build Tool:** {{BUILD_TOOL}}
-- **Package Manager:** {{PACKAGE_MANAGER}}
+| Component | Technology |
+|-----------|------------|
+| Runtime | {{RUNTIME}} |
+| Language | {{LANGUAGE}} |
+| Framework | {{FRAMEWORK}} |
+| Database | {{DATABASE}} |
+| ORM | {{ORM}} |
+| Test Framework | {{TEST_FRAMEWORK}} |
+| Package Manager | {{PACKAGE_MANAGER}} |
 
-**Testing:**
-- **Framework:** {{TEST_FRAMEWORK}}
-- **Coverage Tool:** {{COVERAGE_TOOL}}
-- **Linting:** {{LINTER}}
-
-**Infrastructure:**
-- **Containerization:** {{CONTAINER_PLATFORM}}
-- **Database:** {{DATABASE}}
-- **Deployment:** {{DEPLOYMENT_PLATFORM}}
+**Additional Libraries:**
+{{ADDITIONAL_LIBRARIES}}
 
 ---
 
-## Validation Matrix
+## 2. Validation Matrix
 
-**Run these commands before claiming work is complete:**
-
-| Changed | Command | Required |
+| Command | Purpose | Expected |
 |---------|---------|----------|
-{{VALIDATION_ROWS}}
-| Any | `npx aiknowsys check` | ✅ ESSENTIALS <800 lines |
-| ESSENTIALS bloat | `npx aiknowsys compress-essentials --analyze` | Preview compression opportunities |
+| `{{TEST_COMMAND}}` | Run tests | All {{TEST_COUNT}}+ tests pass |
+| `{{LINT_COMMAND}}` | Lint code | No errors or warnings |
+| `{{BUILD_COMMAND}}` | Build/compile | Clean build |
+| `{{TYPE_CHECK_COMMAND}}` | Type check | No type errors |
+| `{{FORMAT_COMMAND}}` | Format check | No formatting issues |
 
-**🚨 RULE: Never claim work is complete without running validation!**
+**Before claiming work complete:**
+- [ ] All commands above pass
+- [ ] No errors in output
+- [ ] Changes tested locally
 
-**Example validation commands:**
+---
 
+## 3. Project Structure
+
+```
+{{PROJECT_NAME}}/
+{{PROJECT_STRUCTURE}}
+```
+
+**Common Patterns:**
+{{COMMON_PATTERNS}}
+
+---
+
+## 4. Critical Invariants (ALWAYS ENFORCED - NOT OPTIONAL)
+
+These 5 rules are MANDATORY. AI agents cannot skip or "think they know" these.
+
+### 1. Test-Driven Development (TDD) - MANDATORY
+- **For new features:** Write tests BEFORE implementation (RED → GREEN → REFACTOR)
+- **For bugfixes:** Write test that reproduces bug FIRST, then fix
+- Follow RED-GREEN-REFACTOR cycle for both features and bugs
+- **Exception:** Configuration-only changes (adding properties to const objects)
+
+### 2. Graceful Failures
+- Handle missing files/directories gracefully
+- Show helpful error messages, not stack traces
+- Provide actionable guidance in errors
+- Log errors appropriately
+
+### 3. Documentation as Code
+- Update docs when code changes
+- Keep README.md current with features
+- Document architectural decisions
+- Maintain changelog with changes
+
+### 4. Code Quality Standards
+- Follow language/framework conventions
+- Pass all linters and formatters
+- Maintain test coverage >80%
+- Review code before merging
+
+### 5. Backwards Compatibility
+- Use semantic versioning for breaking changes
+- Provide deprecation warnings before removal
+- Write migration guides for major versions
+- Test upgrades work smoothly
+
+---
+
+## 5. Skill Index (Auto-Load on Trigger Detection)
+
+**How this works:**
+1. AI agent detects trigger words in user request
+2. AI loads relevant skill/workflow from [`.github/skills/`](.github/skills/)
+3. AI follows workflow step-by-step (prevents "I thought I knew" failures)
+
+**Why this prevents mistakes:**
+- Critical invariants ALWAYS loaded (above section)
+- Detailed workflows loaded ON-DEMAND
+- 70-80% token reduction vs monolithic documentation
+
+---
+
+### Universal Skills (Framework-Agnostic)
+
+These skills work for ANY project type (Python, JavaScript, Rust, Go, etc.):
+
+#### Development Workflows
+- **tdd-workflow** - Test-driven development (RED-GREEN-REFACTOR cycle)
+- **refactoring-workflow** - Safe code improvements with tests
+- **validation-troubleshooting** - Debug test/build failures
+
+#### Code Quality
+- **ai-friendly-documentation** - AI-optimized docs for RAG systems
+- **dependency-management** - Safe package upgrades
+
+#### Architecture & Planning
+- **feature-implementation** - Structured feature planning
+
+---
+
+### Project-Specific Skills
+
+{{PROJECT_SKILLS}}
+
+**Add your own skills:** Create `.github/skills/<skill-name>/SKILL.md` following the skill-creator pattern.
+
+---
+
+## 6. Quick Reference
+
+### Validation Checklist
 ```bash
-# Backend (Python example)
-{{BACKEND_TEST_CMD}}
-
-# Frontend (TypeScript example)
-{{FRONTEND_TEST_CMD}}
-
-# Type checking
-{{TYPE_CHECK_CMD}}
-
-# Linting
-{{LINT_CMD}}
+{{TEST_COMMAND}}      # All tests pass
+{{LINT_COMMAND}}      # No errors
+{{BUILD_COMMAND}}     # Clean build
+{{FORMAT_COMMAND}}    # Code formatted
 ```
 
-**Expected output:**
-- ✅ "X passed, Y skipped" with no failures
-- ✅ No TypeScript errors (empty output = success)
-- ✅ No linting errors
+### Common Patterns
+
+{{COMMON_PATTERNS_SECTION}}
 
 ---
 
-## Project Structure
+## 7. When to Document Where
 
-**{{PROJECT_TYPE}} structure:**
+**Add to CODEBASE_ESSENTIALS.md when:**
+- Core architecture decisions (technology choices)
+- Critical invariants (cannot be violated)
+- Project structure changes
 
-```
-{{PROJECT_ROOT}}/
-├── {{BACKEND_DIR}}/           # {{BACKEND_DESCRIPTION}}
-├── {{FRONTEND_DIR}}/          # {{FRONTEND_DESCRIPTION}}
-├── {{TEST_DIR}}/              # {{TEST_DESCRIPTION}}
-├── {{CONFIG_DIR}}/            # {{CONFIG_DESCRIPTION}}
-├── .aiknowsys/                # AI knowledge system (see below)
-│   ├── CURRENT_PLAN.md        # Team index (auto-generated by sync-plans)
-│   ├── PLAN_*.md              # Implementation plans
-│   ├── plans/                 # Multi-developer plan tracking (committed)
-│   │   ├── README.md          # Workflow explanation
-│   │   └── active-<username>.md  # Per-developer active plan pointer
-│   ├── reviews/               # Multi-developer reviews (gitignored)
-│   │   ├── README.md          # Workflow explanation (committed)
-│   │   └── PENDING_<username>.md  # Per-developer review files
-│   ├── learned/               # Team-validated patterns (committed)
-│   ├── personal/              # Personal discoveries (gitignored)
-│   │   └── <username>/        # Your personal patterns
-│   └── sessions/              # Session notes (gitignored)
-└── .github/                   # GitHub configuration (optional)
-    ├── agents/                # AI agent workflows (Planner + Developer + Architect)
-    ├── skills/                # Domain-specific task guides
-    ├── hooks/                 # VSCode session hooks (14 automation hooks)
-    └── workflows/             # CI/CD pipelines
-```
+**Add to .github/skills/ when:**
+- Repeatable workflows (testing, deployment, refactoring)
+- Multi-step processes requiring guidance
+- Patterns that prevent common mistakes
 
-**Key directories:**
-- `{{SOURCE_DIR}}` - {{SOURCE_DESCRIPTION}}
-- `{{TEST_DIR}}` - {{TEST_DESCRIPTION}}
-- `{{BUILD_DIR}}` - {{BUILD_DESCRIPTION}}
-
-**AI Knowledge System (.aiknowsys/):**
-- `learned/` - Team-validated patterns (committed to git, shared with team)
-- `personal/<username>/` - Personal pattern discoveries (gitignored, prevents merge conflicts)
-- `sessions/` - Session notes and context (gitignored)
+**Add to project changelog when:**
+- Features added or removed
+- Breaking changes
+- Bug fixes
+- Performance improvements
 
 ---
 
-## Core Patterns
+**Target:** ESSENTIALS <400 lines  
+**Full workflows:** Load from [.github/skills/](.github/skills/) on-demand
 
-<!-- 
-  AI GUIDANCE: Keep code examples concise (under 15 lines each)
-  For verbose examples, create separate docs/patterns/*.md files
-  Focus on WHAT and WHY, not exhaustive HOW
-  Extract detailed implementation to docs/ and link from here
--->
-
-### {{PATTERN_CATEGORY_1}}
-
-**Pattern:** {{PATTERN_DESCRIPTION}}
-
-**Why:** {{PATTERN_RATIONALE}}
-
-**Example:**
-```{{LANGUAGE}}
-{{PATTERN_EXAMPLE}}
-```
-
-**Anti-pattern:**
-```{{LANGUAGE}}
-{{ANTI_PATTERN_EXAMPLE}}
-```
-
----
-
-### {{PATTERN_CATEGORY_2}}
-
-**Pattern:** {{PATTERN_DESCRIPTION_2}}
-
-**Why:** {{PATTERN_RATIONALE_2}}
-
-**Example:**
-```{{LANGUAGE}}
-{{PATTERN_EXAMPLE_2}}
-```
-
----
-
-### Plan Management Pattern
-
-**Multiple concurrent plans** enabled via pointer system.
-
-**Multi-Developer Workflow (Mandatory v0.9.0+):**
-
-**Plan Pointers:**
-- **plans/active-<username>.md:** Personal active plan pointer (committed to git)
-- **CURRENT_PLAN.md:** Team index aggregating all developers' plans (auto-generated, committed)
-- **Username:** Extracted from `git config user.name`, normalized (lowercase, spaces → hyphens)
-
-**Individual Plans (.aiknowsys/PLAN_*.md):**
-- Full implementation details (committed to git)
-- Progress tracking with checkboxes
-- Phase/step breakdown
-- Status lifecycle: 📋 PLANNED → 🎯 ACTIVE → 🔄 PAUSED or ✅ COMPLETE or ❌ CANCELLED
-
-**Workflow:**
-1. **@Planner** creates detailed PLAN_*.md
-2. **Developer** updates `plans/active-<username>.md` to point to plan
-3. **Developer** runs `npx aiknowsys sync-plans` to regenerate team index
-4. **Developer** follows active plan, tracking progress in PLAN_*.md
-5. **Completed plans** remain visible in team index with ✅ status
-
-**Benefits:**
-- No merge conflicts on plan tracking (each dev has own pointer)
-- Team visibility (CURRENT_PLAN.md shows everyone's active work)
-- Solo developers work the same way (just one entry in team index)
-- Clean git history (auto-generated file committed, not manually edited)
-
-**Migration:**
-- **Existing projects (pre-v0.9.0):** Run `npx aiknowsys migrate-to-multidev` to convert single-dev → multi-dev
-- **New projects:** Run `npx aiknowsys init` (creates multi-dev structure by default)
-
-
-See: [AGENTS.md](AGENTS.md#plan-management)
-
----
-
-## Critical Invariants
-
-**Rules that must NEVER be violated:**
-
-1. **{{INVARIANT_1}}**
-   - What: {{INVARIANT_1_DESCRIPTION}}
-   - Why: {{INVARIANT_1_RATIONALE}}
-   - Example: {{INVARIANT_1_EXAMPLE}}
-
-2. **{{INVARIANT_2}}**
-   - What: {{INVARIANT_2_DESCRIPTION}}
-   - Why: {{INVARIANT_2_RATIONALE}}
-   - Example: {{INVARIANT_2_EXAMPLE}}
-
----
-
-## Learned Patterns (Multi-Developer)
-
-**Workflow for AI-discovered patterns:**
-
-1. **AI discovers pattern** → Saves to `.aiknowsys/personal/<username>/`
-2. **Review patterns:** `npx aiknowsys list-patterns`
-3. **Share with team:** `npx aiknowsys share-pattern <pattern-name>`
-4. **Team benefits:** Patterns available after `git pull`
-
-**Why personal/ is gitignored:**
-- ✅ Prevents merge conflicts when multiple developers work simultaneously
-- ✅ Allows experimentation without affecting team
-- ✅ Sharing is deliberate (acts as review gate)
-- ✅ You control what knowledge becomes team standard
-
-**Pattern commands:**
-```bash
-# List all patterns (personal + team)
-npx aiknowsys list-patterns
-
-# Share a personal pattern with team
-npx aiknowsys share-pattern my-pattern
-
-# AI learns automatically (saves to personal/)
-# Use --shared flag to save directly to team
-npx aiknowsys learn --extract my-pattern --shared
-```
-
-**⚠️ Important:** Personal patterns are NOT backed up to git. Share valuable patterns regularly so they benefit the team and survive local machine changes.
-
----
-
-## Common Gotchas
-
-<!-- 
-  AI GUIDANCE: Keep solutions brief and actionable
-  One gotcha = one solution paragraph + minimal code example
-  For complex gotchas, link to docs/troubleshooting/*.md
--->
-
-### {{GOTCHA_1}}
-
-**Problem:** {{GOTCHA_1_DESCRIPTION}}
-
-**Solution:** {{GOTCHA_1_SOLUTION}}
-
-**Example:**
-```{{LANGUAGE}}
-{{GOTCHA_1_EXAMPLE}}
-```
-
----
-
-### {{GOTCHA_2}}
-
-**Problem:** {{GOTCHA_2_DESCRIPTION}}
-
-**Solution:** {{GOTCHA_2_SOLUTION}}
-
----
-
-## Architecture Decisions
-
-### {{DECISION_1}}
-
-**Decision:** {{DECISION_1_WHAT}}
-
-**Rationale:** {{DECISION_1_WHY}}
-
-**Trade-offs:**
-- ✅ {{DECISION_1_PRO}}
-- ⚠️ {{DECISION_1_CON}}
-
-**Alternatives considered:** {{DECISION_1_ALTERNATIVES}}
-
----
-
-## Change Management (OpenSpec)
-
-**Recommended:** Use OpenSpec for spec-driven development on major changes.
-
-### When to Create OpenSpec Proposals:
-
-| Change Type | Create Proposal? |
-|-------------|------------------|
-| New features or capabilities | ✅ Yes |
-| Breaking changes (API, schema) | ✅ Yes |
-| Architecture changes | ✅ Yes |
-| Security-related changes | ✅ Yes |
-| Bug fixes, typos, formatting | ❌ No |
-| Non-breaking dependency updates | ❌ No |
-| Configuration changes | ❌ No |
-
-### OpenSpec Commands:
-
-```bash
-openspec list              # List active changes
-openspec list --specs      # List specifications  
-openspec create add-X      # Create new proposal
-openspec validate --strict # Validate all specs
-openspec archive X --yes   # Archive after deployment
-```
-
-### OpenSpec Workflow:
-
-1. **Create proposal:** `openspec create add-feature-name`
-2. **Fill out:** `proposal.md`, `tasks.md`, spec deltas
-3. **Validate:** `openspec validate add-feature-name --strict`
-4. **Get approval** before implementing
-5. **Implement** following tasks.md checklist
-6. **Archive** after deployment
-
-**See:** `openspec/AGENTS.md` for full workflow (if OpenSpec is installed)
-
----
-
-## VSCode Hooks (Optional)
-
-**What are VSCode hooks?**  
-GitHub Copilot supports hooks that run automatically during session lifecycle. This project includes 14 intelligent hooks for session tracking, validation enforcement, and workflow automation.
-
-**Installed hooks:** (See `.github/hooks/` directory)
-- **Session management** - Auto-load context, save state
-- **Quality enforcement** - Validation reminders, TDD workflow
-- **Skill assistance** - Auto-suggest guides, check prerequisites
-- **Health monitoring** - Workspace checks, code quality
-- **Collaboration** - Concurrent work detection
-- **Performance** - Test regression tracking
-- **Intelligence** - Migration alerts, doc staleness
-
-**Configuration:** `.github/hooks/hooks.json` controls which hooks run when.
-
-**Learn more:** See [docs/vscode-hooks-guide.md](docs/vscode-hooks-guide.md) for complete reference.
-
-**Disable hooks:** Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
-
----
-
-## Feature Configuration
-
-**What is feature configuration?**  
-AIKnowSys supports optional configuration for feature preferences. Core features are enabled by default if no config file exists (backward compatible).
-
-**Configuration file:** `.aiknowsys.config.json` (created manually or via commands)
-
-**Core features (enabled by default):**
-- `agents` - Custom agents (@Developer, @Planner, @SeniorArchitect)
-- `skills` - Universal skills library (.github/skills/)
-- `vscodeHooks` - GitHub Copilot hooks (.github/hooks/)
-- `sessionPersistence` - Session tracking (.aiknowsys/sessions/)
-- `tddEnforcement` - Test-Driven Development workflow reminders
-
-**Optional features (disabled by default):**
-- `openspec` - Change proposal system (openspec/)
-- `context7` - External documentation queries
-
-**Example configuration:**
-```json
-{
-  "version": "1.0",
-  "features": {
-    "agents": true,
-    "skills": true,
-    "vscodeHooks": true,
-    "sessionPersistence": true,
-    "tddEnforcement": true,
-    "openspec": false,
-    "context7": false
-  },
-  "preferences": {
-    "templateType": "full",
-    "stackName": null
-  }
-}
-```
-
-**Commands:**
-```bash
-# View status
-npx aiknowsys check  # Shows enabled/disabled features
-
-# Enable a feature (installs if missing)
-npx aiknowsys enable skills
-npx aiknowsys enable vscodeHooks
-
-# Disable a feature (keeps files by default)
-npx aiknowsys disable openspec
-
-# Disable and remove files
-npx aiknowsys disable skills --remove-files
-
-# Remove AIKnowSys completely
-npx aiknowsys uninstall  # Safety prompts, option to keep user data
-```
-
-**Behavior:**
-- Missing config file → Core features enabled, optional features disabled (backward compatible)
-- Invalid config → Falls back to defaults with warning
-- Feature disabled → Components still installed but won't be referenced in prompts
-- Enable command → Installs missing files and updates config
-- Disable command → Updates config, optionally removes files
-- Uninstall → Removes all AIKnowSys files with safety checks
-
----
-
-## Development Workflow
-
-### Setting Up Local Environment
-
-```bash
-{{SETUP_COMMANDS}}
-```
-
-### Running Tests
-
-```bash
-{{TEST_COMMANDS}}
-```
-
-### Building for Production
-
-```bash
-{{BUILD_COMMANDS}}
-```
-
-### Deployment
-
-{{DEPLOYMENT_WORKFLOW}}
-
----
-
-## Dependencies Management
-
-**Update strategy:** {{UPDATE_STRATEGY}}
-
-**Security:** {{SECURITY_POLICY}}
-
-**Deprecated dependencies:** {{DEPRECATED_DEPS}}
-
-**See also:** [dependency-updates skill](.github/skills/dependency-updates/SKILL.md)
-
----
-
-## Testing Guidelines
-
-### Test Organization
-
-{{TEST_ORGANIZATION}}
-
-### Coverage Requirements
-
-{{COVERAGE_REQUIREMENTS}}
-
-### Testing Patterns
-
-**Unit tests:**
-```{{LANGUAGE}}
-{{UNIT_TEST_EXAMPLE}}
-```
-
-**Integration tests:**
-```{{LANGUAGE}}
-{{INTEGRATION_TEST_EXAMPLE}}
-```
-
----
-
-## Security Considerations
-
-{{SECURITY_CONSIDERATIONS}}
-
----
-
-## Performance Guidelines
-
-{{PERFORMANCE_GUIDELINES}}
-
----
-
-## Accessibility Standards
-
-{{ACCESSIBILITY_STANDARDS}}
-
----
-
-## Documentation Standards
-
-**Code comments:**
-{{COMMENT_STANDARDS}}
-
-**README updates:**
-{{README_STANDARDS}}
-
-**API documentation:**
-{{API_DOC_STANDARDS}}
-
----
-
-## 🚀 First Implementation Guide
-
-**Once this template is filled, here's your recommended build order:**
-
-### Step 1: Foundation (Week 1)
-**Goal:** Get basic project running with validation
-
-**Build:**
-1. Set up project structure (directories from "Project Structure" section)
-2. Initialize package manager and install dependencies
-3. Configure build tools and linters
-4. Write "Hello World" or minimal working version
-5. Set up validation commands from Validation Matrix
-
-**Validate:**
-- [ ] All validation commands work (`npm test`, etc.)
-- [ ] Can build and run the project
-- [ ] Linting passes
-
-**Document:** Update CODEBASE_CHANGELOG.md with first session
-
----
-
-### Step 2: Core Patterns (Week 2-3)
-**Goal:** Implement fundamental patterns from this document
-
-**Build:**
-1. Create pattern examples (from "Core Patterns" section)
-2. Set up error handling structure
-3. Implement logging/monitoring basics
-4. Add configuration management
-5. Write tests for core patterns
-
-**Validate:**
-- [ ] Pattern examples work as documented
-- [ ] Tests cover core patterns
-- [ ] No critical invariants violated
-
-**Why this order:** Patterns guide all future code. Establish them early.
-
----
-
-### Step 3: Feature Development (Ongoing)
-**Goal:** Build actual features following established patterns
-
-**Build:**
-1. Reference "Core Patterns" for each implementation
-2. Follow "Critical Invariants" religiously
-3. Watch out for "Common Gotchas"
-4. Run validation before each commit
-5. Update changelog after each session
-
-**Validate:**
-- [ ] New code follows documented patterns
-- [ ] All validation passes
-- [ ] No gotchas violated
-
-**When stuck:** Review this document, check AGENTS.md for relevant skills
-
----
-
-### Step 4: Hardening (Before Production)
-**Goal:** Production-ready quality
-
-**Build:**
-1. Implement security measures (Security section)
-2. Add performance optimizations (Performance section)
-3. Ensure accessibility (Accessibility section)
-4. Set up monitoring and alerting
-5. Document deployment process
-
-**Validate:**
-- [ ] Security checklist complete
-- [ ] Performance targets met
-- [ ] Accessibility standards met
-- [ ] Deployment tested
-
----
-
-**Golden Rule:** Always refer back to this document. Don't drift from documented patterns.
-
----
-
-## Version Control
-
-**Branch strategy:** {{BRANCH_STRATEGY}}
-
-**Commit message format:** {{COMMIT_FORMAT}}
-
-**PR requirements:** {{PR_REQUIREMENTS}}
-
----
-
-## 📝 Customization Instructions
-
-**This is a template file. To customize it for your project:**
-
-👉 **See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed instructions**
-
-**Quick start:**
-1. Replace all `{{PLACEHOLDERS}}` with real values from your project
-2. Use actual commands, file paths, and code examples (not generic descriptions)
-3. Keep section headings exactly as written
-4. Remove sections that don't apply to your project
-
-**⚠️ Critical:** Replace placeholders with REAL values, not other placeholders  
-Example: `{{TEST_CMD}}` → `npm test` (not "run your tests")
-
-**AI-Assisted:** Use the prompt from `npx aiknowsys init` to have AI fill this automatically
-
----
-
-*This template is part of aiknowsys. See [README](README.md) and [SETUP_GUIDE.md](SETUP_GUIDE.md) for full documentation.*

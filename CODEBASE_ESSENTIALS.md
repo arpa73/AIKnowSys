@@ -89,8 +89,16 @@ These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 - Show helpful error messages, not stack traces
 
 ### 4. Template Preservation
-- Never modify files in `templates/` - they're the source of truth
-- User customization happens in generated files
+- **AI agents never modify templates during normal workflow**
+- Templates in `templates/` are deliverables distributed to users
+- User customization happens in generated files (after `aiknowsys init`)
+- **Exception:** Deliberate template maintenance requires:
+  - Implementation plan documented (`.aiknowsys/plans/PLAN_*.md` or similar)
+  - Tests written FIRST (TDD - see Invariant #7)
+  - Architect review before release (`.aiknowsys/reviews/`)
+  - Validation passing (`validate-deliverables`)
+  - Migration guide for users ([docs/migration-guide.md](docs/migration-guide.md))
+  - See: [.aiknowsys/learned/template-maintenance.md](.aiknowsys/learned/template-maintenance.md) for workflow
 
 ### 5. Template Structure Integrity
 - When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
@@ -320,6 +328,7 @@ npx aiknowsys rebuild-index
 - Project-specific discovery
 - Workaround for library quirk
 - Error resolution that might recur
+- Template maintenance workflows ([.aiknowsys/learned/template-maintenance.md](.aiknowsys/learned/template-maintenance.md))
 
 ---
 

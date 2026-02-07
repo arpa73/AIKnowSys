@@ -4,6 +4,302 @@
 
 ---
 
+## Migrating to v0.10.0 (Skill-Indexed Architecture)
+
+**Target Audience:** Existing AIKnowSys users upgrading from v0.9.x or earlier  
+**Migration Time:** 5-10 minutes (automated)  
+**Impact:** Breaking change - ESSENTIALS format changed
+
+### What Changed in v0.10.0
+
+**ESSENTIALS Format: Monolithic → Skill-Indexed**
+
+| Aspect | Before (v0.9.x) | After (v0.10.0) |
+|--------|-----------------|-----------------|
+| **File Size** | 1000-2000 lines | ~400 lines (70-80% smaller) |
+| **Structure** | Workflows embedded in ESSENTIALS | Workflows in `.github/skills/` (auto-load) |
+| **AI Loading** | Full file every session | Critical rules + on-demand skills |
+| **Token Usage** | ~1000 lines per session | ~300-400 lines per session |
+| **Problem** | AI skims, says "I thought I knew" | AI cannot skip critical rules |
+
+**Benefits:**
+- ✅ 70-80% token reduction
+- ✅ Prevents "I thought I knew" failures
+- ✅ Critical invariants always enforced
+- ✅ Workflows auto-load on trigger detection
+- ✅ Modular skills portable across projects
+
+### Migration Command
+
+**Automatic Migration (Recommended):**
+
+```bash
+# Upgrade to v0.10.0
+npm install aiknowsys@latest
+
+# Run migration command
+npx aiknowsys migrate-essentials
+
+# Output:
+🔄 Migrate ESSENTIALS to v0.10.0
+
+📊 Current ESSENTIALS: 1038 lines
+   Old format: Monolithic workflows embedded
+📝 Found project customizations:
+   • Custom technology stack
+   • Project-specific structure
+💾 Creating backup...
+✅ ✓ Backup saved: CODEBASE_ESSENTIALS.md.pre-v0.10.backup
+✨ Generating skill-indexed ESSENTIALS...
+✅ ✓ Migration complete!
+📊 Results:
+   • Old size: 1038 lines
+   • New size: 327 lines
+   • Reduction: 68.5%
+   • Preserved 2 customizations
+
+📖 Next steps:
+   1. Review new CODEBASE_ESSENTIALS.md
+   2. Verify customizations preserved correctly
+   3. Update any automation referencing old format
+```
+
+**Migration Options:**
+
+```bash
+# Preview changes before applying (dry-run)
+npx aiknowsys migrate-essentials --dry-run
+
+# Migrate specific directory
+npx aiknowsys migrate-essentials --dir /path/to/project
+
+# Check if already migrated
+npx aiknowsys migrate-essentials
+# Output: "✓ Already migrated to skill-indexed format" (idempotent)
+```
+
+### What Gets Preserved
+
+**✅ Automatically Preserved During Migration:**
+
+1. **Section 1: Technology Snapshot**
+   - Your runtime/language/framework choices
+   - Database and ORM selections
+   - Test framework and tools
+   - Additional libraries
+
+2. **Section 2: Validation Matrix**
+   - Your project-specific validation commands
+   - Expected outputs
+   - Test counts
+
+3. **Section 3: Project Structure**
+   - Your directory structure
+   - File organization patterns
+   - Custom folder explanations
+
+4. **Section 4: Critical Invariants**
+   - Your project-specific rules (if added)
+   - Custom invariants beyond the 8 standard ones
+
+### What Changes
+
+**⚠️ Format Changes (Automatic):**
+
+1. **Workflows Extracted:**
+   - Before: Embedded in ESSENTIALS (1000+ lines)
+   - After: Referenced from `.github/skills/` (auto-load)
+
+2. **Section Count Reduced:**
+   - Before: 10 sections (1-10)
+   - After: 8 sections (1-8)
+   - Removed: Sections 9-10 (redundant with skills)
+
+3. **File Size:**
+   - Before: 1000-2000 lines (monolithic)
+   - After: ~400 lines (skill-indexed)
+
+4. **Loading Behavior:**
+   - Before: AI loads full file every session
+   - After: AI loads critical parts + on-demand skills
+
+### Migration Steps
+
+**Step 1: Backup (Automatic)**
+
+Migration automatically creates backup file:
+```bash
+CODEBASE_ESSENTIALS.md.pre-v0.10.backup
+```
+
+**Step 2: Review Changes**
+
+After migration, review the new format:
+
+```bash
+# Compare before/after
+diff CODEBASE_ESSENTIALS.md.pre-v0.10.backup CODEBASE_ESSENTIALS.md
+
+# Check customizations preserved
+grep -A5 "Technology Snapshot" CODEBASE_ESSENTIALS.md
+grep -A5 "Validation Matrix" CODEBASE_ESSENTIALS.md
+grep -A5 "Project Structure" CODEBASE_ESSENTIALS.md
+```
+
+**Step 3: Verify Validation**
+
+Run validation commands to ensure nothing broke:
+
+```bash
+# From your Validation Matrix (Section 2)
+npm test              # Or your test command
+npm run lint          # Or your lint command
+npm run build         # Or your build command
+
+# Validate deliverables (if using AIKnowSys development)
+npx aiknowsys validate-deliverables
+```
+
+**Step 4: Update Team**
+
+Notify your team about the format change:
+
+```markdown
+## ESSENTIALS Format Update (v0.10.0)
+
+We've migrated to skill-indexed ESSENTIALS format:
+- **70% smaller** (1038 → 327 lines)
+- **Workflows** now auto-load from `.github/skills/`
+- **Customizations** preserved (tech stack, validation, structure)
+
+**Action needed:**
+- ✅ Review new CODEBASE_ESSENTIALS.md
+- ✅ Verify validation commands still work
+- ✅ Update bookmarks (sections renumbered)
+
+**Rollback available:**
+- Backup: `CODEBASE_ESSENTIALS.md.pre-v0.10.backup`
+- Restore: `mv CODEBASE_ESSENTIALS.md.pre-v0.10.backup CODEBASE_ESSENTIALS.md`
+```
+
+### Rollback Procedure
+
+If migration causes issues:
+
+**Option 1: Restore from Backup**
+
+```bash
+# Restore original file
+mv CODEBASE_ESSENTIALS.md.pre-v0.10.backup CODEBASE_ESSENTIALS.md
+
+# Downgrade AIKnowSys
+npm install aiknowsys@0.9.0
+```
+
+**Option 2: Fix and Re-migrate**
+
+```bash
+# Edit original
+cat CODEBASE_ESSENTIALS.md.pre-v0.10.backup > CODEBASE_ESSENTIALS.md
+
+# Fix issues
+vim CODEBASE_ESSENTIALS.md
+
+# Re-run migration
+npx aiknowsys migrate-essentials
+```
+
+### Troubleshooting
+
+**Issue: "Already migrated" but file looks wrong**
+
+**Cause:** File was manually edited or partially migrated
+
+**Solution:**
+```bash
+# Restore backup and re-migrate
+mv CODEBASE_ESSENTIALS.md.pre-v0.10.backup CODEBASE_ESSENTIALS.md
+npx aiknowsys migrate-essentials
+```
+
+**Issue: "Customizations lost"**
+
+**Cause:** Migration couldn't detect custom content
+
+**Solution:**
+```bash
+# Check backup for customizations
+grep -A10 "Technology Snapshot" CODEBASE_ESSENTIALS.md.pre-v0.10.backup
+
+# Manually copy to new file
+vim CODEBASE_ESSENTIALS.md
+```
+
+**Issue: "Validation commands fail"**
+
+**Cause:** Validation Matrix wasn't preserved correctly
+
+**Solution:**
+```bash
+# Copy validation section from backup
+# Section 2: Validation Matrix
+vim CODEBASE_ESSENTIALS.md
+```
+
+**Issue: "Skills not loading"**
+
+**Cause:** `.github/skills/` directory missing
+
+**Solution:**
+```bash
+# Create skills directory
+mkdir -p .github/skills
+
+# Copy universal skills from template
+npx aiknowsys init --skills-only  # (if available)
+
+# Or manually create minimal skill
+echo '---
+name: example-skill
+triggers: ["example"]
+---
+# Example Skill
+' > .github/skills/example/SKILL.md
+```
+
+### What to Update After Migration
+
+**📋 Checklist:**
+
+- [ ] **Review ESSENTIALS:** Verify all sections present
+- [ ] **Test validation:** Run all commands from Section 2
+- [ ] **Check CI/CD:** Update if it references old sections
+- [ ] **Update bookmarks:** Section numbers changed
+- [ ] **Notify team:** Share migration notice
+- [ ] **Archive backup:** Keep `.pre-v0.10.backup` for 1 month
+
+**Optional Enhancements:**
+
+- [ ] **Create project-specific skills:** Extract common workflows to `.github/skills/`
+- [ ] **Add learned patterns:** Populate `.aiknowsys/learned/` with project-specific knowledge
+- [ ] **Customize Critical Invariants:** Add project-specific rules to Section 4
+
+### For New Projects (No Migration Needed)
+
+If starting fresh with v0.10.0:
+
+```bash
+# Skill-indexed ESSENTIALS created automatically
+npx aiknowsys init --name "my-project"
+
+# Or with stack template (already skill-indexed)
+npx aiknowsys init --stack nextjs-api --name "my-api"
+```
+
+New projects get skill-indexed format by default - no migration needed!
+
+---
+
 ## Overview: What You're Adding
 
 The knowledge system consists of:

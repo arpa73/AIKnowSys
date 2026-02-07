@@ -28,6 +28,7 @@ import { sharePattern } from '../dist/lib/commands/share-pattern.js';
 import { listPatterns } from '../dist/lib/commands/list-patterns.js';
 import { syncPlans } from '../dist/lib/commands/sync-plans.js';
 import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
+import { migrateEssentials } from '../dist/lib/commands/migrate-essentials.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
@@ -127,6 +128,13 @@ program
   .description('Migrate from single-dev to multi-dev pattern (v0.9.0)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .action(migrateToMultidev);
+
+program
+  .command('migrate-essentials')
+  .description('Migrate ESSENTIALS from monolithic to skill-indexed format (v0.10.0)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--dry-run', 'Preview changes without applying')
+  .action(migrateEssentials);
 
 program
   .command('audit')

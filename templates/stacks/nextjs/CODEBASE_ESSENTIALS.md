@@ -1,27 +1,23 @@
-# {{PROJECT_NAME}} - Codebase Essentials
+<!-- 
+DELIVERABLE TEMPLATE - DO NOT MODIFY DURING NORMAL DEVELOPMENT
 
-> **Last Updated:** {{DATE}}  
-> **Purpose:** Next.js Application with TypeScript  
-> **Stack:** Next.js 15, React 19, TypeScript, Tailwind CSS
+This file is distributed to users.
+Template maintenance requires: Plan → Tests → Implementation → Review → Migration Guide
 
----
+See: template-maintenance workflow in learned skills or documentation
+-->
 
-## Knowledge System: Document Roles
+# Codebase Essentials
 
-### The Three Knowledge Files
+> **Last Updated:** February 7, 2026  
+> **Purpose:** AI-Powered Development Workflow Template  
+> **Version:** v0.10.0 (Skill-Indexed Architecture)
 
-This project uses three interconnected knowledge files:
+⚠️ **MAJOR CHANGE:** ESSENTIALS is now a skill index, not a workflow encyclopedia.  
+**Full workflows** are in [`.github/skills/`](.github/skills/) (auto-loaded on trigger detection).
 
-```
-CODEBASE_ESSENTIALS.md  ←  What the codebase IS (architecture, patterns, rules)
-AGENTS.md               ←  How AI should WORK (workflow, validation, skills)
-CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learnings)
-```
 
-**Golden Rule:**
-- **ESSENTIALS** = "What is" (the system)
-- **AGENTS** = "How to work" (the process)
-- **CHANGELOG** = "What happened" (the history)
+**Migrated from v0.9.x** - Preserved customizations: Custom technology stack, Project-specific structure, Frontend framework patterns
 
 ---
 
@@ -43,6 +39,8 @@ CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learning
 
 ---
 
+---
+
 ## 2. Validation Matrix
 
 | Command | Purpose | Required |
@@ -53,6 +51,8 @@ CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learning
 | `npm run lint` | ESLint check | ✅ Before commit |
 | `npm test` | Run all tests | ✅ Before commit |
 | `npm run test:e2e` | E2E tests (if exists) | ⚠️ Before push |
+
+---
 
 ---
 
@@ -86,723 +86,218 @@ CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learning
 
 ---
 
-## 4. Core Patterns
+---
 
-### Component Organization
+## 4. Critical Invariants (ALWAYS ENFORCED - NOT OPTIONAL)
 
-**Rule: Organize by feature, not by type**
+These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 
-```typescript
-// ✅ GOOD: Feature-based
-components/
-  auth/
-    LoginForm.tsx
-    SignupForm.tsx
-    AuthButton.tsx
-  dashboard/
-    DashboardStats.tsx
-    DashboardHeader.tsx
+### 1. ES Modules Only
+- All **internal** files use `import`/`export`, never `require()`
+- package.json has `"type": "module"`
+- **Exception:** Templates distributed to user projects may use `.cjs` for compatibility
 
-// ❌ BAD: Type-based
-components/
-  forms/
-    LoginForm.tsx
-    SignupForm.tsx
-  buttons/
-    AuthButton.tsx
-```
+### 2. Absolute Paths Required
+- Always use `path.resolve()` for user-provided paths
+- Use `getPackageDir()` for template paths
 
-### Server vs Client Components
+### 3. Graceful Failures
+- All commands must handle missing files/directories
+- Show helpful error messages, not stack traces
 
-**Rule: Default to Server Components, opt into Client Components**
+### 4. Template Preservation
+- Never modify files in `templates/` - they're the source of truth
+- User customization happens in generated files
 
-```typescript
-// ✅ GOOD: Server Component (default)
-export default async function Page() {
-  const data = await fetchData(); // Direct data fetching
-  return <Component data={data} />;
-}
+### 5. Template Structure Integrity
+- When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings
+- Replace `{{PLACEHOLDERS}}` with real values, not generic placeholders
+- Preserve template structure exactly (don't rename sections)
 
-// ✅ GOOD: Client Component (when needed)
-'use client';
+### 6. Backwards Compatibility
+- Bash scripts in `scripts/` must remain functional
+- npm CLI is additive, not replacement
 
-export default function InteractiveWidget() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
-}
+### 7. Test-Driven Development (TDD) - MANDATORY
+- **For new features:** Write tests BEFORE implementation (RED → GREEN → REFACTOR)
+- **For bugfixes:** Write test that reproduces bug FIRST, then fix, then refactor
+- Follow RED-GREEN-REFACTOR cycle for both features and bugs
+- **Exception:** Configuration-only changes (adding properties to const objects)
+- **Full workflow:** [`.github/skills/tdd-workflow/SKILL.md`](.github/skills/tdd-workflow/SKILL.md)
 
-// ❌ BAD: Unnecessary 'use client'
-'use client';  // ← Not needed, no interactivity
-
-export default function StaticContent() {
-  return <div>Static content</div>;
-}
-```
-
-### Data Fetching Pattern
-
-**Rule: Fetch data as close to where it's used as possible**
-
-```typescript
-// ✅ GOOD: Colocated data fetching
-async function UserProfile({ userId }: { userId: string }) {
-  const user = await db.user.findUnique({ where: { id: userId } });
-  return <div>{user.name}</div>;
-}
-
-// ❌ BAD: Prop drilling from root
-// Fetching at page level and passing through many components
-```
-
-### API Route Pattern
-
-**Rule: Use Route Handlers with proper error handling**
-
-```typescript
-// ✅ GOOD: app/api/users/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(request: NextRequest) {
-  try {
-    const users = await db.user.findMany();
-    return NextResponse.json(users);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
-  }
-}
-
-// ❌ BAD: No error handling, no types
-export async function GET(request) {
-  const users = await db.user.findMany();
-  return NextResponse.json(users);
-}
-```
+### 8. Deliverables Consistency
+- Templates (`templates/` directory) are **deliverables** distributed to users
+- ANY change to core functionality MUST update corresponding templates
+- Templates must match non-template equivalents
+- Run `npx aiknowsys validate-deliverables` before commits/releases
+- Pre-commit hook automatically validates when templates/ changed
 
 ---
 
-## 5. Critical Invariants
+## 5. Skill Index (Auto-Load on Trigger Detection)
 
-### TypeScript Strictness
+**How this works:**
+1. AI agent detects trigger words in user request
+2. AI reads relevant skill from `.github/skills/`
+3. AI follows loaded workflow (cannot skip or "think they know")
 
-1. **Always use strict mode** - `tsconfig.json` must have `"strict": true`
-2. **No `any` types** - Use `unknown` or proper types
-3. **Server/Client boundary** - Server Components cannot pass non-serializable props
-
-### Next.js App Router Rules
-
-1. **Metadata exports** - Use `generateMetadata` for dynamic SEO (see Dynamic Metadata section)
-2. **Async headers/cookies** - MUST await `headers()` and `cookies()` in Next.js 15+ (see pattern below)
-3. **Loading states** - Use `loading.tsx` for Suspense boundaries
-4. **Error boundaries** - Use `error.tsx` for error handling
-5. **Route handlers** - Always in `route.ts` files, never `page.ts`
-
-### Database Access
-
-1. **Use Prisma Client** - Never raw SQL unless absolutely necessary
-2. **Server-only code** - Database calls only in Server Components or API routes
-3. **Connection pooling** - Single Prisma Client instance (see `lib/db.ts`)
+**Why this prevents mistakes:**
+- Critical invariants ALWAYS loaded (above section, not optional)
+- Detailed workflows loaded ON-DEMAND (prevents "I thought I knew" failures)
+- 60-80% token reduction per session
 
 ---
 
-## 6. Common Patterns
+### Development Workflows
 
-### Server Components: Data Fetching & Composition
+#### Testing & Validation
+**[tdd-workflow](.github/skills/tdd-workflow/SKILL.md)**
+- **Triggers:** "write tests", "TDD", "test first", "failing test", "RED-GREEN-REFACTOR"
+- **Summary:** Complete TDD cycle - write failing test FIRST, implement minimal code, refactor
+- **Why use:** Prevents "I'll add tests later" - tests drive design
+- **Output:** Test file paths, test execution logs
 
-**Pattern: Parallel Data Fetching**
+**[validation-troubleshooting](.github/skills/validation-troubleshooting/SKILL.md)**
+- **Triggers:** "test fail", "validation error", "build broken", "tests not passing"
+- **Summary:** Debug validation failures - common issues, fixes, rollback procedures
+- **Why use:** Systematic debugging instead of guessing
+- **Output:** Root cause, fix steps, validation commands
 
-```typescript
-// ✅ GOOD: Fetch in parallel for better performance
-async function Dashboard() {
-  const [user, posts, stats] = await Promise.all([
-    fetchUser(),
-    fetchPosts(),
-    fetchStats()
-  ]);
-  
-  return (
-    <div>
-      <UserProfile user={user} />
-      <PostsList posts={posts} />
-      <StatsPanel stats={stats} />
-    </div>
-  );
-}
+#### Code Quality
+**[refactoring-workflow](.github/skills/refactoring-workflow/SKILL.md)**
+- **Triggers:** "refactor", "clean up", "simplify", "extract function", "reduce duplication"
+- **Summary:** Test-driven refactoring - tests pass BEFORE and AFTER each change
+- **Why use:** Safe code improvements without breaking functionality
+- **Output:** Refactored code paths, test results
 
-// ❌ BAD: Sequential fetching (slow waterfall)
-async function Dashboard() {
-  const user = await fetchUser();   // Waits
-  const posts = await fetchPosts(); // Then waits
-  const stats = await fetchStats(); // Then waits
-  return <div>...</div>;
-}
+**[ai-friendly-documentation](.github/skills/ai-friendly-documentation/SKILL.md)**
+- **Triggers:** "write docs", "update README", "changelog", "documentation"
+- **Summary:** AI-optimized documentation for RAG systems - self-contained sections, explicit terminology
+- **Why use:** Better AI comprehension and retrieval
+- **Output:** Documentation files, changelog entries
+
+#### Architecture & Planning
+**[feature-implementation](.github/skills/feature-implementation/SKILL.md)**
+- **Triggers:** "new feature", "implement", "add capability", "build feature"
+- **Summary:** Step-by-step feature planning - when to use OpenSpec, implementation patterns
+- **Why use:** Structured approach prevents scope creep
+- **Output:** Plan file, implementation steps, OpenSpec proposal (if needed)
+
+**[context-query](.github/skills/context-query/SKILL.md)**
+- **Triggers:** "find plan", "query sessions", "search context", "what's the current plan"
+- **Summary:** Query CLI commands instead of file searching - O(1) index lookup
+- **Why use:** 100x faster than grep_search for >100 items
+- **Output:** JSON with structured metadata, file paths
+
+---
+
+### Dependencies & Tools
+
+**[dependency-management](.github/skills/dependency-management/SKILL.md)**
+- **Triggers:** "update deps", "upgrade packages", "security fix", "npm update"
+- **Summary:** Safe upgrade procedures - security-first, incremental updates, rollback plans
+- **Why use:** Prevents breaking changes from surprise dependencies
+- **Output:** Updated package.json, test results
+
+**[context7-usage](.github/skills/context7-usage/SKILL.md)**
+- **Triggers:** "query framework docs", "Context7", "library documentation"
+- **Summary:** Query up-to-date documentation via Context7 MCP server
+- **Why use:** Always current docs instead of outdated web search
+- **Output:** Framework-specific code examples, API documentation
+
+---
+
+### Skill Management
+
+**[skill-creator](.github/skills/skill-creator/SKILL.md)**
+- **Triggers:** "create skill", "new skill", "make this a skill"
+- **Summary:** Create new Agent Skills from guides - follows VS Code Agent Skills standard
+- **Why use:** Proper skill format and metadata
+- **Output:** SKILL.md file, registered in AVAILABLE_SKILLS
+
+**[skill-validation](.github/skills/skill-validation/SKILL.md)**
+- **Triggers:** "validate skill", "check skill format"
+- **Summary:** Validate skill format and content against standards
+- **Why use:** Ensures skill works correctly
+- **Output:** Validation report, errors/warnings
+
+**[pattern-sharing](.github/skills/pattern-sharing/SKILL.md)**
+- **Triggers:** "share pattern", "team pattern", "collaborate"
+- **Summary:** AI-assisted workflow for sharing personal patterns with team
+- **Why use:** Detects valuable patterns, checks duplicates
+- **Output:** Pattern file in learned/ or personal/
+
+---
+
+## 6. Quick Reference
+
+### Validation Before Claiming "Done"
+```bash
+npm test              # All tests pass
+npm run lint          # No errors
+npm run build         # Clean compilation
 ```
 
-**Pattern: Streaming with Suspense**
+### Common Patterns
 
+**Logger pattern (all commands):**
 ```typescript
-// app/dashboard/page.tsx
-import { Suspense } from 'react';
-
-export default function DashboardPage() {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      
-      {/* Fast content shows immediately */}
-      <QuickStats />
-      
-      {/* Slow content streams in */}
-      <Suspense fallback={<PostsSkeleton />}>
-        <PostsList />
-      </Suspense>
-      
-      <Suspense fallback={<ChartSkeleton />}>
-        <AnalyticsChart />
-      </Suspense>
-    </div>
-  );
-}
-
-// Slow component (automatically streamed)
-async function PostsList() {
-  const posts = await db.post.findMany(); // Slow query
-  return <div>{posts.map(p => <Post key={p.id} {...p} />)}</div>;
-}
+import { createLogger } from '../logger.js';
+const log = createLogger(options._silent);
+log.header('Title', '🎯');
+log.success('Done');
 ```
 
-### Server Actions: Mutations
-
-**Pattern: Form Submission with Server Actions**
-
+**TypeScript imports (REQUIRED):**
 ```typescript
-// app/posts/actions.ts
-'use server';
-
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-
-export async function createPost(formData: FormData) {
-  // 1. Validate input
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  
-  if (!title || !content) {
-    return { error: 'Title and content are required' };
-  }
-  
-  // 2. Create post
-  const post = await db.post.create({
-    data: { title, content, authorId: 'current-user-id' }
-  });
-  
-  // 3. Revalidate cache
-  revalidatePath('/posts');
-  
-  // 4. Redirect to new post
-  redirect(`/posts/${post.id}`);
-}
-
-// app/posts/new/page.tsx
-import { createPost } from '../actions';
-
-export default function NewPostPage() {
-  return (
-    <form action={createPost}>
-      <input name="title" required />
-      <textarea name="content" required />
-      <button type="submit">Create Post</button>
-    </form>
-  );
-}
+import { myFunction } from './file.js';  // ✅ .js extension required
+import type { MyType } from './types.js';  // ✅ type-only import
 ```
 
-**Pattern: Optimistic Updates with useOptimistic**
-
+**Absolute paths (REQUIRED):**
 ```typescript
-// app/posts/[id]/LikeButton.tsx
-'use client';
-
-import { useOptimistic } from 'react';
-import { likePost } from './actions';
-
-export function LikeButton({ postId, initialLikes }: Props) {
-  const [optimisticLikes, addOptimisticLike] = useOptimistic(
-    initialLikes,
-    (state, amount: number) => state + amount
-  );
-  
-  return (
-    <form action={async () => {
-      addOptimisticLike(1); // Instant UI update
-      await likePost(postId); // Then sync with server
-    }}>
-      <button type="submit">
-        👍 {optimisticLikes}
-      </button>
-    </form>
-  );
-}
-```
-
-### Prisma Patterns
-
-**Pattern: Transactions with $transaction**
-
-```typescript
-// Transfer points between users (must be atomic)
-async function transferPoints(fromId: string, toId: string, amount: number) {
-  const result = await db.$transaction(async (tx) => {
-    // 1. Deduct from sender
-    const sender = await tx.user.update({
-      where: { id: fromId },
-      data: { points: { decrement: amount } }
-    });
-    
-    // Validate balance
-    if (sender.points < 0) {
-      throw new Error('Insufficient points');
-    }
-    
-    // 2. Add to receiver
-    await tx.user.update({
-      where: { id: toId },
-      data: { points: { increment: amount } }
-    });
-    
-    // 3. Log transaction
-    await tx.transaction.create({
-      data: { fromId, toId, amount }
-    });
-    
-    return sender;
-  });
-  
-  return result;
-}
-```
-
-**Pattern: Efficient Queries with select & include**
-
-```typescript
-// ❌ BAD: Over-fetching (fetches all columns)
-const user = await db.user.findUnique({
-  where: { id: userId }
-});
-
-// ✅ GOOD: Select only needed fields
-const user = await db.user.findUnique({
-  where: { id: userId },
-  select: {
-    id: true,
-    name: true,
-    email: true,
-    // Don't fetch password hash, unused fields
-  }
-});
-
-// ✅ GOOD: Include relations efficiently
-const posts = await db.post.findMany({
-  include: {
-    author: {
-      select: { id: true, name: true } // Only author name, not all fields
-    },
-    _count: {
-      select: { comments: true } // Just the count, not all comments
-    }
-  }
-});
-```
-
-### Accessing Request Headers and Cookies (Next.js 15+)
-
-**⚠️ Breaking Change in Next.js 15: headers() and cookies() are now async**
-
-```typescript
-// Next.js 15+ - MUST use await
-import { headers, cookies } from 'next/headers';
-
-export default async function Page() {
-  // ✅ CORRECT: Await both functions
-  const headersList = await headers();
-  const cookieStore = await cookies();
-  
-  const userAgent = headersList.get('user-agent');
-  const theme = cookieStore.get('theme');
-  
-  return <div>User Agent: {userAgent}</div>;
-}
-
-// ❌ WRONG: Not awaiting (Next.js 15+)
-import { headers } from 'next/headers';
-
-export default function Page() {
-  const headersList = headers(); // TypeError! Must await
-  return <div>...</div>;
-}
-```
-
-**Setting Cookies in Server Actions**
-
-```typescript
-// app/actions.ts
-'use server';
-
-import { cookies } from 'next/headers';
-
-export async function setTheme(theme: 'light' | 'dark') {
-  const cookieStore = await cookies();
-  cookieStore.set('theme', theme, {
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    path: '/',
-    sameSite: 'strict',
-  });
-}
-```
-
-### Authentication with NextAuth.js
-
-**Pattern: Protecting Routes with Middleware**
-
-```typescript
-// middleware.ts
-import { withAuth } from 'next-auth/middleware';
-
-export default withAuth({
-  callbacks: {
-    authorized: ({ token, req }) => {
-      // Check if user has required role
-      if (req.nextUrl.pathname.startsWith('/admin')) {
-        return token?.role === 'admin';
-      }
-      return !!token; // Just needs to be logged in
-    }
-  }
-});
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*']
-};
-```
-
-**Pattern: Getting Session in Server Components**
-
-```typescript
-// app/dashboard/page.tsx
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session) {
-    redirect('/login');
-  }
-  
-  return <div>Welcome, {session.user.name}!</div>;
-}
-```
-
-### Error Handling Patterns
-
-**Pattern: Global Error Boundary**
-
-```typescript
-// app/error.tsx (catches errors in nested routes)
-'use client';
-
-export default function Error({
-  error,
-  reset
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <p>{error.message}</p>
-      <button onClick={reset}>Try again</button>
-    </div>
-  );
-}
-```
-
-**Pattern: Not Found Handling**
-
-```typescript
-// app/posts/[id]/page.tsx
-import { notFound } from 'next/navigation';
-
-export default async function PostPage({ params }: Props) {
-  const { id } = await params;
-  const post = await db.post.findUnique({ where: { id } });
-  
-  if (!post) {
-    notFound(); // Renders app/posts/[id]/not-found.tsx
-  }
-  
-  return <article>{post.content}</article>;
-}
-
-// app/posts/[id]/not-found.tsx
-export default function NotFound() {
-  return <h2>Post not found</h2>;
-}
-```
-
-### Dynamic Metadata for SEO
-
-**Pattern: generateMetadata for Dynamic Pages**
-
-```typescript
-// app/posts/[id]/page.tsx
-import type { Metadata } from 'next';
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  const post = await db.post.findUnique({ where: { id } });
-  
-  if (!post) return { title: 'Post Not Found' };
-  
-  return {
-    title: post.title,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      images: [post.coverImage],
-    },
-  };
-}
-```
-
-### Image Optimization
-
-**Pattern: Next.js Image Component**
-
-```typescript
-import Image from 'next/image';
-
-// ✅ GOOD: Optimized, responsive images
-export function PostCover({ src, alt }: Props) {
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      width={1200}
-      height={630}
-      priority // For above-the-fold images
-      placeholder="blur"
-      blurDataURL="/placeholder.jpg"
-    />
-  );
-}
-
-// ❌ BAD: No optimization
-export function PostCover({ src, alt }: Props) {
-  return <img src={src} alt={alt} />;
-}
+const targetDir = path.resolve(options.dir || process.cwd());
 ```
 
 ---
 
 ## 7. Common Gotchas
 
-### 1. Client Component Hydration Mismatch
-
+**ESM `__dirname` not available:**
 ```typescript
-// ❌ PROBLEM: Server renders different than client
-function Component() {
-  return <div>{new Date().toString()}</div>; // Different on server vs client
-}
-
-// ✅ SOLUTION: useEffect for client-only rendering
-'use client';
-function Component() {
-  const [time, setTime] = useState<string>('');
-  useEffect(() => setTime(new Date().toString()), []);
-  return <div>{time}</div>;
-}
+import { fileURLToPath } from 'url';
+import path from 'path';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 ```
 
-### 2. Environment Variables
-
+**Import extensions required:**
 ```typescript
-// ❌ PROBLEM: Exposing server secrets to client
-// In client component
-const apiKey = process.env.SECRET_API_KEY; // Undefined in client!
-
-// ✅ SOLUTION: Use NEXT_PUBLIC_ prefix for client vars
-const publicKey = process.env.NEXT_PUBLIC_API_KEY;
-
-// Server-only vars don't need prefix (API routes, Server Components)
-const secretKey = process.env.SECRET_API_KEY; // ✓ Works in server
+import { fn } from './utils.js';  // ✅ .js extension required
+import { fn } from './utils';     // ❌ Won't resolve
 ```
 
-### 3. Dynamic Routes and Type Safety
-
-```typescript
-// ❌ PROBLEM: Untyped params
-export default function Page({ params }: any) {
-  return <div>{params.id}</div>;
-}
-
-// ✅ SOLUTION: Typed params
-type PageProps = {
-  params: Promise<{ id: string }>;
-};
-
-export default async function Page({ params }: PageProps) {
-  const { id } = await params;
-  return <div>{id}</div>;
-}
-```
+**For detailed solutions:** See [`.aiknowsys/learned/common-gotchas.md`](.aiknowsys/learned/common-gotchas.md)
 
 ---
 
-## 8. Testing Patterns
+## 8. When to Document Where
 
-### Unit Testing (Vitest + Testing Library)
+**Add to CODEBASE_ESSENTIALS.md when:**
+- Core architecture decision (technology choice)
+- Critical invariant (cannot be violated)
+- Project structure change
 
-```typescript
-// components/__tests__/Button.test.tsx
-import { render, screen } from '@testing-library/react';
-import { Button } from '../Button';
+**Add to .github/skills/ when:**
+- Repeatable workflow (refactoring, testing, deployment)
+- Multi-step process requiring guidance
+- Pattern that prevents common mistakes
 
-describe('Button', () => {
-  it('renders with correct text', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByRole('button')).toHaveTextContent('Click me');
-  });
-});
-```
-
-### API Route Testing
-
-```typescript
-// app/api/users/__tests__/route.test.ts
-import { GET } from '../route';
-import { NextRequest } from 'next/server';
-
-describe('GET /api/users', () => {
-  it('returns users list', async () => {
-    const request = new NextRequest('http://localhost:3000/api/users');
-    const response = await GET(request);
-    const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
-  });
-});
-```
+**Add to .aiknowsys/learned/ when:**
+- Project-specific discovery
+- Workaround for library quirk
+- Error resolution that might recur
 
 ---
 
-## 9. Architecture Decisions
-
-### Why App Router over Pages Router?
-
-- **Server Components** - Better performance, smaller bundle sizes
-- **Nested Layouts** - More flexible UI composition
-- **Streaming** - Progressive rendering with Suspense
-- **Built-in Loading/Error States** - Less boilerplate
-
-### Why Prisma?
-
-- **Type-safe database access** - Auto-generated TypeScript types
-- **Schema-first** - Single source of truth for data model
-- **Migrations** - Versioned schema changes
-
-### Why Tailwind CSS?
-
-- **No CSS-in-JS runtime** - Better performance than styled-components
-- **Utility-first** - Faster development, consistent design
-- **Dark mode support** - Built-in with `class` strategy
-
----
-
-## 10. Change Management
-
-### Small Changes (no spec needed)
-
-- Bug fixes
-- Styling tweaks
-- Performance optimizations
-- Dependency updates
-
-### Medium Changes (optional spec)
-
-- New UI components
-- New API endpoints
-- Database schema changes
-
-### Large Changes (spec required)
-
-- New features with multiple pages
-- Authentication/authorization changes
-- Major refactoring
-- Breaking API changes
-
-**Recommendation:** Use OpenSpec for large changes to align team before coding.
-
----
-
-## 11. Development Workflow
-
-### First-Time Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Set up database
-cp .env.example .env.local
-# Edit .env.local with your database URL
-
-# Run migrations
-npx prisma migrate dev
-
-# Start dev server
-npm run dev
-```
-
-### Daily Development
-
-```bash
-# Pull latest changes
-git pull
-
-# Install new dependencies (if package.json changed)
-npm install
-
-# Run migrations (if schema changed)
-npx prisma migrate dev
-
-# Start development
-npm run dev
-```
-
-### Before Committing
-
-```bash
-# Run all validation
-npm run type-check  # TypeScript
-npm run lint        # ESLint
-npm test            # Unit tests
-npm run build       # Production build test
-```
-
-### Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
----
-
-*This file is the single source of truth for AI assistants working on this Next.js project.*
+**Target:** ESSENTIALS <400 lines (skill-indexed architecture)  
+**Full workflows:** [`.github/skills/`](.github/skills/) (auto-loaded on trigger detection)

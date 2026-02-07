@@ -59,6 +59,15 @@ export async function compressEssentials(options: CompressEssentialsOptions): Pr
   log.blank();
   log.header('ESSENTIALS Compression Tool', '🗜️');
   log.blank();
+  log.yellow('⚠️  LEGACY TOOL: For v0.10.0+ (skill-indexed ESSENTIALS), this tool is obsolete.');
+  log.white('   New ESSENTIALS format is ~327 lines by design (no compression needed).');
+  log.white('   Use `migrate-essentials` to upgrade from monolithic to skill-indexed format.');
+  log.blank();
+  log.white('   📅 Deprecation Timeline:');
+  log.white('      • v0.10.0: Legacy warning (current)');
+  log.white('      • v0.11.0: Marked deprecated');
+  log.white('      • v0.12.0: Removed');
+  log.blank();
   
   // Check if ESSENTIALS exists
   if (!fs.existsSync(essentialsPath)) {
