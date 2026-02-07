@@ -364,11 +364,14 @@ program
 
 program
   .command('update-session')
-  .description('Modify today\'s session metadata')
+  .description('Modify today\'s session metadata and content')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('--add-topic <topic>', 'Add topic to session')
   .option('--add-file <file>', 'Add file to session')
   .option('--set-status <status>', 'Set status: in-progress, complete, abandoned')
+  .option('--appendSection <title>', 'Append markdown section header (e.g., "## Notes")')
+  .option('--content <text>', 'Section body content (requires --appendSection)')
+  .option('--appendFile <path>', 'Append content from markdown file')
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (options) => {
     await updateSession(options);
