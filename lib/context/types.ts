@@ -45,6 +45,9 @@ export interface SessionMetadata {
   /** Session topic/title */
   topic: string;
   
+  /** Optional topics/tags for categorization (v0.10.0+) */
+  topics?: string[];
+  
   /** Related plan ID (if any) */
   plan?: string;
   

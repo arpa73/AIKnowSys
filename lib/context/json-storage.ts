@@ -436,18 +436,48 @@ export class JsonStorage extends StorageAdapter {
     const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
     if (!dateMatch) return null;
     
+    let topics: string[] | undefined;
+    let plan: string | undefined;
+    
+    // Try to parse YAML frontmatter first (v0.10.0+ format)
+    const frontmatterMatch = content.match(/^---\n([\s\S]+?)\n---/);
+    if (frontmatterMatch) {
+      const lines = frontmatterMatch[1].split('\n');
+      lines.forEach(line => {
+        const [key, ...valueParts] = line.split(':');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join(':').trim();
+          const k = key.trim();
+          
+          if (k === 'topics') {
+            // Parse array format: [item1, item2]
+            const topicsMatch = value.match(/\[(.*)\]/);
+            if (topicsMatch) {
+              topics = topicsMatch[1].split(',').map((t: string) => t.trim()).filter(Boolean);
+            }
+          } else if (k === 'plan') {
+            plan = value;
+          }
+        }
+      });
+    }
+    
     // Extract title from first # heading
     const titleMatch = content.match(/^#\s+Session:\s+(.+?)\s+\(/m) ||
                       content.match(/^#\s+(.+)$/m);
     
-    // Extract plan reference
-    const planMatch = content.match(/\*\*Plan:\*\*\s+(.+)/m) ||
-                     content.match(/\*\*Topic:\*\*\s+(.+)/m);
+    // Fallback to markdown-formatted plan if frontmatter not present
+    if (!plan) {
+      const planMatch = content.match(/\*\*Plan:\*\*\s+(.+)/m) ||
+                       content.match(/\*\*Topic:\*\*\s+(.+)/m);
+      plan = planMatch ? planMatch[1] : undefined;
+    }
     
     return {
       date: dateMatch[1],
       topic: titleMatch ? titleMatch[1] : 'Session',
-      plan: planMatch ? planMatch[1] : undefined,
+      topics,
+      plan,
       file: `sessions/${filename}`,
       created: new Date(dateMatch[1]).toISOString(),
       updated: new Date().toISOString()

@@ -1,14 +1,16 @@
 # arno-paffen's Active Plan
 
-**Last Updated:** Feb 2, 2026
+**Last Updated:** Feb 7, 2026
 
 ---
 
 # Active Plan Pointer
 
 **Currently Working On:** [Context Query Completion](../PLAN_context_query_completion.md)  
-**Status:** 🎯 ACTIVE (Phase A.6 + B Mini)  
+**Status:** 🎯 ACTIVE (Phase B Mini - Mutation Commands)  
 **Started:** 2026-02-07  
+**Next Up:** [Milestone Changelog Evolution](../PLAN_milestone_changelog.md) (after Phase B Mini)  
+**Combined Release:** v0.11.0 (Complete Indexed Query System)  
 **Last Completed:** [Context Query System](../PLAN_context_query_system.md) - 2026-02-07 (Phase A + A.5)  
 **Previously:** [Vitest Migration](../PLAN_vitest_migration.md) - 2026-02-06
 
@@ -20,7 +22,8 @@ This file is now a lightweight index pointing to actual plans. See individual `P
 
 | Plan | Status | Progress | Last Updated |
 |------|--------|----------|--------------|
-| [Context Query Completion](../PLAN_context_query_completion.md) | 🎯 ACTIVE | Fixing index staleness + adding mutations | 2026-02-07 |
+| [Context Query Completion](../PLAN_context_query_completion.md) | 🎯 ACTIVE | Phase B Mini: Mutation commands (3-4h remaining) | 2026-02-07 |
+| [Milestone Changelog Evolution](../PLAN_milestone_changelog.md) | 📋 NEXT | Waiting for Phase B Mini completion | 2026-02-07 |
 | [Vitest Migration](../PLAN_vitest_migration.md) | ✅ COMPLETE | All 4 phases complete | 2026-02-06 |
 | [TypeScript Migration & Type-Safe Architecture](../PLAN_typescript_migration.md) | ✅ COMPLETE | All 8 phases implemented, 581 tests passing | 2026-02-06 |
 | [Deliverables Validation Protocol](../PLAN_deliverables_validation_protocol.md) | ✅ COMPLETE | All 5 phases implemented, validation integrated | 2026-02-03 |
