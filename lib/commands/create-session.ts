@@ -40,12 +40,15 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
     _silent = false
   } = options;
 
+  // Always resolve to absolute path (Invariant #2)
+  const resolvedTargetDir = path.resolve(targetDir);
+
   const log = createLogger(_silent || json);
 
   // Generate filename
   const date = new Date().toISOString().split('T')[0];
   const filename = `${date}-session.md`;
-  const filepath = path.join(targetDir, '.aiknowsys', 'sessions', filename);
+  const filepath = path.join(resolvedTargetDir, '.aiknowsys', 'sessions', filename);
 
   // Check if session already exists
   try {
@@ -84,14 +87,14 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
   });
 
   // Create sessions directory if needed
-  await fs.mkdir(path.join(targetDir, '.aiknowsys', 'sessions'), { recursive: true });
+  await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys', 'sessions'), { recursive: true });
 
   // Write file
   await fs.writeFile(filepath, content, 'utf-8');
 
   // Update index
   const storage = new JsonStorage();
-  await storage.init(targetDir);
+  await storage.init(resolvedTargetDir);
   await storage.rebuildIndex();
 
   // Prepare response
@@ -112,7 +115,7 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
   } else if (!_silent) {
     log.success(`✅ Created session: ${filename}`);
     log.info(`📄 File: ${filepath}`);
-    log.info(`📝 Edit session content in the file`);
+    log.info('📝 Edit session content in the file');
   }
 
   return {

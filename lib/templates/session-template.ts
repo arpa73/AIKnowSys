@@ -3,9 +3,9 @@
  * Phase B Mini - Context Query Completion
  */
 
-import { execSync } from 'child_process';
+import { detectUsername } from '../utils/git-utils.js';
 
-export interface SessionMetadata {
+export interface SessionTemplateMetadata {
   date?: string;
   topics?: string[];
   plan?: string | null;
@@ -18,7 +18,7 @@ export interface SessionMetadata {
 /**
  * Generate session file content with YAML frontmatter
  */
-export function generateSessionTemplate(metadata: SessionMetadata = {}): string {
+export function generateSessionTemplate(metadata: SessionTemplateMetadata = {}): string {
   const {
     date = new Date().toISOString().split('T')[0],
     topics = [],
@@ -59,23 +59,6 @@ status: ${status}
 ## Notes for Next Session
 [Important context to remember]
 `;
-}
-
-/**
- * Detect username from git config or system environment
- */
-function detectUsername(): string {
-  try {
-    const gitUser = execSync('git config user.name', { encoding: 'utf-8' }).trim();
-    if (gitUser) {
-      return gitUser.toLowerCase().replace(/\s+/g, '-');
-    }
-  } catch (err) {
-    // Git not available or not configured
-  }
-
-  // Fallback to system username
-  return process.env.USER || process.env.USERNAME || 'unknown';
 }
 
 /**

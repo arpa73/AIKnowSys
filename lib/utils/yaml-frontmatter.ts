@@ -44,8 +44,31 @@ export function updateFrontmatter(
 }
 
 /**
- * Simple YAML parser (supports: strings, arrays, booleans, numbers)
- * Limited to aiknowsys frontmatter needs (not full YAML spec)
+ * Simple YAML parser for frontmatter (aiknowsys-specific)
+ * 
+ * **Supported:**
+ * - Strings (quoted and unquoted)
+ * - Arrays (inline format: [item1, item2])
+ * - Booleans (true/false)
+ * - Numbers (integers and floats)
+ * - Comments (# prefix)
+ * 
+ * **NOT Supported:**
+ * - Nested objects/maps
+ * - Multiline strings (| or >)
+ * - Advanced YAML (anchors, refs, tags)
+ * - Block arrays (- item format)
+ * 
+ * @example
+ * ```yaml
+ * date: "2026-02-07"
+ * topics: [TDD, validation]
+ * status: in-progress
+ * count: 42
+ * ```
+ * 
+ * @param yamlStr - YAML string (without --- delimiters)
+ * @returns Parsed object
  */
 function parseSimpleYaml(yamlStr: string): Record<string, any> {
   const result: Record<string, any> = {};
@@ -58,7 +81,7 @@ function parseSimpleYaml(yamlStr: string): Record<string, any> {
     if (colonIndex === -1) continue;
 
     const key = line.substring(0, colonIndex).trim();
-    let value = line.substring(colonIndex + 1).trim();
+    const value = line.substring(colonIndex + 1).trim();
 
     // Parse value type
     if (value.startsWith('[') && value.endsWith(']')) {
@@ -88,6 +111,12 @@ function parseSimpleYaml(yamlStr: string): Record<string, any> {
 
 /**
  * Simple YAML stringifier (supports: strings, arrays, booleans, numbers)
+ * 
+ * Generates minimal YAML format for frontmatter. Automatically quotes
+ * strings that contain special characters or match date format.
+ * 
+ * @param obj - Object to stringify
+ * @returns YAML string (without --- delimiters)
  */
 function stringifySimpleYaml(obj: Record<string, any>): string {
   const lines: string[] = [];

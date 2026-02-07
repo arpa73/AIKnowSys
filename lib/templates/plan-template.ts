@@ -3,7 +3,7 @@
  * Phase B Mini - Context Query Completion
  */
 
-import { execSync } from 'child_process';
+import { detectUsername } from '../utils/git-utils.js';
 
 export interface PlanMetadata {
   id?: string;
@@ -39,7 +39,7 @@ created: "${created}"`;
     frontmatter += `\ntopics: [${topics.join(', ')}]`;
   }
 
-  frontmatter += `\n---`;
+  frontmatter += '\n---';
 
   return `${frontmatter}
 
@@ -91,21 +91,4 @@ function generatePlanId(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
-
-/**
- * Detect username from git config or system environment
- */
-function detectUsername(): string {
-  try {
-    const gitUser = execSync('git config user.name', { encoding: 'utf-8' }).trim();
-    if (gitUser) {
-      return gitUser.toLowerCase().replace(/\s+/g, '-');
-    }
-  } catch (err) {
-    // Git not available or not configured
-  }
-
-  // Fallback to system username
-  return process.env.USER || process.env.USERNAME || 'unknown';
 }
