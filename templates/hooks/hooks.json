@@ -4,8 +4,8 @@
     "userPromptSubmitted": [
       {
         "type": "command",
-        "bash": "node .github/hooks/skill-detector.cjs",
-        "powershell": "node .github/hooks/skill-detector.cjs",
+        "bash": ".github/hooks/skill-detector.sh",
+        "powershell": ".github/hooks/skill-detector.ps1",
         "cwd": ".",
         "timeoutSec": 2
       }
@@ -13,59 +13,67 @@
     "preToolUse": [
       {
         "type": "command",
-        "bash": "node .github/hooks/skill-prereq-check.cjs",
-        "powershell": "node .github/hooks/skill-prereq-check.cjs",
+        "bash": ".github/hooks/skill-prereq-check.sh",
+        "powershell": ".github/hooks/skill-prereq-check.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/tdd-reminder.cjs",
-        "powershell": "node .github/hooks/tdd-reminder.cjs",
+        "bash": ".github/hooks/tdd-reminder.sh",
+        "powershell": ".github/hooks/tdd-reminder.ps1",
         "cwd": ".",
         "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/mutation-enforcement.sh",
+        "powershell": ".github/hooks/mutation-enforcement.ps1",
+        "cwd": ".",
+        "timeoutSec": 2,
+        "description": "Enforce mutation commands for session/plan files"
       }
     ],
     "sessionStart": [
       {
         "type": "command",
-        "bash": "node .github/hooks/session-start.js",
-        "powershell": "node .github/hooks/session-start.js",
+        "bash": ".github/hooks/session-start.sh",
+        "powershell": ".github/hooks/session-start.ps1",
         "cwd": ".",
         "timeoutSec": 5
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/migration-check.cjs",
-        "powershell": "node .github/hooks/migration-check.cjs",
+        "bash": ".github/hooks/migration-check.sh",
+        "powershell": ".github/hooks/migration-check.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/doc-sync.cjs",
-        "powershell": "node .github/hooks/doc-sync.cjs",
+        "bash": ".github/hooks/doc-sync.sh",
+        "powershell": ".github/hooks/doc-sync.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/collaboration-check.mjs",
-        "powershell": "node .github/hooks/collaboration-check.mjs",
+        "bash": ".github/hooks/collaboration-check.sh",
+        "powershell": ".github/hooks/collaboration-check.ps1",
         "cwd": ".",
         "timeoutSec": 3
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/workspace-health.cjs",
-        "powershell": "node .github/hooks/workspace-health.cjs",
+        "bash": ".github/hooks/workspace-health.sh",
+        "powershell": ".github/hooks/workspace-health.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/quality-health.cjs",
-        "powershell": "node .github/hooks/quality-health.cjs",
+        "bash": ".github/hooks/quality-health.sh",
+        "powershell": ".github/hooks/quality-health.ps1",
         "cwd": ".",
         "timeoutSec": 3
       }
@@ -73,15 +81,15 @@
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "node .github/hooks/performance-monitor.cjs",
-        "powershell": "node .github/hooks/performance-monitor.cjs",
+        "bash": ".github/hooks/performance-monitor.sh",
+        "powershell": ".github/hooks/performance-monitor.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/session-end.js",
-        "powershell": "node .github/hooks/session-end.js",
+        "bash": ".github/hooks/session-end.sh",
+        "powershell": ".github/hooks/session-end.ps1",
         "cwd": ".",
         "timeoutSec": 5
       }
@@ -89,8 +97,8 @@
     "stop": [
       {
         "type": "command",
-        "bash": "node .github/hooks/validation-reminder.cjs",
-        "powershell": "node .github/hooks/validation-reminder.cjs",
+        "bash": ".github/hooks/validation-reminder.sh",
+        "powershell": ".github/hooks/validation-reminder.ps1",
         "cwd": ".",
         "timeoutSec": 2
       }

@@ -616,8 +616,8 @@ All hooks are registered in `.github/hooks/hooks.json`:
     "userPromptSubmitted": [
       {
         "type": "command",
-        "bash": "node .github/hooks/skill-detector.cjs",
-        "powershell": "node .github/hooks/skill-detector.cjs",
+        "bash": ".github/hooks/skill-detector.sh",
+        "powershell": ".github/hooks/skill-detector.ps1",
         "cwd": ".",
         "timeoutSec": 2
       }
@@ -625,15 +625,15 @@ All hooks are registered in `.github/hooks/hooks.json`:
     "preToolUse": [
       {
         "type": "command",
-        "bash": "node .github/hooks/skill-prereq-check.cjs",
-        "powershell": "node .github/hooks/skill-prereq-check.cjs",
+        "bash": ".github/hooks/skill-prereq-check.sh",
+        "powershell": ".github/hooks/skill-prereq-check.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/tdd-reminder.cjs",
-        "powershell": "node .github/hooks/tdd-reminder.cjs",
+        "bash": ".github/hooks/tdd-reminder.sh",
+        "powershell": ".github/hooks/tdd-reminder.ps1",
         "cwd": ".",
         "timeoutSec": 2
       }
@@ -641,43 +641,43 @@ All hooks are registered in `.github/hooks/hooks.json`:
     "sessionStart": [
       {
         "type": "command",
-        "bash": "node .github/hooks/session-start.js",
-        "powershell": "node .github/hooks/session-start.js",
+        "bash": ".github/hooks/session-start.sh",
+        "powershell": ".github/hooks/session-start.ps1",
         "cwd": ".",
         "timeoutSec": 5
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/migration-check.cjs",
-        "powershell": "node .github/hooks/migration-check.cjs",
+        "bash": ".github/hooks/migration-check.sh",
+        "powershell": ".github/hooks/migration-check.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/doc-sync.cjs",
-        "powershell": "node .github/hooks/doc-sync.cjs",
+        "bash": ".github/hooks/doc-sync.sh",
+        "powershell": ".github/hooks/doc-sync.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/collaboration-check.mjs",
-        "powershell": "node .github/hooks/collaboration-check.mjs",
+        "bash": ".github/hooks/collaboration-check.sh",
+        "powershell": ".github/hooks/collaboration-check.ps1",
         "cwd": ".",
         "timeoutSec": 3
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/workspace-health.cjs",
-        "powershell": "node .github/hooks/workspace-health.cjs",
+        "bash": ".github/hooks/workspace-health.sh",
+        "powershell": ".github/hooks/workspace-health.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/quality-health.cjs",
-        "powershell": "node .github/hooks/quality-health.cjs",
+        "bash": ".github/hooks/quality-health.sh",
+        "powershell": ".github/hooks/quality-health.ps1",
         "cwd": ".",
         "timeoutSec": 3
       }
@@ -685,15 +685,15 @@ All hooks are registered in `.github/hooks/hooks.json`:
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "node .github/hooks/performance-monitor.cjs",
-        "powershell": "node .github/hooks/performance-monitor.cjs",
+        "bash": ".github/hooks/performance-monitor.sh",
+        "powershell": ".github/hooks/performance-monitor.ps1",
         "cwd": ".",
         "timeoutSec": 2
       },
       {
         "type": "command",
-        "bash": "node .github/hooks/session-end.js",
-        "powershell": "node .github/hooks/session-end.js",
+        "bash": ".github/hooks/session-end.sh",
+        "powershell": ".github/hooks/session-end.ps1",
         "cwd": ".",
         "timeoutSec": 5
       }
@@ -701,8 +701,8 @@ All hooks are registered in `.github/hooks/hooks.json`:
     "stop": [
       {
         "type": "command",
-        "bash": "node .github/hooks/validation-reminder.cjs",
-        "powershell": "node .github/hooks/validation-reminder.cjs",
+        "bash": ".github/hooks/validation-reminder.sh",
+        "powershell": ".github/hooks/validation-reminder.ps1",
         "cwd": ".",
         "timeoutSec": 2
       }
@@ -729,10 +729,11 @@ Remove the hook from hooks.json:
 
 ```json
 "sessionStart": [
-  // Remove collaboration-check.mjs if you work solo
+  // Remove collaboration-check if you work solo
   // {
   //   "type": "command",
-  //   "bash": "node .github/hooks/collaboration-check.mjs",
+  //   "bash": ".github/hooks/collaboration-check.sh",
+  //   "powershell": ".github/hooks/collaboration-check.ps1",
   //   ...
   // }
 ]
@@ -745,8 +746,8 @@ Increase timeout for slow operations:
 ```json
 {
   "type": "command",
-  "bash": "node .github/hooks/quality-health.cjs",
-  "powershell": "node .github/hooks/quality-health.cjs",
+  "bash": ".github/hooks/quality-health.sh",
+  "powershell": ".github/hooks/quality-health.ps1",
   "cwd": ".",
   "timeoutSec": 5  // Increased from 3 for large codebases
 }
@@ -769,8 +770,8 @@ Register in hooks.json:
 "sessionStart": [
   {
     "type": "command",
-    "bash": "node .github/hooks/custom-check.cjs",
-    "powershell": "node .github/hooks/custom-check.cjs",
+    "bash": ".github/hooks/custom-check.sh",
+    "powershell": ".github/hooks/custom-check.ps1",
     "cwd": ".",
     "timeoutSec": 2
   }
@@ -878,7 +879,8 @@ test -x .github/hooks/session-start.sh && echo "Executable" || echo "Not executa
 // Increase timeoutSec in hooks.json
 {
   "type": "command",
-  "bash": "node .github/hooks/slow-hook.cjs",
+  "bash": ".github/hooks/slow-hook.sh",
+  "powershell": ".github/hooks/slow-hook.ps1",
   "timeoutSec": 10  // Increased from 2
 }
 ```
@@ -1081,9 +1083,14 @@ print(f"[My Hook] Processing: {data}")
 
 ### How do I debug a hook?
 
-**Method 1: Run manually**
+**Method 1: Run manually (test Node.js directly)**
 ```bash
 node .github/hooks/your-hook.cjs '{}'
+```
+
+**Method 2: Test shell wrapper**
+```bash
+echo '{}' | .github/hooks/your-hook.sh
 ```
 
 **Method 2: Add logging**
