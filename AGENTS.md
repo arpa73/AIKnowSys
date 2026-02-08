@@ -146,7 +146,8 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 - `sessionStart` hook: Detects recent sessions and reminds you to load context
 - `sessionEnd` hook: Creates/updates today's session file with timestamp
 - Hooks complement manual workflow - you still populate the content
-- If hooks aren't available, manual session management works the same
+- **Environment requirement:** VSCode + GitHub Copilot coding agent (hooks don't execute in other environments)
+- If hooks aren't available, manual session management works the same (see [.aiknowsys/learned/hook-troubleshooting.md](.aiknowsys/learned/hook-troubleshooting.md))
 
 **Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
 

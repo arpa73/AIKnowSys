@@ -613,11 +613,37 @@ Register in hooks.json:
 **Symptom:** No hook output in Copilot chat
 
 **Possible causes:**
-1. ✅ **Check hooks.json exists:** `.github/hooks/hooks.json`
-2. ✅ **Verify Node.js installed:** Run `node --version`
-3. ✅ **Check hook permissions:** Run `chmod +x .github/hooks/*.{js,cjs,mjs}`
-4. ✅ **View VSCode Output:** Open "Output" panel, select "GitHub Copilot"
-5. ✅ **Verify paths:** Hooks should reference `.github/hooks/` not `templates/hooks/`
+
+**⚠️ #1: Environment Requirements Not Met (MOST COMMON)**
+
+Hooks ONLY execute in this specific environment:
+- ✅ **Visual Studio Code** (desktop application)
+- ✅ **GitHub Copilot extension** installed and active
+- ✅ **Copilot coding agent** mode (not regular chat)
+
+**Not supported:**
+- ❌ Claude Code/Chat
+- ❌ Cursor IDE  
+- ❌ Web-based AI assistants
+- ❌ GitHub Copilot web interface
+- ❌ GitHub Copilot regular chat mode
+
+**How to verify:**
+1. Check if you're using VSCode desktop app
+2. Check extensions: Is GitHub Copilot installed?
+3. Open Output panel (`Cmd/Ctrl + Shift + U`)
+4. Select "GitHub Copilot" from dropdown
+5. Look for hook execution logs
+
+**Solution:** If not using VSCode + Copilot coding agent, follow manual workflows in [AGENTS.md](../AGENTS.md)
+
+**Other possible causes:**
+
+2. ✅ **Check hooks.json exists:** `.github/hooks/hooks.json`
+3. ✅ **Verify Node.js installed:** Run `node --version`
+4. ✅ **Check hook permissions:** Run `chmod +x .github/hooks/*.{js,cjs,mjs}`
+5. ✅ **View VSCode Output:** Open "Output" panel, select "GitHub Copilot"
+6. ✅ **Verify paths:** Hooks should reference `.github/hooks/` not `templates/hooks/`
 
 **Solution:**
 ```bash
