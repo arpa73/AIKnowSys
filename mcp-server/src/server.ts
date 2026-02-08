@@ -116,13 +116,15 @@ export class AIKnowSysServer {
             return await getActivePlans();
 
           case 'get_recent_sessions': {
-            const schema = z.object({ days: z.number().optional() });
+            const schema = z.object({ 
+              days: z.number().min(1).max(365).optional().default(7) 
+            });
             const params = schema.parse(args || {});
             return await getRecentSessions(params.days);
           }
 
           case 'find_skill_for_task': {
-            const schema = z.object({ task: z.string() });
+            const schema = z.object({ task: z.string().min(3) });
             const params = schema.parse(args);
             return await findSkillForTask(params.task);
           }

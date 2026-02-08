@@ -7,6 +7,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Skill mapping: keywords → skill directory name
@@ -187,10 +188,11 @@ export async function findSkillForTask(task: string) {
       };
     }
     
-    // Read skill file
+    // Read skill file (use absolute path from source file location)
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const skillPath = path.resolve(
-      process.cwd(),
-      '.github/skills',
+      __dirname,
+      '../../../.github/skills',
       bestMatch.name,
       'SKILL.md'
     );
