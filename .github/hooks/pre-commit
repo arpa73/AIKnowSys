@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# Pre-commit Git Hook - TDD Compliance + YAML Validation
+# Phase 5.3: Pre-commit YAML Validation
+#
+# Ensures:
+# 1. Changes to lib/ directory include corresponding test changes (TDD)
+# 2. Session files have valid YAML frontmatter
+# 3. Context index is updated when session/plan files change
+#
+# Installation:
+#   chmod +x .git/hooks/pre-commit
+#   (This file should be copied to .git/hooks/pre-commit)
+#
+
+echo "🔍 Running TDD compliance check..."
+
+# Check if lib/ files are staged
+LIB_STAGED=$(git diff --cached --name-only | grep "^lib/" || true)
+
+if [ -n "$LIB_STAGED" ]; then
+    echo "📝 Detected staged changes in lib/:"
+    echo "$LIB_STAGED" | sed 's/^/   - /'
+    
+    # Check if test/ files are also staged
+    TEST_STAGED=$(git diff --cached --name-only | grep "^test/" || true)
+    
+    if [ -z "$TEST_STAGED" ]; then
+        echo ""
+        echo "⚠️  WARNING: Staging lib/ changes without test/ changes"
+        echo ""
+        echo "Critical Invariant #7: Test-Driven Development (TDD)"
+        echo "→ Tests should be written BEFORE implementation"
+        echo "→ Follow RED-GREEN-REFACTOR cycle"
+        echo ""
+        echo "Did you follow TDD?"
+        echo "  🔴 RED: Write failing test first"
+        echo "  🟢 GREEN: Implement minimal code to pass"
+        echo "  🔵 REFACTOR: Clean up while keeping tests green"
+        echo ""
+        
+        read -p "Continue with commit anyway? (y/N) " -n 1 -r
+        echo
+        
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            echo "❌ Commit aborted"
+            echo "💡 Tip: Stage your test files with: git add test/"
+            echo ""
+            exit 1
+        else
+            echo ""
+            echo "⚠️  Proceeding without test changes (you chose to override)"
+            echo "📝 Consider documenting this TDD violation in CODEBASE_CHANGELOG.md"
+            echo ""
+        fi
+    else
+        echo "✅ Found staged test changes:"
+        echo "$TEST_STAGED" | sed 's/^/   - /'
+        echo ""
+        echo "✅ TDD compliance check passed!"
+    fi
+else
+    echo "ℹ️  No changes in lib/ directory"
+fi
+
+echo ""
+
+# === Phase 5.3: YAML Frontmatter Validation ===
+echo "🔍 Checking YAML frontmatter in session files..."
+
+SESSION_FILES=$(git diff --cached --name-only | grep "^\.aiknowsys/sessions/.*\.md$" || true)
+
+if [ -n "$SESSION_FILES" ]; then
+    YAML_ERRORS=0
+    
+    echo "📝 Validating session files:"
+    
+    for file in $SESSION_FILES; do
+        # Check if file exists (might be deleted)
+        if [ ! -f "$file" ]; then
+            echo "   ⏭️  Skipped $file (deleted)"
+            continue
+        fi
+        
+        # Check for YAML frontmatter (starts with ---)
+        if ! head -1 "$file" | grep -q "^---$"; then
+            echo "   ❌ $file - Missing YAML frontmatter"
+            YAML_ERRORS=$((YAML_ERRORS + 1))
+            continue
+        fi
+        
+        # Extract YAML block (between first and second ---)
+        YAML_BLOCK=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+        
+        # Basic YAML validation: Check for required fields
+        if ! echo "$YAML_BLOCK" | grep -q "^date:"; then
+            echo "   ⚠️  $file - Missing 'date' field in frontmatter"
+            YAML_ERRORS=$((YAML_ERRORS + 1))
+        elif ! echo "$YAML_BLOCK" | grep -q "^topics:"; then
+            echo "   ⚠️  $file - Missing 'topics' field in frontmatter"
+            YAML_ERRORS=$((YAML_ERRORS + 1))
+        else
+            echo "   ✅ $file - Valid YAML frontmatter"
+        fi
+    done
+    
+    # Check if context index was updated
+    INDEX_UPDATED=$(git diff --cached --name-only | grep "^\.aiknowsys/context-index\.json$" || true)
+    
+    if [ -z "$INDEX_UPDATED" ] && [ $YAML_ERRORS -eq 0 ]; then
+        echo ""
+        echo "⚠️  WARNING: Session files changed but context-index.json not updated"
+        echo "   This might indicate manual file editing instead of mutation commands"
+        echo ""
+        echo "💡 Recommendation:"
+        echo "   → Use: npx aiknowsys update-session (ensures atomic updates)"
+        echo "   → Or run: npx aiknowsys rebuild-index (manual index update)"
+        echo ""
+        echo "   Proceeding anyway (non-blocking warning)"
+        echo ""
+    fi
+    
+    if [ $YAML_ERRORS -gt 0 ]; then
+        echo ""
+        echo "⚠️  Found $YAML_ERRORS YAML validation error(s)"
+        echo ""
+        echo "💡 How to fix:"
+        echo "   → Use mutation commands: npx aiknowsys update-session"
+        echo "   → Or manually add YAML frontmatter (see template below)"
+        echo ""
+        echo "YAML frontmatter template:"
+        echo "---"
+        echo "date: YYYY-MM-DD"
+        echo "title: Session Title"
+        echo "topics: []"
+        echo "status: in-progress"
+        echo "---"
+        echo ""
+        echo "Proceeding anyway (warning only, not blocking)"
+        echo ""
+    fi
+else
+    echo "ℹ️  No session files changed"
+fi
+
+echo ""
