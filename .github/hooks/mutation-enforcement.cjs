@@ -59,6 +59,7 @@ async function main() {
 function isFileEditTool(tool) {
   return tool === 'replace_string_in_file' || 
          tool === 'multi_replace_string_in_file' ||
+         tool === 'create_file' ||  // Catch plan/session creation
          tool === 'Edit' ||
          tool === 'Write';
 }
