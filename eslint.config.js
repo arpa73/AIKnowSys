@@ -83,7 +83,8 @@ export default [
       'test/fixtures/**',
       'templates/**',
       'examples/**',
-      'docs/**'
+      'docs/**',
+      'mcp-server/**'  // Separate subproject with own tsconfig
     ]
   }
 ];
