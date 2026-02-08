@@ -66,6 +66,17 @@ Hooks are **optional**. If not using VSCode or Copilot, the knowledge system wor
 }
 ```
 
+**Why shell wrappers?**
+- VSCode Copilot extension executes hooks directly (not in a shell)
+- Cannot run `node script.js` commands (no `node` in PATH)
+- Shell wrappers (.sh/.ps1) are directly executable
+- Wrappers delegate to Node.js hooks internally
+
+**When to use node directly:**
+- Manual testing/debugging: `node .github/hooks/hook.cjs '{}'`
+- CI/CD pipelines: Can use either format
+- Local terminal: `echo '{}' | .github/hooks/hook.sh` (recommended)
+
 ### File Structure
 
 ```
