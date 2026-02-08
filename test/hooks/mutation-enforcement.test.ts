@@ -63,6 +63,38 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     expect(stderr).toContain('update-session');
   });
 
+  it('warns when create_file targets session file', async () => {
+    const input = {
+      tool: 'create_file',
+      parameters: {
+        filePath: '.aiknowsys/sessions/2026-02-08-session.md',
+        content: '# New Session'
+      }
+    };
+
+    const { stderr } = await runHook(input);
+    
+    expect(stderr).toContain('❌ Direct file editing detected');
+    expect(stderr).toContain('For session files:');
+    expect(stderr).toContain('YAML frontmatter validation');
+  });
+
+  it('warns when create_file targets plan file', async () => {
+    const input = {
+      tool: 'create_file',
+      parameters: {
+        filePath: '.aiknowsys/PLAN_test.md',
+        content: '# Test Plan'
+      }
+    };
+
+    const { stderr } = await runHook(input);
+    
+    expect(stderr).toContain('❌ Direct file editing detected');
+    expect(stderr).toContain('For plan files:');
+    expect(stderr).toContain('update-plan');
+  });
+
   it('warns when editing PLAN_*.md files', async () => {
     const input = {
       tool: 'replace_string_in_file',
@@ -74,7 +106,8 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     const { stderr } = await runHook(input);
     
     expect(stderr).toContain('❌ Direct file editing detected');
-    expect(stderr).toContain('create-plan');
+    expect(stderr).toContain('For plan files:');
+    expect(stderr).toContain('update-plan');
   });
 
   it('warns when editing files in plans/ directory', async () => {
