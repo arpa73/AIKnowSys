@@ -12,8 +12,18 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOOKS_DIR = path.join(__dirname, '../.github/hooks');
 
 // Read templates
-const bashTemplate = fs.readFileSync(path.join(HOOKS_DIR, '_template.sh'), 'utf8');
-const ps1Template = fs.readFileSync(path.join(HOOKS_DIR, '_template.ps1'), 'utf8');
+let bashTemplate, ps1Template;
+try {
+  bashTemplate = fs.readFileSync(path.join(HOOKS_DIR, '_template.sh'), 'utf8');
+  ps1Template = fs.readFileSync(path.join(HOOKS_DIR, '_template.ps1'), 'utf8');
+} catch (_error) {
+  console.error('❌ Error: Template files not found');
+  console.error('   Expected: .github/hooks/_template.sh');
+  console.error('   Expected: .github/hooks/_template.ps1');
+  console.error('\n💡 Run from project root or ensure templates exist');
+  console.error('   Create templates before generating wrappers');
+  process.exit(1);
+}
 
 // Find all Node.js hooks (exclude templates, git hooks, and generated wrappers)
 const hooks = fs.readdirSync(HOOKS_DIR)

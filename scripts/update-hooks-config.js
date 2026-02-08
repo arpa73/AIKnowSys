@@ -7,9 +7,21 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-const hooksJsonPath = '.github/hooks/hooks.json';
-const config = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf8'));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const hooksJsonPath = path.resolve(__dirname, '../.github/hooks/hooks.json');
+
+let config;
+try {
+  config = JSON.parse(fs.readFileSync(hooksJsonPath, 'utf8'));
+} catch (_error) {
+  console.error('❌ Error: Cannot read or parse hooks.json');
+  console.error(`   Path: ${hooksJsonPath}`);
+  console.error('\n💡 Ensure you are in the project root and hooks.json exists');
+  console.error('   Expected format: Valid JSON with "hooks" key');
+  process.exit(1);
+}
 
 let updated = 0;
 
