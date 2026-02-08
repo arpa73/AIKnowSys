@@ -18,6 +18,10 @@ export interface UpdateSessionOptions {
   appendSection?: string;  // Section title (## Title)
   content?: string;         // Markdown content for section
   appendFile?: string;      // Path to markdown file to append
+  // Advanced insertion options (Phase 1)
+  prependSection?: string;  // Section title to prepend
+  insertAfter?: string;     // Pattern to insert after
+  insertBefore?: string;    // Pattern to insert before
   // Shortcuts (Phase 4.2)
   done?: boolean;           // Shortcut for --set-status complete
   wip?: boolean;            // Shortcut for --set-status in-progress
@@ -80,6 +84,9 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     appendSection,
     content: sectionContent,  // Renamed from 'content' to avoid shadowing the file content variable (line 87)
     appendFile: appendFileOption,
+    prependSection,
+    insertAfter,
+    insertBefore,
     json = false,
     targetDir = process.cwd(),
     _silent = false
@@ -90,9 +97,16 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
 
   const log = createLogger(_silent || json);
 
-  // Validation: content requires appendSection
-  if (sectionContent && !appendSection) {
-    throw new Error('content requires appendSection to be specified');
+  // Validation: content requires appendSection or prependSection
+  // Optional Enhancement: Better error messages with multi-line formatting
+  if (sectionContent && !appendSection && !prependSection && !insertAfter && !insertBefore) {
+    throw new Error(
+      'content requires a section option:\n' +
+      '  --appendSection <title>    (append at end)\n' +
+      '  --prependSection <title>   (prepend at start)\n' +
+      '  --insert-after <pattern>   (insert after section)\n' +
+      '  --insert-before <pattern>  (insert before section)'
+    );
   }
 
   // Find today's session
@@ -160,14 +174,48 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
 
   // Content manipulation (v0.11.0)
   let contentToAppend = '';
+  let contentToPrepend = '';
+  let insertionMode: 'append' | 'prepend' | 'after' | 'before' | null = null;
+  let insertionPattern = '';
 
-  // Append section with content
-  if (appendSection) {
+  // Determine insertion mode
+  if (prependSection) {
+    insertionMode = 'prepend';
+    contentToPrepend += `${prependSection}\n`;
+    if (sectionContent) {
+      contentToPrepend += `\n${sectionContent}\n`;
+    }
+    contentToPrepend += '\n';
+    changes.push(`Prepended section: ${prependSection}`);
+  } else if (insertAfter) {
+    insertionMode = 'after';
+    insertionPattern = insertAfter;
+    contentToAppend += `\n${appendSection || '## Update'}\n`;
+    if (sectionContent) {
+      contentToAppend += `\n${sectionContent}\n`;
+    }
+    contentToAppend += '\n';
+    changes.push(`Inserted section after: ${insertAfter}`);
+  } else if (insertBefore) {
+    insertionMode = 'before';
+    insertionPattern = insertBefore;
+    contentToAppend += `\n${appendSection || '## Update'}\n`;
+    if (sectionContent) {
+      contentToAppend += `\n${sectionContent}\n`;
+    }
+    contentToAppend += '\n';
+    changes.push(`Inserted section before: ${insertBefore}`);
+  } else if (appendSection) {
+    // Standard append (existing behavior)
+    insertionMode = 'append';
     contentToAppend += `\n\n${appendSection}\n`;
     if (sectionContent) {
       contentToAppend += `\n${sectionContent}\n`;
     }
     changes.push(`Appended section: ${appendSection}`);
+  } else if (appendFileOption || sectionContent) {
+    // File/content without section: default to append
+    insertionMode = 'append';
   }
 
   // Append content from file
@@ -178,7 +226,11 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
       throw new Error(`File not found: ${appendFileOption}`);
     }
     const fileContent = await fs.readFile(resolvedFilePath, 'utf-8');
-    contentToAppend += `\n\n${fileContent}\n`;
+    if (insertionMode === 'prepend') {
+      contentToPrepend += `\n${fileContent}\n`;
+    } else {
+      contentToAppend += `\n\n${fileContent}\n`;
+    }
     changes.push(`Appended content from: ${appendFileOption}`);
   }
 
@@ -207,9 +259,83 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     newContent = updateFrontmatter(content as string, updates);
   }
 
-  // Append content if specified
-  if (contentToAppend) {
+  // Handle content insertion
+  if (insertionMode === 'append' && contentToAppend) {
+    // Standard append to end
     newContent = newContent + contentToAppend;
+  } else if (insertionMode === 'prepend' && contentToPrepend) {
+    // Prepend after YAML frontmatter
+    const parts = newContent.split(/^---$/m);
+    if (parts.length >= 3) {
+      // Has frontmatter: parts[0] = before first ---, parts[1] = yaml, parts[2+] = content
+      newContent = `---${parts[1]}---\n${contentToPrepend}${parts.slice(2).join('---')}`;
+    } else {
+      // No frontmatter (shouldn't happen, but handle gracefully)
+      newContent = contentToPrepend + newContent;
+    }
+  } else if (insertionMode === 'after' && contentToAppend && insertionPattern) {
+    // Insert after pattern (after the entire section, not just the heading line)
+    // Optional Enhancement: Multi-match detection with line number hints
+    const patternIndex = newContent.indexOf(insertionPattern);
+    if (patternIndex === -1) {
+      throw new Error(`Pattern not found: ${insertionPattern}`);
+    }
+    
+    // Check for multiple matches
+    const secondMatch = newContent.indexOf(insertionPattern, patternIndex + 1);
+    if (secondMatch !== -1) {
+      // Count total matches and get line numbers
+      const matches: number[] = [];
+      const lines = newContent.split('\n');
+      lines.forEach((line, index) => {
+        if (line.includes(insertionPattern)) {
+          matches.push(index + 1); // 1-based line numbers
+        }
+      });
+      throw new Error(
+        `Pattern '${insertionPattern}' found ${matches.length} times at lines: ${matches.join(', ')}.\n` +
+        'Use a more specific pattern to identify the exact location.'
+      );
+    }
+    
+    // Find end of section: look for next ## heading or end of file
+    const afterPattern = newContent.indexOf('\n', patternIndex);
+    const nextHeadingMatch = newContent.substring(afterPattern + 1).match(/\n## /);
+    let insertPosition;
+    if (nextHeadingMatch && nextHeadingMatch.index !== undefined) {
+      // Insert before next heading
+      insertPosition = afterPattern + 1 + nextHeadingMatch.index + 1; // +1 for the \n we want to keep
+    } else {
+      // No next heading, insert at end
+      insertPosition = newContent.length;
+    }
+    newContent = newContent.slice(0, insertPosition) + contentToAppend + newContent.slice(insertPosition);
+  } else if (insertionMode === 'before' && contentToAppend && insertionPattern) {
+    // Insert before pattern
+    // Optional Enhancement: Multi-match detection with line number hints
+    const patternIndex = newContent.indexOf(insertionPattern);
+    if (patternIndex === -1) {
+      throw new Error(`Pattern not found: ${insertionPattern}`);
+    }
+    
+    // Check for multiple matches
+    const secondMatch = newContent.indexOf(insertionPattern, patternIndex + 1);
+    if (secondMatch !== -1) {
+      // Count total matches and get line numbers
+      const matches: number[] = [];
+      const lines = newContent.split('\n');
+      lines.forEach((line, index) => {
+        if (line.includes(insertionPattern)) {
+          matches.push(index + 1); // 1-based line numbers
+        }
+      });
+      throw new Error(
+        `Pattern '${insertionPattern}' found ${matches.length} times at lines: ${matches.join(', ')}.\n` +
+        'Use a more specific pattern to identify the exact location.'
+      );
+    }
+    
+    newContent = newContent.slice(0, patternIndex) + contentToAppend + newContent.slice(patternIndex);
   }
 
   await fs.writeFile(filepath, newContent, 'utf-8');

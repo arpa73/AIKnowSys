@@ -122,9 +122,12 @@ npx aiknowsys update-session \
 - `--add-topic <topic>` - Add topic to session (no duplicates)
 - `--add-file <file>` - Add file to session (no duplicates)
 - `--set-status <status>` - Set session status (in-progress | complete | abandoned)
-- `--appendSection <title>` - Add markdown section header (e.g., "## Notes")
-- `--content <text>` - Section body content (requires --appendSection)
+- `--appendSection <title>` - Add markdown section header at end (e.g., "## Notes")
+- `--content <text>` - Section body content (requires section option)
 - `--appendFile <path>` - Append content from markdown file
+- `--prependSection <title>` - Add section at beginning (after frontmatter)
+- `--insert-after <pattern>` - Insert section after matching pattern
+- `--insert-before <pattern>` - Insert section before matching pattern
 - `--json` - Structured JSON output
 
 **Shortcuts (v0.11.0):**
@@ -196,7 +199,30 @@ npx aiknowsys done                    # Mark complete
 npx aiknowsys wip                     # Mark in-progress
 npx aiknowsys log "Fixed bug #123"    # Quick note
 ```
+**Advanced Insertion (Phase 1):**
+```bash
+# Prepend section at beginning (after frontmatter)
+npx aiknowsys update-session \
+  --prependSection "## Critical Issue" \
+  --content "Security vulnerability found"
 
+# Insert section after specific pattern
+npx aiknowsys update-session \
+  --insert-after "## Goal" \
+  --appendSection "## Implementation" \
+  --content "Steps taken..."
+
+# Insert section before specific pattern
+npx aiknowsys update-session \
+  --insert-before "## Notes" \
+  --appendSection "## Changes" \
+  --content "List of changes..."
+```
+
+**When to use advanced insertion:**
+- Prepend: Critical updates that should appear first
+- Insert-after: Add content in specific position (e.g., after Goal, before Notes)
+- Insert-before: Insert content right before a specific section
 ---
 
 ### create-plan
@@ -242,6 +268,91 @@ npx aiknowsys create-plan --title "Feature X" --json
 - Planning a multi-step feature implementation
 - Starting a new development track
 - Need to track progress across multiple sessions
+
+---
+
+### update-plan
+
+Modify plan status and progress (v0.12.0):
+
+```bash
+# Activate a plan
+npx aiknowsys update-plan PLAN_feature_xyz --set-status ACTIVE
+
+# Auto-detect plan from active pointer
+npx aiknowsys update-plan --set-status PAUSED
+
+# Add progress note
+npx aiknowsys update-plan PLAN_feature_xyz --append "Phase 1 complete: all tests passing"
+
+# Complete plan with final notes
+npx aiknowsys update-plan PLAN_feature_xyz \
+  --set-status COMPLETE \
+  --append "Feature deployed to production"
+
+# Append progress from file
+npx aiknowsys update-plan PLAN_feature_xyz --append-file ./sprint-notes.md
+
+# JSON output
+npx aiknowsys update-plan PLAN_feature_xyz --set-status ACTIVE --json
+```
+
+**Options:**
+- `[planId]` - Plan identifier (PLAN_xyz) or omit to auto-detect from active pointer
+- `--set-status <status>` - Set plan status (PLANNED|ACTIVE|PAUSED|COMPLETE|CANCELLED)
+- `--append <content>` - Inline progress note to append (auto-timestamped)
+- `--append-file <file>` - Path to file containing progress notes to append
+- `--author <author>` - Plan author for auto-detection (defaults to git user)
+- `--json` - Structured JSON output
+
+**Shortcut Commands (v0.12.0):**
+```bash
+# Ultra-short commands for common status changes
+npx aiknowsys plan-activate PLAN_xyz    # → update-plan --set-status ACTIVE
+npx aiknowsys plan-complete PLAN_xyz    # → update-plan --set-status COMPLETE
+npx aiknowsys plan-pause PLAN_xyz       # → update-plan --set-status PAUSED
+npx aiknowsys plan-cancel PLAN_xyz      # → update-plan --set-status CANCELLED
+```
+
+**What it does:**
+- Updates plan status with automatic timestamp management
+- Adds progress notes to ## Progress section (creates if missing)
+- Updates active pointer (`.aiknowsys/plans/active-{author}.md`)
+- **Automatically runs sync-plans** (updates team plan index)
+- Rebuilds context index atomically
+
+**Status Transitions:**
+- `PLANNED → ACTIVE`: Adds started date, creates active pointer
+- `ACTIVE → PAUSED`: Keeps pointer, no date change
+- `PAUSED → ACTIVE`: Restores pointer
+- `ACTIVE → COMPLETE`: Adds completed date, clears pointer
+- `* → CANCELLED`: Adds completed date, clears pointer
+
+**JSON Output:**
+```json
+{
+  "planId": "PLAN_feature_xyz",
+  "filePath": ".aiknowsys/PLAN_feature_xyz.md",
+  "updated": true,
+  "changes": [
+    "Status: PLANNED → ACTIVE",
+    "Added progress note"
+  ]
+}
+```
+
+**When to use:**
+- Changing plan status (activate, pause, complete, cancel)
+- Recording progress throughout implementation
+- Completing plan with final summary
+- **INSTEAD OF:** Manual editing + manual sync-plans command
+
+**Key Benefits:**
+- ✅ Auto-sync eliminates manual sync-plans step
+- ✅ Atomic updates (plan file + pointer + index together)
+- ✅ YAML validation prevents frontmatter corruption
+- ✅ Progress notes auto-timestamped
+- ✅ Shortcut commands reduce typing
 
 ---
 

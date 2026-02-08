@@ -43,8 +43,9 @@ async function main() {
       }
       
       process.exit(0); // Always non-blocking
-    } catch (err) {
+    } catch (_err) {
       // Fail silently - don't block workflow
+      // Error intentionally unused (educational hook, always succeeds)
       process.exit(0);
     }
   });
@@ -133,10 +134,12 @@ function printWarning(filePath) {
     console.error('   npx aiknowsys log "Quick note"');
     console.error('');
   } else if (filePath.includes('PLAN_') || filePath.includes('/plans/')) {
-    // Plan file warnings
+    // Plan file warnings (v0.12.0: update-plan available)
     console.error('   For plan files:');
-    console.error('   npx aiknowsys create-plan --title "Feature Name"');
-    console.error('   (update-plan command coming in future release)');
+    console.error('   npx aiknowsys update-plan PLAN_xyz --set-status ACTIVE');
+    console.error('   npx aiknowsys update-plan PLAN_xyz --append "Progress note"');
+    console.error('   npx aiknowsys plan-activate PLAN_xyz');
+    console.error('   npx aiknowsys plan-complete PLAN_xyz');
     console.error('');
   }
   

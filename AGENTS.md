@@ -264,6 +264,64 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 ```
 
+### 5️⃣½ SESSION/PLAN FILE MANAGEMENT: Use Mutation Commands (MANDATORY v0.11.0+)
+
+**⚠️ CRITICAL: Use mutation commands as the default for session/plan operations!**
+
+**Default: Mutation Commands**
+```bash
+# Create new session
+npx aiknowsys create-session --goal "Implement feature X"
+
+# Update existing session (append, prepend, insert)
+npx aiknowsys update-session --appendSection "## Changes" --content "Fixed bug Y"
+npx aiknowsys update-session --prependSection "## Critical Issue" --content "Security fix needed"
+npx aiknowsys update-session --insert-after "## Goal" --appendSection "## Progress" --content "Step 1 complete"
+
+# Append content from file
+npx aiknowsys update-session --appendFile notes.md --appendSection "## Implementation"
+
+# Create/update plans
+npx aiknowsys create-plan --id "feature-name" --goal "Add X"
+npx aiknowsys update-plan PLAN_xyz --set-status ACTIVE
+npx aiknowsys update-plan PLAN_xyz --append "Phase 1 complete: 19/19 tests passing"
+
+# Plan shortcuts (v0.12.0)
+npx aiknowsys plan-activate PLAN_xyz     # Set status to ACTIVE
+npx aiknowsys plan-complete PLAN_xyz     # Set status to COMPLETE
+npx aiknowsys plan-pause PLAN_xyz        # Set status to PAUSED
+npx aiknowsys plan-cancel PLAN_xyz       # Set status to CANCELLED
+```
+
+**Exception: Manual Editing**
+
+Only manually edit session/plan files when:
+- ✅ Commands don't support the required operation (e.g., complex restructuring)
+- ✅ Fixing YAML frontmatter corruption (after backup)
+- ✅ Emergency hotfix with command unavailable
+
+**Why Mutation Commands?**
+- **Validation:** Prevents YAML corruption (dates, status values)
+- **Consistency:** Enforced structure (frontmatter preserved, sections ordered)
+- **Safety:** Pre-commit hooks validate mutations
+- **Auditability:** Command usage traceable in terminal history
+- **Discoverability:** `--help` shows available options
+
+**🚨 RULE: If you're tempted to manually edit, check mutation command help first!**
+```bash
+npx aiknowsys update-session --help  # Check available options
+npx aiknowsys update-plan --help     # Check plan update options
+npx aiknowsys create-plan --help     # Check plan creation options
+```
+
+**Advanced Insertion Options (v0.11.0+):**
+- `--prependSection`: Add at beginning (critical updates, blockers)
+- `--insert-after <pattern>`: Insert after specific section (surgical placement)
+- `--insert-before <pattern>`: Insert before specific section (ordered content)
+- `--appendSection`: Default append at end (standard workflow)
+
+---
+
 ### 6️⃣ END: Save Session Context & Confirm Completion
 
 **Before ending your turn:**

@@ -37,6 +37,7 @@ import { rebuildIndex } from '../dist/lib/commands/rebuild-index.js';
 import { createSession } from '../dist/lib/commands/create-session.js';
 import { updateSession } from '../dist/lib/commands/update-session.js';
 import { createPlan } from '../dist/lib/commands/create-plan.js';
+import { updatePlan } from '../dist/lib/commands/update-plan.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
 
 // Get version from package.json
@@ -372,6 +373,10 @@ program
   .option('--appendSection <title>', 'Append markdown section header (e.g., "## Notes")')
   .option('--content <text>', 'Section body content (requires --appendSection)')
   .option('--appendFile <path>', 'Append content from markdown file')
+  // Advanced insertion options (Phase 1)
+  .option('--prependSection <title>', 'Prepend section at beginning (after frontmatter)')
+  .option('--insert-after <pattern>', 'Insert section after matching pattern')
+  .option('--insert-before <pattern>', 'Insert section before matching pattern')
   // Shortcuts (Phase 4.2)
   .option('--done', 'Shortcut for --set-status complete')
   .option('--wip', 'Shortcut for --set-status in-progress')
@@ -430,6 +435,63 @@ program
       process.exit(1);
     }
     await createPlan(options);
+  });
+
+program
+  .command('update-plan [planId]')
+  .description('Update plan status and progress')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('-s, --set-status <status>', 'Set plan status (PLANNED|ACTIVE|PAUSED|COMPLETE|CANCELLED)')
+  .option('--append <content>', 'Append progress note')
+  .option('--append-file <file>', 'Append content from file')
+  .option('-a, --author <author>', 'Plan author (auto-detected from git)')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (planId, options) => {
+    // Validate status if provided
+    const validStatuses = ['PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'];
+    if (options.setStatus && !validStatuses.includes(options.setStatus)) {
+      console.error(chalk.red(`Error: Invalid status. Valid: ${validStatuses.join(', ')}`));
+      process.exit(1);
+    }
+
+    await updatePlan({ ...options, planId, targetDir: options.dir });
+  });
+
+// Plan shortcuts (Phase 2)
+program
+  .command('plan-activate <planId>')
+  .description('Activate plan (shortcut for update-plan --set-status ACTIVE)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (planId, options) => {
+    await updatePlan({ ...options, planId, setStatus: 'ACTIVE', targetDir: options.dir });
+  });
+
+program
+  .command('plan-complete <planId>')
+  .description('Mark plan complete (shortcut for update-plan --set-status COMPLETE)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (planId, options) => {
+    await updatePlan({ ...options, planId, setStatus: 'COMPLETE', targetDir: options.dir });
+  });
+
+program
+  .command('plan-pause <planId>')
+  .description('Pause plan (shortcut for update-plan --set-status PAUSED)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (planId, options) => {
+    await updatePlan({ ...options, planId, setStatus: 'PAUSED', targetDir: options.dir });
+  });
+
+program
+  .command('plan-cancel <planId>')
+  .description('Cancel plan (shortcut for update-plan --set-status CANCELLED)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--json', 'Output JSON (for AI agents)')
+  .action(async (planId, options) => {
+    await updatePlan({ ...options, planId, setStatus: 'CANCELLED', targetDir: options.dir });
   });
 
 // Config management commands

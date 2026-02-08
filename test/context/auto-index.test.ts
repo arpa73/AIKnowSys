@@ -106,9 +106,15 @@ describe('AutoIndexer', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Create new session
-      const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', '2026-02-07-new.md');
-      await fs.writeFile(sessionPath, '# Session: New (Feb 7, 2026)\n\n## Goal\nTest');
+      // Calculate today's date for session file
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString().split('T')[0];
+      const todayFormatted = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      // Create new session with today's date
+      const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', `${todayISO}-new.md`);
+      await fs.writeFile(sessionPath, `# Session: New (${todayFormatted})\n\n## Goal\nTest`);
 
       // Ensure fresh (should rebuild)
       const wasRebuilt = await autoIndexer.ensureFreshIndex(storage, { verbose: false });
@@ -116,12 +122,13 @@ describe('AutoIndexer', () => {
       expect(wasRebuilt).toBe(true);
 
       // Verify index now contains new session
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString().split('T')[0];
+      // Use yesterday for dateAfter since it's exclusive (after X, not including X)
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayISO = yesterday.toISOString().split('T')[0];
       
-      const { sessions } = await storage.querySessions({ dateAfter: todayISO });
-      expect(sessions.some(s => s.file.includes('2026-02-07-new'))).toBe(true);
+      const { sessions } = await storage.querySessions({ dateAfter: yesterdayISO });
+      expect(sessions.some(s => s.file.includes(`${todayISO}-new`))).toBe(true);
     });
 
     it('does not rebuild when index is fresh', async () => {
@@ -181,9 +188,15 @@ describe('AutoIndexer', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Create new session file
-      const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', '2026-02-07-integration.md');
-      const sessionContent = `# Session: Integration Test (Feb 7, 2026)
+      // Calculate today's date for session file
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString().split('T')[0];
+      const todayFormatted = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      // Create new session file with today's date
+      const sessionPath = path.join(testDir, '.aiknowsys', 'sessions', `${todayISO}-integration.md`);
+      const sessionContent = `# Session: Integration Test (${todayFormatted})
 
 **Topics:** test, auto-rebuild
 
@@ -197,11 +210,12 @@ Test integration
       await autoIndexer.ensureFreshIndex(storage, { verbose: false });
 
       // Should find new session
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString().split('T')[0];
+      // Use yesterday for dateAfter since it's exclusive (after X, not including X)
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayISO = yesterday.toISOString().split('T')[0];
       
-      const { sessions } = await storage.querySessions({ dateAfter: todayISO });
+      const { sessions } = await storage.querySessions({ dateAfter: yesterdayISO });
       expect(sessions.some(s => s.file.includes('integration'))).toBe(true);
     });
   });

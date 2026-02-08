@@ -40,10 +40,10 @@ describe('create-plan command', () => {
     // Verify content has YAML frontmatter
     const content = await fs.readFile(filepath, 'utf-8');
     expect(content).toMatch(/^---\n/);
-    expect(content).toContain('id: \"PLAN_test_feature_implementation\"');
-    expect(content).toContain('title: \"Test Feature Implementation\"');
+    expect(content).toContain('id: "PLAN_test_feature_implementation"');
+    expect(content).toContain('title: "Test Feature Implementation"');
     expect(content).toContain('author: "test-user"');
-    expect(content).toContain('status: \"PLANNED\"');
+    expect(content).toContain('status: "PLANNED"');
   });
 
   it('generates plan ID from title', async () => {

@@ -325,7 +325,7 @@ describe('update-session command', () => {
       content: 'Content without section',
       targetDir: testDir,
       _silent: true
-    })).rejects.toThrow('content requires appendSection');
+    })).rejects.toThrow(/content requires a section option/);
   });
 
   it('preserves existing content when appending', async () => {
@@ -462,5 +462,213 @@ describe('update-session command', () => {
     expect(sessionContent).toContain('Line 1');
     expect(sessionContent).toContain('Line 2');
     expect(sessionContent).toContain('- Bullet');
+  });
+
+  // Phase 1: Advanced insertion options
+  it('supports --prepend to add section at the beginning', async () => {
+    // Setup: Create session with existing content
+    await updateSession({
+      appendSection: '## Middle Section',
+      content: 'Existing content',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Test: Prepend new section
+    const result = await updateSession({
+      prependSection: '## First Section',
+      content: 'This should appear first',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Prepended section: ## First Section');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    const firstSectionPos = sessionContent.indexOf('## First Section');
+    const middleSectionPos = sessionContent.indexOf('## Middle Section');
+    expect(firstSectionPos).toBeGreaterThan(0);
+    expect(middleSectionPos).toBeGreaterThan(firstSectionPos);
+  });
+
+  it('supports --insert-after to insert section after pattern', async () => {
+    // Setup: Create session with multiple sections (use unique names)
+    await updateSession({
+      appendSection: '## InsertAfter Goal',
+      content: 'Original goal',
+      targetDir: testDir,
+      _silent: true
+    });
+    await updateSession({
+      appendSection: '## InsertAfter Notes',
+      content: 'Final notes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Test: Insert section after Goal
+    const result = await updateSession({
+      insertAfter: '## InsertAfter Goal',
+      appendSection: '## Changes',
+      content: 'List of changes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Inserted section after: ## InsertAfter Goal');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    const goalPos = sessionContent.indexOf('## InsertAfter Goal');
+    // Use specific pattern to find our inserted section, not template section
+    const changesPos = sessionContent.indexOf('## Changes\n\nList of changes');
+    const notesPos = sessionContent.indexOf('## InsertAfter Notes');
+    expect(changesPos).toBeGreaterThan(goalPos);
+    expect(notesPos).toBeGreaterThan(changesPos);
+  });
+
+  it('supports --insert-before to insert section before pattern', async () => {
+    // Setup: Create session with sections (use unique names)
+    await updateSession({
+      appendSection: '## InsertBefore Goal',
+      content: 'Original goal',
+      targetDir: testDir,
+      _silent: true
+    });
+    await updateSession({
+      appendSection: '## InsertBefore Notes',
+      content: 'Final notes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Test: Insert section before Notes
+    const result = await updateSession({
+      insertBefore: '## InsertBefore Notes',
+      appendSection: '## Changes',
+      content: 'List of changes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.changes).toContain('Inserted section before: ## InsertBefore Notes');
+
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    const goalPos = sessionContent.indexOf('## InsertBefore Goal');
+    // Use specific pattern to find our inserted section, not template section
+    const changesPos = sessionContent.indexOf('## Changes\n\nList of changes');
+    const notesPos = sessionContent.indexOf('## InsertBefore Notes');
+    expect(changesPos).toBeGreaterThan(goalPos);
+    expect(notesPos).toBeGreaterThan(changesPos);
+  });
+
+  it('throws error when insert pattern not found', async () => {
+    await expect(updateSession({
+      insertAfter: '## Nonexistent Section',
+      appendSection: '## New Section',
+      content: 'Content',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow('Pattern not found: ## Nonexistent Section');
+  });
+
+  it('handles prepend with only section title', async () => {
+    const result = await updateSession({
+      prependSection: '## Quick Note',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    const sessionContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(sessionContent).toContain('## Quick Note');
+  });
+
+  // Optional Enhancement: Multi-match detection
+  it('detects when pattern matches multiple times and provides helpful error', async () => {
+    // Setup: Create session with duplicate pattern (use unique name to avoid template conflicts)
+    await updateSession({
+      appendSection: '## MultiMatch Notes',
+      content: 'First notes',
+      targetDir: testDir,
+      _silent: true
+    });
+    await updateSession({
+      appendSection: '## MultiMatch Notes',
+      content: 'Second notes',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Test: insertAfter with ambiguous pattern should error
+    await expect(updateSession({
+      insertAfter: '## MultiMatch Notes',
+      appendSection: '## Summary',
+      content: 'Summary content',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/Pattern '## MultiMatch Notes' found 2 times/);
+    
+    // Error should include line number hints
+    await expect(updateSession({
+      insertAfter: '## MultiMatch Notes',
+      appendSection: '## Summary',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/lines: \d+/);
+  });
+
+  it('provides helpful error with line numbers for duplicate patterns', async () => {
+    // Setup: Create session with duplicate pattern
+    await updateSession({
+      appendSection: '## Changes',
+      content: 'Change 1',
+      targetDir: testDir,
+      _silent: true
+    });
+    await updateSession({
+      appendSection: '## Changes',
+      content: 'Change 2',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    // Test: Error message should suggest being more specific
+    await expect(updateSession({
+      insertBefore: '## Changes',
+      appendSection: '## Summary',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/more specific pattern/);
+  });
+
+  // Optional Enhancement: Better error messages
+  it('provides helpful multi-line error for missing section option', async () => {
+    await expect(updateSession({
+      content: 'Some content without section',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/--appendSection/);
+    
+    // Should mention all available options
+    await expect(updateSession({
+      content: 'Some content',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/--prependSection/);
+    
+    await expect(updateSession({
+      content: 'Some content',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/--insert-after/);
+    
+    await expect(updateSession({
+      content: 'Some content',
+      targetDir: testDir,
+      _silent: true
+    })).rejects.toThrow(/--insert-before/);
   });
 });

@@ -145,3 +145,89 @@ else
 fi
 
 echo ""
+# === Plan File YAML Validation (v0.12.0) ===
+echo "🔍 Checking YAML frontmatter in plan files..."
+
+PLAN_FILES=$(git diff --cached --name-only | grep "^\.aiknowsys/PLAN_.*\.md$" || true)
+
+if [ -n "$PLAN_FILES" ]; then
+    PLAN_YAML_ERRORS=0
+    
+    echo "📝 Validating plan files:"
+    
+    for file in $PLAN_FILES; do
+        # Check if file exists (might be deleted)
+        if [ ! -f "$file" ]; then
+            echo "   ⏭️  Skipped $file (deleted)"
+            continue
+        fi
+        
+        # Check for YAML frontmatter (starts with ---)
+        if ! head -1 "$file" | grep -q "^---$"; then
+            echo "   ❌ $file - Missing YAML frontmatter"
+            PLAN_YAML_ERRORS=$((PLAN_YAML_ERRORS + 1))
+            continue
+        fi
+        
+        # Extract YAML block (between first and second ---)
+        YAML_BLOCK=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
+        
+        # Basic YAML validation: Check for required fields
+        REQUIRED_FIELDS="id title status author created"
+        MISSING_FIELDS=""
+        
+        for field in $REQUIRED_FIELDS; do
+            if ! echo "$YAML_BLOCK" | grep -q "^$field:"; then
+                MISSING_FIELDS="$MISSING_FIELDS $field"
+            fi
+        done
+        
+        if [ -n "$MISSING_FIELDS" ]; then
+            echo "   ⚠️  $file - Missing required fields:$MISSING_FIELDS"
+            PLAN_YAML_ERRORS=$((PLAN_YAML_ERRORS + 1))
+        else
+            echo "   ✅ $file - Valid YAML frontmatter"
+        fi
+    done
+    
+    # Check if context index was updated
+    INDEX_UPDATED=$(git diff --cached --name-only | grep "^\.aiknowsys/context-index\.json$" || true)
+    
+    if [ -z "$INDEX_UPDATED" ] && [ $PLAN_YAML_ERRORS -eq 0 ]; then
+        echo ""
+        echo "⚠️  WARNING: Plan files changed but context-index.json not updated"
+        echo "   This might indicate manual file editing instead of mutation commands"
+        echo ""
+        echo "💡 Recommendation:"
+        echo "   → Use: npx aiknowsys update-plan (ensures atomic updates)"
+        echo "   → Or run: npx aiknowsys rebuild-index (manual index update)"
+        echo ""
+        echo "   Proceeding anyway (non-blocking warning)"
+        echo ""
+    fi
+    
+    if [ $PLAN_YAML_ERRORS -gt 0 ]; then
+        echo ""
+        echo "⚠️  Found $PLAN_YAML_ERRORS YAML validation error(s) in plan files"
+        echo ""
+        echo "💡 How to fix:"
+        echo "   → Use mutation commands: npx aiknowsys update-plan"
+        echo "   → Or use: npx aiknowsys create-plan (for new plans)"
+        echo ""
+        echo "YAML frontmatter template for plans:"
+        echo "---"
+        echo "id: PLAN_feature_name"
+        echo "title: Feature Implementation"
+        echo "status: PLANNED"
+        echo "author: username"
+        echo "created: YYYY-MM-DD"
+        echo "---"
+        echo ""
+        echo "Proceeding anyway (warning only, not blocking)"
+        echo ""
+    fi
+else
+    echo "ℹ️  No plan files changed"
+fi
+
+echo ""
