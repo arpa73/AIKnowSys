@@ -1,4 +1,4 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   CallToolRequestSchema,
@@ -15,10 +15,10 @@ import { validateDeliverables, checkTddCompliance, validateSkill } from './tools
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
 
 export class AIKnowSysServer {
-  private server: Server;
+  private server: McpServer;
 
   constructor() {
-    this.server = new Server(
+    this.server = new McpServer(
       {
         name: 'aiknowsys-mcp-server',
         version: '0.1.0',
@@ -35,8 +35,10 @@ export class AIKnowSysServer {
   }
 
   private setupToolHandlers() {
+    // NOTE: Using low-level Server API via mcpServer.server for now.
+    // TODO: Migrate to high-level mcpServer.registerTool() API in future refactor.
     // List available tools
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+    this.server.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
           {
@@ -318,7 +320,7 @@ export class AIKnowSysServer {
     });
 
     // Handle tool calls
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
 
       try {
@@ -399,7 +401,7 @@ export class AIKnowSysServer {
   }
 
   private setupErrorHandling() {
-    this.server.onerror = (error) => {
+    this.server.server.onerror = (error) => {
       console.error('[MCP Error]', error);
     };
 

@@ -6,8 +6,8 @@ describe('MCP Server Registration', () => {
   it('should register all 15 tools', async () => {
     const server = new AIKnowSysServer();
     
-    // Access the internal server instance via reflection
-    const internalServer = (server as any).server;
+    // Access the internal low-level server instance
+    const internalServer = (server as any).server.server;
     
     // Simulate ListToolsRequest
     const response = await internalServer._requestHandlers.get('tools/list')({

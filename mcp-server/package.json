@@ -22,7 +22,7 @@
   "author": "arpa73",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
