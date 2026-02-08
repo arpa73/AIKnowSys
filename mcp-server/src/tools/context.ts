@@ -82,7 +82,7 @@ export async function getCriticalInvariants() {
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify(
           {
             count: 8,
@@ -183,7 +183,7 @@ export async function getValidationMatrix() {
   return {
     content: [
       {
-        type: 'text',
+        type: 'text' as const,
         text: JSON.stringify(validationMatrix, null, 2),
       },
     ],

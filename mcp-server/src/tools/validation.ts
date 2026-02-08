@@ -33,12 +33,12 @@ export async function validateDeliverables(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error validating deliverables: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -60,12 +60,12 @@ export async function checkTddCompliance(params: unknown) {
     const { stdout } = await execFileAsync('node', args.slice(1));
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error checking TDD compliance: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -86,12 +86,12 @@ export async function validateSkill(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error validating skill: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true

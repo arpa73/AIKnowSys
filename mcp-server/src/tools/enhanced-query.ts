@@ -35,12 +35,12 @@ export async function searchContext(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error searching context: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -65,12 +65,12 @@ export async function findPattern(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error finding pattern: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -91,12 +91,12 @@ export async function getSkillByName(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error getting skill: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true

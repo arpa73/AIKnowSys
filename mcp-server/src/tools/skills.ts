@@ -173,7 +173,7 @@ export async function findSkillForTask(task: string) {
       return {
         content: [
           {
-            type: 'text',
+            type: 'text' as const,
             text: JSON.stringify({
               found: false,
               message: 'No matching skill found for task. Try different keywords.',
@@ -202,7 +202,7 @@ export async function findSkillForTask(task: string) {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify({
             found: true,
             skillName: bestMatch.name,
@@ -219,7 +219,7 @@ export async function findSkillForTask(task: string) {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify({
             error: true,
             message: `Failed to find skill: ${message}`,

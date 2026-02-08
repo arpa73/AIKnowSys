@@ -65,12 +65,12 @@ export async function createSession(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error creating session: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -112,12 +112,12 @@ export async function updateSession(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error updating session: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -150,12 +150,12 @@ export async function createPlan(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error creating plan: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true
@@ -184,12 +184,12 @@ export async function updatePlan(params: unknown) {
     const { stdout } = await execFileAsync('npx', args);
     
     return {
-      content: [{ type: 'text', text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
     return {
       content: [{ 
-        type: 'text', 
+        type: 'text' as const, 
         text: `Error updating plan: ${error instanceof Error ? error.message : String(error)}` 
       }],
       isError: true

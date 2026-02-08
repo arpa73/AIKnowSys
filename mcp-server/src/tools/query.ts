@@ -27,7 +27,7 @@ export async function getActivePlans() {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify(
             {
               count: result.count,
@@ -53,7 +53,7 @@ export async function getActivePlans() {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify({
             error: true,
             message: `Failed to query active plans: ${message}`,
@@ -87,7 +87,7 @@ export async function getRecentSessions(days: number = 7) {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify(
             {
               count: result.count,
@@ -111,7 +111,7 @@ export async function getRecentSessions(days: number = 7) {
     return {
       content: [
         {
-          type: 'text',
+          type: 'text' as const,
           text: JSON.stringify({
             error: true,
             message: `Failed to query sessions: ${message}`,
