@@ -1,14 +1,14 @@
 # Active Plan: arno-paffen
 
-**Currently Working On:** None  
-**Status:** ✅ COMPLETE  
+**Currently Working On:** [CLI UX Analysis and Improvements for AI Agents](../PLAN_cli_ux_analysis_and_improvements_for_ai_agents.md)  
+**Status:** 🎯 ACTIVE  
 **Last Updated:** 2026-02-08
 
 ---
 
-## Recent Work
+## Progress
 
-Previously completed: **Plan Mutation Commands** (2026-02-08)
+[Update as you work through the plan]
 
 ---
 
