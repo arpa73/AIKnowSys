@@ -129,8 +129,9 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 2. **@AGENTS.md** - This file for workflow reminders
 
 **When you need history:**
-- **@CODEBASE_CHANGELOG.md** - Session-by-session changes and validation notes
+- **@CODEBASE_CHANGELOG.md** - Milestone-focused timeline (releases, breaking changes)
 - **@.aiknowsys/learned/** - Project-specific patterns discovered over time
+- **Query commands:** Use `query-sessions`, `search-context` for historical work (faster than file reading)
 
 ### 2️⃣ PLAN: Check Skills Before Coding
 
