@@ -1,5 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
+import { AIKnowSysServer } from '../src/server.js';
+
+describe('MCP Server Registration', () => {
+  it('should register all 15 tools', async () => {
+    const server = new AIKnowSysServer();
+    
+    // Access the internal server instance via reflection
+    const internalServer = (server as any).server;
+    
+    // Simulate ListToolsRequest
+    const response = await internalServer._requestHandlers.get('tools/list')({
+      method: 'tools/list',
+      params: {}
+    });
+
+    expect(response.tools).toHaveLength(15);
+    
+    // Verify tool names
+    const toolNames = response.tools.map((t: any) => t.name);
+    expect(toolNames).toContain('get_critical_invariants');
+    expect(toolNames).toContain('get_validation_matrix');
+    expect(toolNames).toContain('get_active_plans');
+    expect(toolNames).toContain('get_recent_sessions');
+    expect(toolNames).toContain('find_skill_for_task');
+    expect(toolNames).toContain('create_session');
+    expect(toolNames).toContain('update_session');
+    expect(toolNames).toContain('create_plan');
+    expect(toolNames).toContain('update_plan');
+    expect(toolNames).toContain('validate_deliverables');
+    expect(toolNames).toContain('check_tdd_compliance');
+    expect(toolNames).toContain('validate_skill');
+    expect(toolNames).toContain('search_context');
+    expect(toolNames).toContain('find_pattern');
+    expect(toolNames).toContain('get_skill_by_name');
+  });
+});
 
 describe('MCP Server Input Validation', () => {
   describe('days parameter validation', () => {
