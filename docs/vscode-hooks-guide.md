@@ -38,6 +38,179 @@ Hooks are **optional**. If not using VSCode or Copilot, the knowledge system wor
 
 ---
 
+## Shell Wrapper Architecture (v0.11.0+)
+
+**Critical implementation detail:** GitHub Copilot requires hooks to be **executable shell scripts** (.sh for Unix, .ps1 for Windows), not Node.js module invocations.
+
+### Why Wrappers?
+
+**GitHub Copilot's requirement:**
+- Hooks must be shell scripts with proper shebang (`#!/usr/bin/env bash`)
+- Must be marked executable (`chmod +x`)
+- Receive JSON via stdin, output via stdout
+- Cannot be called as `node script.js`
+
+**Previous implementation (WRONG):**
+```json
+{
+  "bash": "node .github/hooks/session-start.js",  // ❌ Copilot can't execute
+  "powershell": "node .github/hooks/session-start.js"
+}
+```
+
+**Current implementation (CORRECT):**
+```json
+{
+  "bash": ".github/hooks/session-start.sh",        // ✅ Executable shell script
+  "powershell": ".github/hooks/session-start.ps1"  // ✅ Cross-platform
+}
+```
+
+### File Structure
+
+```
+.github/hooks/
+├── session-start.js          # Node.js logic (unchanged)
+├── session-start.sh          # Bash wrapper (auto-generated)
+├── session-start.ps1         # PowerShell wrapper (auto-generated)
+├── session-end.js
+├── session-end.sh
+├── session-end.ps1
+├── mutation-enforcement.cjs
+├── mutation-enforcement.sh
+├── mutation-enforcement.ps1
+...16 hooks × 3 files = 48 total files
+```
+
+### Wrapper Implementation
+
+**Bash wrapper (.sh):**
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="$(basename "$0" .sh)"
+
+# Find corresponding Node.js file (.js, .cjs, or .mjs)
+NODE_SCRIPT=""
+for ext in js cjs mjs; do
+  if [[ -f "$SCRIPT_DIR/$SCRIPT_NAME.$ext" ]]; then
+    NODE_SCRIPT="$SCRIPT_DIR/$SCRIPT_NAME.$ext"
+    break
+  fi
+done
+
+if [[ -z "$NODE_SCRIPT" ]]; then
+  echo "Error: No Node.js file found for $SCRIPT_NAME" >&2
+  exit 1
+fi
+
+# Pass stdin to Node.js script
+node "$NODE_SCRIPT"
+```
+
+**Key features:**
+- ✅ Generic: Works for all hooks (no hook-specific code)
+- ✅ Auto-detects: Finds .js, .cjs, or .mjs automatically
+- ✅ Error handling: Fails gracefully if Node.js file missing
+- ✅ Stdin passthrough: Preserves JSON input from Copilot
+
+**PowerShell wrapper (.ps1):**
+```powershell
+#!/usr/bin/env pwsh
+$ErrorActionPreference = "Stop"
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
+
+# Find corresponding Node.js file
+$NodeScript = $null
+foreach ($ext in @('js', 'cjs', 'mjs')) {
+  $candidate = Join-Path $ScriptDir "$ScriptName.$ext"
+  if (Test-Path $candidate) {
+    $NodeScript = $candidate
+    break
+  }
+}
+
+if (-not $NodeScript) {
+  Write-Error "Error: No Node.js file found for $ScriptName"
+  exit 1
+}
+
+# Pass stdin to Node.js script
+$input | node $NodeScript
+```
+
+### Regenerating Wrappers
+
+**When to regenerate:**
+- After adding new hooks
+- After updating wrapper templates
+- After pulling new hooks from git
+- If wrappers are missing or corrupted
+
+**Commands:**
+```bash
+# Generate .sh and .ps1 wrappers for all hooks
+npm run generate:hooks
+
+# Update hooks.json to point to wrappers
+npm run update:hooks-config
+
+# Verify all wrappers work
+npm test
+
+# Make wrappers executable (Linux/macOS)
+chmod +x .github/hooks/*.sh
+```
+
+**Generator script:** `scripts/generate-hook-wrappers.js`
+- Reads templates: `_template.sh`, `_template.ps1`
+- Finds all Node.js hooks: `*.js`, `*.cjs`, `*.mjs`
+- Creates matching wrappers automatically
+- Sets executable permissions (Unix)
+
+### Benefits of Wrapper Approach
+
+**Pros:**
+- ✅ Preserves existing Node.js logic (zero code changes)
+- ✅ Auto-generated (consistent, no manual errors)
+- ✅ Cross-platform (Unix + Windows)
+- ✅ Tested (unit tests validate wrapper execution)
+- ✅ Maintainable (single template for all hooks)
+
+**Cons:**
+- ⚠️ Extra files (3 per hook instead of 1)
+- ⚠️ Small overhead (~10-20ms per hook execution)
+- ⚠️ Requires Node.js in PATH (already a requirement for AIKnowSys)
+
+### Testing Wrappers
+
+**Unit tests:** `test/hooks/shell-wrappers.test.ts`
+- Validates wrappers are executable
+- Verifies Node.js files exist
+- Tests stdin passthrough
+- Checks hooks.json paths
+
+**Manual testing:**
+```bash
+# Test bash wrapper
+echo '{}' | .github/hooks/session-start.sh
+
+# Test PowerShell wrapper
+echo '{}' | .github/hooks/session-start.ps1
+
+# Test Node.js directly (bypasses wrapper)
+node .github/hooks/session-start.js
+
+# Test with realistic data
+echo '{"timestamp": 1704614400000}' | .github/hooks/session-start.sh
+```
+
+---
+
 ## Hook Lifecycle Events
 
 ### 1. userPromptSubmitted
@@ -610,52 +783,87 @@ Register in hooks.json:
 
 ### Hooks Not Running
 
-**Symptom:** No hook output in Copilot chat
+**Prerequisites (v0.11.0+):**
+- ✅ Shell wrappers exist: `.github/hooks/*.sh` and `.github/hooks/*.ps1`
+- ✅ Wrappers are executable: `chmod +x .github/hooks/*.sh`
+- ✅ hooks.json points to wrappers (not node commands)
+- ✅ Using VSCode desktop app with GitHub Copilot extension
 
-**Possible causes:**
+**Diagnostic steps:**
 
-**⚠️ #1: Environment Requirements Not Met (MOST COMMON)**
-
-Hooks ONLY execute in this specific environment:
-- ✅ **Visual Studio Code** (desktop application)
-- ✅ **GitHub Copilot extension** installed and active
-- ✅ **Copilot coding agent** mode (not regular chat)
-
-**Not supported:**
-- ❌ Claude Code/Chat
-- ❌ Cursor IDE  
-- ❌ Web-based AI assistants
-- ❌ GitHub Copilot web interface
-- ❌ GitHub Copilot regular chat mode
-
-**How to verify:**
-1. Check if you're using VSCode desktop app
-2. Check extensions: Is GitHub Copilot installed?
-3. Open Output panel (`Cmd/Ctrl + Shift + U`)
-4. Select "GitHub Copilot" from dropdown
-5. Look for hook execution logs
-
-**Solution:** If not using VSCode + Copilot coding agent, follow manual workflows in [AGENTS.md](../AGENTS.md)
-
-**Other possible causes:**
-
-2. ✅ **Check hooks.json exists:** `.github/hooks/hooks.json`
-3. ✅ **Verify Node.js installed:** Run `node --version`
-4. ✅ **Check hook permissions:** Run `chmod +x .github/hooks/*.{js,cjs,mjs}`
-5. ✅ **View VSCode Output:** Open "Output" panel, select "GitHub Copilot"
-6. ✅ **Verify paths:** Hooks should reference `.github/hooks/` not `templates/hooks/`
-
-**Solution:**
+1. **Verify shell wrappers exist:**
 ```bash
-# Verify hooks.json exists
-ls -la .github/hooks/hooks.json
-
-# Check hook files exist
-ls -la .github/hooks/*.{js,cjs,mjs}
-
-# Test hook manually
-node .github/hooks/session-start.js '{}'
+ls -la .github/hooks/*.sh  # Should show 16+ .sh files
+ls -la .github/hooks/*.ps1 # Should show 16+ .ps1 files
 ```
+
+2. **Check wrapper permissions:**
+```bash
+# Linux/macOS
+chmod +x .github/hooks/*.sh
+
+# Verify executable bit
+ls -l .github/hooks/*.sh | grep "rwxr"
+```
+
+3. **Test wrapper execution:**
+```bash
+# Test bash wrapper
+echo '{}' | .github/hooks/session-start.sh
+
+# Test PowerShell wrapper (Windows)
+echo '{}' | .github/hooks/session-start.ps1
+
+# Test Node.js directly (bypasses wrapper)
+node .github/hooks/session-start.js
+```
+
+4. **Verify hooks.json configuration:**
+```bash
+# Check hooks.json uses shell wrappers
+grep ".sh" .github/hooks/hooks.json
+
+# Should show: ".github/hooks/hook-name.sh"
+# NOT:         "node .github/hooks/hook-name.js"
+```
+
+5. **Check VSCode Copilot environment:**
+- Open Output panel (`Cmd/Ctrl + Shift + U`)
+- Select "GitHub Copilot" from dropdown
+- Look for hook execution logs during conversation
+
+**Common issues:**
+
+**Issue:** Wrappers don't exist
+```bash
+# Solution: Regenerate wrappers
+npm run generate:hooks      # Create .sh/.ps1 wrappers
+npm run update:hooks-config # Update hooks.json
+npm test                    # Validate all wrappers work
+```
+
+**Issue:** hooks.json still uses node commands
+```bash
+# Check current format
+cat .github/hooks/hooks.json | grep bash
+
+# If you see: "node .github/hooks/..."
+# Solution: Update configuration
+npm run update:hooks-config
+```
+
+**Issue:** Wrappers not executable
+```bash
+# Solution: Make executable
+chmod +x .github/hooks/*.sh
+
+# Verify
+test -x .github/hooks/session-start.sh && echo "Executable" || echo "Not executable"
+```
+
+**Issue:** Not using VSCode + Copilot
+- **Solution:** If using other environments (Cursor, web chat), follow manual workflows in [AGENTS.md](../AGENTS.md)
+- Mutation commands still work: `npx aiknowsys update-session`, `create-plan`
 
 ### Hook Timeout Errors
 
