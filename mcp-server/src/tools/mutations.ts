@@ -1,8 +1,13 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { resolve } from 'path';
 import {z} from 'zod';
 
 const execFileAsync = promisify(execFile);
+
+// Project root is one level up from mcp-server directory
+// Works for both development (mcp-server/src) and production (mcp-server/dist)
+const PROJECT_ROOT = resolve(process.cwd(), '..');
 
 // Zod schemas for validation
 const createSessionSchema = z.object({
@@ -63,7 +68,7 @@ export async function createSession(params: unknown) {
       args.push('--plan', validated.plan);
     }
 
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
@@ -110,7 +115,7 @@ export async function updateSession(params: unknown) {
 
     args.push('--content', validated.content);
 
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
@@ -147,7 +152,7 @@ export async function createPlan(params: unknown) {
       args.push('--topics', validated.topics.join(','));
     }
 
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
@@ -181,7 +186,7 @@ export async function updatePlan(params: unknown) {
       args.push('--prepend', validated.content);
     }
 
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]

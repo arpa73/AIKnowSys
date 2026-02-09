@@ -1,8 +1,12 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { resolve } from 'path';
 import { z } from 'zod';
 
 const execFileAsync = promisify(execFile);
+
+// Project root is one level up from mcp-server directory  
+const PROJECT_ROOT = resolve(process.cwd(), '..');
 
 // Zod schemas for validation
 const validateDeliverablesSchema = z.object({
@@ -30,7 +34,7 @@ export async function validateDeliverables(params: unknown) {
       args.push('--fix');
     }
 
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
@@ -57,7 +61,7 @@ export async function checkTddCompliance(params: unknown) {
     // In practice, this would call the actual TDD check from hooks
     const args = ['node', '.github/hooks/tdd-check.js', ...validated.changedFiles];
 
-    const { stdout } = await execFileAsync('node', args.slice(1));
+    const { stdout } = await execFileAsync('node', args.slice(1), { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
@@ -90,7 +94,7 @@ export async function validateSkill(params: unknown) {
     // Future enhancement: Filter output for specific skill path
     // For now, returns validation results for all skills
     
-    const { stdout } = await execFileAsync('npx', args);
+    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
