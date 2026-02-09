@@ -12,7 +12,7 @@ const AVAILABLE_SKILLS = [
   'context-query',
   'dependency-management',
   'feature-implementation',
-  'framework-docs',
+  '3rd-party-framework-docs',
   'pattern-sharing',
   'refactoring-workflow',
   'skill-creator',

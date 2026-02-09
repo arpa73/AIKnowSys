@@ -130,32 +130,79 @@ In Cursor's MCP configuration:
 
 ## Step 3: Test the Tools
 
-Try these queries to verify everything works:
+**⚠️ Current Status (Feb 2026):** 5/15 tools verified working. Several tools have CLI flag bugs. See [.aiknowsys/sessions/2026-02-09-session.md] for bug details.
 
-### Test 1: Critical Invariants
-*"What are the critical invariants I must follow?"*
+### Working Tools (Verified ✅)
 
-**Expected:** AI calls `get_critical_invariants()` and returns 8 rules.
+**Test 1: Critical Invariants**
 
-### Test 2: Validation Commands
-*"What validation commands should I run after changes?"*
+Natural language query: *"What are the critical invariants I must follow?"*
 
-**Expected:** AI calls `get_validation_matrix()` and shows command matrix.
+Or call directly (for testing):
+```typescript
+mcp_aiknowsys_get_critical_invariants()
+```
 
-### Test 3: Active Plans
-*"What implementation plans are currently active?"*
+**Expected:** Returns 8 mandatory rules (ES Modules, Absolute Paths, TDD, etc.)
 
-**Expected:** AI calls `get_active_plans()` and lists active plans.
+---
 
-### Test 4: Recent Sessions
-*"Show me recent session work"*
+**Test 2: Validation Commands**
 
-**Expected:** AI calls `get_recent_sessions()` and summarizes sessions.
+Natural language query: *"What validation commands should I run after changes?"*
 
-### Test 5: Skill Discovery
-*"How do I write tests first?"*
+Or call directly:
+```typescript
+mcp_aiknowsys_get_validation_matrix()
+```
 
-**Expected:** AI calls `find_skill_for_task("write tests first")` and returns TDD workflow.
+**Expected:** Returns validation commands by category (Required on Every Change, Template Changes, etc.)
+
+---
+
+**Test 3: Recent Sessions**
+
+Natural language query: *"Show me recent session work from the last 7 days"*
+
+Or call directly:
+```typescript
+mcp_aiknowsys_get_recent_sessions({ days: 7 })
+```
+
+**Expected:** Returns sessions with dates, topics, plans, file paths
+
+---
+
+**Test 4: Get Skill by Name**
+
+Natural language query: *"Show me the TDD workflow skill"*
+
+Or call directly:
+```typescript
+mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
+```
+
+**Expected:** Returns full skill file content (400+ lines)
+
+---
+
+### Known Bugs (10 tools have issues)
+
+**Search context - Fixed but disabled:**
+- `search_context()` - CLI flag bug fixed, but still disabled in some environments
+
+**Mutation tools - CLI flag bugs:**
+- `create_session()` - Uses `--goal` instead of `--title`
+- Other mutation tools may have similar issues
+
+**Validation tools - Parameter issues:**
+- `check_tdd_compliance()` - Expects `changedFiles` array
+- `validate_skill()` - Expects `skillPath` not `skillName`
+
+**Other disabled tools:**
+- `get_active_plans()`, `find_skill_for_task()`, `find_pattern()`, `validate_deliverables()`
+
+**Fix Plan:** See `.aiknowsys/PLAN_mcp_bugfix_skill_lookup.md` for systematic audit plan.
 
 ---
 

@@ -75,14 +75,21 @@ export async function checkTddCompliance(params: unknown) {
 
 /**
  * Validate skill format and content
+ * 
+ * NOTE: Validates ALL skills in the project, not just the specified skillPath.
+ * The skillPath parameter is required for future individual validation support.
  */
 export async function validateSkill(params: unknown) {
   try {
     const validated = validateSkillSchema.parse(params);
     
-    // Use the validate command with skill filter
-    const args = ['aiknowsys', 'validate', '--type', 'skills', '--file', validated.skillPath];
-
+    // Use the validate command with skills type
+    // Note: Currently validates ALL skills (--file flag doesn't exist in CLI)
+    const args = ['aiknowsys', 'validate', '--type', 'skills'];
+    
+    // Future enhancement: Filter output for specific skill path
+    // For now, returns validation results for all skills
+    
     const { stdout } = await execFileAsync('npx', args);
     
     return {

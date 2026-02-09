@@ -255,7 +255,7 @@ describe('init command', () => {
     expect(content.length > 1000).toBeTruthy();
     expect(content.includes('Next.js')).toBeTruthy();
     expect(content.includes('v0.10.0')).toBeTruthy();
-    expect(content.includes('Skill-Indexed Architecture')).toBeTruthy();
+    expect(content.includes('MCP-First Architecture')).toBeTruthy();
   });
 
   it('should create files with vue-express stack template', async () => {

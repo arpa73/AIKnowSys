@@ -3,10 +3,10 @@
 > **Last Updated:** February 7, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
 > **Maintainer:** arpa73  
-> **Version:** v0.10.0 (Skill-Indexed Architecture)
+> **Version:** v0.10.0 (MCP-First Architecture)
 
-⚠️ **MAJOR CHANGE:** ESSENTIALS is now a skill index, not a workflow encyclopedia.  
-**Full workflows** are in [.github/skills/](/.github/skills/) (auto-loaded on trigger detection).
+⚠️ **CRITICAL:** AIKnowSys requires MCP server to function.  
+**Skills, context, validation** are all MCP-powered (10-100x faster than file reading).
 
 ---
 
@@ -22,6 +22,7 @@
 | Terminal UI | Chalk 5.x, Ora 9.x |
 | Package Manager | npm |
 | Distribution | npm registry |
+| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (15 tools for AI agents)** |
 
 ---
 
@@ -130,112 +131,29 @@ These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 
 ---
 
-## 5. Skill Index (Auto-Load on Trigger Detection)
+## 5. Available Skills (MCP-Powered Discovery)
 
-**How this works:**
-1. AI agent detects trigger words in user request
-2. AI calls `npx aiknowsys query-essentials "<skill-name>"` to load full workflow
-3. AI follows loaded workflow (cannot skip or "think they know")
+**AIKnowSys requires MCP server** - skills are discovered dynamically, not listed here.
 
-**Why this prevents mistakes:**
-- Critical invariants ALWAYS loaded (above section, not optional)
-- Detailed workflows loaded ON-DEMAND (prevents "I thought I knew" failures)
-- 70-80% token reduction (300 lines + 100 skill vs 1039 lines total)
+**Get skill by name:**
+```typescript
+mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
+// Returns: Full skill content (400+ lines)
+```
 
----
+**Common skills you'll use:**
+- `tdd-workflow` - Write tests FIRST (RED → GREEN → REFACTOR)
+- `refactoring-workflow` - Safe code improvements with tests
+- `feature-implementation` - Plan features, use OpenSpec for breaking changes
+- `validation-troubleshooting` - Debug test/build failures
+- `context-query` - Query plans/sessions (READ operations)
+- `context-mutation` - Create/update sessions/plans (WRITE operations)
+- `dependency-management` - Safe package upgrades
+- `3rd-party-framework-docs` - Query 3rd-party library docs (Context7 MCP)
 
-### Development Workflows
+**See Section 10 for MCP setup.** If MCP isn't running, AIKnowSys won't work properly.
 
-#### Testing & Validation
-**[tdd-workflow](.github/skills/tdd-workflow/SKILL.md)**
-- **Triggers:** "write tests", "TDD", "test first", "failing test", "RED-GREEN-REFACTOR"
-- **Summary:** Complete TDD cycle - write failing test FIRST, implement minimal code, refactor
-- **Why use:** Prevents "I'll add tests later" - tests drive design
-- **Output:** Test file paths, test execution logs
-
-**[validation-troubleshooting](.github/skills/validation-troubleshooting/SKILL.md)**
-- **Triggers:** "test fail", "validation error", "build broken", "tests not passing"
-- **Summary:** Debug validation failures - common issues, fixes, rollback procedures
-- **Why use:** Systematic debugging instead of guessing
-- **Output:** Root cause, fix steps, validation commands
-
-#### Code Quality
-**[refactoring-workflow](.github/skills/refactoring-workflow/SKILL.md)**
-- **Triggers:** "refactor", "clean up", "simplify", "extract function", "reduce duplication"
-- **Summary:** Test-driven refactoring - tests pass BEFORE and AFTER each change
-- **Why use:** Safe code improvements without breaking functionality
-- **Output:** Refactored code paths, test results
-
-**[ai-friendly-documentation](.github/skills/ai-friendly-documentation/SKILL.md)**
-- **Triggers:** "write docs", "update README", "changelog", "documentation"
-- **Summary:** AI-optimized documentation for RAG systems - self-contained sections, explicit terminology
-- **Why use:** Better AI comprehension and retrieval
-- **Output:** Documentation files, changelog entries
-
-#### Architecture & Planning
-**[feature-implementation](.github/skills/feature-implementation/SKILL.md)**
-- **Triggers:** "new feature", "implement", "add capability", "build feature"
-- **Summary:** Step-by-step feature planning - when to use OpenSpec, implementation patterns
-- **Why use:** Structured approach prevents scope creep
-- **Output:** Plan file, implementation steps, OpenSpec proposal (if needed)
-
-**[context-query](.github/skills/context-query/SKILL.md)**
-- **Triggers:** "find plan", "query sessions", "search context", "what's the current plan"
-- **Summary:** Query CLI commands for READ operations - O(1) index lookup
-- **Why use:** 100x faster than grep_search for >100 items
-- **Output:** JSON with structured metadata, file paths
-
-**[context-mutation](.github/skills/context-mutation/SKILL.md)**
-- **Triggers:** "create session", "update session", "create plan", "document work"
-- **Summary:** Create and modify sessions/plans via YAML-validated commands (WRITE operations)
-- **Why use:** Easier than manual editing, ensures YAML validation and atomic index updates
-- **Output:** JSON with file paths, metadata changes, validation results
-
-#### Dependency Management
-**[dependency-management](.github/skills/dependency-management/SKILL.md)**
-- **Triggers:** "update deps", "upgrade packages", "security fix", "npm update"
-- **Summary:** Safe upgrade procedures - security-first, incremental updates, rollback plans
-- **Why use:** Prevents breaking changes from surprise dependencies
-- **Output:** Updated package.json, test results
-
-#### Framework Documentation
-**[framework-docs](.github/skills/framework-docs/SKILL.md)**
-- **Triggers:** "query framework docs", "library documentation", "current API docs"
-- **Summary:** Query up-to-date framework/library documentation via Context7 MCP
-- **Why use:** Always current, version-specific docs optimized for AI consumption
-- **Output:** Framework-specific code examples, current API documentation
-
-#### Skill Management
-**[skill-creator](.github/skills/skill-creator/SKILL.md)**
-- **Triggers:** "create skill", "new skill", "make this a skill"
-- **Summary:** Create new Agent Skills from guides - follows VS Code Agent Skills standard
-- **Why use:** Proper skill format and metadata
-- **Output:** SKILL.md file, registered in AVAILABLE_SKILLS
-
-**[skill-validation](.github/skills/skill-validation/SKILL.md)**
-- **Triggers:** "validate skill", "check skill format"
-- **Summary:** Validate skill format and content against standards
-- **Why use:** Ensures skill works correctly
-- **Output:** Validation report, errors/warnings
-
-**[pattern-sharing](.github/skills/pattern-sharing/SKILL.md)**
-- **Triggers:** "share pattern", "team pattern", "collaborate"
-- **Summary:** AI-assisted workflow for sharing personal patterns with team
-- **Why use:** Detects valuable patterns, checks duplicates
-- **Output:** Pattern file in learned/ or personal/
-
----
-
-### Maintainer Skills (Not Distributed to Users)
-
-These skills have `maintainer: true` in frontmatter and stay in `.github/skills/`:
-
-**[deliverable-review](.github/skills/deliverable-review/SKILL.md)**
-- **Purpose:** Monthly quality reviews using Context7 MCP for current framework docs
-- **When:** Pre-release validation, framework major version updates
-
-**[_skill-template](.github/skills/_skill-template/SKILL.md)**
-- **Purpose:** Template for creating new skills following VS Code Agent Skills standard
+**File location:** Skills are in `.github/skills/<skill-name>/SKILL.md`
 
 ---
 
@@ -314,55 +232,53 @@ import { fn } from './utils';     // ❌ Won't resolve
 
 ---
 
-## 9. Context Query Commands (v0.10.0+)
+## 9. MCP Tools (Required for AIKnowSys)
 
-**Purpose:** Query and mutate plans/sessions/context via CLI instead of file searching
+**⚡ Performance:** MCP tools are **10-100x faster** than CLI equivalents (O(1) index lookup vs subprocess spawn)
 
-### Query Commands (Read-Only)
+**🎯 When to use:** If MCP server is running in VS Code, **always prefer MCP tools** over CLI commands or file reading for context queries.
 
-```bash
-# Query plans
-npx aiknowsys query-plans --status ACTIVE --json
+### Working MCP Tools (Verified ✅)
 
-# Query sessions
-npx aiknowsys query-sessions --days 7 --json
+**Context Query (Read-Only):**
+```typescript
+// Get critical invariants (MANDATORY rules)
+mcp_aiknowsys_get_critical_invariants()
+// Returns: 8 invariants with rule details
 
-# Search all context
-npx aiknowsys search-context "TDD" --scope all --json
+// Get validation matrix (commands to run after changes)
+mcp_aiknowsys_get_validation_matrix()
+// Returns: Validation commands by category
 
-# Rebuild index manually
-npx aiknowsys rebuild-index
+// Get recent sessions (indexed, O(1) lookup)
+mcp_aiknowsys_get_recent_sessions({ days: 7 })
+// Returns: Session metadata with topics, plans, dates
+
+// Get skill by exact name (direct file read)
+mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
+// Returns: Full skill file content (496+ lines)
 ```
 
-### Mutation Commands (Write Operations - v0.10.0+)
+**⚠️ Note:** Other MCP tools exist but have CLI flag bugs. See [.aiknowsys/sessions/2026-02-09-session.md] for status.
 
-**Create session file:**
-```bash
-npx aiknowsys create-session --topics "TDD,validation" --plan PLAN_xyz
-```
+### MCP vs CLI vs File Reading
 
-**Update session metadata:**
-```bash
-npx aiknowsys update-session --add-topic "debugging" --set-status complete
-```
+| Task | MCP Tool | CLI Command | File Reading | Speed |
+|------|----------|-------------|--------------|-------|
+| Get critical invariants | `mcp_aiknowsys_get_critical_invariants()` | N/A | `read_file()` ESSENTIALS | **100x faster** |
+| Get validation commands | `mcp_aiknowsys_get_validation_matrix()` | N/A | `read_file()` ESSENTIALS | **100x faster** |
+| Get recent sessions | `mcp_aiknowsys_get_recent_sessions({days:7})` | `query-sessions --days 7` | `list_dir()` + `read_file()` x N | **10-50x faster** |
+| Get skill content | `mcp_aiknowsys_get_skill_by_name({skillName})` | `read_file()` | `read_file()` | **Same speed** (direct read) |
+| Search context | `search_context()` (when fixed) | `search-context "query"` | `grep_search()` | **10x faster** |
 
-**Create implementation plan:**
-```bash
-npx aiknowsys create-plan --title "Feature Implementation"
-```
+**🚀 Best Practice:** Check MCP availability first, fall back to CLI if unavailable.
 
-**Benefits:**
-- YAML frontmatter validation
-- Atomic updates (file + index together)
-- AI-friendly structured I/O
-- Prevents schema violations
+### Setup
 
-**Auto-Indexing (Phase A.6):**
-- Index auto-rebuilds when stale (files newer than index)
-- Transparent to users (~200-500ms overhead when needed)
-- Git hooks available: `node scripts/install-context-hooks.js`
-
-**Full documentation + workflow:** [.github/skills/context-query/SKILL.md](.github/skills/context-query/SKILL.md)
+**Check if MCP is available:**
+- Look for `mcp_aiknowsys_*` tools in your tool list
+- MCP server must be running in VS Code
+- See [mcp-server/SETUP.md](mcp-server/SETUP.md) for installation
 
 ---
 
@@ -386,5 +302,6 @@ npx aiknowsys create-plan --title "Feature Implementation"
 
 ---
 
-**Target:** ESSENTIALS <400 lines (achieved: ~330 lines, 68% reduction from 1039 lines)  
-**Full workflows:** [.github/skills/](.github/skills/) (auto-loaded on trigger detection)
+**Current Size:** ~250 lines (76% reduction from original 1039 lines)  
+**Architecture:** MCP-first (skills/context discovered dynamically, not listed here)  
+**Setup:** See Section 9 for MCP server configuration

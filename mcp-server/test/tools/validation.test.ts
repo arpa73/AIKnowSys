@@ -109,9 +109,9 @@ describe('Validation Tools', () => {
   });
 
   describe('validate_skill', () => {
-    it('should validate skill format and content', async () => {
+    it('should validate all skills (skill validation is global)', async () => {
       mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ Skill valid: .github/skills/feature-implementation/SKILL.md' 
+        stdout: '✅ All skills valid\n10 skills checked' 
       });
 
       const { validateSkill } = await import('../../src/tools/validation.js');
@@ -119,7 +119,32 @@ describe('Validation Tools', () => {
         skillPath: '.github/skills/feature-implementation/SKILL.md'
       });
 
-      expect(result.content[0].text).toContain('Skill valid');
+      expect(result.content[0].text).toContain('skills');
+      // Note: Validates ALL skills, not individual file
+      // skillPath parameter is accepted but not used (validates all)
+    });
+
+    it('should use --type skills flag only', async () => {
+      mockExecFileAsync.mockResolvedValue({ stdout: '✅ All skills valid' });
+
+      const { validateSkill } = await import('../../src/tools/validation.js');
+      await validateSkill({
+        skillPath: '.github/skills/tdd-workflow/SKILL.md'
+      });
+
+      // Verify correct CLI arguments (NO --file flag)
+      expect(mockExecFileAsync).toHaveBeenCalledWith(
+        'npx',
+        expect.arrayContaining([
+          'aiknowsys',
+          'validate',
+          '--type', 'skills'
+        ])
+      );
+      
+      // Verify --file is NOT used (doesn't exist in CLI)
+      const callArgs = mockExecFileAsync.mock.calls[0][1];
+      expect(callArgs).not.toContain('--file');
     });
 
     it('should report skill validation errors', async () => {
@@ -136,7 +161,7 @@ describe('Validation Tools', () => {
       expect(result.content[0].text).toContain('Missing YAML frontmatter');
     });
 
-    it('should require skillPath parameter', async () => {
+    it('should require skillPath parameter (even if not used)', async () => {
       const { validateSkill } = await import('../../src/tools/validation.js');
       const result = await validateSkill({});
 

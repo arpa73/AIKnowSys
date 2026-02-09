@@ -29,7 +29,7 @@ describe('migrate-essentials command', () => {
     const essentialsPath = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
     const skillIndexedContent = `# Test Project - Codebase Essentials
 
-> **Version:** v0.10.0 (Skill-Indexed Architecture)
+> **Version:** v0.10.0 (MCP-First Architecture)
 
 ## 5. Skill Index
 
@@ -37,7 +37,7 @@ describe('migrate-essentials command', () => {
 |-------|---------------|---------|
 | refactoring-workflow | "refactor", "clean up" | Test-driven refactoring |
 
-This is a skill-indexed ESSENTIALS file.`;
+This is a MCP-first ESSENTIALS file.`;
     
     fs.writeFileSync(essentialsPath, skillIndexedContent, 'utf-8');
 
@@ -333,7 +333,7 @@ Some content...
   // MIGRATION OUTPUT TESTS
   // ========================================
 
-  it('should generate skill-indexed ESSENTIALS with Section 4 and 5', async () => {
+  it('should generate MCP-first ESSENTIALS with Section 4 and 5', async () => {
     const essentialsPath = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
     const monolithicContent = Array.from({ length: 100 }, (_, i) => `## 1. Technology\n\nLine ${i + 1}\n`).join('');
     
@@ -346,10 +346,10 @@ Some content...
     
     const newContent = fs.readFileSync(essentialsPath, 'utf-8');
     
-    // Should have skill-indexed structure
+    // Should have MCP-first structure
     expect(newContent).toContain('## 4. Critical Invariants');
-    expect(newContent).toContain('## 5. Skill Index');
-    expect(newContent).toContain('Skill-Indexed Architecture');
+    expect(newContent).toContain('## 5. Available Skills');
+    expect(newContent).toContain('MCP-First Architecture');
   });
 
   it('should reduce file size significantly', async () => {

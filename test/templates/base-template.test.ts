@@ -7,9 +7,11 @@ describe('Base Template Validation', () => {
   const template = readFileSync(templatePath, 'utf-8');
   const lines = template.split('\n');
 
-  test('should contain NO aiknowsys references', () => {
-    // Check for any AIKnowSys-specific content
-    expect(template.toLowerCase()).not.toMatch(/aiknowsys/);
+  test('should contain minimal aiknowsys references', () => {
+    // Template should reference AIKnowSys system (users need to know it requires MCP)
+    expect(template).toMatch(/AIKnowSys requires MCP/);
+    
+    // But should NOT have hardcoded aiknowsys-specific content
     expect(template.toLowerCase()).not.toMatch(/bin\/cli\.js/);
     expect(template.toLowerCase()).not.toMatch(/npx aiknowsys/);
     expect(template).not.toMatch(/737.*tests/); // Hardcoded test count
@@ -52,7 +54,7 @@ describe('Base Template Validation', () => {
     expect(template).toMatch(/^## 2\. Validation Matrix$/m);
     expect(template).toMatch(/^## 3\. Project Structure$/m);
     expect(template).toMatch(/^## 4\. Critical Invariants/m);
-    expect(template).toMatch(/^## 5\. Skill Index/m);
+    expect(template).toMatch(/^## 5\. Available Skills/m);
     expect(template).toMatch(/^## 6\. Quick Reference$/m);
     expect(template).toMatch(/^## 7\. When to Document Where$/m);
     
@@ -79,22 +81,26 @@ describe('Base Template Validation', () => {
     expect(template).toMatch(/CODEBASE_CHANGELOG\.md.*What HAPPENED/);
   });
 
-  test('should explain skill-indexed architecture', () => {
-    // Verify skill-indexed architecture is explained
-    expect(template).toMatch(/Skill-Indexed Architecture/);
+  test('should explain MCP-first architecture', () => {
+    // Verify MCP-first architecture is explained
+    expect(template).toMatch(/MCP-First Architecture/);
     expect(template).toMatch(/70-80% token reduction/);
     expect(template).toMatch(/Critical invariants.*ALWAYS loaded/);
-    expect(template).toMatch(/Detailed workflows.*on-demand/);
+    expect(template).toMatch(/Skills discovered dynamically/);
+    expect(template).toMatch(/MCP server to function/);
   });
 
   test('should reference universal skills only', () => {
-    // Check for framework-agnostic skills
+    // Check for framework-agnostic skills (listed by name only)
     expect(template).toMatch(/tdd-workflow/);
     expect(template).toMatch(/refactoring-workflow/);
     expect(template).toMatch(/validation-troubleshooting/);
-    expect(template).toMatch(/ai-friendly-documentation/);
     expect(template).toMatch(/dependency-management/);
     expect(template).toMatch(/feature-implementation/);
+    expect(template).toMatch(/3rd-party-framework-docs/);
+    
+    // Should explain MCP-powered discovery
+    expect(template).toMatch(/mcp_aiknowsys_get_skill_by_name/);
     
     // Should have placeholder for project-specific skills
     expect(template).toMatch(/\{\{PROJECT_SKILLS\}\}/);
@@ -126,9 +132,10 @@ describe('Base Template Validation', () => {
     expect(docSection).not.toMatch(/\.aiknowsys\//);
   });
 
-  test('should end with target metrics and reference to skills', () => {
-    // Verify footer contains target and skills reference
-    expect(template).toMatch(/Target:.*ESSENTIALS <400 lines/);
-    expect(template).toMatch(/Full workflows.*\.github\/skills/);
+  test('should end with target metrics and MCP setup reference', () => {
+    // Verify footer contains target and MCP setup reference
+    expect(template).toMatch(/Target:.*ESSENTIALS <300 lines/);
+    expect(template).toMatch(/MCP-first/);
+    expect(template).toMatch(/Configure MCP server/);
   });
 });

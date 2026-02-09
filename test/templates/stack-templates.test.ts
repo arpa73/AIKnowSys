@@ -32,17 +32,17 @@ describe('Stack Templates Validation', () => {
       const template = readFileSync(templatePath, 'utf-8');
       const lines = template.split('\n');
 
-      test('should be under 400 lines (skill-indexed format)', () => {
-        // Skill-indexed format should be significantly smaller than monolithic
+      test('should be under 400 lines (MCP-first format)', () => {
+        // MCP-first format should be significantly smaller than monolithic
         expect(lines.length).toBeLessThan(400);
-        expect(lines.length).toBeGreaterThan(200); // Minimum useful size
+        expect(lines.length).toBeGreaterThanOrEqual(150); // Minimum useful size (MCP-first is very compact)
       });
 
-      test('should have skill-indexed structure markers', () => {
-        // Verify migration to skill-indexed format
-        expect(template).toMatch(/Skill-Indexed Architecture/);
-        expect(template).toMatch(/## 5\. Skill Index/);
-        expect(template).toMatch(/auto-loaded on trigger detection/i);
+      test('should have MCP-first structure markers', () => {
+        // Verify migration to MCP-first format
+        expect(template).toMatch(/MCP-First Architecture/);
+        expect(template).toMatch(/## 5\. Available Skills/);
+        expect(template).toMatch(/MCP server/i);
       });
 
       test('should have 8 critical invariants', () => {
@@ -162,15 +162,15 @@ describe('Stack Templates Validation', () => {
       });
     });
 
-    test('all stacks should have skill-indexed format', () => {
+    test('all stacks should have MCP-first format', () => {
       stacks.forEach(stack => {
         const templatePath = path.join(stacksDir, stack, 'CODEBASE_ESSENTIALS.md');
         if (!existsSync(templatePath)) return;
         
         const template = readFileSync(templatePath, 'utf-8');
         
-        // All should mention skill-indexed architecture
-        expect(template).toMatch(/Skill-Indexed Architecture|skill index/i);
+        // All should mention MCP-first architecture
+        expect(template).toMatch(/MCP-First Architecture|MCP server/i);
       });
     });
   });
@@ -188,7 +188,7 @@ describe('Stack Templates Validation', () => {
         expect(template).toMatch(/## 2\./);
         expect(template).toMatch(/## 3\./);
         expect(template).toMatch(/## 4\. Critical Invariants/);
-        expect(template).toMatch(/## 5\. Skill Index/);
+        expect(template).toMatch(/## 5\. Available Skills/);
       });
     });
 

@@ -1,6 +1,6 @@
 ---
-name: framework-docs
-description: Query up-to-date framework/library documentation using Context7 MCP
+name: 3rd-party-framework-docs
+description: Query up-to-date 3rd-party framework/library documentation using Context7 MCP
 triggers:
   - "query framework docs"
   - "library documentation"

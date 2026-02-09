@@ -13,6 +13,9 @@ See: ../.github/skills/template-maintenance/ (or similar) for workflow
 > **Purpose:** {{PROJECT_PURPOSE}}  
 > **Stack:** {{PRIMARY_STACK}}
 
+⚠️ **CRITICAL:** AIKnowSys requires MCP server to function.  
+**Skills, context, validation** are all MCP-powered (10-100x faster than file reading).
+
 ---
 
 ## Knowledge System: Document Roles
@@ -25,9 +28,9 @@ AGENTS.md               ←  How AI should WORK (workflow, validation, skills)
 CODEBASE_CHANGELOG.md   ←  What HAPPENED (session history, decisions, learnings)
 ```
 
-**Skill-Indexed Architecture:**
+**MCP-First Architecture:**
 - **Critical invariants** are ALWAYS loaded (mandatory rules)
-- **Detailed workflows** load on-demand from [.github/skills/](.github/skills/)
+- **Skills discovered dynamically** via MCP tools (not listed statically)
 - **Result:** 70-80% token reduction vs monolithic docs
 
 ---
@@ -114,35 +117,29 @@ These 5 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 
 ---
 
-## 5. Skill Index (Auto-Load on Trigger Detection)
+## 5. Available Skills (MCP-Powered Discovery)
 
-**How this works:**
-1. AI agent detects trigger words in user request
-2. AI loads relevant skill/workflow from [`.github/skills/`](.github/skills/)
-3. AI follows workflow step-by-step (prevents "I thought I knew" failures)
+**AIKnowSys requires MCP server** - skills are discovered dynamically, not listed here.
 
-**Why this prevents mistakes:**
-- Critical invariants ALWAYS loaded (above section)
-- Detailed workflows loaded ON-DEMAND
-- 70-80% token reduction vs monolithic documentation
+**Get skill by name:**
+```typescript
+mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
+// Returns: Full skill content (400+ lines)
+```
 
----
+**Common skills you'll use:**
+- `tdd-workflow` - Write tests FIRST (RED → GREEN → REFACTOR)
+- `refactoring-workflow` - Safe code improvements with tests
+- `feature-implementation` - Plan features, use OpenSpec for breaking changes
+- `validation-troubleshooting` - Debug test/build failures
+- `context-query` - Query plans/sessions (READ operations)
+- `context-mutation` - Create/update sessions/plans (WRITE operations)
+- `dependency-management` - Safe package upgrades
+- `3rd-party-framework-docs` - Query 3rd-party library docs (Context7 MCP)
 
-### Universal Skills (Framework-Agnostic)
+**See MCP setup documentation.** If MCP isn't running, AIKnowSys won't work properly.
 
-These skills work for ANY project type (Python, JavaScript, Rust, Go, etc.):
-
-#### Development Workflows
-- **tdd-workflow** - Test-driven development (RED-GREEN-REFACTOR cycle)
-- **refactoring-workflow** - Safe code improvements with tests
-- **validation-troubleshooting** - Debug test/build failures
-
-#### Code Quality
-- **ai-friendly-documentation** - AI-optimized docs for RAG systems
-- **dependency-management** - Safe package upgrades
-
-#### Architecture & Planning
-- **feature-implementation** - Structured feature planning
+**File location:** Skills are in `.github/skills/<skill-name>/SKILL.md`
 
 ---
 
@@ -190,6 +187,7 @@ These skills work for ANY project type (Python, JavaScript, Rust, Go, etc.):
 
 ---
 
-**Target:** ESSENTIALS <400 lines  
-**Full workflows:** Load from [.github/skills/](.github/skills/) on-demand
+**Target:** ESSENTIALS <300 lines  
+**Architecture:** MCP-first (skills/context discovered dynamically, not listed here)  
+**Setup:** Configure MCP server with correct project root path
 

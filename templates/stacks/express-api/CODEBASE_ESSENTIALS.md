@@ -11,10 +11,10 @@ See: template-maintenance workflow in learned skills or documentation
 
 > **Last Updated:** February 7, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
-> **Version:** v0.10.0 (Skill-Indexed Architecture)
+> **Version:** v0.10.0 (MCP-First Architecture)
 
-⚠️ **MAJOR CHANGE:** ESSENTIALS is now a skill index, not a workflow encyclopedia.  
-**Full workflows** are in [`.github/skills/`](.github/skills/) (auto-loaded on trigger detection).
+⚠️ **CRITICAL:** AIKnowSys requires MCP server to function.  
+**Skills, context, validation** are all MCP-powered (10-100x faster than file reading).
 
 **Migrated from v0.9.x** - Preserved customizations: Express/TypeScript patterns
 
@@ -99,98 +99,29 @@ These 8 rules are MANDATORY. AI agents cannot skip or "think they know" these.
 
 ---
 
-## 5. Skill Index (Auto-Load on Trigger Detection)
+## 5. Available Skills (MCP-Powered Discovery)
 
-**How this works:**
-1. AI agent detects trigger words in user request
-2. AI reads relevant skill from `.github/skills/`
-3. AI follows loaded workflow (cannot skip or "think they know")
+**AIKnowSys requires MCP server** - skills are discovered dynamically, not listed here.
 
-**Why this prevents mistakes:**
-- Critical invariants ALWAYS loaded (above section, not optional)
-- Detailed workflows loaded ON-DEMAND (prevents "I thought I knew" failures)
-- 60-80% token reduction per session
+**Get skill by name:**
+```typescript
+mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
+// Returns: Full skill content (400+ lines)
+```
 
----
+**Common skills you'll use:**
+- `tdd-workflow` - Write tests FIRST (RED → GREEN → REFACTOR)
+- `refactoring-workflow` - Safe code improvements with tests
+- `feature-implementation` - Plan features, use OpenSpec for breaking changes
+- `validation-troubleshooting` - Debug test/build failures
+- `context-query` - Query plans/sessions (READ operations)
+- `context-mutation` - Create/update sessions/plans (WRITE operations)
+- `dependency-management` - Safe package upgrades
+- `3rd-party-framework-docs` - Query 3rd-party library docs (Context7 MCP)
 
-### Development Workflows
+**See Section 10 for MCP setup.** If MCP isn't running, AIKnowSys won't work properly.
 
-#### Testing & Validation
-**[tdd-workflow](.github/skills/tdd-workflow/SKILL.md)**
-- **Triggers:** "write tests", "TDD", "test first", "failing test", "RED-GREEN-REFACTOR"
-- **Summary:** Complete TDD cycle - write failing test FIRST, implement minimal code, refactor
-- **Why use:** Prevents "I'll add tests later" - tests drive design
-- **Output:** Test file paths, test execution logs
-
-**[validation-troubleshooting](.github/skills/validation-troubleshooting/SKILL.md)**
-- **Triggers:** "test fail", "validation error", "build broken", "tests not passing"
-- **Summary:** Debug validation failures - common issues, fixes, rollback procedures
-- **Why use:** Systematic debugging instead of guessing
-- **Output:** Root cause, fix steps, validation commands
-
-#### Code Quality
-**[refactoring-workflow](.github/skills/refactoring-workflow/SKILL.md)**
-- **Triggers:** "refactor", "clean up", "simplify", "extract function", "reduce duplication"
-- **Summary:** Test-driven refactoring - tests pass BEFORE and AFTER each change
-- **Why use:** Safe code improvements without breaking functionality
-- **Output:** Refactored code paths, test results
-
-**[ai-friendly-documentation](.github/skills/ai-friendly-documentation/SKILL.md)**
-- **Triggers:** "write docs", "update README", "changelog", "documentation"
-- **Summary:** AI-optimized documentation for RAG systems - self-contained sections, explicit terminology
-- **Why use:** Better AI comprehension and retrieval
-- **Output:** Documentation files, changelog entries
-
-#### Architecture & Planning
-**[feature-implementation](.github/skills/feature-implementation/SKILL.md)**
-- **Triggers:** "new feature", "implement", "add capability", "build feature"
-- **Summary:** Step-by-step feature planning - when to use OpenSpec, implementation patterns
-- **Why use:** Structured approach prevents scope creep
-- **Output:** Plan file, implementation steps, OpenSpec proposal (if needed)
-
-**[context-query](.github/skills/context-query/SKILL.md)**
-- **Triggers:** "find plan", "query sessions", "search context", "what's the current plan"
-- **Summary:** Query CLI commands instead of file searching - O(1) index lookup
-- **Why use:** 100x faster than grep_search for >100 items
-- **Output:** JSON with structured metadata, file paths
-
----
-
-### Dependencies & Tools
-
-**[dependency-management](.github/skills/dependency-management/SKILL.md)**
-- **Triggers:** "update deps", "upgrade packages", "security fix", "npm update"
-- **Summary:** Safe upgrade procedures - security-first, incremental updates, rollback plans
-- **Why use:** Prevents breaking changes from surprise dependencies
-- **Output:** Updated package.json, test results
-
-**[context7-usage](.github/skills/context7-usage/SKILL.md)**
-- **Triggers:** "query framework docs", "Context7", "library documentation"
-- **Summary:** Query up-to-date documentation via Context7 MCP server
-- **Why use:** Always current docs instead of outdated web search
-- **Output:** Framework-specific code examples, API documentation
-
----
-
-### Skill Management
-
-**[skill-creator](.github/skills/skill-creator/SKILL.md)**
-- **Triggers:** "create skill", "new skill", "make this a skill"
-- **Summary:** Create new Agent Skills from guides - follows VS Code Agent Skills standard
-- **Why use:** Proper skill format and metadata
-- **Output:** SKILL.md file, registered in AVAILABLE_SKILLS
-
-**[skill-validation](.github/skills/skill-validation/SKILL.md)**
-- **Triggers:** "validate skill", "check skill format"
-- **Summary:** Validate skill format and content against standards
-- **Why use:** Ensures skill works correctly
-- **Output:** Validation report, errors/warnings
-
-**[pattern-sharing](.github/skills/pattern-sharing/SKILL.md)**
-- **Triggers:** "share pattern", "team pattern", "collaborate"
-- **Summary:** AI-assisted workflow for sharing personal patterns with team
-- **Why use:** Detects valuable patterns, checks duplicates
-- **Output:** Pattern file in learned/ or personal/
+**File location:** Skills are in `.github/skills/<skill-name>/SKILL.md`
 
 ---
 
@@ -264,5 +195,5 @@ import { fn } from './utils';     // ❌ Won't resolve
 
 ---
 
-**Target:** ESSENTIALS <400 lines (skill-indexed architecture)  
-**Full workflows:** [`.github/skills/`](.github/skills/) (auto-loaded on trigger detection)
+**Target:** ESSENTIALS <300 lines (MCP-first architecture)  
+**Full workflows:** [.github/skills/](.github/skills/) (discovered dynamically via MCP)

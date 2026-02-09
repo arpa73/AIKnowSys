@@ -82,6 +82,7 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 **Before ANY change (even small fixes):**
 - [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
 - [ ] Read relevant skill if applicable
+- [ ] **Check MCP availability:** If `mcp_aiknowsys_*` tools available, prefer them over CLI/file reading (10-100x faster)
 - [ ] **FOR NEW FEATURES:** Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR)
 - [ ] **FOR BUG FIXES:** Write test reproducing bug, then fix
 - [ ] Make changes + write/update tests
@@ -175,7 +176,7 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 | "update docs", "changelog" | `ai-friendly-documentation` | AI-optimized docs |
 | "query plans", "find sessions", "search context" | `context-query` | CLI queries (READ operations) |
 | "create plan", "create session", "update session", "document work" | `context-mutation` | Mutation commands (WRITE operations) |
-| "query framework docs", "library documentation", "current API" | `framework-docs` | Up-to-date framework/library docs |
+| "query framework docs", "library documentation", "current API" | `3rd-party-framework-docs` | Up-to-date 3rd-party framework/library docs |
 | "ESSENTIALS bloat", "compress essentials", "compress-essentials" | `essentials-compression` (learned) | Compression workflow |
 | "create skill", "new skill" | `skill-creator` | Proper skill format |
 | "write tests", "TDD", "test first" | `tdd-workflow` | Test-driven development |
@@ -497,7 +498,7 @@ Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
 - `skill-creator` - How to create new skills
 - `tdd-workflow` - Test-driven development (mandatory for features)
 - `validation-troubleshooting` - Debug validation failures
-- `framework-docs` - Query framework/library documentation (Context7 MCP)
+- `3rd-party-framework-docs` - Query 3rd-party framework/library documentation (Context7 MCP)
 - `skill-validation` - Validate skill format and content
 - `context-query` - Query plans/sessions/context (READ operations)
 - `context-mutation` - Create/modify sessions and plans (WRITE operations)
@@ -513,10 +514,11 @@ Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
 ## 🎯 General Best Practices
 
 1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md for existing patterns
-2. **Update proactively** - Don't wait for user to ask
-3. **Be concise** - Keep summaries short and factual
-4. **Link files** - Include line numbers when referencing code
-5. **Maintain structure** - Follow existing organization
+2. **Prefer MCP tools when available** - Use `mcp_aiknowsys_*` tools over CLI commands or file reading for context queries (10-100x faster)
+3. **Update proactively** - Don't wait for user to ask
+4. **Be concise** - Keep summaries short and factual
+5. **Link files** - Include line numbers when referencing code
+6. **Maintain structure** - Follow existing organization
 
 ---
 

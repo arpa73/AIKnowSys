@@ -32,7 +32,7 @@ export async function searchContext(params: unknown) {
     const args = ['aiknowsys', 'search-context', validated.query];
     
     if (validated.type !== 'all') {
-      args.push('--type', validated.type);
+      args.push('--scope', validated.type);
     }
 
     const { stdout } = await execFileAsync('npx', args);
@@ -88,13 +88,19 @@ export async function getSkillByName(params: unknown) {
   try {
     const validated = getSkillByNameSchema.parse(params);
     
-    // Read skill file directly via search
-    const args = ['aiknowsys', 'search-context', validated.skillName, '--type', 'skills'];
-
-    const { stdout } = await execFileAsync('npx', args);
+    // Read skill file directly
+    // Use process.cwd() to get workspace root (where MCP server is invoked from)
+    const skillPath = path.resolve(
+      process.cwd(),
+      '.github/skills',
+      validated.skillName,
+      'SKILL.md'
+    );
+    
+    const content = await fs.readFile(skillPath, 'utf-8');
     
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: content }]
     };
   } catch (error) {
     return {

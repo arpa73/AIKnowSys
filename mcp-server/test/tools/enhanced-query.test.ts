@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock child_process and util for CLI command execution
+// Mock child_process and util for CLI command execution (used by searchContext and findPattern)
 const mockExecFileAsync = vi.fn();
+
+// Mock fs/promises for file reading (used by getSkillByName)
+const mockReadFile = vi.fn();
 
 vi.mock('child_process', () => ({
   execFile: vi.fn()
@@ -11,10 +14,17 @@ vi.mock('util', () => ({
   promisify: vi.fn(() => mockExecFileAsync)
 }));
 
+vi.mock('fs/promises', () => ({
+  default: {
+    readFile: mockReadFile
+  }
+}));
+
 describe('Enhanced Query Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExecFileAsync.mockReset();
+    mockReadFile.mockReset();
   });
 
   describe('search_context', () => {
@@ -44,6 +54,10 @@ describe('Enhanced Query Tools', () => {
       });
 
       expect(result.content[0].text).toContain('2026-02-08-session.md');
+      // Verify correct CLI flag is used (--scope, not --type)
+      expect(mockExecFileAsync).toHaveBeenCalledWith('npx', 
+        ['aiknowsys', 'search-context', 'Phase 2A', '--scope', 'sessions']
+      );
     });
 
     it('should search plans only', async () => {
@@ -169,31 +183,34 @@ describe('Enhanced Query Tools', () => {
   });
 
   describe('get_skill_by_name', () => {
-    it('should get skill by exact name', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📖 Skill: feature-implementation\n\n# Feature Implementation Skill\n\nUse when...' 
-      });
+    it('should get skill by exact name via file reading', async () => {
+      const skillContent = '# Feature Implementation Skill\n\nUse when planning new features...';
+      mockReadFile.mockResolvedValue(skillContent);
 
       const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
       const result = await getSkillByName({
         skillName: 'feature-implementation'
       });
 
-      expect(result.content[0].text).toContain('feature-implementation');
-      expect(result.content[0].text).toContain('Use when');
+      expect(mockReadFile).toHaveBeenCalledWith(
+        expect.stringContaining('.github/skills/feature-implementation/SKILL.md'),
+        'utf-8'
+      );
+      expect(result.content[0].text).toContain('Feature Implementation Skill');
     });
 
-    it('should return skill not found error', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '❌ Skill not found: nonexistent-skill' 
-      });
+    it('should return skill not found error when file does not exist', async () => {
+      const error = new Error('ENOENT: no such file or directory');
+      (error as NodeJS.ErrnoException).code = 'ENOENT';
+      mockReadFile.mockRejectedValue(error);
 
       const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
       const result = await getSkillByName({
         skillName: 'nonexistent-skill'
       });
 
-      expect(result.content[0].text).toContain('Skill not found');
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Error getting skill');
     });
 
     it('should require skillName parameter', async () => {
@@ -211,14 +228,14 @@ describe('Enhanced Query Tools', () => {
       expect(result.isError).toBe(true);
     });
 
-    it('should handle CLI execution errors', async () => {
-      mockExecFileAsync.mockRejectedValue(new Error('Command failed'));
+    it('should handle file read errors gracefully', async () => {
+      mockReadFile.mockRejectedValue(new Error('Permission denied'));
 
       const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
       const result = await getSkillByName({ skillName: 'test' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error');
+      expect(result.content[0].text).toContain('Error getting skill');
     });
   });
 });

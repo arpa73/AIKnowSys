@@ -6,9 +6,9 @@ const execFileAsync = promisify(execFile);
 
 // Zod schemas for validation
 const createSessionSchema = z.object({
-  goal: z.string().min(3),
+  title: z.string().min(3),
   topics: z.array(z.string()).optional().default([]),
-  status: z.enum(['active', 'paused', 'complete']).optional().default('active')
+  plan: z.string().optional()
 });
 
 const updateSessionSchema = z.object({
@@ -19,10 +19,9 @@ const updateSessionSchema = z.object({
 });
 
 const createPlanSchema = z.object({
-  id: z.string().min(1).regex(/^[a-z0-9_]+$/),
-  goal: z.string().min(3),
-  type: z.enum(['feature', 'refactor', 'bugfix', 'research']).optional().default('feature'),
-  priority: z.enum(['high', 'medium', 'low']).optional().default('medium')
+  title: z.string().min(3),
+  author: z.string().optional(),
+  topics: z.array(z.string()).optional().default([])
 });
 
 const updatePlanSchema = z.discriminatedUnion('operation', [
@@ -53,14 +52,16 @@ export async function createSession(params: unknown) {
     const args = [
       'aiknowsys',
       'create-session',
-      '--goal', validated.goal
+      '--title', validated.title
     ];
 
     if (validated.topics.length > 0) {
       args.push('--topics', validated.topics.join(','));
     }
 
-    args.push('--status', validated.status);
+    if (validated.plan) {
+      args.push('--plan', validated.plan);
+    }
 
     const { stdout } = await execFileAsync('npx', args);
     
@@ -135,16 +136,15 @@ export async function createPlan(params: unknown) {
     const args = [
       'aiknowsys',
       'create-plan',
-      '--id', validated.id,
-      '--goal', validated.goal
+      '--title', validated.title
     ];
 
-    if (validated.type) {
-      args.push('--type', validated.type);
+    if (validated.author) {
+      args.push('--author', validated.author);
     }
 
-    if (validated.priority) {
-      args.push('--priority', validated.priority);
+    if (validated.topics.length > 0) {
+      args.push('--topics', validated.topics.join(','));
     }
 
     const { stdout } = await execFileAsync('npx', args);

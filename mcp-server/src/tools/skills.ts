@@ -86,7 +86,7 @@ const SKILL_MAPPINGS = [
     description: 'AI-optimized documentation and changelog archiving',
   },
   {
-    name: 'framework-docs',
+    name: '3rd-party-framework-docs',
     keywords: [
       'framework documentation',
       'library docs',

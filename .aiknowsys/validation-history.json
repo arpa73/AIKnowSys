@@ -19,5 +19,12 @@
       "failures": 0,
       "avgDuration": 359
     }
+  },
+  "2026-02-09": {
+    "standalone": {
+      "runs": 36,
+      "failures": 0,
+      "avgDuration": 213
+    }
   }
 }

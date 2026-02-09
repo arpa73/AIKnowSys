@@ -20,16 +20,15 @@ describe('Mutation Tools', () => {
   });
 
   describe('create_session', () => {
-    it('should create session with goal and topics', async () => {
+    it('should create session with title and topics', async () => {
      mockExecFileAsync.mockResolvedValue({ 
         stdout: '✅ Session created: .aiknowsys/sessions/2026-02-08-session.md' 
       });
 
       const { createSession } = await import('../../src/tools/mutations.js');
       const result = await createSession({
-        goal: 'Implement Phase 2',
-        topics: ['MCP', 'tools'],
-        status: 'active'
+        title: 'Implement Phase 2',
+        topics: ['MCP', 'tools']
       });
 
       expect(result.content).toHaveLength(1);
@@ -38,10 +37,37 @@ describe('Mutation Tools', () => {
       expect(result.content[0].text).toContain('2026-02-08-session.md');
     });
 
+    it('should use --title flag, not --goal', async () => {
+      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Session created' });
+
+      const { createSession } = await import('../../src/tools/mutations.js');
+      await createSession({
+        title: 'Test Session',
+        topics: ['testing']
+      });
+
+      // Verify correct CLI arguments
+      expect(mockExecFileAsync).toHaveBeenCalledWith(
+        'npx',
+        expect.arrayContaining([
+          'aiknowsys',
+          'create-session',
+          '--title', 'Test Session',
+          '--topics', 'testing'
+        ])
+      );
+      
+      // Verify --goal is NOT used
+      const callArgs = mockExecFileAsync.mock.calls[0][1];
+      expect(callArgs).not.toContain('--goal');
+      // Verify --status is NOT used (sessions don't have status at creation)
+      expect(callArgs).not.toContain('--status');
+    });
+
     it('should handle missing required parameters', async () => {
       const { createSession } = await import('../../src/tools/mutations.js');
       
-      const result = await createSession({ goal: '' });
+      const result = await createSession({ title: '' });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error creating session');
     });
@@ -51,7 +77,7 @@ describe('Mutation Tools', () => {
 
       const { createSession } = await import('../../src/tools/mutations.js');
       const result = await createSession({
-        goal: 'Test error',
+        title: 'Test error',
         topics: []
       });
 
@@ -132,21 +158,44 @@ describe('Mutation Tools', () => {
   });
 
   describe('create_plan', () => {
-    it('should create plan with required parameters', async () => {
+    it('should create plan with title', async () => {
       mockExecFileAsync.mockResolvedValue({ 
         stdout: '✅ Plan created: .aiknowsys/PLAN_feature_x.md' 
       });
 
       const { createPlan } = await import('../../src/tools/mutations.js');
       const result = await createPlan({
-        id: 'feature_x',
-        goal: 'Implement feature X',
-        type: 'feature',
-        priority: 'high'
+        title: 'Implement feature X'
       });
 
       expect(result.content[0].text).toContain('Plan created');
-      expect(result.content[0].text).toContain('PLAN_feature_x.md');
+      expect(result.content[0].text).toContain('PLAN_');
+    });
+
+    it('should use --title flag correctly', async () => {
+     mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan created' });
+
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      await createPlan({
+        title: 'Test Plan'
+      });
+
+      // Verify correct CLI arguments
+      expect(mockExecFileAsync).toHaveBeenCalledWith(
+        'npx',
+        expect.arrayContaining([
+          'aiknowsys',
+          'create-plan',
+          '--title', 'Test Plan'
+        ])
+      );
+      
+      // Verify --goal, --id, --type, --priority are NOT used (these flags don't exist in CLI)
+      const callArgs = mockExecFileAsync.mock.calls[0][1];
+      expect(callArgs).not.toContain('--goal');
+      expect(callArgs).not.toContain('--id');
+      expect(callArgs).not.toContain('--type');
+      expect(callArgs).not.toContain('--priority');
     });
 
     it('should handle optional parameters', async () => {
@@ -154,8 +203,7 @@ describe('Mutation Tools', () => {
 
       const { createPlan } = await import('../../src/tools/mutations.js');
       const result = await createPlan({
-        id: 'simple_plan',
-        goal: 'Simple goal'
+        title: 'Simple goal'
       });
 
       expect(result.content[0].text).toContain('Plan created');
