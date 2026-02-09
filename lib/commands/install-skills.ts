@@ -14,6 +14,7 @@ const AVAILABLE_SKILLS = [
   'feature-implementation',
   '3rd-party-framework-docs',
   'pattern-sharing',
+  'plan-cleanup',
   'refactoring-workflow',
   'skill-creator',
   'skill-validation',

@@ -133,6 +133,17 @@ const SKILL_MAPPINGS = [
     ],
     description: 'Share personal patterns with the team',
   },
+  {
+    name: 'plan-cleanup',
+    keywords: [
+      'archive plans',
+      'clean plans',
+      'cleanup workspace',
+      'remove old plans',
+      'archive completed',
+    ],
+    description: 'Archive completed plans and clean workspace using CLI commands',
+  },
 ];
 
 /**
