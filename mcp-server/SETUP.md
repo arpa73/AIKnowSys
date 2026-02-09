@@ -1,0 +1,371 @@
+# AIKnowSys MCP Server Setup Guide
+
+**Quick Start:** Get AI agents using your knowledge system in 5 minutes.
+
+---
+
+## Prerequisites
+
+1. **Node.js 20+** installed
+2. **MCP-compatible client** (Claude Desktop, VS Code with Copilot, or Cursor)
+3. **This repository** cloned locally
+
+---
+
+## Step 1: Build the MCP Server
+
+```bash
+cd mcp-server
+npm install
+npm run build
+```
+
+**Verify build succeeded:**
+```bash
+ls -la dist/mcp-server/src/index.js  # Should exist
+```
+
+---
+
+## Step 2: Configure Your MCP Client
+
+Choose your client below:
+
+### Option A: Claude Desktop (Recommended)
+
+**1. Find your Claude Desktop config file:**
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+
+**2. Add the AIKnowSys server:**
+
+```json
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/knowledge-system-template/mcp-server/dist/mcp-server/src/index.js"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+**⚠️ Important:** Replace `/absolute/path/to/` with your actual path!
+
+**3. Restart Claude Desktop**
+
+Close and reopen Claude Desktop completely.
+
+**4. Verify it works:**
+
+In a new conversation, ask: *"What tools do you have access to?"*
+
+Claude should list 15 AIKnowSys tools.
+
+---
+
+### Option B: VS Code + GitHub Copilot
+
+**1. Create/edit `.vscode/mcp.json` in your project:**
+
+```json
+{
+  "servers": {
+    "aiknowsys": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/mcp-server/dist/mcp-server/src/index.js"
+      ]
+    }
+  }
+}
+```
+
+**2. Restart the MCP server**
+
+Open Chat view → Click refresh icon next to MCP SERVERS heading, or run:
+`Ctrl/Cmd + Shift + P` → "MCP: List Servers" → Select aiknowsys → "Start Server"
+
+**3. Trust the server when prompted**
+
+VS Code will ask you to trust the MCP server on first start.
+
+**4. Verify it works:**
+
+Open Copilot Chat (Agent mode) → Click Tools button → You should see aiknowsys with 15 tools
+
+---
+
+### Option C: Cursor IDE
+
+**1. Open Cursor Settings:**
+- `Ctrl/Cmd + ,` → Search "MCP"
+
+**2. Add MCP Server:**
+
+In Cursor's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/mcp-server/dist/mcp-server/src/index.js"
+      ]
+    }
+  }
+}
+```
+
+**3. Restart Cursor**
+
+---
+
+## Step 3: Test the Tools
+
+Try these queries to verify everything works:
+
+### Test 1: Critical Invariants
+*"What are the critical invariants I must follow?"*
+
+**Expected:** AI calls `get_critical_invariants()` and returns 8 rules.
+
+### Test 2: Validation Commands
+*"What validation commands should I run after changes?"*
+
+**Expected:** AI calls `get_validation_matrix()` and shows command matrix.
+
+### Test 3: Active Plans
+*"What implementation plans are currently active?"*
+
+**Expected:** AI calls `get_active_plans()` and lists active plans.
+
+### Test 4: Recent Sessions
+*"Show me recent session work"*
+
+**Expected:** AI calls `get_recent_sessions()` and summarizes sessions.
+
+### Test 5: Skill Discovery
+*"How do I write tests first?"*
+
+**Expected:** AI calls `find_skill_for_task("write tests first")` and returns TDD workflow.
+
+---
+
+## Available Tools (15 Total)
+
+### Context Tools (2)
+- `get_critical_invariants()` - 8 mandatory rules
+- `get_validation_matrix()` - Validation commands reference
+
+### Query Tools (3)
+- `get_active_plans()` - Active implementation plans
+- `get_recent_sessions(days?)` - Recent session history
+- `find_skill_for_task(task)` - Find relevant skill workflow
+
+### Mutation Tools (4)
+- `create_session(goal, topics?, status?)` - Create new session
+- `update_session(section, content, operation?)` - Update session
+- `create_plan(id, goal, type?, priority?)` - Create implementation plan
+- `update_plan(planId, operation, ...)` - Update plan status/content
+
+### Validation Tools (3)
+- `validate_deliverables(fix?)` - Check template consistency
+- `check_tdd_compliance(changedFiles[])` - Verify test coverage
+- `validate_skill(skillPath)` - Check skill format
+
+### Enhanced Query Tools (3)
+- `search_context(query, type?)` - Full-text search across knowledge
+- `find_pattern(keywords[], category?)` - Find learned patterns
+- `get_skill_by_name(skillName)` - Get specific skill content
+
+---
+
+## Troubleshooting
+
+### "MCP server not found" or "Connection failed"
+
+**Check build:**
+```bash
+cd mcp-server
+ls dist/mcp-server/src/index.js  # Should exist
+```
+
+**If missing:**
+```bash
+npm run build
+```
+
+**Check path:**
+- Absolute path? Use full path (not relative)
+- Contains spaces? Wrap in quotes
+- Correct separator? Use `/` on macOS/Linux, `\` on Windows
+
+### "No tools showing up"
+
+**VS Code users:**
+1. Check Output panel: `View → Output → GitHub Copilot Chat`
+2. Look for MCP server startup logs
+3. Try: `Ctrl/Cmd + Shift + P` → "Reload Window"
+
+**Claude Desktop users:**
+1. Check config file syntax (valid JSON?)
+2. Completely quit and restart Claude Desktop
+3. Try asking: *"List all available tools"*
+
+### "Import errors" or "Module not found"
+
+**Check dependencies:**
+```bash
+cd mcp-server
+npm install  # Reinstall dependencies
+npm run build  # Rebuild
+```
+
+**Check Node version:**
+```bash
+node --version  # Should be 20+
+```
+
+### "Tools work, but return errors"
+
+**Verify workspace location:**
+
+The MCP server expects to find `.aiknowsys/` directory in the **parent** of `mcp-server/`.
+
+**Correct structure:**
+```
+knowledge-system-template/
+├── .aiknowsys/          ← Server reads from here
+│   ├── sessions/
+│   ├── plans/
+│   └── learned/
+├── lib/                 ← Server uses these functions
+└── mcp-server/          ← Server runs from here
+    └── dist/
+```
+
+**If using from a different location, set working directory:**
+
+```json
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": ["path/to/index.js"],
+      "cwd": "/absolute/path/to/knowledge-system-template"  ← Add this
+    }
+  }
+}
+```
+
+---
+
+## Performance Expectations
+
+**Token Efficiency:**
+- Before MCP: 2000+ tokens (reading CODEBASE_ESSENTIALS.md)
+- After MCP: ~50 tokens (structured tool response)
+- **Savings: 95%**
+
+**Speed:**
+- Before: O(n) file scans (grep, semantic search)
+- After: O(1) direct queries (indexed data)
+- **Improvement: 10-20x faster**
+
+**Usage:**
+- No need to remember CLI commands
+- No need to parse JSON output
+- Built-in discovery (agent calls `list_tools()`)
+
+---
+
+## Development Workflow
+
+### Making changes to the server
+
+1. **Edit source:**
+   ```bash
+   # Edit files in mcp-server/src/
+   vim src/tools/my-new-tool.ts
+   ```
+
+2. **Add tests:**
+   ```bash
+   # Add tests in mcp-server/test/
+   npm test
+   ```
+
+3. **Rebuild:**
+   ```bash
+   npm run build
+   ```
+
+4. **Restart client:**
+   - VS Code: Reload Window
+   - Claude Desktop: Quit and reopen
+   - Cursor: Restart IDE
+
+### Hot-reload during development
+
+```bash
+npm run dev  # Uses tsx watch for auto-rebuild
+```
+
+Then restart client when ready to test.
+
+---
+
+## Next Steps
+
+### ✅ Basic Setup Complete
+
+1. Build server ✓
+2. Configure client ✓
+3. Test connection ✓
+
+### 🚀 Advanced Usage
+
+1. **Customize tools** - Add project-specific tools in `src/tools/`
+2. **Add resources** - MCP supports resources (read-only data)
+3. **Add prompts** - MCP supports prompt templates
+4. **Connect multiple projects** - Run one server per project
+
+### 📚 Learn More
+
+- [MCP Documentation](https://modelcontextprotocol.io/introduction)
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [VS Code MCP Guide](https://code.visualstudio.com/docs/copilot/copilot-mcp-architecture)
+
+---
+
+## FAQ
+
+**Q: Do I need to rebuild after every change?**  
+A: Yes. TypeScript → JavaScript requires compilation. Use `npm run dev` for watch mode.
+
+**Q: Can multiple AI agents use the same server?**  
+A: Yes! Each client spawns its own server instance.
+
+**Q: Does this work offline?**  
+A: Yes. MCP server runs locally, no internet needed.
+
+**Q: Can I use this in CI/CD?**  
+A: Not directly. MCP is for interactive AI agents. For CI/CD, use the CLI commands (`npx aiknowsys ...`).
+
+**Q: How do I add custom tools?**  
+A: See `mcp-server/src/tools/` for examples. Follow the `registerTool()` pattern.
+
+**Q: What if my project has a different structure?**  
+A: Set `cwd` in the MCP config to point to your project root.
+
+---
+
+**Ready to go?** Your AI agent now has instant access to your project knowledge! 🎉

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": [
+        "/REPLACE/WITH/ABSOLUTE/PATH/knowledge-system-template/mcp-server/dist/mcp-server/src/index.js"
+      ]
+    }
+  }
+}

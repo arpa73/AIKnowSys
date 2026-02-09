@@ -1,6 +1,9 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { z } from 'zod';
+import fs from 'fs/promises';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const execFileAsync = promisify(execFile);
 
