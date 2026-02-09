@@ -16,7 +16,7 @@ import { join } from 'path';
 
 describe('Integration: Fixed MCP Tools', () => {
   const testSessionPath = join(process.cwd(), '../.aiknowsys/sessions/test-integration-session.md');
-  const testPlanPath = join(process.cwd(), '../.aiknowsys/PLAN_integration_test.md');
+  const testPlanPath = join(process.cwd(), '../.aiknowsys/PLAN_integration_test_plan.md');
 
   // Cleanup function
   const cleanup = () => {

@@ -1,13 +1,38 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import { existsSync } from 'fs';
 import {z} from 'zod';
 
 const execFileAsync = promisify(execFile);
 
-// Project root is one level up from mcp-server directory
-// Works for both development (mcp-server/src) and production (mcp-server/dist)
-const PROJECT_ROOT = resolve(process.cwd(), '..');
+// Get actual file location (works in any execution context)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Find project root by searching for .aiknowsys/ directory
+// This works in both development (src/) and production (dist/) environments
+function findProjectRoot(): string {
+  let current = __dirname;
+  
+  // Try up to 10 levels (should be more than enough)
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(resolve(current, '.aiknowsys'))) {
+      return current;
+    }
+    const parent = resolve(current, '..');
+    if (parent === current) {
+      // Reached filesystem root
+      break;
+    }
+    current = parent;
+  }
+  
+  throw new Error('Could not locate project root (.aiknowsys/ not found)');
+}
+
+const PROJECT_ROOT = findProjectRoot();
 
 // Zod schemas for validation
 const createSessionSchema = z.object({
