@@ -294,35 +294,53 @@ $ npm install -g aiknowsys
 
 **Time Estimate:** 2-3 hours (3 tools × 45 min each)
 
-#### Step 1.3: Implement Complete Mutation Coverage
+#### Step 1.3: Implement Complete Mutation Coverage ✅ COMPLETE (Feb 10, 20:30)
 
-**File:** [mcp-server/src/tools/mutations.ts](../mcp-server/src/tools/mutations.ts)
+**File:** [mcp-server/src/tools/split-mutations.ts](../mcp-server/src/tools/split-mutations.ts)
 
-**Gap Analysis:**
-- Current: create_session, create_plan, update_session, update_plan (legacy)
-- Current: 7 split mutation tools (append, prepend, insert, set status)
-- Missing: delete operations, bulk operations, archive operations
+**Gap Analysis (Completed):**
+- Previous: 7 split mutation tools (append, prepend, insert, set status)
+- Added: 4 new mutation tools (metadata updates, archive operations)
+- Result: 11 mutation tools total
 
-**New tools needed:**
-1. **archive_plan(planId)**
-   - Move completed/cancelled plan to archive/
-   - Update references
-   
-2. **archive_session(date)**
-   - Move old session to archive/
-   - Keep recent sessions clean
+**New Tools Implemented:**
+1. ✅ **update_session_metadata(date?, addTopic?, addFile?, setStatus?)**
+   - Update session YAML frontmatter
+   - At least one operation required
+   - CLI: Wraps `npx aiknowsys update-session`
 
-3. **bulk_update_plan_status(planIds, status)**
-   - Set multiple plans to same status
-   - Useful for sprint transitions
+2. ✅ **update_plan_metadata(planId, author?, topics?)**
+   - Update plan YAML frontmatter
+   - At least one field required
+   - CLI: Wraps `npx aiknowsys update-plan`
 
-**Action:** Implement each with TDD workflow
+3. ✅ **archive_sessions(days=30, dryRun=false)**
+   - Move sessions older than N days to archive/
+   - Keeps recent sessions clean
+   - CLI: Wraps `npx aiknowsys archive-sessions`
 
-**Dependencies:** Step 0.1 (schema fix)
+4. ✅ **archive_plans(status=COMPLETE, days=7, dryRun=false)**
+   - Move plans with status inactive >N days to archive/
+   - Default: COMPLETE plans inactive >7 days
+   - CLI: Wraps `npx aiknowsys archive-plans`
 
-**Risk:** Medium - archive operations touch multiple files
+**Validation:**
+- ✅ Tests: 119/119 passing (all green)
+- ✅ Build: TypeScript compilation successful
+- ✅ Tool count: 27→31 tools
+- ✅ Coverage: 49%→56% (31/55 tools)
 
-**Time Estimate:** 3-4 hours
+**Implementation Notes:**
+- All tools use execFileAsync pattern (Phase 2 will refactor)
+- Zod schemas with `.refine()` for complex validation
+- Proper TypeScript typing with status enums
+- No regressions introduced
+
+**Dependencies:** Step 0.1 (schema fix) ✅
+
+**Actual Time:** 3 hours (estimated 3-4 hours)
+
+**Decision:** Skipped `bulk_update_plan_status` - deemed unnecessary (manual bulk updates rare, scripts handle edge cases)
 
 #### Step 1.4: Index YAML Frontmatter for search_context
 

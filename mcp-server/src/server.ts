@@ -24,7 +24,11 @@ import {
   appendToSession,
   prependToSession,
   insertAfterSection,
-  insertBeforeSection
+  insertBeforeSection,
+  updateSessionMetadata,
+  updatePlanMetadata,
+  archiveSessions,
+  archivePlans
 } from './tools/split-mutations.js';
 import { validateDeliverables, checkTddCompliance, validateSkill } from './tools/validation.js';
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
@@ -320,6 +324,70 @@ export class AIKnowSysServer {
         }),
       },
       async (args) => prependToPlan(args)
+    );
+
+    // Metadata Mutation Tools
+    this.server.registerTool(
+      'update_session_metadata',
+      {
+        description:
+          "Update session YAML frontmatter metadata. Use for adding topics, file references, or changing status. At least one operation required.",
+        inputSchema: z.object({
+          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD').optional(),
+          addTopic: z.string().optional(),
+          addFile: z.string().optional(),
+          setStatus: z.enum(['in-progress', 'complete', 'abandoned']).optional()
+        }).refine(
+          (data) => data.addTopic || data.addFile || data.setStatus,
+          { message: 'At least one metadata operation required (addTopic, addFile, or setStatus)' }
+        ),
+      },
+      async (args) => updateSessionMetadata(args)
+    );
+
+    this.server.registerTool(
+      'update_plan_metadata',
+      {
+        description:
+          "Update plan YAML frontmatter metadata. Use for updating author or adding topics. At least one field required.",
+        inputSchema: z.object({
+          planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+          author: z.string().optional(),
+          topics: z.array(z.string()).optional()
+        }).refine(
+          (data) => data.author || data.topics,
+          { message: 'At least one metadata field required (author or topics)' }
+        ),
+      },
+      async (args) => updatePlanMetadata(args)
+    );
+
+    // Archive Tools
+    this.server.registerTool(
+      'archive_sessions',
+      {
+        description:
+          "Archive old session files to archive folder. Moves sessions older than specified days (default: 30). Use dry-run to preview.",
+        inputSchema: z.object({
+          days: z.number().min(1).optional().default(30),
+          dryRun: z.boolean().optional().default(false)
+        }),
+      },
+      async (args) => archiveSessions(args)
+    );
+
+    this.server.registerTool(
+      'archive_plans',
+      {
+        description:
+          "Archive plans by status to archive folder. Moves plans with specified status (COMPLETE, CANCELLED, PAUSED) older than threshold days. Use dry-run to preview.",
+        inputSchema: z.object({
+          status: z.enum(['COMPLETE', 'CANCELLED', 'PAUSED']).optional().default('COMPLETE'),
+          days: z.number().min(0).optional().default(7),
+          dryRun: z.boolean().optional().default(false)
+        }),
+      },
+      async (args) => archivePlans(args)
     );
 
     // Phase 2B: Validation Tools

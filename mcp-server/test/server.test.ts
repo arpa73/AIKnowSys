@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 27 tools', async () => {
+  it('should register all 31 tools', async () => {
     const server = new AIKnowSysServer();
     
     // Access the internal low-level server instance
@@ -15,7 +15,7 @@ describe('MCP Server Registration', () => {
       params: {}
     });
 
-    expect(response.tools).toHaveLength(27);
+    expect(response.tools).toHaveLength(31);
     
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);
@@ -52,6 +52,14 @@ describe('MCP Server Registration', () => {
     expect(toolNames).toContain('set_plan_status');
     expect(toolNames).toContain('append_to_plan');
     expect(toolNames).toContain('prepend_to_plan');
+    
+    // Metadata mutation tools (Phase 1.3 - NEW)
+    expect(toolNames).toContain('update_session_metadata');
+    expect(toolNames).toContain('update_plan_metadata');
+    
+    // Archive tools (Phase 1.3 - NEW)
+    expect(toolNames).toContain('archive_sessions');
+    expect(toolNames).toContain('archive_plans');
     
     // Validation tools
     expect(toolNames).toContain('validate_deliverables');

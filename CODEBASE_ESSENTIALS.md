@@ -22,7 +22,7 @@
 | Terminal UI | Chalk 5.x, Ora 9.x |
 | Package Manager | npm |
 | Distribution | npm registry |
-| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (27 tools for AI agents)** |
+| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (31 tools for AI agents)** |
 
 ---
 
@@ -257,6 +257,41 @@ mcp_aiknowsys_get_recent_sessions({ days: 7 })
 // Get skill by exact name (direct file read)
 mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
 // Returns: Full skill file content (496+ lines)
+```
+
+**Mutation Tools (Write Operations):**
+```typescript
+// Update session YAML frontmatter metadata
+mcp_aiknowsys_update_session_metadata({
+  date: "2026-02-10",  // optional, defaults to today
+  addTopic: "mcp-server",  // optional
+  addFile: "server.ts",  // optional
+  setStatus: "in-progress"  // optional: in-progress | complete | abandoned
+})
+// At least one operation required
+
+// Update plan YAML frontmatter metadata
+mcp_aiknowsys_update_plan_metadata({
+  planId: "PLAN_mcp_only_architecture",  // required
+  author: "arno-paffen",  // optional
+  topics: ["mcp", "architecture"]  // optional
+})
+// At least one field (author or topics) required
+
+// Archive old session files
+mcp_aiknowsys_archive_sessions({
+  days: 30,  // optional, default 30
+  dryRun: false  // optional, default false
+})
+// Moves sessions older than N days to .aiknowsys/sessions/archive/
+
+// Archive plans by status
+mcp_aiknowsys_archive_plans({
+  status: "COMPLETE",  // optional, default COMPLETE (also: CANCELLED, PAUSED)
+  days: 7,  // optional, default 7
+  dryRun: false  // optional, default false
+})
+// Moves plans with status inactive >N days to .aiknowsys/plans/archive/
 ```
 
 **⚠️ Note:** Other MCP tools exist but have CLI flag bugs. See [.aiknowsys/sessions/2026-02-09-session.md] for status.
