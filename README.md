@@ -12,16 +12,26 @@ A battle-tested knowledge management system that enables AI-assisted development
 
 A structured workflow system consisting of:
 
-1. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
-2. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
-3. **Skills System** - Domain-specific how-to guides for common tasks
-4. **Changelog** - Session-by-session validation and learning history
-5. **Validation Matrix** - Mandatory test running before completion
-6. **Multi-Developer Collaboration** - Per-developer plan tracking and reviews prevent merge conflicts (Phase 2)
-7. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
-8. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
-9. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
-10. **VSCode Hooks** - 17 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, migration assistance, and git collaboration reminders (optional)
+1. **MCP Server** - 15 Model Context Protocol tools for AI agents (10-100x faster context access than file reading)
+2. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
+3. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
+4. **Skills System** - Domain-specific how-to guides for common tasks
+5. **Changelog** - Session-by-session validation and learning history
+6. **Validation Matrix** - Mandatory test running before completion
+7. **Multi-Developer Collaboration** - Per-developer plan tracking and reviews prevent merge conflicts (Phase 2)
+8. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
+9. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
+10. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
+11. **VSCode Hooks** - 17 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, migration assistance, and git collaboration reminders (optional)
+
+**MCP Tools Enable:**
+- Query plans/sessions (10-100x faster than file reading)
+- Create/update sessions with YAML validation
+- Search historical context
+- Validate deliverables
+- Check TDD compliance
+
+**CLI Alternative:** All MCP tools have CLI equivalents (`npx aiknowsys`) for when MCP server isn't configured.
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 

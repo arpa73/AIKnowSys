@@ -1,14 +1,38 @@
 {
   "version": 1,
-  "updated": "2026-02-09T21:11:51.261Z",
+  "updated": "2026-02-10T16:48:39.125Z",
   "plans": [
+    {
+      "id": "PLAN_mcp_first_documentation_updates",
+      "title": "MCP-First Documentation Updates",
+      "status": "ACTIVE",
+      "author": "arno-paffen",
+      "created": "2026-02-10T16:48:39.126Z",
+      "updated": "2026-02-10T16:48:39.126Z",
+      "file": "PLAN_mcp_first_documentation_updates.md"
+    },
+    {
+      "id": "PLAN_bundle_mcp_server_with_main_package",
+      "title": "Implementation Plan: Bundle MCP Server with Main Package",
+      "status": "\"PLANNED\"",
+      "author": "\"arno-paffen\"",
+      "created": "2026-02-08T23:00:00.000Z",
+      "updated": "2026-02-10T16:48:39.127Z",
+      "topics": [
+        "mcp",
+        "bundling",
+        "distribution",
+        "npm"
+      ],
+      "file": "PLAN_bundle_mcp_server_with_main_package.md"
+    },
     {
       "id": "PLAN_claude_memory_comparison",
       "title": "Implementation Plan: Claude Memory Tool Comparison Document",
       "status": "\"PLANNED\"",
       "author": "\"arno-paffen\"",
       "created": "2026-02-07T23:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.263Z",
+      "updated": "2026-02-10T16:48:39.127Z",
       "file": "PLAN_claude_memory_comparison.md"
     }
   ],
@@ -18,14 +42,14 @@
       "topic": "v0.4.0 Release - Memory & Learning",
       "file": "sessions/2026-01-25-session.md",
       "created": "2026-01-25T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.264Z"
+      "updated": "2026-02-10T16:48:39.128Z"
     },
     {
       "date": "2026-01-26",
       "topic": "v0.5.0 Test Coverage Implementation",
       "file": "sessions/2026-01-26-session.md",
       "created": "2026-01-26T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.265Z"
+      "updated": "2026-02-10T16:48:39.128Z"
     },
     {
       "date": "2026-01-27",
@@ -33,14 +57,14 @@
       "plan": "Architect tool permissions & gitignore updates  ",
       "file": "sessions/2026-01-27-session.md",
       "created": "2026-01-27T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.266Z"
+      "updated": "2026-02-10T16:48:39.129Z"
     },
     {
       "date": "2026-01-28",
       "topic": "Architect Session File Auto-Creation",
       "file": "sessions/2026-01-28-session.md",
       "created": "2026-01-28T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.267Z"
+      "updated": "2026-02-10T16:48:39.129Z"
     },
     {
       "date": "2026-01-29",
@@ -48,7 +72,7 @@
       "plan": "Progress indicator implementation (scan, audit, migrate)  ",
       "file": "sessions/2026-01-29-session.md",
       "created": "2026-01-29T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.268Z"
+      "updated": "2026-02-10T16:48:39.130Z"
     },
     {
       "date": "2026-01-30",
@@ -56,14 +80,14 @@
       "plan": "[PLAN_essentials_compression.md](PLAN_essentials_compression.md)",
       "file": "sessions/2026-01-30-session.md",
       "created": "2026-01-30T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.270Z"
+      "updated": "2026-02-10T16:48:39.130Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 4 Implementation & Review",
       "file": "sessions/2026-01-31-phase4-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.271Z"
+      "updated": "2026-02-10T16:48:39.130Z"
     },
     {
       "date": "2026-01-31",
@@ -71,21 +95,21 @@
       "plan": "Phase 5 implementation - Context preservation & learning system  ",
       "file": "sessions/2026-01-31-phase5-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.273Z"
+      "updated": "2026-02-10T16:48:39.131Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 6 - Collaboration & CI/CD Integration",
       "file": "sessions/2026-01-31-phase6-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.274Z"
+      "updated": "2026-02-10T16:48:39.131Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 7 Implementation Session",
       "file": "sessions/2026-01-31-phase7-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.275Z"
+      "updated": "2026-02-10T16:48:39.131Z"
     },
     {
       "date": "2026-01-31",
@@ -93,7 +117,7 @@
       "plan": "Hooks Documentation Completion (All 5 Phases)  ",
       "file": "sessions/2026-01-31-phase8-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.276Z"
+      "updated": "2026-02-10T16:48:39.131Z"
     },
     {
       "date": "2026-01-31",
@@ -101,7 +125,7 @@
       "plan": "Workspace Maintenance & Archiving  ",
       "file": "sessions/2026-01-31-session.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.276Z"
+      "updated": "2026-02-10T16:48:39.132Z"
     },
     {
       "date": "2026-02-01",
@@ -109,7 +133,7 @@
       "plan": "[PLAN_remove_deprecated_scripts.md](PLAN_remove_deprecated_scripts.md)  ",
       "file": "sessions/2026-02-01-session.md",
       "created": "2026-02-01T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.277Z"
+      "updated": "2026-02-10T16:48:39.132Z"
     },
     {
       "date": "2026-02-02",
@@ -117,7 +141,7 @@
       "plan": "CI Test Failures Fix - 17 failures across 3 categories  ",
       "file": "sessions/2026-02-02-session.md",
       "created": "2026-02-02T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.277Z"
+      "updated": "2026-02-10T16:48:39.133Z"
     },
     {
       "date": "2026-02-03",
@@ -125,7 +149,7 @@
       "plan": "[PLAN_deliverables_validation_protocol.md](../PLAN_deliverables_validation_protocol.md)  ",
       "file": "sessions/2026-02-03-session.md",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.278Z"
+      "updated": "2026-02-10T16:48:39.134Z"
     },
     {
       "date": "2026-02-04",
@@ -133,7 +157,7 @@
       "plan": "archive-plans Bug Fixes and Enhancement",
       "file": "sessions/2026-02-04-session.md",
       "created": "2026-02-04T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.278Z"
+      "updated": "2026-02-10T16:48:39.134Z"
     },
     {
       "date": "2026-02-05",
@@ -141,7 +165,7 @@
       "plan": "[PLAN_context_query_system.md](../PLAN_context_query_system.md) (1470 lines)  ",
       "file": "sessions/2026-02-05-session.md",
       "created": "2026-02-05T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.279Z"
+      "updated": "2026-02-10T16:48:39.134Z"
     },
     {
       "date": "2026-02-06",
@@ -149,7 +173,7 @@
       "plan": "VSCode hooks configuration fix + setupHooks() installation bugs  ",
       "file": "sessions/2026-02-06-session.md",
       "created": "2026-02-06T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.284Z"
+      "updated": "2026-02-10T16:48:39.135Z"
     },
     {
       "date": "2026-02-07",
@@ -157,7 +181,7 @@
       "plan": "[PLAN_milestone_changelog.md](../PLAN_milestone_changelog.md)  ",
       "file": "sessions/2026-02-07-session.md",
       "created": "2026-02-07T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.288Z"
+      "updated": "2026-02-10T16:48:39.135Z"
     },
     {
       "date": "2026-02-08",
@@ -172,7 +196,7 @@
       "plan": "PLAN_session_mutation_workflow.md  ",
       "file": "sessions/2026-02-08-session.md",
       "created": "2026-02-08T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.292Z"
+      "updated": "2026-02-10T16:48:39.136Z"
     },
     {
       "date": "2026-02-09",
@@ -187,7 +211,15 @@
       "plan": "\"PLAN_mcp_bugfix_skill_lookup\"",
       "file": "sessions/2026-02-09-session.md",
       "created": "2026-02-09T00:00:00.000Z",
-      "updated": "2026-02-09T21:11:51.296Z"
+      "updated": "2026-02-10T16:48:39.137Z"
+    },
+    {
+      "date": "2026-02-10",
+      "topic": "Session: 2026-02-10",
+      "plan": "MCP-First Documentation Transformation  ",
+      "file": "sessions/2026-02-10-session.md",
+      "created": "2026-02-10T00:00:00.000Z",
+      "updated": "2026-02-10T16:48:39.137Z"
     }
   ],
   "learned": [

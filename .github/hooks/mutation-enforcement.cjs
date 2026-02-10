@@ -129,28 +129,36 @@ function printWarning(filePath) {
   
   if (filePath.includes('/sessions/')) {
     // Session file warnings
-    console.error('   For session files:');
+    console.error('   MCP tools (preferred - 10-100x faster, validated):');
+    console.error('   mcp_aiknowsys_update_session({ operation: "append", content: "..." })');
+    console.error('   mcp_aiknowsys_create_session({ title: "...", topics: [...] })');
+    console.error('');
+    console.error('   CLI fallback (if MCP unavailable):');
     console.error('   npx aiknowsys update-session --append "content"');
-    console.error('   npx aiknowsys update-session --done');
     console.error('   npx aiknowsys log "Quick note"');
     console.error('');
   } else if (filePath.includes('PLAN_') || filePath.includes('/plans/')) {
     // Plan file warnings (v0.12.0: update-plan available)
-    console.error('   For plan files:');
+    console.error('   MCP tools (preferred - 10-100x faster, validated):');
+    console.error('   mcp_aiknowsys_create_plan({ title: "...", topics: [...] })');
+    console.error('   mcp_aiknowsys_update_plan({ planId: "PLAN_xyz", status: "ACTIVE" })');
+    console.error('   mcp_aiknowsys_update_plan({ planId: "PLAN_xyz", content: "Progress note" })');
+    console.error('');
+    console.error('   CLI fallback (if MCP unavailable):');
+    console.error('   npx aiknowsys create-plan --title "..."');
     console.error('   npx aiknowsys update-plan PLAN_xyz --set-status ACTIVE');
-    console.error('   npx aiknowsys update-plan PLAN_xyz --append "Progress note"');
     console.error('   npx aiknowsys plan-activate PLAN_xyz');
-    console.error('   npx aiknowsys plan-complete PLAN_xyz');
     console.error('');
   }
   
-  console.error('💡 Why use commands?');
-  console.error('   • YAML frontmatter validation');
+  console.error('💡 Why prefer MCP tools?');
+  console.error('   • 10-100x faster (in-memory vs process spawn)');
+  console.error('   • YAML frontmatter validated before write');
+  console.error('   • Atomic updates (no partial commits)');
   console.error('   • Automatic index updates');
-  console.error('   • Consistent format enforcement');
-  console.error('   • No manual errors');
+  console.error('   • Tool parameters show options (no --help needed)');
   console.error('');
-  console.error('📚 Read the skill first:');
+  console.error('📚 Full documentation:');
   console.error('   .github/skills/context-mutation/SKILL.md');
   console.error('');
 }

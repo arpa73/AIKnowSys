@@ -1,0 +1,632 @@
+# Implementation Plan: Bundle MCP Server with Main Package
+
+**Created:** 2026-02-09  
+**Status:** 🎯 PLANNING  
+**Goal:** Single npm install provides both aiknowsys CLI and MCP server
+
+---
+
+## Overview
+
+Enable users to install both CLI and MCP server with one command:
+```bash
+npm install -g aiknowsys
+# Gets: aiknowsys (CLI) + aiknowsys-mcp (MCP server)
+```
+
+**Current Pain Point:**
+- MCP server requires full path in mcp.json: `"${workspaceFolder}/mcp-server/dist/mcp-server/src/index.js"`
+- Users must manually build mcp-server separately
+- Not portable across machines
+
+**After Bundling:**
+```json
+{
+  "servers": {
+    "aiknowsys": {
+      "type": "stdio",
+      "command": "aiknowsys-mcp"
+    }
+  }
+}
+```
+Clean, portable, works anywhere! ✅
+
+---
+
+## Requirements
+
+**Must Have:**
+- [x] Single `npm install -g aiknowsys` installs everything
+- [x] `aiknowsys-mcp` command available globally
+- [x] All 737+ main tests still pass
+- [x] All 98 MCP tests still pass
+- [x] TypeScript compilation works for both
+- [x] Package size reasonable (<10MB)
+
+**Should Have:**
+- [x] Single `npm run build` builds both
+- [x] Single `npm test` runs all tests
+- [x] Maintain separate source directories (lib/ and mcp-server/src/)
+- [x] No breaking changes to existing CLI
+
+**Nice to Have:**
+- [ ] Automatic mcp.json configuration helper
+- [ ] Version alignment (both at v0.11.0?)
+
+---
+
+## Architecture Analysis
+
+### Current Structure (Separate Packages)
+
+```
+aiknowsys/
+├── package.json (v0.10.0)
+├── tsconfig.json (rootDir: "./", outDir: "./dist")
+├── lib/ → compiles to dist/lib/
+├── bin/cli.js → uses dist/lib/
+└── mcp-server/
+    ├── package.json (v0.1.0)
+    ├── tsconfig.json (rootDir: "..", outDir: "./dist")
+    ├── src/ → compiles to mcp-server/dist/mcp-server/src/
+    └── test/ → compiles to mcp-server/dist/test/
+```
+
+**Why nested dist?**
+- MCP tsconfig has `"rootDir": ".."` (parent directory)
+- Preserves full path structure in output
+- Allows MCP server to import from `../lib/`
+
+### Target Structure (Bundled)
+
+```
+aiknowsys/
+├── package.json (v0.11.0)
+│   ├── bin:
+│   │   - aiknowsys → bin/cli.js
+│   │   - aks → bin/cli.js
+│   │   - aiknowsys-mcp → mcp-server/dist/mcp-server/src/index.js
+│   ├── dependencies:
+│   │   + @modelcontextprotocol/sdk ^1.26.0
+│   │   + zod ^3.24.1
+│   ├── files:
+│   │   + mcp-server/dist/
+│   └── scripts:
+│       build: tsc && (cd mcp-server && tsc)
+│       test: vitest run && (cd mcp-server && vitest run)
+├── lib/ (CLI source)
+├── mcp-server/
+│   ├── src/ (MCP source)
+│   ├── test/ (MCP tests)
+│   ├── tsconfig.json (keep as-is)
+│   └── package.json (keep or remove?)
+└── dist/ (compiled output)
+```
+
+---
+
+## Key Decisions
+
+### Decision 1: Keep mcp-server/package.json?
+
+**Option A: Keep it (Development Convenience)** ← RECOMMENDED
+- ✅ Separate `cd mcp-server && npm test` works
+- ✅ VSCode recognizes MCP dependencies
+- ✅ Clearer separation of concerns
+- ❌ Duplicate dependency declarations
+- ❌ Must manually sync versions
+
+**Option B: Remove it (Simpler Distribution)**
+- ✅ Single source of truth for versions
+- ✅ Simpler dependency management
+- ❌ Loses `cd mcp-server && npm test`
+- ❌ Must use `npm test -- mcp-server/test/`
+
+**Decision: Keep it for development, exclude from npm package**
+- Add to .npmignore: `mcp-server/package.json`
+- Benefits: Dev convenience + clean distribution
+- Tradeoff: Manual version sync (acceptable)
+
+### Decision 2: TypeScript Compilation Strategy
+
+**Option A: Separate builds** ← RECOMMENDED
+```bash
+npm run build:
+  tsc                      # Main: lib/ → dist/lib/
+  cd mcp-server && tsc     # MCP: src/ → mcp-server/dist/mcp-server/src/
+```
+- ✅ Works with current tsconfig files
+- ✅ No changes to existing structure
+- ❌ Two build commands
+
+**Option B: Unified build with project references**
+```json
+// Root tsconfig.json
+{
+  "references": [
+    { "path": "./tsconfig.main.json" },
+    { "path": "./mcp-server/tsconfig.json" }
+  ]
+}
+```
+- ✅ Single `tsc --build` command
+- ✅ Proper dependency tracking
+- ❌ Requires tsconfig restructuring
+- ❌ More complex setup
+
+**Decision: Separate builds (Option A) - simplest, works today**
+
+### Decision 3: Testing Strategy
+
+**Option A: Separate test commands** ← RECOMMENDED
+```bash
+npm test: vitest run                    # Main tests (737+)
+npm run test:mcp: cd mcp-server && vitest run  # MCP tests (98)
+npm run test:all: npm test && npm run test:mcp
+```
+
+**Option B: Unified test command**
+```bash
+npm test: vitest run --config=vitest.config.ts && vitest run --config=mcp-server/vitest.config.ts
+```
+
+**Decision: Option A with `test:all` for CI**
+- Familiar workflow
+- Easier to run subset of tests
+- CI uses `test:all`
+
+---
+
+## Implementation Phases
+
+### Phase 1: Package Configuration (30 min)
+
+**Goal:** Update package.json to include MCP server
+
+#### Step 1.1: Add MCP bin entry
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "bin": {
+    "aiknowsys": "./bin/cli.js",
+    "aks": "./bin/cli.js",
+    "aiknowsys-mcp": "./mcp-server/dist/mcp-server/src/index.js"
+  }
+}
+```
+
+**Why:** Makes `aiknowsys-mcp` available globally after install  
+**Risk:** Low - purely additive change
+
+#### Step 1.2: Include MCP dist in files array
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "files": [
+    "bin/",
+    "dist/",
+    "mcp-server/dist/",
+    "templates/",
+    "scripts/",
+    "SETUP_GUIDE.md",
+    "README.md",
+    "LICENSE"
+  ]
+}
+```
+
+**Why:** npm pack will include compiled MCP server  
+**Verification:**
+```bash
+npm pack --dry-run | grep mcp-server
+# Should list mcp-server/dist/ files
+```
+**Risk:** Low - increases package size (~500KB for MCP dist)
+
+#### Step 1.3: Add MCP dependencies
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "dependencies": {
+    // ... existing dependencies
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.24.1"
+  }
+}
+```
+
+**Why:** MCP server needs these at runtime  
+**Risk:** Low - zod is 58KB, SDK is ~200KB
+
+---
+
+### Phase 2: Build Process (20 min)
+
+**Goal:** Single command builds both CLI and MCP server
+
+#### Step 2.1: Update build script
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "scripts": {
+    "build": "tsc && cd mcp-server && tsc",
+    "build:main": "tsc",
+    "build:mcp": "cd mcp-server && tsc",
+    "postbuild": "mkdir -p dist/scripts && cp package.json dist/ && cp scripts/*.js scripts/*.cjs scripts/*.mjs dist/scripts/ 2>/dev/null || true"
+  }
+}
+```
+
+**Why:** Ensures both are built before publish
+
+**Verification:**
+```bash
+npm run build
+ls -la mcp-server/dist/mcp-server/src/index.js  # Should exist
+ls -la dist/lib/commands/                       # Should exist
+```
+
+**Risk:** Medium - build failures could block npm publish  
+**Mitigation:** Add to prepublishOnly validation
+
+---
+
+### Phase 3: Testing Integration (15 min)
+
+**Goal:** Ensure all tests run and pass
+
+#### Step 3.1: Add test:all script
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:mcp": "cd mcp-server && vitest run",
+    "test:all": "npm test && npm run test:mcp",
+    "test:watch": "vitest",
+    "test:mcp:watch": "cd mcp-server && vitest"
+  }
+}
+```
+
+**Why:** CI and prepublishOnly need to run all tests
+
+**Verification:**
+```bash
+npm run test:all
+# Expected: 737+ main tests + 98 MCP tests = 835+ total
+```
+
+**Risk:** Low - tests already pass independently
+
+#### Step 3.2: Update prepublishOnly
+
+**File:** `package.json`
+
+**Changes:**
+```json
+{
+  "scripts": {
+    "prepublishOnly": "npm run build && npm run test:all && npm run lint && npm run test:cli && npm pack --dry-run"
+  }
+}
+```
+
+**Why:** Catch issues before publishing  
+**Risk:** Low - prevents bad releases
+
+---
+
+### Phase 4: Documentation (30 min)
+
+**Goal:** Update docs to reflect bundled installation
+
+#### Step 4.1: Update README.md
+
+**File:** `README.md`
+
+**Add section after "Installation":**
+```markdown
+## 📦 Installation
+
+### Global Installation (Recommended)
+
+```bash
+npm install -g aiknowsys
+```
+
+This installs:
+- `aiknowsys` CLI (all commands)
+- `aiknowsys-mcp` MCP server (for AI agents)
+
+### MCP Server Configuration
+
+**VS Code + GitHub Copilot:**
+
+Create/edit `.vscode/mcp.json`:
+```json
+{
+  "servers": {
+    "aiknowsys": {
+      "type": "stdio",
+      "command": "aiknowsys-mcp"
+    }
+  }
+}
+```
+
+**Claude Desktop:**
+
+Edit Claude config:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "aiknowsys-mcp"
+    }
+  }
+}
+```
+
+Restart your AI client and ask: "What tools do you have?"
+
+You should see 15 AIKnowSys tools! ✅
+```
+
+**Risk:** Low - documentation only
+
+#### Step 4.2: Update mcp-server/SETUP.md
+
+**File:** `mcp-server/SETUP.md`
+
+**Prepend to Step 1:**
+```markdown
+## Quick Start
+
+### If You Installed via npm (Recommended)
+
+AIKnowSys MCP server is bundled with the main package!
+
+```bash
+npm install -g aiknowsys
+```
+
+Skip to **Step 2: Configure Your MCP Client** below.
+
+---
+
+### Development Setup (Local Build)
+
+If you're developing the MCP server itself, continue with the build instructions below.
+```
+
+**Then update all mcp.json examples:**
+- Replace: `"command": "node", "args": ["${workspaceFolder}/mcp-server/dist/mcp-server/src/index.js"]`
+- With: `"command": "aiknowsys-mcp"`
+
+**Risk:** Low - improves clarity
+
+---
+
+### Phase 5: Validation & Testing (45 min)
+
+**Goal:** Verify bundled package works end-to-end
+
+#### Step 5.1: Local pack test
+
+```bash
+# Build everything
+npm run build
+
+# Create tarball
+npm pack
+
+# Extract and inspect
+tar -tzf aiknowsys-*.tgz | grep -E "(bin|mcp-server/dist)"
+
+# Expected files:
+# package/bin/cli.js
+# package/mcp-server/dist/mcp-server/src/index.js
+# package/mcp-server/dist/mcp-server/src/tools/*.js
+```
+
+**Risk:** Low - catches packaging issues
+
+#### Step 5.2: Global install test
+
+```bash
+# Install from local tarball
+npm install -g ./aiknowsys-*.tgz
+
+# Verify CLI works
+aiknowsys --version
+aiknowsys --help
+
+# Verify MCP server exists
+which aiknowsys-mcp
+ls -la $(which aiknowsys-mcp)
+
+# Test MCP server runs
+aiknowsys-mcp 2>&1 | head -5
+# Should show MCP protocol messages (not errors)
+```
+
+**Risk:** Medium - reveals real-world issues  
+**Mitigation:** Test on fresh user account
+
+#### Step 5.3: Integration test with MCP client
+
+**Manual test in VS Code:**
+1. Create test project with `.vscode/mcp.json`
+2. Configure: `"command": "aiknowsys-mcp"`
+3. Restart VS Code MCP server
+4. Ask Copilot: "What tools do you have access to?"
+5. Verify: 15 AIKnowSys tools listed
+
+**Risk:** Medium - tests real user experience
+
+---
+
+## Risks & Mitigations
+
+### Risk 1: Package Size Too Large
+
+**Likelihood:** Low  
+**Impact:** Medium  
+**Current Estimate:** Main dist (~2MB) + MCP dist (~500KB) + node_modules (~20MB for dependencies)
+
+**Mitigation:**
+- Check with `npm pack --dry-run`
+- Exclude .map files if needed (add to .npmignore)
+- MCP SDK is tree-shakeable
+- Acceptable for global install
+
+### Risk 2: Path Resolution Issues
+
+**Likelihood:** Low  
+**Impact:** High  
+**Scenario:** `aiknowsys-mcp` can't find project root in user's workspace
+
+**Mitigation:**
+- ✅ Already fixed with findProjectRoot() (commit b77d0b9)
+- Search for .aiknowsys/ directory up the tree
+- Works from any execution context
+
+### Risk 3: Dependency Conflicts
+
+**Likelihood:** Low  
+**Impact:** Low  
+**Scenario:** User has conflicting versions of zod or SDK
+
+**Mitigation:**
+- Use caret ranges (^) for flexibility
+- Test with `npm ls` after install
+- Document if peer dependency conflicts arise
+
+### Risk 4: TypeScript Build Failures
+
+**Likelihood:** Low  
+**Impact:** High  
+**Scenario:** One build fails but other succeeds, leaving partial package
+
+**Mitigation:**
+- Use `&&` to chain builds (fails fast)
+- prepublishOnly runs full build + tests
+- CI validates before merge
+
+### Risk 5: Breaking Changes for Existing Users
+
+**Likelihood:** Very Low  
+**Impact:** Medium  
+**Scenario:** Users update and old mcp.json paths break
+
+**Mitigation:**
+- This is **fully backward compatible**
+- Old local paths still work
+- New global command is additive only
+- No CLI changes
+- Bump version to v0.11.0 (feature release)
+
+---
+
+## Success Criteria
+
+- [ ] `npm pack` includes mcp-server/dist/
+- [ ] `aiknowsys-mcp` command exists after global install
+- [ ] All 737+ main tests pass
+- [ ] All 98 MCP tests pass
+- [ ] TypeScript builds both without errors
+- [ ] mcp.json works with just `"command": "aiknowsys-mcp"`
+- [ ] Package size < 25MB (acceptable for global install)
+- [ ] Documentation updated (README, SETUP.md)
+- [ ] CHANGELOG.md entry added
+- [ ] Manual integration test passes in VS Code
+
+---
+
+## Timeline Estimate
+
+| Phase | Time | Description |
+|-------|------|-------------|
+| Phase 1 | 30 min | Package configuration |
+| Phase 2 | 20 min | Build process updates |
+| Phase 3 | 15 min | Testing integration |
+| Phase 4 | 30 min | Documentation updates |
+| Phase 5 | 45 min | End-to-end validation |
+| **Total** | **2h 20m** | Active development time |
+
+**Plus:** 1-2 hours for edge case testing and polish
+
+**Total Estimated:** 3-4 hours
+
+---
+
+## Notes for Developer
+
+**Before starting:**
+- Read CODEBASE_ESSENTIALS.md (Critical Invariants)
+- Current MCP tests: 98/98 passing ✅
+- Current main tests: 1014/1015 passing (99.9%)
+
+**During implementation:**
+- Use manage_todo_list to track phases
+- Run validation after each phase
+- Update session file with discoveries
+- Commit after each successful phase
+
+**Phase execution order:**
+1. Phase 1 → validate with `npm pack --dry-run`
+2. Phase 2 → validate with `npm run build`
+3. Phase 3 → validate with `npm run test:all`
+4. Phase 4 → review docs for clarity
+5. Phase 5 → full integration test
+
+**Critical validation points:**
+- After Phase 1: Check `npm pack --dry-run` output
+- After Phase 2: Both builds succeed
+- After Phase 3: 835+ tests passing
+- After Phase 5: Global install + MCP integration works
+
+---
+
+## Open Questions
+
+**Q1: Version bump?**
+- Current: v0.10.0
+- Recommendation: v0.11.0 (feature release, backward compatible)
+
+**Q2: Add .npmignore?**
+- Exclude: mcp-server/package.json, mcp-server/node_modules/, test-*/ dirs
+- Recommendation: Yes, cleaner package
+
+**Q3: Add postinstall message?**
+- Show "MCP server ready! Configure in .vscode/mcp.json" after install?
+- Recommendation: Optional, but helpful for discoverability
+
+**Q4: Merge test suites?**
+- Currently: `npm test` = main only
+- Alternative: `npm test` = all tests
+- Recommendation: Keep separate, add `test:all` for CI
+
+---
+
+*Plan created by @Planner on 2026-02-09. Ready for @Developer implementation.*

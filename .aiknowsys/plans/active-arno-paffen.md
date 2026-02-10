@@ -1,14 +1,14 @@
 # Active Plan: arno-paffen
 
-**Currently Working On:** None  
-**Status:** ✅ COMPLETE  
-**Last Updated:** 2026-02-08
+**Currently Working On:** [MCP-First Documentation Updates](../PLAN_mcp_first_documentation_updates.md)  
+**Status:** 🎯 ACTIVE  
+**Last Updated:** 2026-02-09
 
 ---
 
-## Recent Work
+## Progress
 
-Previously completed: **MCP Server Phase 2 - 10 New Tools + Modern API Refactor** (2026-02-08)
+[Update as you work through the plan]
 
 ---
 

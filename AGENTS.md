@@ -51,6 +51,22 @@ If fixing bug:
   - [ ] Run full test suite
 ```
 
+**Step 3½: Use Mutation Tools for Session/Plan Changes** (MANDATORY)
+
+✅ **Default: MCP Tools** (always prefer when available)
+```typescript
+// Create/update sessions and plans
+mcp_aiknowsys_create_session({ title: "...", topics: [...] })
+mcp_aiknowsys_update_session({ operation: "append", section: "...", content: "..." })
+mcp_aiknowsys_create_plan({ title: "...", topics: [...] })
+mcp_aiknowsys_update_plan({ planId: "...", status: "ACTIVE" })
+```
+
+Benefits: 10-100x faster, YAML validated, atomic updates  
+See full details: Section 5½ below
+
+❌ **Avoid: Manual file editing** (use only when MCP unavailable)
+
 **Step 4: Proceed with Implementation**
 
 ### ⚠️ EMERGENCY HOTFIX PROTOCOL
@@ -267,14 +283,53 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 **Key Learning**: [Optional: pattern or gotcha for future reference]
 ```
 
-### 5️⃣½ SESSION/PLAN FILE MANAGEMENT: Use Mutation Commands (MANDATORY v0.11.0+)
+### 5️⃣½ SESSION/PLAN FILE MANAGEMENT: Use Mutation Tools (MANDATORY)
 
-**⚠️ CRITICAL: Use mutation commands as the default for session/plan operations!**
+**⚠️ CRITICAL: Use MCP tools as the default for session/plan operations!**
 
-**Default: Mutation Commands**
+**Default: MCP Tools** (Preferred - 10-100x faster, validated)
+```typescript
+// Create new session
+mcp_aiknowsys_create_session({
+  title: "Implement feature X",
+  topics: ["feature", "implementation"]
+});
+
+// Update existing session
+mcp_aiknowsys_update_session({
+  operation: "append",
+  section: "## Changes",
+  content: "Fixed bug Y"
+});
+
+// Prepend critical update
+mcp_aiknowsys_update_session({
+  operation: "prepend",
+  section: "## Critical Issue",
+  content: "Security fix needed"
+});
+
+// Create/update plans
+mcp_aiknowsys_create_plan({
+  title: "Add Feature X",
+  topics: ["feature-x", "api"]
+});
+
+mcp_aiknowsys_update_plan({
+  planId: "PLAN_xyz",
+  status: "ACTIVE"
+});
+
+mcp_aiknowsys_update_plan({
+  planId: "PLAN_xyz",
+  content: "Phase 1 complete: 19/19 tests passing"
+});
+```
+
+**Fallback: CLI Commands** (if MCP unavailable)
 ```bash
 # Create new session
-npx aiknowsys create-session --goal "Implement feature X"
+npx aiknowsys create-session --title "Implement feature X"
 
 # Update existing session (append, prepend, insert)
 npx aiknowsys update-session --appendSection "## Changes" --content "Fixed bug Y"
@@ -285,7 +340,7 @@ npx aiknowsys update-session --insert-after "## Goal" --appendSection "## Progre
 npx aiknowsys update-session --appendFile notes.md --appendSection "## Implementation"
 
 # Create/update plans
-npx aiknowsys create-plan --id "feature-name" --goal "Add X"
+npx aiknowsys create-plan --title "Add Feature X" --topics "feature-x,api"
 npx aiknowsys update-plan PLAN_xyz --set-status ACTIVE
 npx aiknowsys update-plan PLAN_xyz --append "Phase 1 complete: 19/19 tests passing"
 
@@ -303,19 +358,32 @@ Only manually edit session/plan files when:
 - ✅ Fixing YAML frontmatter corruption (after backup)
 - ✅ Emergency hotfix with command unavailable
 
-**Why Mutation Commands?**
-- **Validation:** Prevents YAML corruption (dates, status values)
-- **Consistency:** Enforced structure (frontmatter preserved, sections ordered)
-- **Safety:** Pre-commit hooks validate mutations
-- **Auditability:** Command usage traceable in terminal history
-- **Discoverability:** `--help` shows available options
+**Why Prefer MCP Tools Over CLI/Manual Editing?**
 
-**🚨 RULE: If you're tempted to manually edit, check mutation command help first!**
-```bash
-npx aiknowsys update-session --help  # Check available options
-npx aiknowsys update-plan --help     # Check plan update options
-npx aiknowsys create-plan --help     # Check plan creation options
-```
+**Performance:**
+- MCP: ~10ms (in-memory operation)
+- CLI: ~200ms (process spawn + file I/O)
+- Manual: N/A (agent can't validate)
+
+**Validation:**
+- MCP: YAML frontmatter validated before write
+- CLI: Basic validation only
+- Manual: No validation (corruption risk)
+
+**Atomicity:**
+- MCP: All-or-nothing updates
+- CLI: Partial updates possible on error
+- Manual: No rollback
+
+**Discoverability:**
+- MCP: Tool parameters show available options
+- CLI: Must run `--help` separately
+- Manual: Must read file format docs
+
+**Use CLI when:** MCP server not configured or testing CLI directly  
+**Use Manual when:** Fixing corrupted files (after backup)
+
+**📚 Full documentation:** See [.github/skills/context-mutation/SKILL.md](.github/skills/context-mutation/SKILL.md)
 
 **Advanced Insertion Options (v0.11.0+):**
 - `--prependSection`: Add at beginning (critical updates, blockers)
