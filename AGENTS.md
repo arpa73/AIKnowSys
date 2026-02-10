@@ -23,6 +23,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 **This rule applies to EVERY session, EVERY request - no exceptions.**
 
+**💡 TIP: Set up custom instructions** to make this automatic!
+- See [docs/custom-instructions-template.md](docs/custom-instructions-template.md)
+- Custom instructions auto-inject these reminders into EVERY conversation
+- Much more reliable than hoping agents read this file
+- AGENTS.md provides complete workflow; custom instructions ensure session start happens
+
 ### Before Making ANY Code Changes:
 
 **Step 1: Acknowledge & Read Context**
@@ -130,7 +136,31 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 
 ### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
 
-**Before reading ESSENTIALS, check for active plan and session continuity:**
+**🚨 MANDATORY: ALWAYS call these MCP tools at session start:**
+
+```typescript
+// Step 1: Load active plans (REQUIRED - DO NOT SKIP)
+const plans = await mcp_aiknowsys_get_active_plans();
+if (plans.length > 0) {
+  console.log(`Loaded active plan: ${plans[0].title}`);
+}
+
+// Step 2: Load recent sessions (REQUIRED - DO NOT SKIP)
+const sessions = await mcp_aiknowsys_get_recent_sessions({ days: 7 });
+if (sessions.length > 0) {
+  console.log(`Found ${sessions.length} recent sessions`);
+  // Read the most recent one
+}
+
+// Step 3: Get critical invariants (REQUIRED - DO NOT SKIP)
+const invariants = await mcp_aiknowsys_get_critical_invariants();
+console.log(`Loaded ${invariants.length} critical invariants`);
+
+// Step 4: Acknowledge context loaded
+console.log("✅ Context loaded. Ready to proceed.");
+```
+
+**If MCP tools unavailable (Claude Desktop without MCP, etc):**
 
 ```
 1. **Check .aiknowsys/plans/active-<username>.md** (personal plan pointer)
@@ -158,14 +188,15 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 
 **Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
 
-**VSCode Hooks (Automated):**  
-If VSCode hooks are installed (`.github/hooks/`), session files are automatically created/updated:
-- `sessionStart` hook: Detects recent sessions and reminds you to load context
-- `sessionEnd` hook: Creates/updates today's session file with timestamp
-- Hooks complement manual workflow - you still populate the content
-- **Shell wrapper architecture (v0.11.0+):** Hooks use .sh (bash) and .ps1 (PowerShell) wrappers for cross-platform compatibility with GitHub Copilot
-- **Environment:** VSCode + GitHub Copilot coding agent extension (hooks execute automatically in this environment)
-- If hooks aren't available, manual session management works the same (see [.aiknowsys/learned/hook-troubleshooting.md](.aiknowsys/learned/hook-troubleshooting.md))
+**VSCode Hooks (Infrastructure Ready, Runtime Pending):**  
+Shell wrapper hooks are implemented in `.github/hooks/` but **VSCode Copilot doesn't execute them yet** (as of Feb 2026):
+- Theory: `sessionStart` hook should auto-load context
+- Reality: Hooks don't fire in practice (VSCode/Copilot API limitation)
+- **Current workaround:** Use MCP tools explicitly (see above)
+- **Future:** When VSCode enables hooks, context will auto-inject
+- See [.aiknowsys/learned/hook-troubleshooting.md](.aiknowsys/learned/hook-troubleshooting.md)
+
+**Until hooks work, use MCP tools explicitly at session start!**
 
 **Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
 
@@ -637,6 +668,55 @@ This project uses Developer + Architect agents for automated code review.
 - Easy to scan what happened without full review text
 
 **See:** `.github/agents/README.md` for details
+
+---
+
+## 📝 AGENTS.md vs Custom Instructions
+
+**You're reading AGENTS.md** - environment-independent workflow reference that lives in your repo.
+
+**The Challenge:** Agents must **actively read** this file. They can forget or skip it.
+
+**The Solution:** Custom Instructions (environment-specific, auto-injected)
+
+### What Are Custom Instructions?
+
+**Custom instructions** are settings in your AI client (Claude Desktop, VS Code, Cursor) that are **automatically injected into EVERY conversation**.
+
+**Key differences:**
+
+| Feature | AGENTS.md (This File) | Custom Instructions |
+|---------|----------------------|---------------------|
+| **Location** | In repo (version controlled) | In AI client settings |
+| **Loading** | Agent must read it | Auto-injected every session |
+| **Reliability** | Depends on agent discipline | Guaranteed to be present |
+| **Scope** | Complete workflow reference | High-priority reminders |
+| **Portability** | Works everywhere | Client-specific |
+| **Best for** | Detailed protocols, edge cases | Session start, TDD, performance |
+
+### Recommended Approach
+
+**Use both together:**
+
+1. **Custom Instructions** (high-priority reminders)
+   - Session start MCP calls (most critical!)
+   - "Read @AGENTS.md for complete workflow"
+   - TDD enforcement
+   - Performance hints
+
+2. **AGENTS.md** (complete reference) ← You are here
+   - Full workflow protocol
+   - Skills integration
+   - Emergency procedures  
+   - Multi-agent handoffs
+   - All edge cases
+
+**Setup:** See [docs/custom-instructions-template.md](docs/custom-instructions-template.md) for copy-paste ready templates for Claude Desktop, VS Code, Cursor, and Windsurf.
+
+**Why this works:**
+- Custom instructions ensure critical session start happens
+- AGENTS.md provides detailed guidance after context loaded
+- Together they create reliable autonomous workflow
 
 ---
 

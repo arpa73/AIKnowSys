@@ -279,6 +279,37 @@ npx aiknowsys install-agents --essentials ARCHITECTURE.md
 
 See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled example using the minimal template.
 
+---
+
+### ⚡ Optional: Set Up Custom Instructions (Recommended)
+
+**Make AI agents autonomously load context** instead of manually prompting every session:
+
+```bash
+# View custom instructions template
+cat docs/custom-instructions-template.md
+```
+
+**What this does:**
+- ✅ Auto-loads active plans and recent sessions at every session start
+- ✅ Enforces TDD workflow (write tests first)
+- ✅ Optimizes MCP tool usage (10-100x faster than file reading)
+- ✅ Makes AGENTS.md workflow automatic
+
+**Quick setup:**
+1. Copy instructions from `docs/custom-instructions-template.md`
+2. Paste into your AI client settings:
+   - **Claude Desktop:** Settings → Custom Instructions
+   - **VS Code:** Settings → GitHub Copilot System Prompt
+   - **Cursor:** Create `.cursorrules` in project root
+   - **Windsurf:** Create `.windsurfrules` in project root
+
+**Setup time:** 2 minutes (one-time, massive ongoing benefit)
+
+See [docs/custom-instructions-template.md](docs/custom-instructions-template.md) for detailed instructions.
+
+---
+
 **🚀 Enhanced Interactive Setup (Manual Mode):**
 
 Manual mode now asks intelligent questions about your project and automatically fills many placeholders:

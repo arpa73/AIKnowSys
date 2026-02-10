@@ -40,7 +40,8 @@
         "bash": ".github/hooks/session-start.sh",
         "powershell": ".github/hooks/session-start.ps1",
         "cwd": ".",
-        "timeoutSec": 5
+        "timeoutSec": 5,
+        "description": "Detect and suggest loading recent sessions (when hooks work)"
       },
       {
         "type": "command",
