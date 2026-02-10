@@ -8,6 +8,7 @@ import { execFile } from 'child_process';
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
 import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.js';
+import { createPlanCore } from '../../../lib/core/create-plan.js';
 
 // Temporary: Keep execFileAsync for functions not yet refactored
 // TODO Phase 2: Migrate updateSession, createPlan, updatePlan to lib/core
@@ -171,30 +172,37 @@ export async function updateSession(params: unknown) {
 
 /**
  * Create a new implementation plan
+ * 
+ * Refactored: Direct import from lib/core (10-100x faster than CLI subprocess)
  */
 export async function createPlan(params: unknown) {
   try {
     const validated = createPlanSchema.parse(params);
     
-    const args = [
-      'aiknowsys',
-      'create-plan',
-      '--title', validated.title
-    ];
+    // Direct function call (NO subprocess!)
+    const result = await createPlanCore({
+      title: validated.title,
+      author: validated.author,
+      topics: validated.topics,
+      targetDir: PROJECT_ROOT
+    });
 
-    if (validated.author) {
-      args.push('--author', validated.author);
+    // Format MCP response
+    if (result.created) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n🔗 Pointer: ${result.pointerPath}\n📝 Edit plan to add implementation steps`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ Plan already exists: ${result.filePath}`
+        }]
+      };
     }
-
-    if (validated.topics.length > 0) {
-      args.push('--topics', validated.topics.join(','));
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     return {
       content: [{ 

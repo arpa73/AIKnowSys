@@ -132,55 +132,27 @@ describe('Mutation Tools', () => {
 
   describe('create_plan', () => {
     it('should create plan with title', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ Plan created: .aiknowsys/PLAN_feature_x.md' 
-      });
-
+      // NOTE: createPlan now uses direct lib/core import (no CLI mock needed)
       const { createPlan } = await import('../../src/tools/mutations.js');
       const result = await createPlan({
-        title: 'Implement feature X'
+        title: `Test Plan ${Date.now()}`
       });
 
-      expect(result.content[0].text).toContain('Plan created');
-      expect(result.content[0].text).toContain('PLAN_');
+      expect(result.content[0].text).toMatch(/Created plan:|Plan already exists:/);
+      expect(result.content[0].text).toMatch(/PLAN_/);
     });
 
-    it('should use --title flag correctly', async () => {
-     mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan created' });
-
-      const { createPlan } = await import('../../src/tools/mutations.js');
-      await createPlan({
-        title: 'Test Plan'
-      });
-
-      // Verify correct CLI arguments
-      expect(mockExecFileAsync).toHaveBeenCalledWith(
-        'npx',
-        expect.arrayContaining([
-          'aiknowsys',
-          'create-plan',
-          '--title', 'Test Plan'
-        ]),
-        expect.anything()  // Accept cwd options object
-      );
-      
-      // Verify --goal, --id, --type, --priority are NOT used (these flags don't exist in CLI)
-      const callArgs = mockExecFileAsync.mock.calls[0][1];
-      expect(callArgs).not.toContain('--goal');
-      expect(callArgs).not.toContain('--id');
-      expect(callArgs).not.toContain('--type');
-      expect(callArgs).not.toContain('--priority');
+    // NOTE: These tests are SKIPPED because createPlan() now uses direct lib/core import
+    // instead of CLI subprocess, so CLI argument mocking is no longer relevant.
+    // See test/core/create-plan.test.ts for comprehensive pure function tests.
+    it.skip('should use --title flag correctly', async () => {
+      // This test validated CLI arguments when createPlan used execFileAsync.
+      // Now it uses createPlanCore() directly - see lib/core tests instead.
     });
 
-    it('should handle optional parameters', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan created' });
-
-      const { createPlan } = await import('../../src/tools/mutations.js');
-      const result = await createPlan({
-        title: 'Simple goal'
-      });
-
-      expect(result.content[0].text).toContain('Plan created');
+    it.skip('should handle optional parameters', async () => {
+      // This test validated CLI parameter handling when createPlan used execFileAsync.
+      // Now it uses createPlanCore() directly - see lib/core tests instead.
     });
   });
 
