@@ -21,48 +21,27 @@ describe('Mutation Tools', () => {
 
   describe('create_session', () => {
     it('should create session with title and topics', async () => {
-     mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ Session created: .aiknowsys/sessions/2026-02-08-session.md' 
-      });
-
+      // NOTE: createSession now uses direct lib/core import (no CLI mock needed)
+      // This test will create actual session file (in today's date)
       const { createSession } = await import('../../src/tools/mutations.js');
       const result = await createSession({
-        title: 'Implement Phase 2',
+        title: 'Test MCP Integration',
         topics: ['MCP', 'tools']
       });
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
-      expect(result.content[0].text).toContain('Session created');
-      expect(result.content[0].text).toContain('2026-02-08-session.md');
+      // New format: "✅ Created session: YYYY-MM-DD-session.md" or "ℹ️ Session already exists: ..."
+      expect(result.content[0].text).toMatch(/Created session:|Session already exists:/);
+      expect(result.content[0].text).toMatch(/session\.md/);
     });
 
-    it('should use --title flag, not --goal', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Session created' });
-
-      const { createSession } = await import('../../src/tools/mutations.js');
-      await createSession({
-        title: 'Test Session',
-        topics: ['testing']
-      });
-
-      // Verify correct CLI arguments
-      expect(mockExecFileAsync).toHaveBeenCalledWith(
-        'npx',
-        expect.arrayContaining([
-          'aiknowsys',
-          'create-session',
-          '--title', 'Test Session',
-          '--topics', 'testing'
-        ]),
-        expect.anything()  // Accept cwd options object
-      );
-      
-      // Verify --goal is NOT used
-      const callArgs = mockExecFileAsync.mock.calls[0][1];
-      expect(callArgs).not.toContain('--goal');
-      // Verify --status is NOT used (sessions don't have status at creation)
-      expect(callArgs).not.toContain('--status');
+    // NOTE: These tests are SKIPPED because createSession() now uses direct lib/core import
+    // instead of CLI subprocess, so CLI argument mocking is no longer relevant.
+    // See test/core/create-session.test.ts for comprehensive pure function tests.
+    it.skip('should use --title flag, not --goal', async () => {
+      // This test validated CLI arguments when createSession used execFileAsync.
+      // Now it uses createSessionCore() directly - see lib/core tests instead.
     });
 
     it('should handle missing required parameters', async () => {
@@ -73,17 +52,10 @@ describe('Mutation Tools', () => {
       expect(result.content[0].text).toContain('Error creating session');
     });
 
-    it('should handle CLI execution errors', async () => {
-      mockExecFileAsync.mockRejectedValue(new Error('Command failed'));
-
-      const { createSession } = await import('../../src/tools/mutations.js');
-      const result = await createSession({
-        title: 'Test error',
-        topics: []
-      });
-
-      expect(result.content[0].text).toContain('Error');
-      expect(result.isError).toBe(true);
+    it.skip('should handle CLI execution errors', async () => {
+      // This test validated execFileAsync error handling when createSession used CLI subprocess.
+      // Now it uses createSessionCore() directly which handles errors via structured returns.
+      // See test/core/create-session.test.ts for comprehensive error handling tests.
     });
   });
 

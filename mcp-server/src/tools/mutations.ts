@@ -2,10 +2,16 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 import { z } from 'zod';
+import { promisify } from 'util';
+import { execFile } from 'child_process';
 
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
 import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.js';
+
+// Temporary: Keep execFileAsync for functions not yet refactored
+// TODO Phase 2: Migrate updateSession, createPlan, updatePlan to lib/core
+const execFileAsync = promisify(execFile);
 
 // Get actual file location (works in any execution context)
 const __filename = fileURLToPath(import.meta.url);
