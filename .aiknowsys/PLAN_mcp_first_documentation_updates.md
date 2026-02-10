@@ -1,11 +1,12 @@
 ---
 id: "PLAN_mcp_first_documentation_updates"
 title: "MCP-First Documentation Updates"
-status: "ACTIVE"
+status: "COMPLETE"
 author: "arno-paffen"
 created: "2026-02-09"
 topics: ["documentation", "mcp", "mutations", "agents-md"]
 started: "2026-02-09"
+completed: "2026-02-10"
 ---
 
 # Implementation Plan: MCP-First Documentation Updates

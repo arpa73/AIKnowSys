@@ -2,7 +2,10 @@
 
 **Status:** 🎯 PLANNING  
 **Created:** 2026-02-09  
+**Updated:** 2026-02-10 (Added Phase 0: API Improvements)  
 **Goal:** Make AIKnowSys MCP server discoverable and installable with one-click installation
+
+**Prerequisites:** Fix discriminator usability bugs before public distribution (Phase 0)
 
 ## Overview
 
@@ -87,6 +90,173 @@ npm install -g aiknowsys-mcp-server
 [![MCP Server](https://img.shields.io/badge/MCP-Server-blue)](https://github.com/mcp)
 [![Install](https://img.shields.io/badge/Install-VS%20Code-green)](https://smithery.ai/server/@arpa73/aiknowsys)
 ```
+
+## Phase 0: API Improvements (Prerequisites)
+
+**Goal:** Fix known usability issues before public distribution
+
+**Why This Matters:**  
+Public users will encounter these issues immediately. Better to fix before distribution than to deal with support requests and negative feedback.
+
+### Known Issue: Discriminator Usability Bug
+
+**Problem:**  
+MCP mutation tools (`update_plan`, `update_session`, `create_plan`, `create_session`) use TypeScript discriminated unions with an `operation` field, but this requirement is not obvious from the tool name or initial documentation.
+
+**User Experience:**
+```typescript
+// ❌ Natural attempt (causes MCP error -32602):
+mcp_aiknowsys_update_plan({
+  planId: "PLAN_something",
+  status: "COMPLETE"
+})
+
+// Error: "Invalid discriminator value. Expected 'set-status' | 'append' | 'prepend'"
+
+// ✅ Correct usage (not discoverable):
+mcp_aiknowsys_update_plan({
+  operation: "set-status",  // ← Required but non-obvious!
+  planId: "PLAN_something",
+  status: "COMPLETE"
+})
+```
+
+**Root Cause:**
+- Tool API uses discriminated unions (operation determines parameter shape)
+- Field name "operation" is generic and doesn't explain what it discriminates
+- Error message comes late (after failed call) rather than being self-documenting
+- No inline examples in tool descriptions
+
+### Solution: API Redesign
+
+**Option 1: Split into Separate Tools** (RECOMMENDED)
+```typescript
+// Instead of one tool with discriminator:
+mcp_aiknowsys_update_plan({ operation: "set-status", ... })
+
+// Create specific tools:
+mcp_aiknowsys_set_plan_status({ planId, status })
+mcp_aiknowsys_append_to_plan({ planId, content })
+mcp_aiknowsys_prepend_to_plan({ planId, content })
+
+// Similarly for sessions:
+mcp_aiknowsys_set_session_status({ date?, status })
+mcp_aiknowsys_append_to_session({ section, content })
+mcp_aiknowsys_prepend_to_session({ section, content })
+mcp_aiknowsys_insert_after_section({ targetSection, newSection, content })
+```
+
+**Benefits:**
+- ✅ Self-documenting API (tool name explains what it does)
+- ✅ TypeScript autocomplete works perfectly
+- ✅ No discriminator confusion
+- ✅ Better tool discovery (15 → 21 tools, but clearer purpose)
+- ✅ Simpler parameter validation
+
+**Trade-offs:**
+- ⚠️ More tools to maintain (15 → 21 tools, +6)
+- ⚠️ Slightly larger tool list in MCP Inspector
+- ⚠️ Need to update documentation in AGENTS.md, ESSENTIALS
+
+**Implementation Effort:** ~3 hours
+- 1h: Split update_plan and update_session into separate tools
+- 1h: Update tests (unit + integration)
+- 1h: Update documentation (AGENTS.md Section 5½, ESSENTIALS Section 10)
+
+---
+
+**Option 2: Better Documentation** (FALLBACK)
+```typescript
+// Add inline examples to tool descriptions:
+{
+  name: "update_plan",
+  description: `Update a plan's status or content.
+  
+Examples:
+  // Set status to COMPLETE:
+  { operation: "set-status", planId: "PLAN_xyz", status: "COMPLETE" }
+  
+  // Append progress note:
+  { operation: "append", planId: "PLAN_xyz", content: "Phase 1 done" }
+  
+  // Prepend critical update:
+  { operation: "prepend", planId: "PLAN_xyz", content: "Blocker found" }
+  `,
+  inputSchema: z.object({ ... })
+}
+```
+
+**Benefits:**
+- ✅ Quick fix (30 minutes work)
+- ✅ No breaking changes
+- ✅ Examples visible in tool list
+
+**Trade-offs:**
+- ⚠️ Still requires reading documentation
+- ⚠️ Discriminator pattern still non-obvious
+- ⚠️ Doesn't fix TypeScript autocomplete issues
+
+**Implementation Effort:** ~30 minutes
+- Update tool descriptions in mcp-server/src/tools/mutations.ts
+- Add examples to AGENTS.md Section 5½
+
+---
+
+**Option 3: Hybrid Approach** (BEST OF BOTH)
+```typescript
+// Keep discriminated tools for advanced users:
+mcp_aiknowsys_update_plan({ operation, ... })
+
+// Add convenience wrappers for common cases:
+mcp_aiknowsys_complete_plan({ planId })  // Shortcut for set-status COMPLETE
+mcp_aiknowsys_pause_plan({ planId })     // Shortcut for set-status PAUSED
+mcp_aiknowsys_activate_plan({ planId })  // Shortcut for set-status ACTIVE
+
+// Wrappers internally call update_plan with correct operation
+```
+
+**Benefits:**
+- ✅ Backward compatible (existing tools still work)
+- ✅ Easier for common operations (90% of use cases)
+- ✅ Advanced users can still use full API
+
+**Trade-offs:**
+- ⚠️ More tools (15 → 18-20 tools)
+- ⚠️ Two ways to do same thing (can confuse)
+
+**Implementation Effort:** ~2 hours
+- 1h: Create wrapper tools
+- 30min: Update tests
+- 30min: Update documentation
+
+---
+
+### Recommendation
+
+**For public distribution: Option 1 (Split into Separate Tools)**
+
+**Rationale:**
+1. **First impressions matter** - Public users won't tolerate confusing APIs
+2. **Self-documenting is critical** - Reduces support burden
+3. **MCP tools should be simple** - Each tool does one thing well
+4. **Long-term maintainability** - Clearer separation of concerns
+
+**Timeline:**
+- Phase 0 must complete BEFORE Phase 1 (registry submission)
+- Estimated: 3 hours development + 1 hour testing/validation
+- Can be done in one focused session
+
+### Success Criteria for Phase 0
+
+- [ ] All mutation tools use clear, single-purpose names
+- [ ] No discriminator fields in public API
+- [ ] TypeScript autocomplete works without documentation
+- [ ] Error messages are actionable
+- [ ] Documentation updated (AGENTS.md, ESSENTIALS)
+- [ ] All 89+ tests still passing
+- [ ] Integration tests verify new tool signatures
+
+---
 
 ## Implementation Steps
 
@@ -401,25 +571,42 @@ Then configure in `.vscode/mcp.json`:
 
 ## Timeline Estimate
 
+- **Phase 0 (API Redesign):** 4 hours (PREREQUISITE - must complete first)
+  - Option 1: 3h development + 1h testing
+  - Option 2: 30 minutes (fallback)
+  - Option 3: 2h development + 30min testing
 - **Phase 1 (Prep):** 2 hours
 - **Phase 2 (NPM):** 1 hour
 - **Phase 3 (Registry):** 2-4 weeks (review time)
 - **Phase 4 (Docs):** 1 hour
 
-**Total Active Work:** 4 hours  
+**Total Active Work:** 8 hours (Phase 0 + Phases 1-4)  
 **Total Calendar Time:** 2-4 weeks (waiting for registry approval)
 
 ## Next Steps
 
-1. **Immediate:** Update package.json with registry metadata
-2. **Day 1:** Create mcp-server/README.md
-3. **Day 1:** Publish to NPM
-4. **Day 2:** Research registry submission process
-5. **Week 1:** Submit to GitHub MCP Registry
-6. **Week 2-4:** Wait for approval
-7. **Post-Approval:** Update all documentation
+**PHASE 0 (MUST DO FIRST):**
+1. **Immediate:** Choose API redesign approach (Option 1 recommended)
+2. **Day 1:** Implement discriminator fix (split tools or add wrappers)
+3. **Day 1:** Update tests and documentation
+4. **Day 1:** Validate all tests passing
+
+**PHASE 1-4 (AFTER PHASE 0):**
+5. **Day 2:** Update package.json with registry metadata
+6. **Day 2:** Create mcp-server/README.md
+7. **Day 2:** Publish to NPM
+8. **Day 3:** Research registry submission process
+9. **Week 1:** Submit to GitHub MCP Registry
+10. **Week 2-4:** Wait for approval
+11. **Post-Approval:** Update all documentation
 
 ## Notes for Developer
+
+**⚠️ CRITICAL: Complete Phase 0 Before Distribution**
+- Discriminator usability bug will cause immediate user frustration
+- Fix BEFORE NPM publication to avoid bad reviews
+- Choose Option 1 (split tools) for best long-term outcome
+- See Phase 0 section for detailed analysis
 
 **NPM Publication:**
 - Need npm account (create at npmjs.com)

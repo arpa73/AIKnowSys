@@ -22,7 +22,7 @@
 | Terminal UI | Chalk 5.x, Ora 9.x |
 | Package Manager | npm |
 | Distribution | npm registry |
-| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (15 tools for AI agents)** |
+| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (27 tools for AI agents)** |
 
 ---
 

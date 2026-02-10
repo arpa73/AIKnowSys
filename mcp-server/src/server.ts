@@ -4,9 +4,28 @@ import { z } from 'zod';
 
 // Tool implementations
 import { getCriticalInvariants, getValidationMatrix } from './tools/context.js';
-import { getActivePlans, getRecentSessions } from './tools/query.js';
+import { 
+  getActivePlans, 
+  getRecentSessions, 
+  queryPlansWithFilters, 
+  querySessionsWithFilters,
+  getPlansByStatus,
+  getAllPlans,
+  getSessionByDate,
+  rebuildContextIndex,
+  syncPlans
+} from './tools/query.js';
 import { findSkillForTask } from './tools/skills.js';
-import { createSession, updateSession, createPlan, updatePlan } from './tools/mutations.js';
+import { createSession, createPlan } from './tools/mutations.js';
+import { 
+  setPlanStatus, 
+  appendToPlan, 
+  prependToPlan,
+  appendToSession,
+  prependToSession,
+  insertAfterSection,
+  insertBeforeSection
+} from './tools/split-mutations.js';
 import { validateDeliverables, checkTddCompliance, validateSkill } from './tools/validation.js';
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
 
@@ -86,6 +105,94 @@ export class AIKnowSysServer {
       async ({ task }) => findSkillForTask(task)
     );
 
+    // Phase 1.2: Advanced Query Tools (NEW - 2026-02-10)
+    this.server.registerTool(
+      'query_plans',
+      {
+        description:
+          'Query plans with flexible filters: status (ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED), author, topic, date range. Returns structured plan metadata.',
+        inputSchema: z.object({
+          status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']).optional(),
+          author: z.string().optional(),
+          topic: z.string().optional(),
+          updatedAfter: z.string().optional(),
+          updatedBefore: z.string().optional(),
+        }),
+      },
+      async (args) => queryPlansWithFilters(args)
+    );
+
+    this.server.registerTool(
+      'query_sessions',
+      {
+        description:
+          'Query sessions with flexible filters: exact date, date range (dateAfter/dateBefore), topic, plan reference, or last N days. Returns structured session metadata.',
+        inputSchema: z.object({
+          date: z.string().optional(),
+          dateAfter: z.string().optional(),
+          dateBefore: z.string().optional(),
+          topic: z.string().optional(),
+          plan: z.string().optional(),
+          days: z.number().optional(),
+        }),
+      },
+      async (args) => querySessionsWithFilters(args)
+    );
+
+    this.server.registerTool(
+      'get_plans_by_status',
+      {
+        description:
+          'Get all plans with a specific status. Simpler than query_plans for status-only queries. Status values: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED.',
+        inputSchema: z.object({
+          status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']),
+        }),
+      },
+      async ({ status }) => getPlansByStatus(status)
+    );
+
+    this.server.registerTool(
+      'get_all_plans',
+      {
+        description:
+          'Get complete inventory of all plans with metadata (id, title, author, status, dates). No filters applied.',
+        inputSchema: z.object({}),
+      },
+      async () => getAllPlans()
+    );
+
+    this.server.registerTool(
+      'get_session_by_date',
+      {
+        description:
+          'Get session file for a specific date (YYYY-MM-DD). Returns session metadata and content reference.',
+        inputSchema: z.object({
+          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD'),
+        }),
+      },
+      async ({ date }) => getSessionByDate(date)
+    );
+
+    this.server.registerTool(
+      'rebuild_index',
+      {
+        description:
+          'Rebuild context index (.aiknowsys/context-index.json) from markdown files. Use after manual file edits or when index is corrupted.',
+        inputSchema: z.object({}),
+      },
+      async () => rebuildContextIndex()
+    );
+
+    this.server.registerTool(
+      'sync_plans',
+      {
+        description:
+          'Sync individual developer plan pointers (active-*.md) into team index (CURRENT_PLAN.md). Critical for multi-developer workflow.',
+        inputSchema: z.object({}),
+      },
+      async () => syncPlans()
+    );
+
     // Phase 2A: Mutation Tools
     this.server.registerTool(
       'create_session',
@@ -93,7 +200,7 @@ export class AIKnowSysServer {
         description:
           'Create a new session file with YAML frontmatter. Use when starting work on a new task or feature.',
         inputSchema: z.object({
-          goal: z.string().min(3),
+          title: z.string().min(3),
           topics: z.array(z.string()).optional().default([]),
           status: z.enum(['active', 'paused', 'complete']).optional().default('active'),
         }),
@@ -101,19 +208,63 @@ export class AIKnowSysServer {
       async (args) => createSession(args)
     );
 
+    // Session Mutation Tools (Split from update_session for clarity)
     this.server.registerTool(
-      'update_session',
+      'append_to_session',
       {
         description:
-          "Update today's session with new content. Use for appending progress, prepending urgent notes, or inserting sections.",
+          "Append content to a session section. Use for adding progress updates or notes.",
         inputSchema: z.object({
           date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD').optional(),
           section: z.string().min(1),
           content: z.string().min(1),
-          operation: z.enum(['append', 'prepend', 'insert-after', 'insert-before']).optional().default('append'),
         }),
       },
-      async (args) => updateSession(args)
+      async (args) => appendToSession(args)
+    );
+
+    this.server.registerTool(
+      'prepend_to_session',
+      {
+        description:
+          "Prepend content to a session section. Use for adding critical updates or blockers at the top.",
+        inputSchema: z.object({
+          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD').optional(),
+          section: z.string().min(1),
+          content: z.string().min(1),
+        }),
+      },
+      async (args) => prependToSession(args)
+    );
+
+    this.server.registerTool(
+      'insert_after_section',
+      {
+        description:
+          "Insert a new section after a pattern in the session file. Use for surgical placement of content.",
+        inputSchema: z.object({
+          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD').optional(),
+          pattern: z.string().min(1),
+          section: z.string().optional(),
+          content: z.string().min(1),
+        }),
+      },
+      async (args) => insertAfterSection(args)
+    );
+
+    this.server.registerTool(
+      'insert_before_section',
+      {
+        description:
+          "Insert a new section before a pattern in the session file. Use for ordered content placement.",
+        inputSchema: z.object({
+          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD').optional(),
+          pattern: z.string().min(1),
+          section: z.string().optional(),
+          content: z.string().min(1),
+        }),
+      },
+      async (args) => insertBeforeSection(args)
     );
 
     this.server.registerTool(
@@ -123,7 +274,7 @@ export class AIKnowSysServer {
           'Create a new implementation plan. Use when starting a significant feature or refactoring.',
         inputSchema: z.object({
           id: z.string().min(1).regex(/^[a-z0-9_]+$/),
-          goal: z.string().min(3),
+          title: z.string().min(3),
           type: z.enum(['feature', 'refactor', 'bugfix', 'research']).optional().default('feature'),
           priority: z.enum(['high', 'medium', 'low']).optional().default('medium'),
         }),
@@ -131,30 +282,44 @@ export class AIKnowSysServer {
       async (args) => createPlan(args)
     );
 
+    // Plan Mutation Tools (Split from update_plan for clarity)
     this.server.registerTool(
-      'update_plan',
+      'set_plan_status',
       {
         description:
-          "Update an existing plan's status or content. Use for appending progress, changing status, or adding notes.",
-        inputSchema: z.discriminatedUnion('operation', [
-          z.object({
-            planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
-            operation: z.literal('set-status'),
-            status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED']),
-          }),
-          z.object({
-            planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
-            operation: z.literal('append'),
-            content: z.string().min(1),
-          }),
-          z.object({
-            planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
-            operation: z.literal('prepend'),
-            content: z.string().min(1),
-          }),
-        ]),
+          "Set a plan's status. Use for marking plans as ACTIVE, PAUSED, COMPLETE, or CANCELLED.",
+        inputSchema: z.object({
+          planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+          status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED']),
+        }),
       },
-      async (args) => updatePlan(args)
+      async (args) => setPlanStatus(args)
+    );
+
+    this.server.registerTool(
+      'append_to_plan',
+      {
+        description:
+          "Append progress notes to a plan. Use for documenting progress, decisions, or updates.",
+        inputSchema: z.object({
+          planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+          content: z.string().min(1),
+        }),
+      },
+      async (args) => appendToPlan(args)
+    );
+
+    this.server.registerTool(
+      'prepend_to_plan',
+      {
+        description:
+          "Prepend critical updates to a plan. Use for adding blockers, urgent changes, or breaking news at the top.",
+        inputSchema: z.object({
+          planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+          content: z.string().min(1),
+        }),
+      },
+      async (args) => prependToPlan(args)
     );
 
     // Phase 2B: Validation Tools

@@ -57,9 +57,9 @@ If fixing bug:
 ```typescript
 // Create/update sessions and plans
 mcp_aiknowsys_create_session({ title: "...", topics: [...] })
-mcp_aiknowsys_update_session({ operation: "append", section: "...", content: "..." })
+mcp_aiknowsys_append_to_session({ section: "...", content: "..." })
 mcp_aiknowsys_create_plan({ title: "...", topics: [...] })
-mcp_aiknowsys_update_plan({ planId: "...", status: "ACTIVE" })
+mcp_aiknowsys_set_plan_status({ planId: "...", status: "ACTIVE" })
 ```
 
 Benefits: 10-100x faster, YAML validated, atomic updates  
@@ -295,16 +295,14 @@ mcp_aiknowsys_create_session({
   topics: ["feature", "implementation"]
 });
 
-// Update existing session
-mcp_aiknowsys_update_session({
-  operation: "append",
+// Update existing session - append to section
+mcp_aiknowsys_append_to_session({
   section: "## Changes",
   content: "Fixed bug Y"
 });
 
 // Prepend critical update
-mcp_aiknowsys_update_session({
-  operation: "prepend",
+mcp_aiknowsys_prepend_to_session({
   section: "## Critical Issue",
   content: "Security fix needed"
 });
@@ -315,12 +313,14 @@ mcp_aiknowsys_create_plan({
   topics: ["feature-x", "api"]
 });
 
-mcp_aiknowsys_update_plan({
+// Set plan status
+mcp_aiknowsys_set_plan_status({
   planId: "PLAN_xyz",
   status: "ACTIVE"
 });
 
-mcp_aiknowsys_update_plan({
+// Append progress to plan
+mcp_aiknowsys_append_to_plan({
   planId: "PLAN_xyz",
   content: "Phase 1 complete: 19/19 tests passing"
 });

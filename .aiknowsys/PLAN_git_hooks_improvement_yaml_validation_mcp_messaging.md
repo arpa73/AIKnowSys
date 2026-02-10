@@ -1,10 +1,11 @@
 ---
 id: "PLAN_git_hooks_improvement_yaml_validation_mcp_messaging"
 title: "Git Hooks Improvement - YAML Validation & MCP Messaging"
-status: "PAUSED"
+status: "ACTIVE"
 author: "arno-paffen"
 created: "2026-02-09"
 topics: ["git", "hooks", "yaml", "validation", "mcp"]
+started: "2026-02-10"
 ---
 
 # Implementation Plan: Git Hooks Improvement - YAML Validation & MCP Messaging

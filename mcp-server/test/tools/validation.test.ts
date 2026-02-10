@@ -139,7 +139,8 @@ describe('Validation Tools', () => {
           'aiknowsys',
           'validate',
           '--type', 'skills'
-        ])
+        ]),
+        expect.anything()  // Accept cwd options object
       );
       
       // Verify --file is NOT used (doesn't exist in CLI)

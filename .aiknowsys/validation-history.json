@@ -29,9 +29,9 @@
   },
   "2026-02-10": {
     "standalone": {
-      "runs": 4,
+      "runs": 12,
       "failures": 0,
-      "avgDuration": 121
+      "avgDuration": 222
     }
   }
 }

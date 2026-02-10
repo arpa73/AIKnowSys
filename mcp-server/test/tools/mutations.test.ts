@@ -54,7 +54,8 @@ describe('Mutation Tools', () => {
           'create-session',
           '--title', 'Test Session',
           '--topics', 'testing'
-        ])
+        ]),
+        expect.anything()  // Accept cwd options object
       );
       
       // Verify --goal is NOT used
@@ -187,7 +188,8 @@ describe('Mutation Tools', () => {
           'aiknowsys',
           'create-plan',
           '--title', 'Test Plan'
-        ])
+        ]),
+        expect.anything()  // Accept cwd options object
       );
       
       // Verify --goal, --id, --type, --priority are NOT used (these flags don't exist in CLI)
