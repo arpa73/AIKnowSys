@@ -10,7 +10,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { parseFrontmatter, updateFrontmatter } from '../utils/yaml-frontmatter.js';
 import { JsonStorage } from '../context/json-storage.js';
-import { syncPlans } from '../commands/sync-plans.js';
+import { syncPlansCore } from './sync-plans.js';
 import { detectUsername } from '../utils/git-utils.js';
 import { existsSync } from 'fs';
 
@@ -209,7 +209,7 @@ export async function updatePlanCore(
   await storage.rebuildIndex();
 
   // Auto-sync plans to update CURRENT_PLAN.md
-  await syncPlans({ dir: resolvedTargetDir, _silent: true });
+  await syncPlansCore({ targetDir: resolvedTargetDir });
 
   // Return structured result
   return {

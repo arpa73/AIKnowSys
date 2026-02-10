@@ -72,12 +72,9 @@ const updatePlanSchema = z.discriminatedUnion('operation', [
     planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
     operation: z.literal('append'),
     content: z.string().min(1)
-  }),
-  z.object({
-    planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
-    operation: z.literal('prepend'),
-    content: z.string().min(1)
   })
+  // Note: 'prepend' operation removed - not implemented in core yet
+  // TODO Phase 2 Batch 2: Add prepend support to lib/core/update-plan.ts
 ]);
 
 /**
@@ -229,7 +226,6 @@ export async function updatePlan(params: unknown) {
       planId: validated.planId,
       setStatus: validated.operation === 'set-status' ? validated.status : undefined,
       append: validated.operation === 'append' ? validated.content : undefined,
-      // Note: prepend not implemented in core yet (Phase 2 future work)
       targetDir: PROJECT_ROOT
     });
 
