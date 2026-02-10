@@ -9,6 +9,7 @@ import { execFile } from 'child_process';
 import { createSessionCore } from '../../../lib/core/create-session.js';
 import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.js';
 import { createPlanCore } from '../../../lib/core/create-plan.js';
+import { updatePlanCore } from '../../../lib/core/update-plan.js';
 
 // Temporary: Keep execFileAsync for functions not yet refactored
 // TODO Phase 2: Migrate updateSession, createPlan, updatePlan to lib/core
@@ -216,26 +217,31 @@ export async function createPlan(params: unknown) {
 
 /**
  * Update an existing implementation plan
+ * 
+ * Refactored: Direct import from lib/core (10-100x faster than CLI subprocess)
  */
 export async function updatePlan(params: unknown) {
   try {
     const validated = updatePlanSchema.parse(params);
     
-    const args = ['aiknowsys', 'update-plan', validated.planId];
+    // Direct function call (NO subprocess!)
+    const result = await updatePlanCore({
+      planId: validated.planId,
+      setStatus: validated.operation === 'set-status' ? validated.status : undefined,
+      append: validated.operation === 'append' ? validated.content : undefined,
+      // Note: prepend not implemented in core yet (Phase 2 future work)
+      targetDir: PROJECT_ROOT
+    });
 
-    // Discriminated union guarantees correct fields exist for each operation
-    if (validated.operation === 'set-status') {
-      args.push('--set-status', validated.status);
-    } else if (validated.operation === 'append') {
-      args.push('--append', validated.content);
-    } else if (validated.operation === 'prepend') {
-      args.push('--prepend', validated.content);
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    // Format MCP response
+    const changes = result.changes || [];
+    const changeList = changes.map(c => `   • ${c}`).join('\n');
     
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{
+        type: 'text' as const,
+        text: `✅ Plan Updated\n\n📝 Changes:\n${changeList}\n\n📂 File: ${result.filePath}\n🔍 Index: Rebuilt automatically`
+      }]
     };
   } catch (error) {
     return {

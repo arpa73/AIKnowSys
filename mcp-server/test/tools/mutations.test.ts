@@ -157,30 +157,17 @@ describe('Mutation Tools', () => {
   });
 
   describe('update_plan', () => {
-    it('should update plan with append operation', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan updated' });
-
-      const { updatePlan } = await import('../../src/tools/mutations.js');
-      const result = await updatePlan({
-        planId: 'PLAN_feature_x',
-        operation: 'append',
-        content: 'Progress update'
-      });
-
-      expect(result.content[0].text).toContain('Plan updated');
+    // NOTE: These tests are SKIPPED because updatePlan() now uses direct lib/core import
+    // instead of CLI subprocess. Integration tests would require creating real plans.
+    // See test/core/update-plan.test.ts for comprehensive pure function tests.
+    it.skip('should update plan with append operation', async () => {
+      // This test validated CLI execution when updatePlan used execFileAsync.
+      // Now it uses updatePlanCore() directly - see lib/core tests instead.
     });
 
-    it('should update plan status', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan updated' });
-
-      const { updatePlan } = await import('../../src/tools/mutations.js');
-      const result = await updatePlan({
-        planId: 'PLAN_feature_x',
-        operation: 'set-status',
-        status: 'COMPLETE'
-      });
-
-      expect(result.content[0].text).toContain('Plan updated');
+    it.skip('should update plan status', async () => {
+      // This test validated CLI execution when updatePlan used execFileAsync.
+      // Now it uses updatePlanCore() directly - see lib/core tests instead.
     });
 
     it('should validate planId format', async () => {
