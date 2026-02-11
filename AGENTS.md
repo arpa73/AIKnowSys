@@ -23,12 +23,6 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 **This rule applies to EVERY session, EVERY request - no exceptions.**
 
-**💡 TIP: Set up custom instructions** to make this automatic!
-- See [docs/custom-instructions-template.md](docs/custom-instructions-template.md)
-- Custom instructions auto-inject these reminders into EVERY conversation
-- Much more reliable than hoping agents read this file
-- AGENTS.md provides complete workflow; custom instructions ensure session start happens
-
 ### Before Making ANY Code Changes:
 
 **Step 1: Acknowledge & Read Context**
@@ -180,26 +174,6 @@ console.log("✅ Context loaded. Ready to proceed.");
    - Wait for user direction
 ```
 
-**Why This Helps:**
-- Prevents context loss between conversations
-- Maintains continuity on complex features
-- Reduces repeated explanations
-- Tracks progress automatically
-
-**Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
-
-**VSCode Hooks (Infrastructure Ready, Runtime Pending):**  
-Shell wrapper hooks are implemented in `.github/hooks/` but **VSCode Copilot doesn't execute them yet** (as of Feb 2026):
-- Theory: `sessionStart` hook should auto-load context
-- Reality: Hooks don't fire in practice (VSCode/Copilot API limitation)
-- **Current workaround:** Use MCP tools explicitly (see above)
-- **Future:** When VSCode enables hooks, context will auto-inject
-- See [.aiknowsys/learned/hook-troubleshooting.md](.aiknowsys/learned/hook-troubleshooting.md)
-
-**Until hooks work, use MCP tools explicitly at session start!**
-
-**Maintenance Note:** Session files are gitignored and accumulate locally. Consider archiving or removing files >30 days old to keep your working directory clean and focus on recent context.
-
 ### 1️⃣ START: Read Context (REQUIRED)
 
 **ALWAYS read these files at the start of every conversation:**
@@ -288,12 +262,6 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 # For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
 # For PATTERNS: Update CODEBASE_ESSENTIALS.md if invariants changed
 ```
-
-**Why this approach?** (v0.11.0+)
-- Session files are **indexed** in `.aiknowsys/context-index.json` (queryable via CLI)
-- Changelog stays **lean** (~500 lines) and scannable for major events
-- Use `query-sessions` / `search-context` to find historical work
-- See: [docs/milestone-changelog-format.md](docs/milestone-changelog-format.md)
 
 ⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
 
@@ -388,33 +356,6 @@ Only manually edit session/plan files when:
 - ✅ Commands don't support the required operation (e.g., complex restructuring)
 - ✅ Fixing YAML frontmatter corruption (after backup)
 - ✅ Emergency hotfix with command unavailable
-
-**Why Prefer MCP Tools Over CLI/Manual Editing?**
-
-**Performance:**
-- MCP: ~10ms (in-memory operation)
-- CLI: ~200ms (process spawn + file I/O)
-- Manual: N/A (agent can't validate)
-
-**Validation:**
-- MCP: YAML frontmatter validated before write
-- CLI: Basic validation only
-- Manual: No validation (corruption risk)
-
-**Atomicity:**
-- MCP: All-or-nothing updates
-- CLI: Partial updates possible on error
-- Manual: No rollback
-
-**Discoverability:**
-- MCP: Tool parameters show available options
-- CLI: Must run `--help` separately
-- Manual: Must read file format docs
-
-**Use CLI when:** MCP server not configured or testing CLI directly  
-**Use Manual when:** Fixing corrupted files (after backup)
-
-**📚 Full documentation:** See [.github/skills/context-mutation/SKILL.md](.github/skills/context-mutation/SKILL.md)
 
 **Advanced Insertion Options (v0.11.0+):**
 - `--prependSection`: Add at beginning (critical updates, blockers)
@@ -548,12 +489,6 @@ Only manually edit session/plan files when:
 - `debugging_techniques` - Effective debugging approaches
 - `project_specific` - Project conventions and standards
 
-**Why This Matters:**
-- System gets smarter over time
-- Reduces repeated explanations
-- Captures project-specific knowledge
-- Team can share discoveries
-
 ---
 
 ## 🚫 When NOT to Update Changelog
@@ -562,26 +497,6 @@ Only manually edit session/plan files when:
 - Work in progress (wait until complete)
 - Exploratory research without implementation
 - Simple bug fixes that don't reveal new patterns
-
----
-
-## 🐛 Common Issues & Workarounds
-
-### VSCode File Operation Conflicts (VSCode users only)
-
-**If working in VSCode** and file operations fail mysteriously, see:  
-**[.aiknowsys/learned/vscode-file-operations.md](.aiknowsys/learned/vscode-file-operations.md)**
-
-**Quick fix:** Click "Keep" or "Discard" in VSCode's diff/conflict UI, then retry the operation.
-
-**Trigger words for full guide:** "file doesn't exist", "file already exists", "can't delete file", "git add failed"
-
-## Maintainer Content
-
-Skills with `maintainer: true` frontmatter are for AIKnowSys development only.
-Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
-
-**Current maintainer skills:** `deliverable-review`, `_skill-template`
 
 ---
 
@@ -601,12 +516,6 @@ Don't sync them to `templates/skills/` or include in AVAILABLE_SKILLS.
 - `skill-validation` - Validate skill format and content
 - `context-query` - Query plans/sessions/context (READ operations)
 - `context-mutation` - Create/modify sessions and plans (WRITE operations)
-
-**To use a skill:**
-1. AI detects trigger words
-2. Reads relevant skill file
-3. Follows step-by-step workflow
-4. Applies to current task
 
 ---
 
@@ -661,62 +570,7 @@ This project uses Developer + Architect agents for automated code review.
 [PENDING_REVIEW.md deleted - no longer needed]
 ```
 
-**Benefits:**
-- Session file stays lean (timeline, not archive)
-- PENDING_REVIEW.md is ephemeral (exists only during action)
-- No clutter accumulation
-- Easy to scan what happened without full review text
-
 **See:** `.github/agents/README.md` for details
-
----
-
-## 📝 AGENTS.md vs Custom Instructions
-
-**You're reading AGENTS.md** - environment-independent workflow reference that lives in your repo.
-
-**The Challenge:** Agents must **actively read** this file. They can forget or skip it.
-
-**The Solution:** Custom Instructions (environment-specific, auto-injected)
-
-### What Are Custom Instructions?
-
-**Custom instructions** are settings in your AI client (Claude Desktop, VS Code, Cursor) that are **automatically injected into EVERY conversation**.
-
-**Key differences:**
-
-| Feature | AGENTS.md (This File) | Custom Instructions |
-|---------|----------------------|---------------------|
-| **Location** | In repo (version controlled) | In AI client settings |
-| **Loading** | Agent must read it | Auto-injected every session |
-| **Reliability** | Depends on agent discipline | Guaranteed to be present |
-| **Scope** | Complete workflow reference | High-priority reminders |
-| **Portability** | Works everywhere | Client-specific |
-| **Best for** | Detailed protocols, edge cases | Session start, TDD, performance |
-
-### Recommended Approach
-
-**Use both together:**
-
-1. **Custom Instructions** (high-priority reminders)
-   - Session start MCP calls (most critical!)
-   - "Read @AGENTS.md for complete workflow"
-   - TDD enforcement
-   - Performance hints
-
-2. **AGENTS.md** (complete reference) ← You are here
-   - Full workflow protocol
-   - Skills integration
-   - Emergency procedures  
-   - Multi-agent handoffs
-   - All edge cases
-
-**Setup:** See [docs/custom-instructions-template.md](docs/custom-instructions-template.md) for copy-paste ready templates for Claude Desktop, VS Code, Cursor, and Windsurf.
-
-**Why this works:**
-- Custom instructions ensure critical session start happens
-- AGENTS.md provides detailed guidance after context loaded
-- Together they create reliable autonomous workflow
 
 ---
 
