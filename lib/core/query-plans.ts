@@ -18,6 +18,7 @@
  * @module lib/core/query-plans
  */
 
+import path from 'path';
 import { createStorage, type PlanFilters } from '../context/index.js';
 
 /**
@@ -67,7 +68,7 @@ export interface QueryPlansResult {
  * @example
  * // Query active plans
  * const result = await queryPlansCore({ status: 'ACTIVE' });
- * console.log(`Found ${result.count} active plans`);
+ * // Returns: { count: 1, plans: [{ id: 'PLAN_xyz', title: '...', ... }] }
  * 
  * @example
  * // Query with multiple filters
@@ -76,6 +77,7 @@ export interface QueryPlansResult {
  *   author: 'alice',
  *   updatedAfter: '2026-02-01'
  * });
+ * // Returns structured data for MCP/CLI consumption
  */
 export async function queryPlansCore(
   options: QueryPlansOptions = {},
@@ -89,8 +91,11 @@ export async function queryPlansCore(
     );
   }
   
-  // Get target directory (from parameter or option or cwd)
-  const workingDir = targetDir || options.dir || process.cwd();
+  // Get target directory - ALWAYS resolve user input to absolute path
+  // (Critical Invariant #2: Absolute Paths Required)
+  const workingDir = targetDir 
+    ? path.resolve(targetDir)
+    : (options.dir ? path.resolve(options.dir) : process.cwd());
   
   // Create storage adapter
   const storage = await createStorage(workingDir, { autoRebuild: true });
