@@ -1,9 +1,20 @@
+/**
+ * Validation Tools
+ * 
+ * Fast validation of deliverables without subprocess spawning.
+ * Direct function calls with structured returns.
+ * 
+ * Phase 2 Batch 3: validateDeliverablesCore uses direct import
+ * for 10-100x faster execution vs CLI subprocess spawning.
+ */
+
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 import { z } from 'zod';
+import { validateDeliverablesCore } from '../../../lib/core/validate-deliverables.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -49,27 +60,42 @@ const validateSkillSchema = z.object({
 
 /**
  * Validate all deliverable files (templates)
+ * 
+ * Phase 2 Batch 3: Direct core function call (10-100x faster than CLI subprocess)
+ * Returns structured validation results with checks, fixes, and metrics.
+ * 
+ * @param params.fix - Auto-fix fixable issues (default: false)
+ * @returns Structured validation results
  */
 export async function validateDeliverables(params: unknown) {
   try {
     const validated = validateDeliverablesSchema.parse(params);
     
-    const args = ['aiknowsys', 'validate-deliverables'];
-    
-    if (validated.fix) {
-      args.push('--fix');
-    }
+    // Direct core function call (10-100x faster than CLI)
+    const result = await validateDeliverablesCore({
+      projectRoot: PROJECT_ROOT,
+      fix: validated.fix,
+    });
 
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
-  } catch (error) {
     return {
       content: [{ 
         type: 'text' as const, 
-        text: `Error validating deliverables: ${error instanceof Error ? error.message : String(error)}` 
+        text: JSON.stringify(result, null, 2)
+      }]
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [{ 
+        type: 'text' as const, 
+        text: JSON.stringify({
+          error: true,
+          message: `Failed to validate deliverables: ${message}`,
+          passed: false,
+          checks: [],
+          summary: 'Validation error',
+          exitCode: 1
+        })
       }],
       isError: true
     };
