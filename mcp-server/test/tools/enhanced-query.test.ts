@@ -1,17 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock child_process and util for CLI command execution (used by searchContext and findPattern)
-const mockExecFileAsync = vi.fn();
-
 // Mock fs/promises for file reading (used by getSkillByName)
 const mockReadFile = vi.fn();
 
-vi.mock('child_process', () => ({
-  execFile: vi.fn()
-}));
-
-vi.mock('util', () => ({
-  promisify: vi.fn(() => mockExecFileAsync)
+// Mock searchContextCore (used by searchContext)
+vi.mock('../../../lib/core/search-context.js', () => ({
+  searchContextCore: vi.fn()
 }));
 
 vi.mock('fs/promises', () => ({
@@ -20,17 +14,25 @@ vi.mock('fs/promises', () => ({
   }
 }));
 
+// Import after mocking
+import { searchContextCore } from '../../../lib/core/search-context.js';
+
 describe('Enhanced Query Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExecFileAsync.mockReset();
     mockReadFile.mockReset();
   });
 
   describe('search_context', () => {
     it('should search all context types', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📁 Found 3 matches:\n- Session 2026-02-08: MCP server Phase 2\n- Plan PLAN_mcp_phase2: Active' 
+      vi.mocked(searchContextCore).mockResolvedValue({
+        query: 'MCP server',
+        scope: 'all',
+        count: 3,
+        matches: [
+          { type: 'session', context: 'MCP server Phase 2', file: '2026-02-08-session.md', relevance: 10 },
+          { type: 'plan', context: 'MCP Phase 2 Active', file: 'PLAN_mcp_phase2.md', relevance: 9 }
+        ]
       });
 
       const { searchContext } = await import('../../src/tools/enhanced-query.js');
@@ -39,12 +41,19 @@ describe('Enhanced Query Tools', () => {
         type: 'all'
       });
 
-      expect(result.content[0].text).toContain('Found 3 matches');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(3);
+      expect(data.query).toBe('MCP server');
     });
 
     it('should search sessions only', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📁 Found 1 match:\n- 2026-02-08-session.md: MCP Phase 2A complete' 
+      vi.mocked(searchContextCore).mockResolvedValue({
+        query: 'Phase 2A',
+        scope: 'sessions',
+        count: 1,
+        matches: [
+          { type: 'session', context: 'MCP Phase 2A complete', file: '2026-02-08-session.md', relevance: 10 }
+        ]
       });
 
       const { searchContext } = await import('../../src/tools/enhanced-query.js');
@@ -53,16 +62,21 @@ describe('Enhanced Query Tools', () => {
         type: 'sessions'
       });
 
-      expect(result.content[0].text).toContain('2026-02-08-session.md');
-      // Verify correct CLI flag is used (--scope, not --type)
-      expect(mockExecFileAsync).toHaveBeenCalledWith('npx', 
-        ['aiknowsys', 'search-context', 'Phase 2A', '--scope', 'sessions']
-      );
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(1);
+      expect(data.scope).toBe('sessions');
+      // Verify searchContextCore was called with correct parameters
+      expect(searchContextCore).toHaveBeenCalledWith('Phase 2A', { scope: 'sessions' });
     });
 
     it('should search plans only', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📁 Found 1 match:\n- PLAN_mcp_phase2.md: 10 new tools' 
+      vi.mocked(searchContextCore).mockResolvedValue({
+        query: 'tools',
+        scope: 'plans',
+        count: 1,
+        matches: [
+          { type: 'plan', context: '10 new tools', file: 'PLAN_mcp_phase2.md', relevance: 10 }
+        ]
       });
 
       const { searchContext } = await import('../../src/tools/enhanced-query.js');
@@ -71,12 +85,19 @@ describe('Enhanced Query Tools', () => {
         type: 'plans'
       });
 
-      expect(result.content[0].text).toContain('PLAN_mcp_phase2.md');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(1);
+      expect(data.scope).toBe('plans');
     });
 
     it('should search learned patterns only', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📁 Found 1 match:\n- .aiknowsys/learned/mcp-sdk-patterns.md' 
+      vi.mocked(searchContextCore).mockResolvedValue({
+        query: 'registerTool',
+        scope: 'learned',
+        count: 1,
+        matches: [
+          { type: 'learned', context: 'MCP SDK patterns', file: '.aiknowsys/learned/mcp-sdk-patterns.md', relevance: 10 }
+        ]
       });
 
       const { searchContext } = await import('../../src/tools/enhanced-query.js');
@@ -85,7 +106,9 @@ describe('Enhanced Query Tools', () => {
         type: 'learned'
       });
 
-      expect(result.content[0].text).toContain('mcp-sdk-patterns.md');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(1);
+      expect(data.scope).toBe('learned');
     });
 
     it('should require query parameter', async () => {
@@ -107,8 +130,11 @@ describe('Enhanced Query Tools', () => {
     });
 
     it('should handle no results', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📁 No matches found for query: nonexistent' 
+      vi.mocked(searchContextCore).mockResolvedValue({
+        query: 'nonexistent',
+        scope: 'all',
+        count: 0,
+        matches: []
       });
 
       const { searchContext } = await import('../../src/tools/enhanced-query.js');
@@ -117,7 +143,9 @@ describe('Enhanced Query Tools', () => {
         type: 'all'
       });
 
-      expect(result.content[0].text).toContain('No matches found');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(0);
+      expect(data.matches).toEqual([]);
     });
   });
 

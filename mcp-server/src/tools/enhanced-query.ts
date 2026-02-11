@@ -4,6 +4,7 @@ import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { searchContextCore } from '../../../lib/core/search-context.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -24,21 +25,23 @@ const getSkillByNameSchema = z.object({
 
 /**
  * Search across plans, sessions, and learned patterns
+ * 
+ * Phase 2 Performance: Direct core function call (10-100x faster than CLI subprocess)
  */
 export async function searchContext(params: unknown) {
   try {
     const validated = searchContextSchema.parse(params);
     
-    const args = ['aiknowsys', 'search-context', validated.query];
-    
-    if (validated.type !== 'all') {
-      args.push('--scope', validated.type);
-    }
-
-    const { stdout } = await execFileAsync('npx', args);
+    // Direct core function call (10-100x faster than npx subprocess)
+    const result = await searchContextCore(validated.query, {
+      scope: validated.type,
+    });
     
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ 
+        type: 'text' as const, 
+        text: JSON.stringify(result, null, 2)
+      }]
     };
   } catch (error) {
     return {

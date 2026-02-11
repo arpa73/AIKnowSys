@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getActivePlans, getRecentSessions } from '../../src/tools/query.js';
 
-// Mock the query commands
-vi.mock('../../../lib/commands/query-plans.js', () => ({
-  queryPlans: vi.fn(),
+// Mock the core query functions
+vi.mock('../../../lib/core/query-plans.js', () => ({
+  queryPlansCore: vi.fn(),
 }));
 
-vi.mock('../../../lib/commands/query-sessions.js', () => ({
-  querySessions: vi.fn(),
+vi.mock('../../../lib/core/query-sessions.js', () => ({
+  querySessionsCore: vi.fn(),
 }));
 
-import { queryPlans } from '../../../lib/commands/query-plans.js';
-import { querySessions } from '../../../lib/commands/query-sessions.js';
+import { queryPlansCore } from '../../../lib/core/query-plans.js';
+import { querySessionsCore } from '../../../lib/core/query-sessions.js';
 
 describe('getActivePlans', () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('getActivePlans', () => {
       ],
     };
 
-    vi.mocked(queryPlans).mockResolvedValue(mockPlans);
+    vi.mocked(queryPlansCore).mockResolvedValue(mockPlans);
 
     const result = await getActivePlans();
     const data = JSON.parse(result.content[0].text);
@@ -56,20 +56,18 @@ describe('getActivePlans', () => {
     expect(data.plans[0].status).toBe('ACTIVE');
   });
 
-  it('should call queryPlans with correct filters', async () => {
-    vi.mocked(queryPlans).mockResolvedValue({ count: 0, plans: [] });
+  it('should call queryPlansCore with correct filters', async () => {
+    vi.mocked(queryPlansCore).mockResolvedValue({ count: 0, plans: [] });
 
     await getActivePlans();
 
-    expect(queryPlans).toHaveBeenCalledWith({
+    expect(queryPlansCore).toHaveBeenCalledWith({
       status: 'ACTIVE',
-      json: true,
-      _silent: true,
     });
   });
 
   it('should handle empty plans list', async () => {
-    vi.mocked(queryPlans).mockResolvedValue({ count: 0, plans: [] });
+    vi.mocked(queryPlansCore).mockResolvedValue({ count: 0, plans: [] });
 
     const result = await getActivePlans();
     const data = JSON.parse(result.content[0].text);
@@ -79,7 +77,7 @@ describe('getActivePlans', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    vi.mocked(queryPlans).mockRejectedValue(new Error('Database error'));
+    vi.mocked(queryPlansCore).mockRejectedValue(new Error('Database error'));
 
     const result = await getActivePlans();
     const data = JSON.parse(result.content[0].text);
@@ -91,7 +89,7 @@ describe('getActivePlans', () => {
   });
 
   it('should return MCP-compliant response format', async () => {
-    vi.mocked(queryPlans).mockResolvedValue({ count: 0, plans: [] });
+    vi.mocked(queryPlansCore).mockResolvedValue({ count: 0, plans: [] });
 
     const result = await getActivePlans();
 
@@ -128,7 +126,7 @@ describe('getRecentSessions', () => {
       ],
     };
 
-    vi.mocked(querySessions).mockResolvedValue(mockSessions);
+    vi.mocked(querySessionsCore).mockResolvedValue(mockSessions);
 
     const result = await getRecentSessions(7);
     const data = JSON.parse(result.content[0].text);
@@ -140,31 +138,27 @@ describe('getRecentSessions', () => {
   });
 
   it('should use default days parameter (7)', async () => {
-    vi.mocked(querySessions).mockResolvedValue({ count: 0, sessions: [] });
+    vi.mocked(querySessionsCore).mockResolvedValue({ count: 0, sessions: [] });
 
     await getRecentSessions();
 
-    expect(querySessions).toHaveBeenCalledWith({
+    expect(querySessionsCore).toHaveBeenCalledWith({
       days: 7,
-      json: true,
-      _silent: true,
     });
   });
 
   it('should accept custom days parameter', async () => {
-    vi.mocked(querySessions).mockResolvedValue({ count: 0, sessions: [] });
+    vi.mocked(querySessionsCore).mockResolvedValue({ count: 0, sessions: [] });
 
     await getRecentSessions(30);
 
-    expect(querySessions).toHaveBeenCalledWith({
+    expect(querySessionsCore).toHaveBeenCalledWith({
       days: 30,
-      json: true,
-      _silent: true,
     });
   });
 
   it('should handle empty sessions list', async () => {
-    vi.mocked(querySessions).mockResolvedValue({ count: 0, sessions: [] });
+    vi.mocked(querySessionsCore).mockResolvedValue({ count: 0, sessions: [] });
 
     const result = await getRecentSessions(7);
     const data = JSON.parse(result.content[0].text);
@@ -174,7 +168,7 @@ describe('getRecentSessions', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    vi.mocked(querySessions).mockRejectedValue(new Error('File read error'));
+    vi.mocked(querySessionsCore).mockRejectedValue(new Error('File read error'));
 
     const result = await getRecentSessions(7);
     const data = JSON.parse(result.content[0].text);
@@ -186,7 +180,7 @@ describe('getRecentSessions', () => {
   });
 
   it('should return MCP-compliant response format', async () => {
-    vi.mocked(querySessions).mockResolvedValue({ count: 0, sessions: [] });
+    vi.mocked(querySessionsCore).mockResolvedValue({ count: 0, sessions: [] });
 
     const result = await getRecentSessions(7);
 
