@@ -44,7 +44,7 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     
     expect(stderr).toContain('❌ Direct file editing detected');
     expect(stderr).toContain('update-session');
-    expect(stderr).toContain('YAML frontmatter validation');
+    expect(stderr).toContain('YAML frontmatter validated before write');
   });
 
   it('warns when multi_replace_string_in_file targets session file', async () => {
@@ -75,8 +75,8 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     const { stderr } = await runHook(input);
     
     expect(stderr).toContain('❌ Direct file editing detected');
-    expect(stderr).toContain('For session files:');
-    expect(stderr).toContain('YAML frontmatter validation');
+    expect(stderr).toContain('MCP tools (preferred');
+    expect(stderr).toContain('YAML frontmatter validated before write');
   });
 
   it('warns when create_file targets plan file', async () => {
@@ -91,7 +91,7 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     const { stderr } = await runHook(input);
     
     expect(stderr).toContain('❌ Direct file editing detected');
-    expect(stderr).toContain('For plan files:');
+    expect(stderr).toContain('MCP tools (preferred');
     expect(stderr).toContain('update-plan');
   });
 
@@ -106,7 +106,7 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     const { stderr } = await runHook(input);
     
     expect(stderr).toContain('❌ Direct file editing detected');
-    expect(stderr).toContain('For plan files:');
+    expect(stderr).toContain('MCP tools (preferred');
     expect(stderr).toContain('update-plan');
   });
 
@@ -162,7 +162,7 @@ describe('mutation-enforcement hook (preToolUse)', () => {
     // Should show multiple command examples
     expect(stderr).toContain('npx aiknowsys');
     expect(stderr).toContain('--append');
-    expect(stderr).toContain('--done');
+    expect(stderr).toContain('log');
   });
 
   it('mentions skill documentation in warning', async () => {
