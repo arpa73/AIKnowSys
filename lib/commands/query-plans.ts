@@ -3,46 +3,23 @@
  * 
  * Query plan metadata with filters (status, author, topic, date range)
  * Returns structured JSON for AI agents or human-readable table
+ * 
+ * This is a CLI wrapper around queryPlansCore with logger output.
  */
 
-import path from 'path';
 import { createLogger } from '../logger.js';
-import { createStorage } from '../context/index.js';
-import type { PlanFilters } from '../context/types.js';
+import { queryPlansCore, type QueryPlansOptions as CoreOptions } from '../core/query-plans.js';
 
 /**
- * Command options for queryPlans
+ * CLI command options (extends core options with CLI-specific flags)
  */
-export interface QueryPlansOptions {
-  /** Target directory (defaults to current directory) */
-  dir?: string;
-  
-  /** Filter by plan status */
-  status?: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
-  
-  /** Filter by author */
-  author?: string;
-  
-  /** Filter by topic (fuzzy match) */
-  topic?: string;
-  
-  /** Filter by plans updated after this date (ISO format YYYY-MM-DD) */
-  updatedAfter?: string;
-  
-  /** Filter by plans updated before this date (ISO format YYYY-MM-DD) */
-  updatedBefore?: string;
-  
+export interface QueryPlansOptions extends CoreOptions {
   /** Output JSON (for AI agents) */
   json?: boolean;
   
   /** Silent mode (for testing) */
   _silent?: boolean;
 }
-
-/**
- * Valid plan statuses
- */
-const VALID_STATUSES = ['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED'] as const;
 
 /**
  * Query plans with filters
@@ -70,36 +47,9 @@ const VALID_STATUSES = ['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED'] 
 export async function queryPlans(options: QueryPlansOptions = {}) {
   const log = createLogger(options._silent);
   
-  // Validate status if provided
-  if (options.status && !VALID_STATUSES.includes(options.status)) {
-    const error = new Error(
-      `Invalid plan status: ${options.status}. ` +
-      `Valid statuses: ${VALID_STATUSES.join(', ')}`
-    );
-    log.error(error.message);
-    throw error;
-  }
-  
-  // Get target directory
-  const targetDir = options.dir ? path.resolve(options.dir) : process.cwd();
-  
   try {
-    // Create storage adapter
-    const storage = await createStorage(targetDir, { autoRebuild: true });
-    
-    // Build filters
-    const filters: PlanFilters = {};
-    if (options.status) filters.status = options.status;
-    if (options.author) filters.author = options.author;
-    if (options.topic) filters.topic = options.topic;
-    if (options.updatedAfter) filters.updatedAfter = options.updatedAfter;
-    if (options.updatedBefore) filters.updatedBefore = options.updatedBefore;
-    
-    // Query plans
-    const result = await storage.queryPlans(filters);
-    
-    // Cleanup
-    await storage.close();
+    // Call pure business logic function
+    const result = await queryPlansCore(options);
     
     // JSON output for AI agents
     if (options.json) {

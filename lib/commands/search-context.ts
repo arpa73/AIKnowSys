@@ -1,37 +1,16 @@
 import { createLogger } from '../logger.js';
-import { createStorage } from '../context/index.js';
-import type { SearchScope, SearchResult } from '../context/types.js';
-import path from 'path';
+import { searchContextCore, type SearchContextOptions as CoreOptions, type SearchContextResult } from '../core/search-context.js';
+import type { SearchResult } from '../context/types.js';
 
 /**
- * Options for the search-context command
+ * CLI command options (extends core options with CLI-specific flags)
  */
-export interface SearchContextOptions {
-  /** Target directory (defaults to current directory) */
-  dir?: string;
-  /** Search scope: all, plans, sessions, learned */
-  scope?: 'all' | 'plans' | 'sessions' | 'learned';
+export interface SearchContextOptions extends CoreOptions {
   /** Output JSON for AI agents */
   json?: boolean;
   /** Silent mode (for testing) */
   _silent?: boolean;
 }
-
-/**
- * Result from the search-context command
- */
-export interface SearchContextResult {
-  /** The search query that was executed */
-  query: string;
-  /** The scope that was searched */
-  scope: 'all' | 'plans' | 'sessions' | 'learned';
-  /** Number of matches found */
-  count: number;
-  /** Array of search results sorted by relevance (highest first) */
-  matches: SearchResult[];
-}
-
-const VALID_SCOPES = ['all', 'plans', 'sessions', 'learned'] as const;
 
 /**
  * Full-text search across AIKnowSys knowledge system
@@ -61,64 +40,34 @@ export async function searchContext(
 ): Promise<SearchContextResult> {
   const log = createLogger(options._silent);
 
-  // Validate query
-  if (!query || query.trim().length === 0) {
-    const error = new Error('Search query cannot be empty');
-    log.error(error.message);
-    throw error;
-  }
-
-  // Validate scope if provided
-  const scope = options.scope || 'all';
-  if (!VALID_SCOPES.includes(scope)) {
-    const error = new Error(
-      `Invalid scope: ${scope}. Must be one of: ${VALID_SCOPES.join(', ')}`
-    );
-    log.error(error.message);
-    throw error;
-  }
-
-  // Get target directory (absolute path)
-  const targetDir = options.dir ? path.resolve(options.dir) : process.cwd();
-
   try {
-    // Create storage adapter with auto-rebuild
-    const storage = await createStorage(targetDir, { autoRebuild: true });
-
-    // Execute search (storage layer expects scope as second parameter)
-    const scopeParam: SearchScope = scope === 'all' ? 'all' : scope;
-    const result = await storage.search(query, scopeParam);
-    await storage.close();
+    // Call pure business logic function
+    const result = await searchContextCore(query, options);
 
     // JSON output for AI agents
     if (options.json) {
-      return {
-        query,
-        scope,
-        count: result.count,
-        matches: result.results  // Rename 'results' to 'matches' for API consistency
-      };
+      return result;
     }
 
     // Human-readable output
     if (result.count === 0) {
-      log.warn(`No results found for "${query}"`);
-      if (scope !== 'all') {
-        log.info(`  Searched scope: ${scope}`);
+      log.warn(`No results found for "${result.query}"`);
+      if (result.scope !== 'all') {
+        log.info(`  Searched scope: ${result.scope}`);
       }
       log.blank();
-      return { query, scope, count: 0, matches: [] };
+      return result;
     }
 
-    log.success(`Found ${result.count} match(es) for "${query}":`);
-    if (scope !== 'all') {
-      log.info(`  Scope: ${scope}`);
+    log.success(`Found ${result.count} match(es) for "${result.query}":`);
+    if (result.scope !== 'all') {
+      log.info(`  Scope: ${result.scope}`);
     }
     log.blank();
 
     // Note: Search results use compact output with relevance scores and file context.
     // Matches are pre-sorted by relevance (highest first) from storage layer.
-    result.results.forEach((match: SearchResult) => {
+    result.matches.forEach((match: SearchResult) => {
       const typeEmoji: Record<string, string> = {
         plan: '📋',
         session: '📅',
@@ -135,12 +84,7 @@ export async function searchContext(
       log.blank();
     });
 
-    return {
-      query,
-      scope,
-      count: result.count,
-      matches: result.results  // Rename 'results' to 'matches' for API consistency
-    };
+    return result;
 
   } catch (error) {
     const err = error as Error;
