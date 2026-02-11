@@ -10,9 +10,9 @@ import { createSessionCore } from '../../../lib/core/create-session.js';
 import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.js';
 import { createPlanCore } from '../../../lib/core/create-plan.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
+import { updateSessionCore } from '../../../lib/core/update-session.js';
 
 // Temporary: Keep execFileAsync for functions not yet refactored
-// TODO Phase 2: Migrate updateSession, createPlan, updatePlan to lib/core
 const execFileAsync = promisify(execFile);
 
 // Get actual file location (works in any execution context)
@@ -123,40 +123,55 @@ export async function createSession(params: unknown) {
 
 /**
  * Update an existing session file
+ * 
+ * Refactored: Direct import from lib/core (10-100x faster than CLI subprocess)
  */
 export async function updateSession(params: unknown) {
   try {
     const validated = updateSessionSchema.parse(params);
     
-    const args = ['aiknowsys', 'update-session'];
-
-    if (validated.date) {
-      args.push('--date', validated.date);
-    }
-
-    // Operation-specific arguments
+    // Map MCP schema to core function options
+    const coreOptions: any = {
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      content: validated.content
+    };
+    
+    // Map operation to appropriate section option
     switch (validated.operation) {
       case 'append':
-        args.push('--appendSection', validated.section);
+        coreOptions.appendSection = validated.section;
         break;
       case 'prepend':
-        args.push('--prependSection', validated.section);
+        coreOptions.prependSection = validated.section;
         break;
       case 'insert-after':
-        args.push('--insert-after', validated.section);
+        coreOptions.insertAfter = validated.section;
         break;
       case 'insert-before':
-        args.push('--insert-before', validated.section);
+        coreOptions.insertBefore = validated.section;
         break;
     }
-
-    args.push('--content', validated.content);
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
     
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
+    // Direct function call (NO subprocess!)
+    const result = await updateSessionCore(coreOptions);
+    
+    // Format MCP response
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
+    }
   } catch (error) {
     return {
       content: [{ 
