@@ -19,6 +19,47 @@ import type {
 } from './types.js';
 
 /**
+ * Database row interfaces for type-safe query results
+ */
+interface PlanRow {
+  id: string;
+  project_id: string;
+  title: string;
+  status: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
+  topics: string | null;
+  description: string | null;
+  priority: string | null;
+  type: string | null;
+  content: string;
+}
+
+interface SessionRow {
+  id: string;
+  project_id: string;
+  date: string;
+  topic: string;
+  status: string;
+  plan_id: string | null;
+  duration: string | null;
+  content: string;
+  topics: string | null;
+  phases: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface SearchRow {
+  plan_id?: string;
+  session_id?: string;
+  title?: string;  // Present for plan searches
+  topic?: string;  // Present for session searches
+  content: string;
+}
+
+/**
  * SQLite storage adapter for cross-repository knowledge management
  */
 export class SqliteStorage extends StorageAdapter {
@@ -126,12 +167,12 @@ export class SqliteStorage extends StorageAdapter {
     query += ' ORDER BY updated_at DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params) as any[];
+    const rows = stmt.all(...params) as PlanRow[];
     
     const plans: PlanMetadata[] = rows.map(row => ({
       id: row.id,
       title: row.title,
-      status: row.status,
+      status: row.status as PlanMetadata['status'],
       author: row.author,
       created: row.created_at,
       updated: row.updated_at,
@@ -202,7 +243,7 @@ export class SqliteStorage extends StorageAdapter {
     query += ' ORDER BY date DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params) as any[];
+    const rows = stmt.all(...params) as SessionRow[];
     
     const sessions: SessionMetadata[] = rows.map(row => {
       const session: SessionMetadata = {
@@ -262,11 +303,11 @@ export class SqliteStorage extends StorageAdapter {
       `;
       
       const stmt = this.db.prepare(planQuery);
-      const rows = stmt.all(ftsQuery) as any[];
+      const rows = stmt.all(ftsQuery) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
-        const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : row.title;
+        const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : (row.title || '');
         
         results.push({
           file: `PLAN_${row.plan_id}.md`,
@@ -294,11 +335,11 @@ export class SqliteStorage extends StorageAdapter {
       `;
       
       const stmt = this.db.prepare(sessionQuery);
-      const rows = stmt.all(ftsQuery) as any[];
+      const rows = stmt.all(ftsQuery) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
-        const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : row.topic;
+        const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : (row.topic || '');
         
         results.push({
           file: `sessions/${row.session_id}.md`,

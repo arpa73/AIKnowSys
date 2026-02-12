@@ -47,46 +47,39 @@ export class DatabaseLocator {
     // Resolve to absolute path (Critical Invariant #2)
     const resolvedDir = path.resolve(targetDir);
     
+    let dbPath: string;
+    let projectId: string;
+    let projectName: string;
+    
     // Priority 1: Environment variable
     if (process.env.AIKNOWSYS_DB_PATH) {
-      const envDbPath = path.resolve(process.env.AIKNOWSYS_DB_PATH);
-      await this.ensureDatabaseDirectory(envDbPath);
-      
-      return {
-        dbPath: envDbPath,
-        projectId: await this.getProjectId(resolvedDir),
-        projectName: await this.getProjectName(resolvedDir)
-      };
+      dbPath = path.resolve(process.env.AIKNOWSYS_DB_PATH);
+      projectId = await this.getProjectId(resolvedDir);
+      projectName = await this.getProjectName(resolvedDir);
+    } else {
+      // Priority 2: .aiknowsys.config file
+      const config = await this.readConfig(resolvedDir);
+      if (config?.databasePath) {
+        // Resolve relative paths against project root
+        dbPath = path.isAbsolute(config.databasePath)
+          ? config.databasePath
+          : path.join(resolvedDir, config.databasePath);
+        projectId = config.projectId || await this.getProjectId(resolvedDir);
+        projectName = config.projectName || await this.getProjectName(resolvedDir);
+      } else {
+        // Priority 3: User-level default (~/.aiknowsys/knowledge.db)
+        // Use process.env.HOME if available (for testing), otherwise os.homedir()
+        const homeDir = process.env.HOME || os.homedir();
+        dbPath = path.join(homeDir, '.aiknowsys', 'knowledge.db');
+        projectId = config?.projectId || await this.getProjectId(resolvedDir);
+        projectName = config?.projectName || await this.getProjectName(resolvedDir);
+      }
     }
     
-    // Priority 2: .aiknowsys.config file
-    const config = await this.readConfig(resolvedDir);
-    if (config?.databasePath) {
-      // Resolve relative paths against project root
-      const configDbPath = path.isAbsolute(config.databasePath)
-        ? config.databasePath
-        : path.join(resolvedDir, config.databasePath);
-      
-      await this.ensureDatabaseDirectory(configDbPath);
-      
-      return {
-        dbPath: configDbPath,
-        projectId: config.projectId || await this.getProjectId(resolvedDir),
-        projectName: config.projectName || await this.getProjectName(resolvedDir)
-      };
-    }
+    // Ensure database directory exists (single call)
+    await this.ensureDatabaseDirectory(dbPath);
     
-    // Priority 3: User-level default (~/.aiknowsys/knowledge.db)
-    // Use process.env.HOME if available (for testing), otherwise os.homedir()
-    const homeDir = process.env.HOME || os.homedir();
-    const userDbPath = path.join(homeDir, '.aiknowsys', 'knowledge.db');
-    await this.ensureDatabaseDirectory(userDbPath);
-    
-    return {
-      dbPath: userDbPath,
-      projectId: config?.projectId || await this.getProjectId(resolvedDir),
-      projectName: config?.projectName || await this.getProjectName(resolvedDir)
-    };
+    return { dbPath, projectId, projectName };
   }
   
   /**
@@ -174,14 +167,13 @@ export class DatabaseLocator {
    * @param rawId - Raw project identifier
    * @returns Sanitized ID (lowercase, hyphens instead of spaces/special chars)
    */
-  private sanitizeProjectId(rawId: string): Promise<string> {
-    return Promise.resolve(
-      rawId
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, '-')  // Replace non-alphanumeric with hyphens
-        .replace(/-+/g, '-')           // Collapse multiple hyphens
-        .replace(/^-|-$/g, '')         // Remove leading/trailing hyphens
-    );
+  private sanitizeProjectId(rawId: string): string {
+    return rawId
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')  // Replace non-alphanumeric with hyphens
+      .replace(/-+/g, '-')           // Collapse multiple hyphens
+      .replace(/^-|-$/g, '')         // Remove leading/trailing hyphens
+      ;
   }
   
   /**
