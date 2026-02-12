@@ -120,6 +120,9 @@ export interface SessionFilters {
   /** Filter by date range (sessions before this date) */
   dateBefore?: string;
   
+  /** Filter by last N days */
+  days?: number;
+  
   /** Filter by topic (fuzzy match) */
   topic?: string;
   

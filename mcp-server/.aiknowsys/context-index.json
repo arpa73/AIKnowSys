@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updated": "2026-02-12T17:18:26.562Z",
+  "plans": [],
+  "sessions": [
+    {
+      "date": "2026-02-12",
+      "topic": "MCP-Only Architecture Migration - Phase 0 Decision",
+      "topics": [
+        "architecture",
+        "database",
+        "mcp",
+        "decision",
+        "phase-0"
+      ],
+      "file": "sessions/2026-02-12-session.md",
+      "created": "2026-02-12T00:00:00.000Z",
+      "updated": "2026-02-12T17:18:26.565Z"
+    }
+  ],
+  "learned": []
+}
