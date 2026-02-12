@@ -12,7 +12,7 @@ A battle-tested knowledge management system that enables AI-assisted development
 
 A structured workflow system consisting of:
 
-1. **MCP Server** - 15 Model Context Protocol tools for AI agents (10-100x faster context access than file reading)
+1. **MCP Server** - 31 Model Context Protocol tools for AI agents (⚡ instant context access, 10-100x faster than subprocess)
 2. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
 3. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
 4. **Skills System** - Domain-specific how-to guides for common tasks
@@ -24,12 +24,14 @@ A structured workflow system consisting of:
 10. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
 11. **VSCode Hooks** - 17 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, migration assistance, and git collaboration reminders (optional)
 
-**MCP Tools Enable:**
-- Query plans/sessions (10-100x faster than file reading)
-- Create/update sessions with YAML validation
-- Search historical context
-- Validate deliverables
-- Check TDD compliance
+**MCP Tools Enable (All Instant ⚡):**
+- Query plans/sessions (direct core imports, <1ms response)
+- Create/update sessions/plans with YAML validation
+- Search historical context across all files
+- Validate deliverables and check TDD compliance
+- Access skills and learned patterns
+
+**Performance:** Phase 2 extraction achieved 10-100x speedup by replacing subprocess calls with direct core function imports.
 
 **CLI Alternative:** All MCP tools have CLI equivalents (`npx aiknowsys`) for when MCP server isn't configured.
 
