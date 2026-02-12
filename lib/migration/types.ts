@@ -25,6 +25,18 @@ export interface SessionFrontmatter {
   /** Files modified in session */
   files?: string[];
   
+  /** Session duration */
+  duration?: string;
+  
+  /** Session phases */
+  phases?: string[];
+  
+  /** Creation timestamp */
+  created?: string;
+  
+  /** Last update timestamp */
+  updated?: string;
+  
   /** Allow additional fields */
   [key: string]: unknown;
 }
@@ -57,6 +69,9 @@ export interface PlanFrontmatter {
   
   /** Plan type */
   type?: 'feature' | 'refactor' | 'bugfix' | 'research';
+  
+  /** Plan description */
+  description?: string;
   
   /** Allow additional fields */
   [key: string]: unknown;
