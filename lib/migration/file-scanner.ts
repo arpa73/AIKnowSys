@@ -47,7 +47,12 @@ export class FileScanner {
   /**
    * Scan a directory for .aiknowsys content
    * @param targetDir - Directory to scan (should contain .aiknowsys/ subdirectory)
-   * @returns Categorized file information
+   * @returns ScanResult object containing:
+   *   - sessions: Array of session markdown files
+   *   - plans: Array of plan files (PLAN_*.md and active-*.md)
+   *   - learned: Array of learned pattern files (recursive)
+   *   - total: Count of all discovered files
+   *   - errors: Array of error messages (empty if no errors)
    */
   async scanDirectory(targetDir: string): Promise<ScanResult> {
     const result: ScanResult = {
@@ -63,7 +68,7 @@ export class FileScanner {
     // Check if .aiknowsys directory exists
     try {
       await fs.access(aiknowsysDir);
-    } catch (error) {
+    } catch {
       // .aiknowsys doesn't exist - return empty result
       return result;
     }
@@ -72,9 +77,9 @@ export class FileScanner {
     const sessionsDir = path.join(aiknowsysDir, 'sessions');
     try {
       await fs.access(sessionsDir);
-      const sessionFiles = await this.scanMarkdownFiles(sessionsDir, aiknowsysDir);
+      const sessionFiles = await this.scanMarkdownFiles(sessionsDir, aiknowsysDir, result.errors);
       result.sessions = sessionFiles.map(f => ({ ...f, type: 'session' as const }));
-    } catch (error) {
+    } catch {
       // sessions/ doesn't exist - continue
     }
     
@@ -121,7 +126,7 @@ export class FileScanner {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // plans/ doesn't exist - continue
     }
     
@@ -129,9 +134,9 @@ export class FileScanner {
     const learnedDir = path.join(aiknowsysDir, 'learned');
     try {
       await fs.access(learnedDir);
-      const learnedFiles = await this.scanMarkdownFilesRecursive(learnedDir, aiknowsysDir);
+      const learnedFiles = await this.scanMarkdownFilesRecursive(learnedDir, aiknowsysDir, result.errors);
       result.learned = learnedFiles.map(f => ({ ...f, type: 'learned' as const }));
-    } catch (error) {
+    } catch {
       // learned/ doesn't exist - continue
     }
     
@@ -144,9 +149,10 @@ export class FileScanner {
    * Scan a directory for markdown files (non-recursive)
    * @param dir - Directory to scan
    * @param aiknowsysRoot - Root .aiknowsys directory for relative paths
+   * @param errors - Array to collect error messages
    * @returns File information
    */
-  private async scanMarkdownFiles(dir: string, aiknowsysRoot: string): Promise<Omit<FileInfo, 'type'>[]> {
+  private async scanMarkdownFiles(dir: string, aiknowsysRoot: string, errors: string[]): Promise<Omit<FileInfo, 'type'>[]> {
     const results: Omit<FileInfo, 'type'>[] = [];
     
     try {
@@ -169,12 +175,12 @@ export class FileScanner {
             });
           }
         } catch (error) {
-          // File read error - skip and continue
+          errors.push(`Error reading ${file}: ${(error as Error).message}`);
           continue;
         }
       }
     } catch (error) {
-      // Directory read error - return what we have
+      errors.push(`Error scanning directory ${dir}: ${(error as Error).message}`);
     }
     
     return results;
@@ -184,9 +190,10 @@ export class FileScanner {
    * Scan a directory recursively for markdown files
    * @param dir - Directory to scan
    * @param aiknowsysRoot - Root .aiknowsys directory for relative paths
+   * @param errors - Array to collect error messages
    * @returns File information
    */
-  private async scanMarkdownFilesRecursive(dir: string, aiknowsysRoot: string): Promise<Omit<FileInfo, 'type'>[]> {
+  private async scanMarkdownFilesRecursive(dir: string, aiknowsysRoot: string, errors: string[]): Promise<Omit<FileInfo, 'type'>[]> {
     const results: Omit<FileInfo, 'type'>[] = [];
     
     try {
@@ -197,7 +204,7 @@ export class FileScanner {
         
         if (entry.isDirectory()) {
           // Recurse into subdirectories
-          const subResults = await this.scanMarkdownFilesRecursive(fullPath, aiknowsysRoot);
+          const subResults = await this.scanMarkdownFilesRecursive(fullPath, aiknowsysRoot, errors);
           results.push(...subResults);
         } else if (entry.isFile() && entry.name.endsWith('.md')) {
           try {
@@ -210,13 +217,13 @@ export class FileScanner {
               size: stats.size
             });
           } catch (error) {
-            // File stat error - skip
+            errors.push(`Error reading ${entry.name}: ${(error as Error).message}`);
             continue;
           }
         }
       }
     } catch (error) {
-      // Directory read error - return what we have
+      errors.push(`Error scanning directory ${dir}: ${(error as Error).message}`);
     }
     
     return results;

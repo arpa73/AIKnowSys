@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MarkdownParser } from '../../lib/migration/markdown-parser.js';
+import type { SessionFrontmatter, PlanFrontmatter, LearnedFrontmatter } from '../../lib/migration/types.js';
 
 describe('MarkdownParser', () => {
   const parser = new MarkdownParser();
@@ -44,7 +45,7 @@ Content here`;
     });
 
     it('should handle markdown without frontmatter', () => {
-      const markdown = `# Just Content\n\nNo frontmatter here.`;
+      const markdown = '# Just Content\n\nNo frontmatter here.';
 
       const result = parser.parse(markdown);
 
@@ -102,8 +103,8 @@ Content`;
         author: 'alice',
         tags: ['important', 'urgent']
       });
-      expect(result.frontmatter.files).toHaveLength(2);
-      expect(result.frontmatter.files[0].path).toBe('src/main.ts');
+      expect((result.frontmatter.files as any[])).toHaveLength(2);
+      expect((result.frontmatter.files as any[])[0].path).toBe('src/main.ts');
     });
 
     it('should trim whitespace from content', () => {
@@ -193,13 +194,15 @@ Content`;
       // Should attempt to parse and note the error
       expect(result.errors).toBeDefined();
       expect(result.errors).toBeTruthy();
-      expect(result.errors!.length).toBeGreaterThan(0);
+      if (result.errors) {
+        expect(result.errors.length).toBeGreaterThan(0);
+      }
       // But still return content
       expect(result.content).toBe('Content');
     });
 
     it('should handle Windows line endings (CRLF)', () => {
-      const markdown = `---\r\ntitle: Test\r\ndate: 2026-02-12\r\n---\r\n\r\nContent`;
+      const markdown = '---\r\ntitle: Test\r\ndate: 2026-02-12\r\n---\r\n\r\nContent';
 
       const result = parser.parse(markdown);
 
@@ -307,6 +310,96 @@ With **markdown** formatting.`;
 
       expect(reparsed.frontmatter).toEqual(parsed.frontmatter);
       expect(reparsed.content.trim()).toBe(parsed.content.trim());
+    });
+  });
+
+  describe('typed frontmatter parsing', () => {
+    it('should parse session frontmatter with type safety', () => {
+      const markdown = `---
+date: 2026-02-12
+status: active
+plan: PLAN_test
+topics:
+  - migration
+  - testing
+files:
+  - lib/migration/file-scanner.ts
+---
+
+# Session content`;
+
+      const result = parser.parse<SessionFrontmatter>(markdown);
+
+      // TypeScript should recognize these properties
+      expect(result.frontmatter.date).toBe('2026-02-12');
+      expect(result.frontmatter.status).toBe('active');
+      expect(result.frontmatter.plan).toBe('PLAN_test');
+      expect(result.frontmatter.topics).toEqual(['migration', 'testing']);
+      expect(result.frontmatter.files).toHaveLength(1);
+    });
+
+    it('should parse plan frontmatter with type safety', () => {
+      const markdown = `---
+title: Test Plan
+author: arno-paffen
+status: ACTIVE
+topics:
+  - feature
+  - implementation
+priority: high
+type: feature
+---
+
+# Plan content`;
+
+      const result = parser.parse<PlanFrontmatter>(markdown);
+
+      // TypeScript should recognize these properties
+      expect(result.frontmatter.title).toBe('Test Plan');
+      expect(result.frontmatter.author).toBe('arno-paffen');
+      expect(result.frontmatter.status).toBe('ACTIVE');
+      expect(result.frontmatter.priority).toBe('high');
+      expect(result.frontmatter.type).toBe('feature');
+    });
+
+    it('should parse learned pattern frontmatter with type safety', () => {
+      const markdown = `---
+category: error-resolution
+keywords:
+  - migration
+  - yaml
+  - parsing
+author: arno-paffen
+created: 2026-02-12
+---
+
+# Pattern content`;
+
+      const result = parser.parse<LearnedFrontmatter>(markdown);
+
+      // TypeScript should recognize these properties
+      expect(result.frontmatter.category).toBe('error-resolution');
+      expect(result.frontmatter.keywords).toEqual(['migration', 'yaml', 'parsing']);
+      expect(result.frontmatter.author).toBe('arno-paffen');
+      expect(result.frontmatter.created).toBe('2026-02-12');
+    });
+
+    it('should handle additional fields in typed frontmatter', () => {
+      const markdown = `---
+date: 2026-02-12
+status: active
+customField: customValue
+extraData:
+  nested: value
+---
+
+Content`;
+
+      const result = parser.parse<SessionFrontmatter>(markdown);
+
+      // Should preserve additional fields
+      expect(result.frontmatter.customField).toBe('customValue');
+      expect(result.frontmatter.extraData).toEqual({ nested: 'value' });
     });
   });
 });

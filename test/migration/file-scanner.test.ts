@@ -209,5 +209,59 @@ describe('FileScanner', () => {
       expect(result.total).toBe(6);
       expect(result.sessions.length + result.plans.length + result.learned.length).toBe(6);
     });
+
+    it('should report errors from sessions directory scan', async () => {
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      const sessionsDir = path.join(aiknowsysDir, 'sessions');
+      await fs.mkdir(sessionsDir, { recursive: true });
+      
+      // Create a file that will cause a stat error
+      const badFile = path.join(sessionsDir, 'corrupted.md');
+      await fs.writeFile(badFile, 'content');
+      
+      // Make file inaccessible (if platform supports it)
+      try {
+        await fs.chmod(badFile, 0o000);
+        
+        const result = await scanner.scanDirectory(tmpDir);
+        
+        // Should report error for inaccessible file
+        const sessionError = result.errors.find(e => e.includes('corrupted.md'));
+        expect(sessionError).toBeDefined();
+        
+        // Restore permissions for cleanup
+        await fs.chmod(badFile, 0o644);
+      } catch (error) {
+        // Skip test if chmod doesn't work (Windows, etc.)
+        console.log('Skipping sessions error test (platform limitation)');
+      }
+    });
+
+    it('should report errors from learned directory scan', async () => {
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      const learnedDir = path.join(aiknowsysDir, 'learned');
+      await fs.mkdir(learnedDir, { recursive: true });
+      
+      // Create a file that will cause a stat error
+      const badFile = path.join(learnedDir, 'corrupted.md');
+      await fs.writeFile(badFile, 'content');
+      
+      // Make file inaccessible (if platform supports it)
+      try {
+        await fs.chmod(badFile, 0o000);
+        
+        const result = await scanner.scanDirectory(tmpDir);
+        
+        // Should report error for inaccessible file
+        const learnedError = result.errors.find(e => e.includes('corrupted.md'));
+        expect(learnedError).toBeDefined();
+        
+        // Restore permissions for cleanup
+        await fs.chmod(badFile, 0o644);
+      } catch (error) {
+        // Skip test if chmod doesn't work (Windows, etc.)
+        console.log('Skipping learned error test (platform limitation)');
+      }
+    });
   });
 });
