@@ -28,20 +28,30 @@ export class SqliteStorage extends StorageAdapter {
    * Initialize the SQLite database
    * Creates .aiknowsys/knowledge.db if it doesn't exist
    * Loads schema and enables foreign key constraints
-   * @param targetDir - Directory to create database in (will be resolved to absolute path)
+   * @param targetDir - Directory to create database in (will be resolved to absolute path) OR absolute database path if it ends with .db
    * @throws Error if schema loading fails
    */
   async init(targetDir: string): Promise<void> {
     // Validate and resolve user-provided path (Critical Invariant #2)
-    const resolvedDir = path.resolve(targetDir);
+    const resolvedPath = path.resolve(targetDir);
     
-    // Create .aiknowsys directory if it doesn't exist
-    const aiknowsysDir = path.join(resolvedDir, '.aiknowsys');
-    await fs.mkdir(aiknowsysDir, { recursive: true });
+    // Determine if this is a database file path or a directory
+    let dbPath: string;
+    if (resolvedPath.endsWith('.db') || resolvedPath.endsWith('.sqlite')) {
+      // Direct database path provided
+      dbPath = resolvedPath;
+    } else {
+      // Directory provided - create database in .aiknowsys subdirectory
+      const aiknowsysDir = path.join(resolvedPath, '.aiknowsys');
+      await fs.mkdir(aiknowsysDir, { recursive: true });
+      dbPath = path.join(aiknowsysDir, 'knowledge.db');
+    }
     
-    // Database path: .aiknowsys/knowledge.db
-    const dbPath = path.join(aiknowsysDir, 'knowledge.db');
+    // Ensure database directory exists
+    const dbDir = path.dirname(dbPath);
+    await fs.mkdir(dbDir, { recursive: true });
     
+
     // Open/create database
     this.db = new Database(dbPath);
     

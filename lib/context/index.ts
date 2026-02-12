@@ -6,6 +6,8 @@
 import path from 'path';
 import { StorageAdapter } from './storage-adapter.js';
 import { JsonStorage } from './json-storage.js';
+import { SqliteStorage } from './sqlite-storage.js';
+import { DatabaseLocator } from './database-locator.js';
 
 /**
  * Storage adapter configuration options
@@ -53,18 +55,23 @@ export async function createStorage(
   switch (adapter) {
     case 'json':
       storage = new JsonStorage();
+      await storage.init(absoluteDir);
       break;
       
-    case 'sqlite':
-      // TODO: Implement SQLite storage adapter in Phase 2
-      throw new Error('Unsupported storage adapter: sqlite. SQLite support coming in Phase 2.');
+    case 'sqlite': {
+      // Use DatabaseLocator to determine database path
+      const locator = new DatabaseLocator();
+      const dbConfig = await locator.getDatabaseConfig(absoluteDir);
+      
+      // Create SqliteStorage and init with database path
+      storage = new SqliteStorage();
+      await storage.init(dbConfig.dbPath);
+      break;
+    }
       
     default:
       throw new Error(`Unsupported storage adapter: ${adapter}`);
   }
-  
-  // Initialize storage
-  await storage.init(absoluteDir);
   
   // Optionally rebuild index from markdown files
   if (autoRebuild) {
@@ -88,3 +95,6 @@ export type {
 
 export { StorageAdapter } from './storage-adapter.js';
 export { JsonStorage } from './json-storage.js';
+export { SqliteStorage } from './sqlite-storage.js';
+export { DatabaseLocator } from './database-locator.js';
+export type { DatabaseConfig, AiknowsysConfig } from './database-locator.js';
