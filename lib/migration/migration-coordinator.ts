@@ -65,33 +65,7 @@ export class MigrationCoordinator {
     // Add scan errors to result
     result.errors.push(...scanResult.errors);
     
-    // Migrate sessions
-    for (const fileInfo of scanResult.sessions) {
-      try {
-        const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
-        const parsed = this.parser.parse<SessionFrontmatter>(content);
-        
-        // Check for parse errors
-        if (parsed.errors && parsed.errors.length > 0) {
-          result.errors.push(`${fileInfo.filename}: ${parsed.errors.join(', ')}`);
-        }
-        
-        // Insert into database
-        const inserted = await this.insertSession(fileInfo, parsed);
-        if (inserted) {
-          result.sessionsMigrated++;
-        } else {
-          result.skipped++;
-        }
-        
-        result.totalFiles++;
-      } catch (error) {
-        result.errors.push(`Error migrating ${fileInfo.filename}: ${(error as Error).message}`);
-        result.totalFiles++;
-      }
-    }
-    
-    // Migrate plans
+    // Migrate plans FIRST (before sessions that might reference them)
     for (const fileInfo of scanResult.plans) {
       try {
         const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
@@ -120,7 +94,7 @@ export class MigrationCoordinator {
       }
     }
     
-    // Migrate learned patterns
+    // Migrate learned patterns SECOND
     for (const fileInfo of scanResult.learned) {
       try {
         const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
@@ -135,6 +109,32 @@ export class MigrationCoordinator {
         const inserted = await this.insertLearned(fileInfo, parsed);
         if (inserted) {
           result.learnedMigrated++;
+        } else {
+          result.skipped++;
+        }
+        
+        result.totalFiles++;
+      } catch (error) {
+        result.errors.push(`Error migrating ${fileInfo.filename}: ${(error as Error).message}`);
+        result.totalFiles++;
+      }
+    }
+    
+    // Migrate sessions LAST (after plans exist to satisfy foreign key constraints)
+    for (const fileInfo of scanResult.sessions) {
+      try {
+        const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
+        const parsed = this.parser.parse<SessionFrontmatter>(content);
+        
+        // Check for parse errors
+        if (parsed.errors && parsed.errors.length > 0) {
+          result.errors.push(`${fileInfo.filename}: ${parsed.errors.join(', ')}`);
+        }
+        
+        // Insert into database
+        const inserted = await this.insertSession(fileInfo, parsed);
+        if (inserted) {
+          result.sessionsMigrated++;
         } else {
           result.skipped++;
         }
@@ -194,6 +194,12 @@ export class MigrationCoordinator {
     const created = stats.birthtime.toISOString();
     const updated = stats.mtime.toISOString();
     
+    // Normalize plan reference (remove PLAN_ prefix to match plan IDs)
+    let planId = frontmatter.plan;
+    if (planId && planId.startsWith('PLAN_')) {
+      planId = planId.replace('PLAN_', '');
+    }
+    
     // Insert session in database
     await this.storage.insertSession({
       id: frontmatter.date || `session-${Date.now()}`,
@@ -205,7 +211,7 @@ export class MigrationCoordinator {
       updated: frontmatter.updated || updated,
       topics: frontmatter.topics || [],
       content,
-      plan: frontmatter.plan,
+      plan: planId,
       duration: frontmatter.duration,
       phases: frontmatter.phases
     });

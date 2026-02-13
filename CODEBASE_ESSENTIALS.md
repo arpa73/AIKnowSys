@@ -218,6 +218,16 @@ import { fn } from './utils.js';  // ✅ .js extension required
 import { fn } from './utils';     // ❌ Won't resolve
 ```
 
+**Build system limitations:**
+TypeScript compilation doesn't copy non-.ts files to dist/. Manual workaround:
+```bash
+mkdir -p dist/scripts
+cp scripts/*.js dist/scripts/
+cp lib/context/*.sql dist/lib/context/
+cp package.json dist/
+```
+Affects: migrate-to-sqlite command (needs schema.sql, migrate-learned-patterns.js, package.json)
+
 **For detailed solutions:** See [.aiknowsys/learned/common-gotchas.md](.aiknowsys/learned/common-gotchas.md)
 
 ---
@@ -259,8 +269,37 @@ mcp_aiknowsys_get_skill_by_name({ skillName: "tdd-workflow" })
 // Returns: Full skill file content (496+ lines)
 ```
 
-**Mutation Tools (Write Operations):**
+**Mutation Tools (Write Operations - 10 tools available):**
+
+**Session File Management:**
 ```typescript
+// Create new session file
+mcp_aiknowsys_create_session({
+  title: "Implement feature X",
+  topics: ["feature", "implementation"],  // optional
+  status: "active"  // optional: active | paused | complete
+})
+
+// Append content to session section
+mcp_aiknowsys_append_to_session({
+  date: "2026-02-13",  // optional, defaults to today
+  section: "## Changes",
+  content: "Fixed bug Y"
+})
+
+// Prepend critical update to session
+mcp_aiknowsys_prepend_to_session({
+  section: "## Critical Issue",
+  content: "Security fix needed"
+})
+
+// Insert after specific section
+mcp_aiknowsys_insert_after_section({
+  pattern: "## Goal",  // literal string to match
+  section: "## Progress",  // optional new section
+  content: "Step 1 complete"
+})
+
 // Update session YAML frontmatter metadata
 mcp_aiknowsys_update_session_metadata({
   date: "2026-02-10",  // optional, defaults to today
@@ -269,15 +308,47 @@ mcp_aiknowsys_update_session_metadata({
   setStatus: "in-progress"  // optional: in-progress | complete | abandoned
 })
 // At least one operation required
+```
+
+**Plan File Management:**
+```typescript
+// Create new plan file
+mcp_aiknowsys_create_plan({
+  id: "feature_x",  // lowercase with underscores
+  title: "Add Feature X",
+  type: "feature",  // optional: feature | refactor | bugfix | research
+  priority: "high"  // optional: high | medium | low
+})
+
+// Append progress to plan
+mcp_aiknowsys_append_to_plan({
+  planId: "PLAN_feature_x",
+  content: "Phase 1 complete: 19/19 tests passing"
+})
+
+// Prepend critical update to plan
+mcp_aiknowsys_prepend_to_plan({
+  planId: "PLAN_feature_x",
+  content: "⚠️ BLOCKER: API breaking change detected"
+})
+
+// Set plan status
+mcp_aiknowsys_set_plan_status({
+  planId: "PLAN_feature_x",
+  status: "COMPLETE"  // ACTIVE | PAUSED | COMPLETE | CANCELLED
+})
 
 // Update plan YAML frontmatter metadata
 mcp_aiknowsys_update_plan_metadata({
-  planId: "PLAN_mcp_only_architecture",  // required
+  planId: "PLAN_feature_x",
   author: "arno-paffen",  // optional
-  topics: ["mcp", "architecture"]  // optional
+  topics: ["feature-x", "api"]  // optional
 })
 // At least one field (author or topics) required
+```
 
+**Archival Tools:**
+```typescript
 // Archive old session files
 mcp_aiknowsys_archive_sessions({
   days: 30,  // optional, default 30
@@ -294,7 +365,67 @@ mcp_aiknowsys_archive_plans({
 // Moves plans with status inactive >N days to .aiknowsys/plans/archive/
 ```
 
-**⚠️ Note:** Other MCP tools exist but have CLI flag bugs. See [.aiknowsys/sessions/2026-02-09-session.md] for status.
+**🚀 Total: 10 mutation tools available** (6 session + 4 plan management tools)
+
+**Usage Pattern:** 
+- Use `create_*` to start new sessions/plans
+- Use `append_*` / `prepend_*` for content updates (main workflow)
+- Use `insert_*` for surgical placement (rare)
+- Use `update_*_metadata` for YAML frontmatter changes
+- Use `set_plan_status` / `archive_*` for lifecycle management
+
+**SQLite Backend Tools (Phase 1 - Experimental):**
+```typescript
+// Get database statistics
+mcp_aiknowsys_get_db_stats_sqlite({ dbPath: ".aiknowsys/knowledge.db" })
+// Returns: Record counts, database size, last updated
+// Performance: ~9ms average
+
+// Query sessions with filters
+mcp_aiknowsys_query_sessions_sqlite({
+  dbPath: ".aiknowsys/knowledge.db",
+  dateAfter: "2026-02-01",  // optional
+  dateBefore: "2026-02-13",  // optional
+  topic: "mcp-tools"  // optional
+})
+// Returns: Session metadata + content
+// Performance: ~3.6ms average (100x faster than file scanning)
+
+// Query plans with filters
+mcp_aiknowsys_query_plans_sqlite({
+  dbPath: ".aiknowsys/knowledge.db",
+  status: "ACTIVE",  // optional: ACTIVE | PAUSED | COMPLETE | CANCELLED
+  author: "arno-paffen",  // optional
+  topic: "mcp"  // optional
+})
+// Returns: Plan metadata + content
+// Performance: ~7ms average
+
+// Query learned patterns
+mcp_aiknowsys_query_learned_patterns_sqlite({
+  dbPath: ".aiknowsys/knowledge.db",
+  category: "error_resolution",  // optional
+  keywords: "yaml,parsing"  // optional, comma-separated
+})
+// Returns: Pattern metadata + content
+// Performance: ~18ms average
+
+// Full-text search across all content
+mcp_aiknowsys_search_context_sqlite({
+  dbPath: ".aiknowsys/knowledge.db",
+  query: "SQLite migration",
+  limit: 10  // optional, default 10
+})
+// Returns: Ranked results with snippets
+// Performance: ~18ms average
+```
+
+**Setup Required:**
+1. Run `npx aiknowsys migrate-to-sqlite` to create `.aiknowsys/knowledge.db`
+2. Database must exist before using SQLite tools
+3. Re-run migration after creating new sessions/plans/patterns
+
+**See:** [mcp-server/SETUP.md](mcp-server/SETUP.md) for full setup guide
 
 ### MCP vs CLI vs File Reading
 
@@ -303,10 +434,16 @@ mcp_aiknowsys_archive_plans({
 | Get critical invariants | `mcp_aiknowsys_get_critical_invariants()` | N/A | `read_file()` ESSENTIALS | **100x faster** |
 | Get validation commands | `mcp_aiknowsys_get_validation_matrix()` | N/A | `read_file()` ESSENTIALS | **100x faster** |
 | Get recent sessions | `mcp_aiknowsys_get_recent_sessions({days:7})` | `query-sessions --days 7` | `list_dir()` + `read_file()` x N | **10-50x faster** |
+| **Query sessions (SQLite)** | `mcp_aiknowsys_query_sessions_sqlite()` | `migrate-to-sqlite` + query | File scanning + parsing | **100x faster (3.6ms)** |
+| **Query plans (SQLite)** | `mcp_aiknowsys_query_plans_sqlite()` | N/A | File scanning + parsing | **100x faster (7ms)** |
+| **Search context (SQLite)** | `mcp_aiknowsys_search_context_sqlite()` | N/A | `grep_search()` | **10-50x faster (18ms)** |
 | Get skill content | `mcp_aiknowsys_get_skill_by_name({skillName})` | `read_file()` | `read_file()` | **Same speed** (direct read) |
 | Search context | `search_context()` (when fixed) | `search-context "query"` | `grep_search()` | **10x faster** |
 
-**🚀 Best Practice:** Check MCP availability first, fall back to CLI if unavailable.
+**🚀 Best Practice:** 
+1. Use SQLite tools if database exists (fastest)
+2. Fall back to file-based MCP tools if no database
+3. Fall back to CLI if MCP unavailable
 
 ### Setup
 

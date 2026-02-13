@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": [
+        "/REPLACE/WITH/ABSOLUTE/PATH/TO/PROJECT/mcp-server/dist/mcp-server/src/index.js"
+      ],
+      "env": {
+        "AIKNOWSYS_DIR": "/REPLACE/WITH/ABSOLUTE/PATH/TO/PROJECT"
+      }
+    }
+  }
+}

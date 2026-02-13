@@ -25,11 +25,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ### Before Making ANY Code Changes:
 
-**Step 1: Acknowledge & Read Context**
-```
-"Reading required context files..."
-[Actually call read_file on @CODEBASE_ESSENTIALS.md]
-"Context review complete. Ready to proceed."
+**Step 1: Load Context via MCP Tools**
+```typescript
+"Loading project context..."
+// Get critical invariants (replaces reading ESSENTIALS)
+const invariants = await mcp_aiknowsys_get_critical_invariants();
+"✅ Context loaded. Ready to proceed."
 ```
 
 **Step 2: Create Work Plan** (even for "quick fixes")
@@ -74,7 +75,7 @@ See full details: Section 5½ below
 **"Emergency" does NOT mean "skip the process"!**
 
 Even for production-critical bugs:
-1. ✅ **STILL read CODEBASE_ESSENTIALS.md** (30 seconds - prevents making it worse)
+1. ✅ **STILL load critical invariants** (`mcp_aiknowsys_get_critical_invariants()` - 2 seconds, prevents violations)
 2. ✅ **STILL create todo list** (1 minute - prevents forgetting steps)
 3. ✅ **STILL follow TDD** (test first = confidence the fix works)
 4. ✅ **STILL request architectural review** (catches side effects)
@@ -96,14 +97,24 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 ## ⚡ QUICK REFERENCE CHECKLIST
 
 **Before ANY change (even small fixes):**
-- [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
-- [ ] Read relevant skill if applicable
-- [ ] **Check MCP availability:** If `mcp_aiknowsys_*` tools available, prefer them over CLI/file reading (10-100x faster)
+- [ ] **Check MCP availability first** - If `mcp_aiknowsys_*` tools available, use them instead of file reading
+- [ ] Read relevant skill if applicable (trigger word matching)
 - [ ] **FOR NEW FEATURES:** Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR)
 - [ ] **FOR BUG FIXES:** Write test reproducing bug, then fix
 - [ ] Make changes + write/update tests
-- [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
+- [ ] **VALIDATE** (see validation matrix below)
 - [ ] Update docs if patterns changed
+
+**🎯 MCP Tools Available (Prefer These!):**
+
+See **📦 MCP TOOLS REFERENCE** section below for complete list of 15 tools.
+
+**Common operations:**
+- Get context: `mcp_aiknowsys_get_critical_invariants()`, `get_recent_sessions()`, `get_active_plans()`
+- Query data: `query_sessions_sqlite()`, `query_plans_sqlite()`, `search_context_sqlite()`
+- Create/update: `create_session()`, `append_to_session()`, `create_plan()`, `set_plan_status()`
+
+**Performance:** 10-100x faster than file reading, validated responses
 
 **Validation Matrix (ALWAYS run after changes):**
 
@@ -126,35 +137,160 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 
 ---
 
+## 📦 MCP TOOLS REFERENCE
+
+**⚡ 15 MCP tools available for fast, validated operations (10-100x faster than file reading)**
+
+### Context & Discovery Tools (Use at Session Start)
+
+**`mcp_aiknowsys_get_critical_invariants()`**
+- Returns: 8 mandatory rules (architecture, patterns, validation)
+- Purpose: Load project rules without reading ESSENTIALS
+- Speed: 50 tokens vs 2000 tokens (file reading)
+
+**`mcp_aiknowsys_get_validation_matrix()`**
+- Returns: Validation commands by file type changed
+- Purpose: Know what to run after changes
+- Speed: Direct data, no parsing
+
+**`mcp_aiknowsys_get_active_plans()`**
+- Returns: Current active plans with metadata
+- Purpose: Session start - know what's in progress
+- Speed: Index query vs file scanning
+
+**`mcp_aiknowsys_get_recent_sessions({ days: 7 })`**
+- Returns: Recent sessions with topics, status
+- Purpose: Session continuity - build on previous work
+- Speed: Date-filtered index vs list+read all files
+
+**`mcp_aiknowsys_find_skill_for_task({ task: "refactoring" })`**
+- Returns: Relevant skill workflow for task
+- Purpose: Natural language → skill matching
+- Speed: Keyword matching vs hoping trigger words match
+
+### Query Tools (SQLite - Fastest)
+
+**`mcp_aiknowsys_get_db_stats_sqlite({ dbPath })`**
+- Returns: Record counts, DB size, last updated
+- Performance: ~9ms average
+- Requires: `npx aiknowsys migrate-to-sqlite` first
+
+**`mcp_aiknowsys_query_sessions_sqlite({ dateAfter, dateBefore, topic, dbPath })`**
+- Returns: Sessions with filters (full content)
+- Performance: ~3.6ms (100x faster than file scanning)
+- ⚠️ Token warning: Returns full content (~22K tokens for 4 sessions)
+- Note: Optimization plan exists for metadata-only mode
+
+**`mcp_aiknowsys_query_plans_sqlite({ status, author, topic, dbPath })`**
+- Returns: Plans with filters (full content)
+- Performance: ~7ms average
+- Use case: Find active plans, plans by developer
+
+**`mcp_aiknowsys_query_learned_patterns_sqlite({ category, keywords, dbPath })`**
+- Returns: Learned patterns with filters
+- Performance: ~18ms average (~48K tokens for 33 patterns)
+- Categories: error_resolution, workarounds, project_specific
+
+**`mcp_aiknowsys_search_context_sqlite({ query, limit, dbPath })`**
+- Returns: Full-text search across sessions/plans/patterns with snippets
+- Performance: ~18ms average
+- Already optimized: Returns snippets, not full content
+
+### Mutation Tools (Session & Plan Management)
+
+**Session Tools:**
+```typescript
+mcp_aiknowsys_create_session({ title, topics })
+mcp_aiknowsys_append_to_session({ section, content })
+mcp_aiknowsys_prepend_to_session({ section, content })
+mcp_aiknowsys_insert_after_section({ pattern, section, content })
+mcp_aiknowsys_insert_before_section({ pattern, section, content })
+mcp_aiknowsys_update_session_metadata({ field, value })
+```
+
+**Plan Tools:**
+```typescript
+mcp_aiknowsys_create_plan({ title, topics })
+mcp_aiknowsys_append_to_plan({ planId, content })
+mcp_aiknowsys_prepend_to_plan({ planId, content })
+mcp_aiknowsys_set_plan_status({ planId, status }) // ACTIVE|PAUSED|COMPLETE|CANCELLED
+```
+
+**Benefits:**
+- Automatic YAML validation
+- Auto-sync plan/session indexes
+- Atomic updates (no partial writes)
+- 10-100x faster than file editing
+
+### When to Use What
+
+```typescript
+// ✅ Session start (MANDATORY)
+get_critical_invariants()      // Load rules
+get_active_plans()              // Know what's in progress
+get_recent_sessions({ days: 7 }) // Build on previous work
+
+// ✅ Finding information
+search_context_sqlite({ query: "error handling" })  // Full-text search
+query_sessions_sqlite({ topic: "mcp-tools" })        // Filter sessions
+find_skill_for_task({ task: "refactoring" })         // Get workflow
+
+// ✅ Creating/updating work
+create_plan({ title: "Add feature X" })
+append_to_session({ section: "## Progress", content: "..." })
+set_plan_status({ planId: "PLAN_xyz", status: "COMPLETE" })
+
+// ❌ Avoid
+read_file("CODEBASE_ESSENTIALS.md")  // Use get_critical_invariants() instead
+grep_search("pattern", ".aiknowsys/**")  // Use search_context_sqlite() instead
+create_file("PLAN_xyz.md")  // Use create_plan() instead
+```
+
+### Setup Required
+
+**SQLite tools (`*_sqlite`):**
+1. Run `npx aiknowsys migrate-to-sqlite` once
+2. Creates `.aiknowsys/knowledge.db`
+3. Re-run after creating new sessions/plans manually
+
+**Full setup:** See [mcp-server/SETUP.md](mcp-server/SETUP.md)
+
+---
+
 ## 📋 SESSION WORKFLOW (Follow This Order!)
 
 ### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
 
-**🚨 MANDATORY: ALWAYS call these MCP tools at session start:**
+**🚨 MANDATORY: Use MCP tools for session start (10-100x faster than file reading)**
 
 ```typescript
-// Step 1: Load active plans (REQUIRED - DO NOT SKIP)
+// Step 1: Get critical rules (REQUIRED - DO NOT SKIP)
+const invariants = await mcp_aiknowsys_get_critical_invariants();
+console.log(`✅ Loaded ${invariants.length} critical invariants`);
+
+// Step 2: Load active plans (REQUIRED - DO NOT SKIP)
 const plans = await mcp_aiknowsys_get_active_plans();
 if (plans.length > 0) {
-  console.log(`Loaded active plan: ${plans[0].title}`);
+  console.log(`✅ Active plan: ${plans[0].title}`);
 }
 
-// Step 2: Load recent sessions (REQUIRED - DO NOT SKIP)
+// Step 3: Load recent sessions (REQUIRED - DO NOT SKIP)
 const sessions = await mcp_aiknowsys_get_recent_sessions({ days: 7 });
 if (sessions.length > 0) {
-  console.log(`Found ${sessions.length} recent sessions`);
-  // Read the most recent one
+  console.log(`✅ Found ${sessions.length} recent sessions`);
 }
-
-// Step 3: Get critical invariants (REQUIRED - DO NOT SKIP)
-const invariants = await mcp_aiknowsys_get_critical_invariants();
-console.log(`Loaded ${invariants.length} critical invariants`);
 
 // Step 4: Acknowledge context loaded
 console.log("✅ Context loaded. Ready to proceed.");
 ```
 
-**If MCP tools unavailable (Claude Desktop without MCP, etc):**
+**Why MCP tools instead of file reading:**
+- 95% token reduction (500 tokens vs 10K+ tokens)
+- Structured data (no parsing markdown)
+- Validated responses
+- Multiple queries in parallel possible
+
+**If MCP tools unavailable (fallback only):**
 
 ```
 1. **Check .aiknowsys/plans/active-<username>.md** (personal plan pointer)
@@ -170,15 +306,15 @@ console.log("✅ Context loaded. Ready to proceed.");
      - Continue from where previous session ended
 
 3. If no active plan and no recent session:
-   - Read CODEBASE_ESSENTIALS.md for context
+   - Load critical invariants via `mcp_aiknowsys_get_critical_invariants()`
    - Wait for user direction
 ```
 
 ### 1️⃣ START: Read Context (REQUIRED)
 
-**ALWAYS read these files at the start of every conversation:**
-1. **@CODEBASE_ESSENTIALS.md** - Current architecture, patterns, and guardrails (MANDATORY)
-2. **@AGENTS.md** - This file for workflow reminders
+**ALWAYS load context at the start of every conversation:**
+1. **MCP Tools** - Use `mcp_aiknowsys_get_critical_invariants()` for rules (MANDATORY if MCP available)
+2. **@AGENTS.md** - This file for workflow reminders (if MCP not available)
 
 **When you need history:**
 - **@CODEBASE_CHANGELOG.md** - Milestone-focused timeline (releases, breaking changes)
@@ -521,8 +657,8 @@ Only manually edit session/plan files when:
 
 ## 🎯 General Best Practices
 
-1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md for existing patterns
-2. **Prefer MCP tools when available** - Use `mcp_aiknowsys_*` tools over CLI commands or file reading for context queries (10-100x faster)
+1. **MCP tools first** - Always use `mcp_aiknowsys_*` tools when available (10-100x faster than file reading)
+2. **Load context before coding** - Get critical invariants, active plans, recent sessions via MCP
 3. **Update proactively** - Don't wait for user to ask
 4. **Be concise** - Keep summaries short and factual
 5. **Link files** - Include line numbers when referencing code

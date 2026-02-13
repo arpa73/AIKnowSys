@@ -1,7 +1,53 @@
 {
   "version": 1,
-  "updated": "2026-02-12T17:18:26.562Z",
-  "plans": [],
+  "updated": "2026-02-13T22:07:26.886Z",
+  "plans": [
+    {
+      "id": "PLAN_template_sync_add_mcp_tools_documentation",
+      "title": "Template Sync: Add MCP Tools Documentation",
+      "status": "ACTIVE",
+      "author": "arno-paffen",
+      "created": "2026-02-13T22:07:26.889Z",
+      "updated": "2026-02-13T22:07:26.889Z",
+      "file": "PLAN_template_sync_add_mcp_tools_documentation.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771020446876",
+      "title": "Test Plan 1771020446876",
+      "status": "ACTIVE",
+      "author": "arno",
+      "created": "2026-02-13T22:07:26.889Z",
+      "updated": "2026-02-13T22:07:26.889Z",
+      "file": "PLAN_test_plan_1771020446876.md"
+    },
+    {
+      "id": "PLAN_integration_test_plan",
+      "title": "Implementation Plan: Integration Test Plan",
+      "status": "\"PLANNED\"",
+      "author": "\"arno-paffen\"",
+      "created": "2026-02-12T23:00:00.000Z",
+      "updated": "2026-02-13T22:07:26.890Z",
+      "file": "PLAN_integration_test_plan.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771010560184",
+      "title": "Implementation Plan: Test Plan 1771010560184",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-12T23:00:00.000Z",
+      "updated": "2026-02-13T22:07:26.891Z",
+      "file": "PLAN_test_plan_1771010560184.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771020373558",
+      "title": "Implementation Plan: Test Plan 1771020373558",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-12T23:00:00.000Z",
+      "updated": "2026-02-13T22:07:26.894Z",
+      "file": "PLAN_test_plan_1771020373558.md"
+    }
+  ],
   "sessions": [
     {
       "date": "2026-02-12",
@@ -15,7 +61,15 @@
       ],
       "file": "sessions/2026-02-12-session.md",
       "created": "2026-02-12T00:00:00.000Z",
-      "updated": "2026-02-12T17:18:26.565Z"
+      "updated": "2026-02-13T22:07:26.900Z"
+    },
+    {
+      "date": "2026-02-13",
+      "topic": "Phase 1 Week 2: MCP Tools with SQLite Backend",
+      "topics": [],
+      "file": "sessions/2026-02-13-session.md",
+      "created": "2026-02-13T00:00:00.000Z",
+      "updated": "2026-02-13T22:07:26.900Z"
     }
   ],
   "learned": []

@@ -123,3 +123,126 @@ export interface DeliverableValidationResult extends ValidationResult {
   fix?: string;
   error?: string;
 }
+
+export interface MigrateToSqliteOptions {
+  dir: string;
+  dbPath: string;
+  verbose?: boolean;
+  dryRun?: boolean;
+}
+
+export interface MigrationStats {
+  found: number;
+  migrated: number;
+  errors: number;
+}
+
+export interface MigrateToSqliteResult {
+  sessions: MigrationStats;
+  plans: MigrationStats;
+  learned: MigrationStats;
+  dbPath?: string;
+}
+
+// SQLite Query types (Phase 1 Week 2)
+export interface QuerySessionsOptions {
+  dbPath: string;
+  dateAfter?: string;
+  dateBefore?: string;
+  topic?: string;
+  status?: string;
+}
+
+export interface QueryPlansOptions {
+  dbPath: string;
+  status?: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
+  author?: string;
+  topic?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
+export interface QueryLearnedPatternsOptions {
+  dbPath: string;
+  category?: string;
+  keywords?: string[];
+}
+
+export interface SearchContextOptions {
+  dbPath: string;
+  query: string;
+  limit?: number;
+}
+
+export interface DbStatsOptions {
+  dbPath: string;
+}
+
+export interface SessionRecord {
+  date: string;
+  title: string;
+  goal?: string;
+  status?: string;
+  topics: string[];
+  content: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface PlanRecord {
+  id: string;
+  title: string;
+  status: string;
+  author?: string;
+  priority?: string;
+  type?: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LearnedPatternRecord {
+  id: string;
+  category: string;
+  title: string;
+  content: string;
+  keywords: string[];
+  created_at: string;
+}
+
+export interface SearchResult {
+  type: 'session' | 'plan' | 'learned';
+  id: string;
+  title: string;
+  snippet: string;
+  score: number;
+}
+
+export interface QuerySessionsResult {
+  count: number;
+  sessions: SessionRecord[];
+}
+
+export interface QueryPlansResult {
+  count: number;
+  plans: PlanRecord[];
+}
+
+export interface QueryLearnedPatternsResult {
+  count: number;
+  patterns: LearnedPatternRecord[];
+}
+
+export interface SearchContextResult {
+  count: number;
+  results: SearchResult[];
+  query: string;
+}
+
+export interface DbStatsResult {
+  sessions: number;
+  plans: number;
+  learned: number;
+  total: number;
+  dbSize: number;
+  dbPath: string;
+}

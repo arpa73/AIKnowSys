@@ -20,8 +20,9 @@ import type {
 
 /**
  * Database row interfaces for type-safe query results
+ * Exported for use by core query functions that need full record access
  */
-interface PlanRow {
+export interface PlanRow {
   id: string;
   project_id: string;
   title: string;
@@ -36,7 +37,7 @@ interface PlanRow {
   content: string;
 }
 
-interface SessionRow {
+export interface SessionRow {
   id: string;
   project_id: string;
   date: string;
@@ -384,6 +385,175 @@ export class SqliteStorage extends StorageAdapter {
       plansIndexed: plansCount.count,
       sessionsIndexed: sessionsCount.count,
       learnedIndexed: patternsCount.count
+    };
+  }
+
+  /**
+   * Query full plan records (including content) with optional filters
+   * Used by MCP tools that need access to full plan content
+   * @param filters - Optional filters for status, author, topic, priority
+   *  @returns Promise resolving to plan count and array of full plan rows
+   * @throws Error if database not initialized
+   */
+  async queryFullPlans(filters?: PlanFilters & { priority?: string; idStartsWith?: string; contentContains?: string }): Promise<{ count: number; plans: PlanRow[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    let query = 'SELECT * FROM plans WHERE 1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.idStartsWith) {
+        query += ' AND id LIKE ?';
+        params.push(`${filters.idStartsWith}%`);
+      }
+      
+      if (filters.contentContains) {
+        query += ' AND (content LIKE ? OR title LIKE ?)';
+        params.push(`%${filters.contentContains}%`, `%${filters.contentContains}%`);
+      }
+      
+      if (filters.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters.author) {
+        query += ' AND author = ?';
+        params.push(filters.author);
+      }
+      
+      if (filters.topic) {
+        query += ' AND (title LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.priority) {
+        query += ' AND priority = ?';
+        params.push(filters.priority);
+      }
+      
+      if (filters.updatedAfter) {
+        query += ' AND updated_at > ?';
+        params.push(filters.updatedAfter);
+      }
+      
+      if (filters.updatedBefore) {
+        query += ' AND updated_at < ?';
+        params.push(filters.updatedBefore);
+      }
+    }
+    
+    query += ' ORDER BY updated_at DESC';
+    
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as PlanRow[];
+    
+    return {
+      count: rows.length,
+      plans: rows
+    };
+  }
+
+  /**
+   * Query full session records (including content) with optional filters
+   * Used by MCP tools that need access to full session content
+   * @param filters - Optional filters for date, date range, topic, plan, status
+   * @returns Promise resolving to session count and array of full session rows
+   * @throws Error if database not initialized
+   */
+  async queryFullSessions(filters?: SessionFilters & { status?: string; contentContains?: string }): Promise<{ count: number; sessions: SessionRow[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    let query = 'SELECT * FROM sessions WHERE 1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.contentContains) {
+        query += ' AND (content LIKE ? OR topic LIKE ?)';
+        params.push(`%${filters.contentContains}%`, `%${filters.contentContains}%`);
+      }
+      
+      if (filters.date) {
+        query += ' AND date = ?';
+        params.push(filters.date);
+      }
+      
+      if (filters.dateAfter) {
+        query += ' AND date >= ?';
+        params.push(filters.dateAfter);
+      }
+      
+      if (filters.dateBefore) {
+        query += ' AND date <= ?';
+        params.push(filters.dateBefore);
+      }
+      
+      if (filters.days) {
+        const daysAgo = new Date();
+        daysAgo.setDate(daysAgo.getDate() - filters.days);
+        query += ' AND date >= ?';
+        params.push(daysAgo.toISOString().split('T')[0]);
+      }
+      
+      if (filters.topic) {
+        query += ' AND (topic LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.plan) {
+        query += ' AND plan_id = ?';
+        params.push(filters.plan);
+      }
+      
+      if (filters.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+    }
+    
+    query += ' ORDER BY date DESC';
+    
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as SessionRow[];
+    
+    return {
+      count: rows.length,
+      sessions: rows
+    };
+  }
+
+  /**
+   * Get database statistics using optimized COUNT(*) queries
+   * Much faster than loading all records into memory
+   * @returns Promise resolving to record counts by type
+   * @throws Error if database not initialized
+   */
+  async getStats(): Promise<{ sessions: number; plans: number; learned: number }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying stats. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    const sessionCount = this.db.prepare('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
+    const planCount = this.db.prepare("SELECT COUNT(*) as count FROM plans WHERE id NOT LIKE 'learned_%'").get() as { count: number };
+    const learnedCount = this.db.prepare("SELECT COUNT(*) as count FROM plans WHERE id LIKE 'learned_%'").get() as { count: number };
+    
+    return {
+      sessions: sessionCount.count,
+      plans: planCount.count,
+      learned: learnedCount.count
     };
   }
 

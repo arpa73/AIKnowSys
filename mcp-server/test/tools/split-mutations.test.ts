@@ -217,7 +217,7 @@ describe('Split Session Mutation Tools', () => {
         expect.arrayContaining([
           'aiknowsys',
           'update-session',
-          '--appendSection',
+          '--append-section',
           '## Changes',
           '--content',
           'Fixed bug X'
@@ -289,7 +289,7 @@ describe('Split Session Mutation Tools', () => {
         expect.arrayContaining([
           'aiknowsys',
           'update-session',
-          '--prependSection',
+          '--prepend-section',
           '## Blocker',
           '--content',
           'Deployment failed'
@@ -332,7 +332,7 @@ describe('Split Session Mutation Tools', () => {
           'update-session',
           '--insert-after',
           '## Goal',
-          '--appendSection',
+          '--append-section',
           '## Implementation',
           '--content',
           'Phase 1 steps'
@@ -353,7 +353,7 @@ describe('Split Session Mutation Tools', () => {
       expect(mockExecFileAsync).toHaveBeenCalledWith(
         'npx',
         expect.arrayContaining([
-          '--appendSection',
+          '--append-section',
           '## Update'
         ]),
         expect.anything()
@@ -394,7 +394,7 @@ describe('Split Session Mutation Tools', () => {
           'update-session',
           '--insert-before',
           '## Complete',
-          '--appendSection',
+          '--append-section',
           '## Testing',
           '--content',
           '15 tests added'

@@ -346,7 +346,7 @@ export async function appendToSession(params: unknown) {
       args.push('--date', validated.date);
     }
 
-    args.push('--appendSection', validated.section);
+    args.push('--append-section', validated.section);
     args.push('--content', validated.content);
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
@@ -384,7 +384,7 @@ export async function prependToSession(params: unknown) {
       args.push('--date', validated.date);
     }
 
-    args.push('--prependSection', validated.section);
+    args.push('--prepend-section', validated.section);
     args.push('--content', validated.content);
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
@@ -424,7 +424,7 @@ export async function insertAfterSection(params: unknown) {
     }
 
     args.push('--insert-after', validated.pattern);
-    args.push('--appendSection', validated.section);
+    args.push('--append-section', validated.section);
     args.push('--content', validated.content);
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
@@ -464,7 +464,7 @@ export async function insertBeforeSection(params: unknown) {
     }
 
     args.push('--insert-before', validated.pattern);
-    args.push('--appendSection', validated.section);
+    args.push('--append-section', validated.section);
     args.push('--content', validated.content);
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });

@@ -32,6 +32,13 @@ import {
 } from './tools/split-mutations.js';
 import { validateDeliverables, checkTddCompliance, validateSkill } from './tools/validation.js';
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
+import {
+  querySessionsSqlite,
+  queryPlansSqlite,
+  queryLearnedPatternsSqlite,
+  searchContextSqlite,
+  getDbStatsSqlite,
+} from './tools/sqlite-query.js';
 
 export class AIKnowSysServer {
   private server: McpServer;
@@ -195,6 +202,79 @@ export class AIKnowSysServer {
         inputSchema: z.object({}),
       },
       async () => syncPlans()
+    );
+
+    // Phase 1 Week 2: SQLite Query Tools (10-100x faster than file-based queries)
+    this.server.registerTool(
+      'query_sessions_sqlite',
+      {
+        description:
+          'Query sessions from SQLite database (10-100x faster than file scanning). Supports filtering by date range, topic, and status. Requires database path to .aiknowsys/knowledge.db.',
+        inputSchema: z.object({
+          dbPath: z.string().min(1),
+          dateAfter: z.string().optional(),
+          dateBefore: z.string().optional(),
+          topic: z.string().optional(),
+          status: z.string().optional(),
+        }),
+      },
+      async (args) => querySessionsSqlite(args)
+    );
+
+    this.server.registerTool(
+      'query_plans_sqlite',
+      {
+        description:
+          'Query plans from SQLite database (10-100x faster than file scanning). Supports filtering by status, author, topic, and priority. Excludes learned patterns (use query_learned_patterns_sqlite for those).',
+        inputSchema: z.object({
+          dbPath: z.string().min(1),
+          status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']).optional(),
+          author: z.string().optional(),
+          topic: z.string().optional(),
+          priority: z.enum(['high', 'medium', 'low']).optional(),
+        }),
+      },
+      async (args) => queryPlansSqlite(args)
+    );
+
+    this.server.registerTool(
+      'query_learned_patterns_sqlite',
+      {
+        description:
+          'Query learned patterns from SQLite database (10-100x faster than file scanning). Patterns are stored as plans with "learned_" prefix. Supports filtering by category and keywords array.',
+        inputSchema: z.object({
+          dbPath: z.string().min(1),
+          category: z.string().optional(),
+          keywords: z.array(z.string()).optional(),
+        }),
+      },
+      async (args) => queryLearnedPatternsSqlite(args)
+    );
+
+    this.server.registerTool(
+      'search_context_sqlite',
+      {
+        description:
+          'Full-text search across ALL content (sessions, plans, learned patterns) in SQLite database. Much faster than grep_search. Returns ranked results with snippets and scores. Supports result limiting.',
+        inputSchema: z.object({
+          dbPath: z.string().min(1),
+          query: z.string().min(1),
+          limit: z.number().int().positive().optional(),
+        }),
+      },
+      async (args) => searchContextSqlite(args)
+    );
+
+    this.server.registerTool(
+      'get_db_stats_sqlite',
+      {
+        description:
+          'Get database statistics from SQLite: record counts (sessions, plans, learned patterns), total count, database size in bytes. Uses optimized COUNT(*) queries for speed. Useful for monitoring and debugging.',
+        inputSchema: z.object({
+          dbPath: z.string().min(1),
+        }),
+      },
+      async (args) => getDbStatsSqlite(args)
     );
 
     // Phase 2A: Mutation Tools
