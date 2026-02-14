@@ -146,7 +146,7 @@ export interface MigrateToSqliteResult {
 
 // SQLite Query types (Phase 1 Week 2)
 export interface QuerySessionsOptions {
-  dbPath: string;
+  dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
   dateAfter?: string;
   dateBefore?: string;
   topic?: string;
@@ -155,7 +155,7 @@ export interface QuerySessionsOptions {
 }
 
 export interface QueryPlansOptions {
-  dbPath: string;
+  dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
   status?: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
   author?: string;
   topic?: string;
@@ -164,7 +164,7 @@ export interface QueryPlansOptions {
 }
 
 export interface QueryLearnedPatternsOptions {
-  dbPath: string;
+  dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
   category?: string;
   keywords?: string[];
   includeContent?: boolean; // Default: false (metadata only for token efficiency)

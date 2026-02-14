@@ -6,11 +6,14 @@
  * 
  * Design note: These functions use SqliteStorage's queryFull* methods
  * to access complete records with content (not just metadata).
+ * 
+ * Phase 3: Smart database path detection (auto-find knowledge.db)
  */
 
 import { SqliteStorage } from '../context/sqlite-storage.js';
 import { statSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { findKnowledgeDb } from '../utils/find-knowledge-db.js';
 import type {
   QuerySessionsOptions,
   QueryPlansOptions,
@@ -31,12 +34,13 @@ import type {
  * Query sessions from SQLite database
  * 
  * @param options - Query filters (dateAfter, dateBefore, topic, status, includeContent)
+ *                  dbPath is optional - will auto-detect if not provided
  * @returns Session records matching filters (metadata-only by default for token efficiency)
  */
 export async function querySessionsSqlite(
   options: QuerySessionsOptions
 ): Promise<QuerySessionsResult> {
-  const dbPath = resolve(options.dbPath);
+  const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
   

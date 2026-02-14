@@ -6,6 +6,7 @@
  * 
  * Phase 1 Week 2 Day 7: MCP Tool Integration
  * Phase 2: Natural Language Query Support (Feb 2026)
+ * Phase 3: Infrastructure Improvements (Smart DB Path)
  */
 
 import {
@@ -23,6 +24,7 @@ import type {
 } from '../../../lib/types/index.js';
 
 import { parseQueryParams } from '../utils/query-parser.js';
+import { findKnowledgeDb } from '../../../lib/utils/find-knowledge-db.js';
 
 /**
  * Query sessions from SQLite database
@@ -53,8 +55,14 @@ export async function querySessionsSqlite(params: {
   includeContent?: boolean;
 }) {
   try {
+    // Smart default: Auto-detect database location if not provided
+    const effectiveParams = {
+      ...params,
+      dbPath: params.dbPath || findKnowledgeDb(),
+    };
+    
     // Parse flexible parameters into structured format
-    const parsed = parseQueryParams(params);
+    const parsed = parseQueryParams(effectiveParams);
     
     // Type-safe narrowing: Extract only QuerySessionsOptions fields
     const sessionOptions: QuerySessionsOptions = {
