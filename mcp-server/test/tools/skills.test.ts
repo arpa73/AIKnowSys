@@ -15,7 +15,7 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# TDD Workflow\n\nWrite tests first...`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('I need to write tests before implementing');
+    const result = await findSkillForTask({ task: 'I need to write tests before implementing' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -28,7 +28,7 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# Refactoring Workflow\n\nRefactor safely...`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('refactor this messy code');
+    const result = await findSkillForTask({ task: 'refactor this messy code' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -39,7 +39,7 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# Dependency Management\n\nUpdate packages safely...`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('update dependencies');
+    const result = await findSkillForTask({ task: 'update dependencies' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -50,7 +50,7 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# TDD Workflow`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('WRITE TESTS FIRST');
+    const result = await findSkillForTask({ task: 'WRITE TESTS FIRST' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -62,7 +62,7 @@ describe('findSkillForTask', () => {
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
     // "write tests first" matches multiple keywords in tdd-workflow
-    const result = await findSkillForTask('write tests first');
+    const result = await findSkillForTask({ task: 'write tests first' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -70,7 +70,7 @@ describe('findSkillForTask', () => {
   });
 
   it('should return not found when no keywords match', async () => {
-    const result = await findSkillForTask('make coffee');
+    const result = await findSkillForTask({ task: 'make coffee' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(false);
@@ -80,7 +80,7 @@ describe('findSkillForTask', () => {
   });
 
   it('should list available skills when no match found', async () => {
-    const result = await findSkillForTask('random task');
+    const result = await findSkillForTask({ task: 'random task' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(false);
@@ -96,7 +96,7 @@ describe('findSkillForTask', () => {
   it('should handle file read errors gracefully', async () => {
     vi.mocked(fs.readFile).mockRejectedValue(new Error('File not found'));
 
-    const result = await findSkillForTask('write tests');
+    const result = await findSkillForTask({ task: 'write tests' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.error).toBe(true);
@@ -108,14 +108,14 @@ describe('findSkillForTask', () => {
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
     const task = 'write tests before implementing';
-    const result = await findSkillForTask(task);
+    const result = await findSkillForTask({ task });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.task).toBe(task);
   });
 
   it('should return MCP-compliant response format', async () => {
-    const result = await findSkillForTask('random task');
+    const result = await findSkillForTask({ task: 'random task' });
 
     expect(result).toHaveProperty('content');
     expect(Array.isArray(result.content)).toBe(true);
@@ -127,7 +127,7 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# Context Query`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('query plans');
+    const result = await findSkillForTask({ task: 'query plans' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
@@ -138,10 +138,33 @@ describe('findSkillForTask', () => {
     const mockSkillContent = `# Context Mutation`;
     vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
 
-    const result = await findSkillForTask('create session');
+    const result = await findSkillForTask({ task: 'create session' });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.found).toBe(true);
     expect(data.skillName).toBe('context-mutation');
+  });
+
+  it('should return conversational error for missing task parameter', async () => {
+    const result = await findSkillForTask({});
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Invalid parameter 'task'");
+    expect(result.content[0].text).toContain('non-empty string');
+  });
+
+  it('should return conversational error for empty task string', async () => {
+    const result = await findSkillForTask({ task: '' });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Invalid parameter 'task'");
+    expect(result.content[0].text).toContain('non-empty string');
+  });
+
+  it('should return conversational error for non-string task', async () => {
+    const result = await findSkillForTask({ task: 123 });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain("Invalid parameter 'task'");
   });
 });

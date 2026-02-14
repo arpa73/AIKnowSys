@@ -8,6 +8,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { z } from 'zod';
+import { handleZodError } from './utils/error-helpers.js';
+
+// Zod schema for parameter validation
+const findSkillSchema = z.object({
+  task: z.string().min(1, 'Task description is required')
+});
 
 /**
  * Skill mapping: keywords → skill directory name
@@ -149,19 +156,20 @@ const SKILL_MAPPINGS = [
 /**
  * Find the most relevant skill for a given task
  * 
- * @param task - Natural language description of what to do
+ * @param params.task - Natural language description of what to do
  * @returns Full skill content if found, error otherwise
  * 
  * @example
- * findSkillForTask("I need to write tests before implementing")
+ * findSkillForTask({ task: "I need to write tests before implementing" })
  * // Returns: tdd-workflow skill content
  * 
- * findSkillForTask("refactor this messy code")
+ * findSkillForTask({ task: "refactor this messy code" })
  * // Returns: refactoring-workflow skill content
  */
-export async function findSkillForTask(task: string) {
+export async function findSkillForTask(params: unknown) {
   try {
-    const taskLower = task.toLowerCase();
+    const validated = findSkillSchema.parse(params);
+    const taskLower = validated.task.toLowerCase();
     
     // Find matching skill by keyword overlap
     let bestMatch: { name: string; score: number; description: string } | null = null;
@@ -188,7 +196,7 @@ export async function findSkillForTask(task: string) {
             text: JSON.stringify({
               found: false,
               message: 'No matching skill found for task. Try different keywords.',
-              task,
+              task: validated.task,
               availableSkills: SKILL_MAPPINGS.map((s) => ({
                 name: s.name,
                 description: s.description,
@@ -219,13 +227,23 @@ export async function findSkillForTask(task: string) {
             skillName: bestMatch.name,
             description: bestMatch.description,
             matchScore: bestMatch.score,
-            task,
+            task: validated.task,
             skillContent: content,
           }, null, 2),
         },
       ],
     };
   } catch (error) {
+    // Handle Zod validation errors with conversational responses
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'finding skill', {
+        task: {
+          suggestion: 'Task must be a non-empty string describing what you want to do',
+          examples: ['{ "task": "write tests first" }', '{ "task": "refactor messy code" }']
+        }
+      });
+    }
+    
     const message = error instanceof Error ? error.message : String(error);
     return {
       content: [
@@ -234,7 +252,6 @@ export async function findSkillForTask(task: string) {
           text: JSON.stringify({
             error: true,
             message: `Failed to find skill: ${message}`,
-            task,
           }),
         },
       ],
