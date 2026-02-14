@@ -319,13 +319,18 @@ Troubleshooting:
 
 ## 🎯 Prioritized Fix List
 
-### Priority 1: Infrastructure (Foundation)
+### ✅ Priority 1: Infrastructure (Foundation) - PHASE 1 COMPLETE
 
-1. **Path resolution** - Flatten build output OR export public API
-2. **Database path** - Smart detection (walk up tree)
-3. **Built-in testing** - `mcp-test` and `mcp-repl` commands
+1. **✅ Database path** - Smart detection (walk up tree)
+   - Implemented: `lib/utils/find-knowledge-db.ts`
+   - Integrated: Made dbPath optional in all query options
+   - Tests: 7/7 passing
+   - Impact: Zero configuration, works from any directory
+   
+2. ❌ **Path resolution** - Flatten build output OR export public API
+3. ❌ **Built-in testing** - `mcp-test` and `mcp-repl` commands
 
-**Impact:** Removes 80% of development friction
+**Impact:** Removed database path brittleness (critical bump #2)
 
 ### Priority 2: Discovery (Visibility)
 
