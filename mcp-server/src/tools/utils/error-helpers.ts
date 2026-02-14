@@ -5,6 +5,7 @@ import { AIFriendlyErrorBuilder } from '../../../../lib/utils/error-builder.js';
  * MCP Error Response Format
  */
 export interface MCPErrorResponse {
+  [x: string]: unknown; // Allow additional properties for MCP SDK compatibility
   content: Array<{
     type: 'text';
     text: string;

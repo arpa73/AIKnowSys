@@ -113,7 +113,7 @@ export class AIKnowSysServer {
           task: z.string().min(3),
         }),
       },
-      async ({ task }) => findSkillForTask(task)
+      async (args) => findSkillForTask(args)
     );
 
     // Phase 1.2: Advanced Query Tools (NEW - 2026-02-10)

@@ -290,39 +290,1117 @@ conversational_query("What did we work on with MCP this week?")
 
 ---
 
-## 🧠 Architecture: Local AI as Smart Middleware
+## 🧠 Architecture: Mediator as MCP Tool
 
-### System Design
+**KEY INSIGHT:** The mediator is NOT a separate service - it's a **tool inside the MCP server**.
+
+**DEPLOYMENT OPTIONS:**
+- **Option A (Distributed):** MCP server on laptop, files local
+- **Option B (Centralized - RECOMMENDED):** MCP server on mini PC, global access ✨
+
+### Option A: Distributed (Original Plan)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Agent (Claude, GPT-4, etc.)            │
-└───────────────────────┬─────────────────────────────────────┘
-                        │ Natural language
-                        │ "Show me recent MCP work"
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Conversational Mediator (Local AI)             │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ Intent       │  │ Query        │  │ Response     │     │
-│  │ Parser       │→ │ Optimizer    │→ │ Formatter    │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│         ↑                  ↓                  ↑             │
-│         │                  │                  │             │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  Context: User patterns, recent queries, preferences │  │
-│  └──────────────────────────────────────────────────────┘  │
-└───────────────────────┬─────────────────────────────────────┘
-                        │ Structured tool calls
-                        │ query_sessions_sqlite({ ... })
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│              AIKnowSys Knowledge System (SQLite)            │
-│  Sessions, Plans, Patterns, Learned Knowledge               │
+│  Laptop                                                     │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ Agent (VSCode with MCP client)                         │ │
+│  └───────────────────┬────────────────────────────────────┘ │
+│                      │ stdio (local process)                │
+│                      ▼                                       │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ MCP Server + Storage                                   │ │
+│  │ .aiknowsys/ files on laptop                           │ │
+│  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Local AI Model Options
+**Cons:**
+- ❌ Files stuck on one device
+- ❌ Can't work from other computers
+- ❌ Sync issues if using multiple devices
+
+### Option B: Centralized on Mini PC (BETTER!) ✨
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Laptop (Work Device #1)                                    │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ VSCode with MCP Client                                 │ │
+│  └───────────────────┬────────────────────────────────────┘ │
+└──────────────────────┼──────────────────────────────────────┘
+                       │
+                       │ HTTP (WebSocket or SSE)
+                       │
+┌─────────────────────────────────────────────────────────────┐
+│  Desktop (Work Device #2)                                   │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ VSCode with MCP Client                                 │ │
+│  └───────────────────┬────────────────────────────────────┘ │
+└──────────────────────┼──────────────────────────────────────┘
+                       │
+                       │ HTTP (WebSocket or SSE)
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Mini PC (Always-On Server) - 128GB RAM + AMD GPU          │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  MCP Server (HTTP Transport)                          │  │
+│  │  ┌─────────────────┐  ┌─────────────────────────┐   │  │
+│  │  │ Direct Tools    │  │ Mediator                │   │  │
+│  │  │ (31 tools)      │  │ (conversational_query)  │   │  │
+│  │  │                 │  │  ↓ Calls local AI       │   │  │
+│  │  │     ↓           │  │  ↓ Llama 70B / 1B       │   │  │
+│  │  └─────┼───────────┘  └─────────┼───────────────┘   │  │
+│  │        └──────────────────┬─────┘                    │  │
+│  │                           ▼                           │  │
+│  │           ┌────────────────────────┐                 │  │
+│  │           │  Storage Functions     │                 │  │
+│  │           └────────────┬───────────┘                 │  │
+│  └────────────────────────┼───────────────────────────┘  │
+│                           ▼                               │
+│  ┌───────────────────────────────────────────────────┐   │
+│  │  Centralized Knowledge Base                       │   │
+│  │  .aiknowsys/ (sessions, plans, patterns)         │   │
+│  │  knowledge.db (SQLite with FTS)                   │   │
+│  └───────────────────────────────────────────────────┘   │
+│                                                           │
+│  ┌───────────────────────────────────────────────────┐   │
+│  │  Ollama / vLLM (Local AI Models)                  │   │
+│  │  • Custom AIKnowSys 1B (intent parsing)           │   │
+│  │  • Llama 3.3 70B (complex reasoning)              │   │
+│  └───────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Pros:**
+- ✅ **Global access** - Work from laptop, desktop, phone, anywhere
+- ✅ **One source of truth** - No sync issues, centralized data
+- ✅ **Team collaboration** - Multiple developers use same knowledge base
+- ✅ **Always available** - Mini PC runs 24/7
+- ✅ **AI co-located** - MCP server and models on same hardware (zero latency)
+- ✅ **128GB RAM** - Can handle server + multiple AI models + storage
+- ✅ **Backup friendly** - Backup one machine, not multiple devices
+
+### Communication Flow (Centralized)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Agent (Claude, GPT-4, Copilot)                             │
+│  - Running in IDE (VSCode, Cursor, etc.)                    │
+│  - Has MCP client built-in                                  │
+│  - Any device, anywhere on network                          │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        │ MCP Protocol over HTTP/WebSocket
+                        │ (network request)
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Mini PC - MCP Server (AIKnowSys)                           │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Tool Registry                                        │  │
+│  │  ┌─────────────────┐  ┌─────────────────────────┐   │  │
+│  │  │ Option 1:       │  │ Option 2: Mediator      │   │  │
+│  │  │ Direct Tools    │  │ (conversational_query)  │   │  │
+│  │  │                 │  │                         │   │  │
+│  │  │ • query_sessions│  │  ┌───────────────────┐ │   │  │
+│  │  │ • query_plans   │  │  │ Intent Parser    │ │   │  │
+│  │  │ • create_session│  │  │ (Local AI / API) │ │   │  │
+│  │  │ • etc. (31)     │  │  └─────────┬─────────┘ │   │  │
+│  │  │                 │  │            │           │   │  │
+│  │  │      ↓          │  │            ▼           │   │  │
+│  │  │  [same path]    │  │  ┌───────────────────┐ │   │  │
+│  │  │                 │  │  │ Query Executor   │ │   │  │
+│  │  │                 │  │  └─────────┬─────────┘ │   │  │
+│  │  │                 │  │            │           │   │  │
+│  │  └────────┬────────┘  │            │           │   │  │
+│  │           │           │            │           │   │  │
+│  │           └───────────┴────────────┘           │   │  │
+│  │                       │                        │   │  │
+│  │                       ▼                        │   │  │
+│  │           ┌────────────────────────┐           │   │  │
+│  │           │  Storage Functions     │           │   │  │
+│  │           │  • querySessions()     │           │   │  │
+│  │           │  • createSession()     │           │   │  │
+│  │           │  • updatePlan()        │           │   │  │
+│  │           │  • etc.                │           │   │  │
+│  │           └────────────┬───────────┘           │   │  │
+│  └────────────────────────┼───────────────────────┘   │  │
+│                           │                            │  │
+│                           ▼                            │  │
+│  ┌───────────────────────────────────────────────────┐  │
+│  │  SQLite Storage                                   │  │
+│  │  • .aiknowsys/sessions/*.md                      │  │
+│  │  • .aiknowsys/plans/*.md                         │  │
+│  │  • .aiknowsys/knowledge.db (metadata + FTS)      │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Two Options for Agent
+
+**Option 1: Direct Tool Calls (Current/Backward Compatible)**
+```typescript
+// Agent calls specific tools directly
+await mcp.callTool('query_sessions_sqlite', {
+  topic: 'mcp',
+  dateAfter: '2026-02-07',
+  mode: 'metadata'
+});
+```
+
+**Option 2: Conversational Query (New/Easier)**
+```typescript
+// Agent just describes what they want
+await mcp.callTool('conversational_query', {
+  query: "Show me MCP work from this week"
+});
+```
+
+**Both options exist simultaneously!**
+- Power users / specific needs → Direct tools
+- Conversational / quick queries → Mediator
+
+### How Mediator Tool Works Internally
+
+```typescript
+// mcp-server/src/tools/conversational-query.ts
+import { ConversationalMediator } from '../lib/mediator';
+
+export async function conversationalQuery(args: { query: string }) {
+  // 1. Mediator interprets intent (using local AI or cloud API)
+  const mediator = new ConversationalMediator();
+  const intent = await mediator.parseIntent(args.query);
+  // → { action: 'query_sessions', topic: 'mcp', time: 'this_week' }
+  
+  // 2. Mediator calls INTERNAL storage functions (same as direct tools)
+  const executor = new QueryExecutor(storage);
+  const result = await executor.execute(intent);
+  // → Calls storage.querySessions({ topic: 'mcp', dateAfter: '2026-02-07' })
+  
+  // 3. Mediator formats response conversationally
+  const formatter = new ResponseFormatter();
+  const response = await formatter.format(args.query, intent, result);
+  
+  // 4. Return to agent
+  return {
+    success: true,
+    answer: response.answer,        // Natural language
+    data: response.structured_data, // Structured if needed
+    suggestions: response.follow_up_suggestions
+  };
+}
+
+// Register as MCP tool
+server.registerTool('conversational_query', {
+  description: 'Natural language interface to knowledge system',
+  inputSchema: z.object({
+    query: z.string().min(3)
+  }),
+  handler: conversationalQuery
+});
+```
+
+### The Mediator's Local AI
+
+**Where does the AI run?**
+
+**Option A: Mini PC (Your Hardware)**
+```
+┌──────────────────┐         HTTP          ┌──────────────────┐
+│  MCP Server      │──────────────────────→│  Mini PC         │
+│  (Laptop)        │                        │  (128GB + GPU)   │
+│                  │                        │                  │
+│  conversational_ │                        │  Ollama Server   │
+│  query() calls:  │                        │  • llama-70b     │
+│                  │←──────────────────────│  • custom-1b     │
+│  HTTP client     │    Intent JSON         └──────────────────┘
+│  to mini PC      │
+└──────────────────┘
+```
+
+**Option B: Same Process (Cloud API)**
+```
+┌──────────────────┐         HTTPS         ┌──────────────────┐
+│  MCP Server      │──────────────────────→│  OpenAI API      │
+│  (Laptop)        │                        │  (gpt-4o-mini)   │
+│                  │                        │                  │
+│  conversational_ │                        │                  │
+│  query() calls:  │                        │                  │
+│                  │←──────────────────────│                  │
+│  OpenAI SDK      │    Intent JSON         └──────────────────┘
+└──────────────────┘
+```
+
+**Option C: Same Process (Local Inference)**
+```
+┌──────────────────────────────────────────┐
+│  MCP Server Process                      │
+│  ┌────────────────────────────────────┐  │
+│  │  conversational_query()            │  │
+│  │  ↓                                 │  │
+│  │  llama.cpp / Ollama client         │  │
+│  │  (connects to localhost:11434)     │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  Same machine, different process         │
+└──────────────────────────────────────────┘
+```
+
+### Data Flow Example
+
+**Agent request:**
+```json
+{
+  "tool": "conversational_query",
+  "input": { "query": "How many plans did we complete this month?" }
+}
+```
+
+**Mediator processing (inside MCP server):**
+
+1. **Intent Parsing** (AI call - local or cloud):
+```typescript
+const prompt = `Parse: "How many plans did we complete this month?"`;
+const llm_response = await ollama.generate(prompt);
+// → { action: 'query_plans', status: 'COMPLETE', time: 'this_month', detail: 'count' }
+```
+
+2. **Query Execution** (internal function call):
+```typescript
+const intent = JSON.parse(llm_response);
+const result = await storage.queryPlans({
+  status: 'COMPLETE',
+  dateAfter: '2026-02-01',
+  mode: 'preview' // intent.detail === 'count'
+});
+// → { count: 3, plans: [...] }
+```
+
+3. **Response Formatting** (AI call - optional):
+```typescript
+const answer = `You completed 3 plans this month: ${result.plans.map(p => p.title).join(', ')}`;
+```
+
+4. **Return to agent**:
+```json
+{
+  "success": true,
+  "answer": "You completed 3 plans this month: Quick Wins, Smart Tools, Mediator",
+  "data": { "count": 3 },
+  "suggestions": ["See details?", "Compare to last month?"]
+}
+```
+
+**The agent receives this as the tool response!**
+
+---
+
+## 🔌 MCP Protocol Communication
+
+### How Agent Discovers Tools
+
+**When MCP server starts:**
+
+```typescript
+// mcp-server/src/index.ts
+const server = new McpServer();
+
+// Register ALL tools (direct + mediator)
+server.registerTool('query_sessions_sqlite', {...});
+server.registerTool('query_plans_sqlite', {...});
+// ... 30 more direct tools
+server.registerTool('conversational_query', {...}); // The mediator!
+
+server.start();
+```
+
+**Agent queries available tools:**
+```typescript
+// Agent makes MCP request
+{
+  "jsonrpc": "2.0",
+  "method": "tool/list",
+  "id": 1
+}
+
+// MCP server responds with ALL tools
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "tools": [
+      {
+        "name": "query_sessions_sqlite",
+        "description": "Query sessions from SQLite database...",
+        "inputSchema": {...}
+      },
+      // ... 30 more
+      {
+        "name": "conversational_query",
+        "description": "Natural language interface to knowledge system. Just describe what you want in plain English...",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "Natural language query" }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+**Agent sees:** "Oh, there's a conversational_query tool that takes plain English!"
+
+### Agent Chooses How to Query
+
+**Scenario 1: Agent is confident (uses direct tool)**
+```typescript
+// Agent knows exactly what to do
+await mcp.callTool('query_sessions_sqlite', {
+  topic: 'mcp',
+  dateAfter: '2026-02-07',
+  mode: 'metadata'
+});
+```
+
+**Scenario 2: Agent is uncertain or being conversational (uses mediator)**
+```typescript
+// Agent doesn't want to construct parameters
+await mcp.callTool('conversational_query', {
+  query: "Show me recent MCP work"
+});
+```
+
+**The choice is up to the agent!** Both paths lead to the same storage layer.
+
+### MCP Request/Response Flow (Detailed)
+
+**Agent request:**
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tool/call",
+  "id": 2,
+  "params": {
+    "name": "conversational_query",
+    "arguments": {
+      "query": "How many sessions about testing?"
+    }
+  }
+}
+```
+
+**MCP server processing:**
+```typescript
+// Server receives request
+async handleToolCall(toolName, args) {
+  if (toolName === 'conversational_query') {
+    // 1. Call mediator handler
+    const result = await conversationalQuery(args);
+    return result;
+  }
+  // Other tools...
+}
+```
+
+**Inside conversational_query handler:**
+```typescript
+async function conversationalQuery(args: { query: string }) {
+  // AI interprets intent (mini PC or cloud API)
+  const intent = await parseIntent(args.query);
+  // → { action: 'query_sessions', topic: 'testing', detail: 'count' }
+  
+  // Call internal storage (SAME as direct tools use)
+  const result = await storage.querySessions({
+    topic: 'testing',
+    mode: 'preview' // for count
+  });
+  
+  // Format response
+  return {
+    success: true,
+    answer: `Found ${result.count} sessions about testing`,
+    data: { count: result.count }
+  };
+}
+```
+
+**MCP server response:**
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "success": true,
+    "answer": "Found 12 sessions about testing",
+    "data": { "count": 12 },
+    "suggestions": ["See summaries?", "Filter by date?"]
+  }
+}
+```
+
+**Agent displays:** "Found 12 sessions about testing"
+
+### Why This Architecture Works
+
+**1. Backward Compatible**
+- Existing agents using direct tools → Still work perfectly
+- No breaking changes
+
+**2. Forward Compatible**
+- Agents that understand conversational queries → Can use mediator
+- Gradual migration possible
+
+**3. Separation of Concerns**
+```
+┌─────────────────────────────────────────┐
+│  MCP Protocol Layer                     │
+│  - Tool registration                    │
+│  - Request/response handling            │
+│  - JSON-RPC 2.0                         │
+└────────────┬────────────────────────────┘
+             │
+┌────────────┴────────────────────────────┐
+│  Tool Implementation Layer              │
+│  Option A: Direct tools (31)            │
+│  Option B: Mediator (1)                 │
+│  - Both call same storage layer         │
+└────────────┬────────────────────────────┘
+             │
+┌────────────┴────────────────────────────┐
+│  Storage Layer                          │
+│  - querySessions()                      │
+│  - createSession()                      │
+│  - updatePlan()                         │
+│  - SQLite operations                    │
+└─────────────────────────────────────────┘
+```
+
+**The mediator is just another tool!** It calls the same internal functions as direct tools.
+
+### Mini PC Communication (If Using)
+
+**MCP Server on laptop → Mini PC for AI:**
+
+```typescript
+// lib/mediator/mini-pc-client.ts
+export class MiniPCMediator {
+  private miniPcUrl = 'http://mini-pc.local:11434'; // Ollama endpoint
+  
+  async parseIntent(query: string): Promise<QueryIntent> {
+    // HTTP request to mini PC
+    const response = await fetch(`${this.miniPcUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'aiknowsys-llama:1b', // Your fine-tuned model
+        prompt: query,
+        system: 'Parse this into intent JSON...',
+        stream: false
+      })
+    });
+    
+    const result = await response.json();
+    return JSON.parse(result.response);
+  }
+}
+
+// Use in conversational_query handler
+async function conversationalQuery(args) {
+  const mediator = new MiniPCMediator();
+  const intent = await mediator.parseIntent(args.query); // ← HTTP to mini PC
+  // ... rest of logic
+}
+```
+
+**The mini PC is just an inference backend!** The MCP server remains on your laptop.
+
+### Complete Communication Stack
+
+```
+Agent (VSCode)
+    ↕ MCP Protocol (stdio/HTTP)
+MCP Server (Laptop)
+    ↕ Internal function calls
+Storage Functions (Laptop)
+    ↕ File I/O + SQLite
+Files (.aiknowsys/*.md, knowledge.db)
+
+PLUS (if using mini PC):
+
+MCP Server (Laptop)
+    ↕ HTTP/REST
+Mini PC Ollama Server
+    ↕ GPU inference
+Fine-tuned models (llama:1b, llama:70b)
+```
+
+**Key insight:** MCP server orchestrates everything. It calls mini PC for AI inference, but returns results to agent via MCP protocol.
+
+---
+
+## 💻 Concrete Code Example: Both Paths Side-by-Side
+
+### Scenario: Agent wants to find recent sessions about MCP
+
+**Path 1: Direct Tool (Current)**
+
+```typescript
+// Agent constructs precise parameters
+const result = await mcp.callTool('query_sessions_sqlite', {
+  topic: 'mcp',
+  dateAfter: '2026-02-07',  // Agent calculated "this week"
+  mode: 'metadata'
+});
+
+// MCP server handler (lib/tools/query-sessions.ts)
+export async function querySessionsSqlite(args: QuerySessionsArgs) {
+  // Validate args
+  const validated = QuerySessionsSchema.parse(args);
+  
+  // Call storage directly
+  const result = await storage.querySessions({
+    topic: validated.topic,
+    dateAfter: validated.dateAfter,
+    mode: validated.mode || 'metadata'
+  });
+  
+  // Return to agent
+  return {
+    success: true,
+    data: result.sessions,
+    meta: { count: result.sessions.length }
+  };
+}
+```
+
+**Path 2: Mediator Tool (New)**
+
+```typescript
+// Agent just describes intent
+const result = await mcp.callTool('conversational_query', {
+  query: "Show me MCP work from this week"
+});
+
+// MCP server handler (lib/tools/conversational-query.ts)
+export async function conversationalQuery(args: { query: string }) {
+  // 1. Parse intent using AI
+  const mediator = new ConversationalMediator();
+  const intent = await mediator.parseIntent(args.query);
+  // AI returns: { action: 'query_sessions', topic: 'mcp', time: 'this_week', detail: 'summary' }
+  
+  // 2. Convert time phrase to date
+  const dateAfter = timeToDate(intent.time); // "this_week" → "2026-02-07"
+  
+  // 3. Call SAME storage function as direct tool
+  const result = await storage.querySessions({
+    topic: intent.topic,
+    dateAfter: dateAfter,
+    mode: 'metadata' // intent.detail 'summary' → mode 'metadata'
+  });
+  
+  // 4. Format conversationally
+  const answer = `You worked on MCP this week (${result.sessions.length} sessions): ${
+    result.sessions.map(s => s.title).join(', ')
+  }`;
+  
+  // 5. Return to agent
+  return {
+    success: true,
+    answer: answer,
+    data: result.sessions,
+    suggestions: ['See full content?', 'Compare with last week?']
+  };
+}
+```
+
+**Both paths call `storage.querySessions()` - they just differ in how they get the parameters!**
+
+### Storage Layer (Shared by Both)
+
+```typescript
+// lib/storage/sqlite-storage.ts
+export class SqliteStorage {
+  /**
+   * Query sessions - called by BOTH direct tools and mediator
+   */
+  async querySessions(options: QuerySessionsOptions): Promise<QueryResult> {
+    const { topic, dateAfter, mode } = options;
+    
+    // Build SQL query
+    let sql = 'SELECT * FROM sessions WHERE 1=1';
+    const params = [];
+    
+    if (topic) {
+      sql += ' AND topics LIKE ?';
+      params.push(`%${topic}%`);
+    }
+    
+    if (dateAfter) {
+      sql += ' AND date >= ?';
+      params.push(dateAfter);
+    }
+    
+    // Execute
+    const rows = this.db.prepare(sql).all(...params);
+    
+    // Apply mode (preview/metadata/full)
+    return this.applyMode(rows, mode);
+  }
+  
+  private applyMode(rows: any[], mode: string): QueryResult {
+    switch (mode) {
+      case 'preview':
+        return { count: rows.length, sessions: [] }; // Just count
+      case 'metadata':
+        return { sessions: rows.map(r => ({ id: r.id, title: r.title, topics: r.topics })) };
+      case 'full':
+        return { sessions: rows.map(r => ({ ...r, content: fs.readFileSync(r.path, 'utf-8') })) };
+      default:
+        return { sessions: rows }; // Default: metadata
+    }
+  }
+}
+```
+
+**This function doesn't care whether it was called by direct tool or mediator!**
+
+### Visual Comparison
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DIRECT TOOL PATH                                           │
+├─────────────────────────────────────────────────────────────┤
+│  Agent                                                      │
+│    ↓ Constructs parameters manually                        │
+│  MCP Tool: query_sessions_sqlite                           │
+│    ↓ Validates schema                                      │
+│  Storage: querySessions({ topic, dateAfter, mode })       │
+│    ↓ SQLite query                                          │
+│  Return: { success, data: [...sessions] }                 │
+│    ↓ Agent parses JSON                                     │
+│  Agent displays results                                     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  MEDIATOR TOOL PATH                                         │
+├─────────────────────────────────────────────────────────────┤
+│  Agent                                                      │
+│    ↓ Natural language query                                │
+│  MCP Tool: conversational_query                            │
+│    ↓ Parse intent with AI (mini PC or cloud)              │
+│  Intent: { action, topic, time, detail }                   │
+│    ↓ Convert to parameters                                 │
+│  Storage: querySessions({ topic, dateAfter, mode })       │  ← SAME!
+│    ↓ SQLite query                                          │  ← SAME!
+│  Result: [...sessions]                                     │
+│    ↓ Format conversationally with AI                       │
+│  Return: { success, answer: "...", data, suggestions }    │
+│    ↓ Agent reads natural language                          │
+│  Agent displays results                                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**The middle part (storage) is identical!**
+
+### Tool Registration in MCP Server
+
+```typescript
+// mcp-server/src/index.ts
+import { Server } from '@modelcontextprotocol/sdk/server';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio';
+
+// Import all tool handlers
+import { querySessionsSqlite } from './tools/query-sessions';
+import { conversationalQuery } from './tools/conversational-query';
+// ... 30+ more
+
+const server = new Server({
+  name: 'aiknowsys-mcp-server',
+  version: '0.12.0'
+});
+
+// Register direct tools (31 of them)
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: 'query_sessions_sqlite',
+      description: 'Query session files from SQLite database...',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          topic: { type: 'string' },
+          dateAfter: { type: 'string' },
+          mode: { type: 'string', enum: ['preview', 'metadata', 'full'] }
+        }
+      }
+    },
+    // ... 30 more direct tools
+    {
+      name: 'conversational_query',  // ← THE MEDIATOR
+      description: 'Natural language interface. Just describe what you want!',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { 
+            type: 'string',
+            description: 'Natural language question or request'
+          }
+        },
+        required: ['query']
+      }
+    }
+  ]
+}));
+
+// Handle tool calls
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+  
+  switch (name) {
+    case 'query_sessions_sqlite':
+      return await querySessionsSqlite(args);
+    
+    // ... 30 more cases
+    
+    case 'conversational_query':  // ← THE MEDIATOR
+      return await conversationalQuery(args);
+    
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+});
+
+// Start server (stdio transport for local VSCode)
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+**That's it!** The mediator is just one more tool in the registry. The agent chooses whether to use it based on the situation.
+
+### Agent Decision Logic (Conceptual)
+
+```typescript
+// Inside Claude/GPT-4/Copilot
+async function decideHowToQuery(userRequest: string) {
+  // Option 1: I know exactly what tool and parameters
+  if (this.isConfident(userRequest)) {
+    return await callTool('query_sessions_sqlite', {
+      topic: this.extractTopic(userRequest),
+      dateAfter: this.calculateDate(userRequest)
+    });
+  }
+  
+  // Option 2: Let mediator figure it out
+  return await callTool('conversational_query', {
+    query: userRequest
+  });
+}
+```
+
+**The agent can mix and match!** Sometimes direct, sometimes mediator, based on confidence and context.
+
+---
+
+## 🌐 Deployment: Centralized Mini PC Server
+
+### Why Centralize on Mini PC?
+
+**Your insight: "Move MCP server to mini-PC so has global database for wherever I work from"**
+
+**This is BRILLIANT because:**
+
+1. **Work from anywhere**
+   - Laptop at home - same knowledge base
+   - Desktop at office - same knowledge base
+   - Tablet on couch - same knowledge base
+   - Everything in sync automatically
+
+2. **Mini PC is perfect server**
+   - 128GB RAM (handles everything)
+   - Always on (24/7 availability)
+   - One backup location
+   - Team can share resource
+
+3. **Co-located AI + Data**
+   - MCP server and AI models same machine
+   - Zero network latency for AI calls
+   - Mediator uses local Ollama (instant)
+   - No cloud API costs
+
+### Setup: Mini PC as Central Server
+
+**Step 1: Install MCP Server on Mini PC**
+
+```bash
+# On mini PC
+cd /opt/aiknowsys
+git clone https://github.com/yourusername/aiknowsys.git
+cd aiknowsys
+npm install
+
+# Set up storage directory
+mkdir -p /opt/aiknowsys-data/.aiknowsys/{sessions,plans,learned,reviews}
+
+# Configure for HTTP transport
+# Edit: mcp-server/config.json
+{
+  "transport": "http",
+  "port": 3100,
+  "host": "0.0.0.0",  // Allow network access
+  "dataPath": "/opt/aiknowsys-data/.aiknowsys",
+  "aiProvider": "ollama",
+  "ollamaUrl": "http://localhost:11434"  // Local Ollama
+}
+```
+
+**Step 2: Set Up HTTP Transport**
+
+```typescript
+// mcp-server/src/index.ts
+import { Server } from '@modelcontextprotocol/sdk/server';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse';
+
+const server = new Server({
+  name: 'aiknowsys-mcp-server',
+  version: '0.12.0'
+});
+
+// Register all tools (direct + mediator)
+// ... tool registration code ...
+
+// Use HTTP/SSE transport instead of stdio
+const transport = new SSEServerTransport('/messages', {
+  port: 3100,
+  host: '0.0.0.0'
+});
+
+await server.connect(transport);
+console.log('MCP Server running on mini-pc.local:3100');
+```
+
+**Step 3: Set Up AI Models on Mini PC**
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull models
+ollama pull llama3.3:70b
+ollama pull llama3.2:3b
+
+# Fine-tune custom model (later)
+# ollama create aiknowsys:1b -f Modelfile
+```
+
+**Step 4: Run as System Service**
+
+```bash
+# Create systemd service
+sudo nano /etc/systemd/system/aiknowsys-mcp.service
+```
+
+```ini
+# /etc/systemd/system/aiknowsys-mcp.service
+[Unit]
+Description=AIKnowSys MCP Server
+After=network.target ollama.service
+
+[Service]
+Type=simple
+User=aiknowsys
+WorkingDirectory=/opt/aiknowsys
+ExecStart=/usr/bin/node mcp-server/src/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=DATA_PATH=/opt/aiknowsys-data/.aiknowsys
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Enable and start
+sudo systemctl enable aiknowsys-mcp
+sudo systemctl start aiknowsys-mcp
+
+# Check status
+sudo systemctl status aiknowsys-mcp
+# ● aiknowsys-mcp.service - AIKnowSys MCP Server
+#    Active: active (running)
+```
+
+**Step 5: Configure Network Access**
+
+```bash
+# Allow port 3100 through firewall
+sudo ufw allow 3100/tcp
+
+# Verify server is accessible
+curl http://mini-pc.local:3100/health
+# → { "status": "ok", "tools": 32 }
+```
+
+### Client Configuration (Laptop/Desktop)
+
+**VSCode MCP Client Configuration:**
+
+```json
+// .vscode/mcp.json (on laptop)
+{
+  "mcpServers": {
+    "aiknowsys": {
+      "transport": "sse",
+      "url": "http://mini-pc.local:3100/messages",
+      "headers": {
+        "Authorization": "Bearer your-token-here"  // Optional: add auth
+      }
+    }
+  }
+}
+```
+
+**Or using environment variable:**
+
+```bash
+# .bashrc or .zshrc (on laptop)
+export AIKNOWSYS_MCP_URL="http://mini-pc.local:3100/messages"
+```
+
+**VSCode automatically connects to mini PC when starting!**
+
+### Data Flow: Centralized Architecture
+
+```
+Laptop at Home
+    ↓ WiFi
+    ↓ HTTP: callTool('conversational_query', { query: "..." })
+    ↓
+Mini PC (mini-pc.local:3100)
+    ↓ Process request
+    ↓ Mediator calls local Ollama (localhost:11434)
+    ↓ Query storage (/opt/aiknowsys-data/.aiknowsys/)
+    ↓ Format response
+    ↓ HTTP: Return result
+    ↑
+Laptop displays result
+```
+
+**Next day, at office:**
+
+```
+Desktop at Office
+    ↓ Network
+    ↓ HTTP: callTool('query_sessions_sqlite', { ... })
+    ↓
+Mini PC (same server)
+    ↓ Query SAME storage
+    ↓ Return SAME data
+    ↑
+Desktop displays result
+```
+
+**Everything in sync - it's the same database!**
+
+### Security Considerations
+
+**Option 1: Home Network Only (Simplest)**
+- Mini PC on local network
+- Access via `mini-pc.local:3100`
+- Firewall blocks external access
+- No authentication needed (trusted network)
+
+**Option 2: VPN Access (Recommended)**
+- Set up WireGuard VPN on mini PC
+- Access from anywhere via VPN
+- Encrypted tunnel
+- Still local network security
+
+**Option 3: Public with Authentication (Advanced)**
+- Expose mini PC to internet (port forwarding)
+- Add JWT authentication to MCP server
+- HTTPS with Let's Encrypt
+- Rate limiting
+
+### Backup Strategy
+
+**Daily automated backups:**
+
+```bash
+# Backup script on mini PC
+#!/bin/bash
+# /opt/aiknowsys/scripts/backup.sh
+
+BACKUP_DIR="/backup/aiknowsys"
+DATE=$(date +%Y-%m-%d)
+
+# Backup knowledge base
+tar -czf "$BACKUP_DIR/aiknowsys-$DATE.tar.gz" \
+  /opt/aiknowsys-data/.aiknowsys/
+
+# Backup SQLite database
+sqlite3 /opt/aiknowsys-data/.aiknowsys/knowledge.db \
+  ".backup $BACKUP_DIR/knowledge-$DATE.db"
+
+# Sync to cloud (optional)
+rclone sync "$BACKUP_DIR" remote:aiknowsys-backups
+
+# Keep last 30 days
+find "$BACKUP_DIR" -type f -mtime +30 -delete
+```
+
+```bash
+# Cron job (daily at 2 AM)
+0 2 * * * /opt/aiknowsys/scripts/backup.sh
+```
+
+**One backup location covers ALL your devices!**
+
+### Migration: Laptop → Mini PC
+
+**Move existing knowledge base:**
+
+```bash
+# On laptop
+cd ~/projects/knowledge-system-template
+tar -czf aiknowsys-export.tar.gz .aiknowsys/
+
+# Transfer to mini PC
+scp aiknowsys-export.tar.gz mini-pc:/tmp/
+
+# On mini PC
+cd /opt/aiknowsys-data
+tar -xzf /tmp/aiknowsys-export.tar.gz
+chown -R aiknowsys:aiknowsys .aiknowsys/
+
+# Rebuild SQLite index
+npx aiknowsys migrate-to-sqlite
+
+# Restart MCP server
+sudo systemctl restart aiknowsys-mcp
+```
+
+**Done! Your knowledge base is now centralized!**
+
+### Performance Benefits
+
+**Centralized vs Distributed:**
+
+| Aspect | Distributed (Laptop) | Centralized (Mini PC) |
+|--------|---------------------|----------------------|
+| **AI Speed** | Laptop CPU (~50 tok/s) | GPU (~100+ tok/s) |
+| **Storage** | Laptop SSD | Mini PC NVMe (faster) |
+| **RAM** | Limited (8-16GB) | Abundant (128GB) |
+| **Network** | N/A (local) | ~5-10ms LAN latency |
+| **Availability** | Only when laptop on | 24/7 |
+| **Multi-device** | ❌ Sync issues | ✅ Always in sync |
+
+**Net result:** Slightly higher network latency (~10ms) offset by vastly better AI speed and no sync issues.
+
+---
 
 **Option A: Llama 3.2 3B (Recommended)**
 - **Size:** 3B parameters, ~2GB RAM
