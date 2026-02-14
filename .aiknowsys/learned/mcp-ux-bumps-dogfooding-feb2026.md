@@ -319,7 +319,7 @@ Troubleshooting:
 
 ## 🎯 Prioritized Fix List
 
-### ✅ Priority 1: Infrastructure (Foundation) - PHASE 1 COMPLETE
+### ✅ Priority 1: Infrastructure (Foundation) - PHASES 1 & 2 COMPLETE
 
 1. **✅ Database path** - Smart detection (walk up tree)
    - Implemented: `lib/utils/find-knowledge-db.ts`
@@ -328,9 +328,15 @@ Troubleshooting:
    - Impact: Zero configuration, works from any directory
    
 2. ❌ **Path resolution** - Flatten build output OR export public API
-3. ❌ **Built-in testing** - `mcp-test` and `mcp-repl` commands
+   
+3. **✅ Built-in testing** - `mcp-test` command
+   - Implemented: `lib/commands/mcp-test.ts` with 10 tool registry
+   - CLI integration: `npx aiknowsys mcp-test <tool> [args]`
+   - Tests: JSON parsing, argument validation
+   - Features: Auto DB detection, pretty-print, timing, color-coded output
+   - Impact: Testing friction reduced from 5 minutes to 10 seconds
 
-**Impact:** Removed database path brittleness (critical bump #2)
+**Impact:** Eliminated database path brittleness (bump #2) and MCP testing friction (bump #4)
 
 ### Priority 2: Discovery (Visibility)
 
