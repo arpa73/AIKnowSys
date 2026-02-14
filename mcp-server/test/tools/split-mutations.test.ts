@@ -68,7 +68,9 @@ describe('Split Plan Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error');
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'planId'");
+      expect(errorText).toContain('Plan ID must be in format PLAN_<name>');
     });
 
     it('should validate status enum', async () => {
@@ -80,6 +82,9 @@ describe('Split Plan Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'status'");
+      expect(errorText).toContain('Status must be one of: ACTIVE, PAUSED, COMPLETE, CANCELLED');
     });
   });
 
@@ -129,6 +134,9 @@ describe('Split Plan Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'planId'");
+      expect(errorText).toContain('Plan ID must be in format PLAN_<name>');
     });
 
     it('should require content field', async () => {
@@ -140,6 +148,9 @@ describe('Split Plan Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'content'");
+      expect(errorText).toContain('Content must be a non-empty string');
     });
   });
 
@@ -257,6 +268,9 @@ describe('Split Session Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'content'");
+      expect(errorText).toContain('Content must be a non-empty string');
     });
   });
 

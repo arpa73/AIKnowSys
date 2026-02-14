@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { z } from 'zod';
 import { getProjectRoot } from './utils/project-root.js';
+import { handleZodError, MCPErrorResponse } from './utils/error-helpers.js';
 
 const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
@@ -52,6 +53,18 @@ export async function updateSessionMetadata(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'updating session metadata', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{"addTopic": "refactoring", "date": "2026-02-14"}', '{"setStatus": "complete"}']
+        },
+        addTopic: {
+          suggestion: 'Provide at least one operation: addTopic, addFile, or setStatus',
+          examples: ['{"addTopic": "mcp-tools"}', '{"addFile": "src/server.ts", "addTopic": "bugfix"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -94,8 +107,18 @@ export async function updatePlanMetadata(params: unknown) {
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {
-    return {
+  } catch (error) {    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'updating plan metadata', {
+        planId: {
+          suggestion: 'Plan ID must be in format PLAN_<name> (lowercase with underscores)',
+          examples: ['{"planId": "PLAN_mcp_phase2", "author": "arno"}', '{"planId": "PLAN_terminal_ux", "topics": ["ux", "errors"]}']
+        },
+        author: {
+          suggestion: 'Provide at least one field to update: author or topics',
+          examples: ['{"planId": "PLAN_test", "author": "developer"}', '{"planId": "PLAN_test", "topics": ["testing"]}']
+        }
+      });
+    }    return {
       content: [{ 
         type: 'text' as const, 
         text: `Error updating plan metadata: ${error instanceof Error ? error.message : String(error)}` 
@@ -132,8 +155,18 @@ export async function archiveSessions(params: unknown) {
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {
-    return {
+  } catch (error) {    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'updating session metadata', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{\"addTopic\": \"refactoring\", \"date\": \"2026-02-14\"}', '{\"setStatus\": \"complete\"}']
+        },
+        addTopic: {
+          suggestion: 'Provide at least one operation: addTopic, addFile, or setStatus',
+          examples: ['{\"addTopic\": \"mcp-tools\"}', '{\"addFile\": \"src/server.ts\", \"addTopic\": \"bugfix\"}']
+        }
+      });
+    }    return {
       content: [{ 
         type: 'text' as const, 
         text: `Error archiving sessions: ${error instanceof Error ? error.message : String(error)}` 
@@ -173,6 +206,18 @@ export async function archivePlans(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'archiving plans', {
+        status: {
+          suggestion: 'Status must be one of: COMPLETE, CANCELLED, PAUSED (defaults to COMPLETE)',
+          examples: ['{"status": "COMPLETE", "days": 14}', '{"status": "CANCELLED", "dryRun": true}']
+        },
+        days: {
+          suggestion: 'Days must be a non-negative number (defaults to 7)',
+          examples: ['{"days": 30}', '{"status": "PAUSED", "days": 60}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -213,6 +258,18 @@ export async function setPlanStatus(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'setting plan status', {
+        planId: {
+          suggestion: 'Plan ID must be in format PLAN_<name> (lowercase with underscores)',
+          examples: ['{"planId": "PLAN_mcp_phase2", "status": "ACTIVE"}', '{"planId": "PLAN_terminal_ux", "status": "COMPLETE"}']
+        },
+        status: {
+          suggestion: 'Status must be one of: ACTIVE, PAUSED, COMPLETE, CANCELLED',
+          examples: ['{"planId": "PLAN_test", "status": "ACTIVE"}', '{"planId": "PLAN_test", "status": "PAUSED"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -249,6 +306,18 @@ export async function appendToPlan(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'appending to plan', {
+        planId: {
+          suggestion: 'Plan ID must be in format PLAN_<name> (lowercase with underscores)',
+          examples: ['{"planId": "PLAN_test", "content": "Phase 1 complete"}', '{"planId": "PLAN_mcp_phase2", "content": "Added 10 tools"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to append',
+          examples: ['{"planId": "PLAN_test", "content": "Updated status"}', '{"planId": "PLAN_test", "content": "## Progress\\nAll tests passing"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -285,6 +354,18 @@ export async function prependToPlan(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'prepending to plan', {
+        planId: {
+          suggestion: 'Plan ID must be in format PLAN_<name> (lowercase with underscores)',
+          examples: ['{"planId": "PLAN_test", "content": "URGENT: Security fix needed"}', '{"planId": "PLAN_mcp", "content": "## Critical Issue"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to prepend',
+          examples: ['{"planId": "PLAN_test", "content": "Priority update"}', '{"planId": "PLAN_test", "content": "⚠️ Blocker found"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -327,6 +408,22 @@ export async function appendToSession(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'appending to session', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{\"section\": \"## Progress\", \"content\": \"Fixed bug X\", \"date\": \"2026-02-14\"}', '{\"section\": \"## Notes\", \"content\": \"Testing complete\"}']
+        },
+        section: {
+          suggestion: 'Section heading (optional, defaults to \"## Update\")',
+          examples: ['{\"section\": \"## Changes\", \"content\": \"Updated tests\"}', '{\"section\": \"## Key Learning\", \"content\": \"Pattern discovered\"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to append',
+          examples: ['{\"content\": \"Phase 1 complete\"}', '{\"section\": \"## Validation\", \"content\": \"✅ All tests passing\"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -364,7 +461,37 @@ export async function prependToSession(params: unknown) {
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {
+  } catch (error) {    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'appending to session', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{"section": "## Progress", "content": "Fixed bug X", "date": "2026-02-14"}', '{"section": "## Notes", "content": "Testing complete"}']
+        },
+        section: {
+          suggestion: 'Section heading (optional, defaults to "## Update")',
+          examples: ['{"section": "## Changes", "content": "Updated tests"}', '{"section": "## Key Learning", "content": "Pattern discovered"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to append',
+          examples: ['{"content": "Phase 1 complete"}', '{"section": "## Validation", "content": "✅ All tests passing"}']
+        }
+      });
+    }    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'prepending to session', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{"section": "## Critical Issue", "content": "Security bug found", "date": "2026-02-14"}', '{"section": "## Blocker", "content": "Test failing"}']
+        },
+        section: {
+          suggestion: 'Section heading (optional, defaults to "## Update")',
+          examples: ['{"section": "## Urgent", "content": "Breaking change"}', '{"section": "## ⚠️ Warning", "content": "API deprecated"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to prepend',
+          examples: ['{"content": "HIGH PRIORITY: Fix regression"}', '{"section": "## Alert", "content": "Production issue"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -405,6 +532,22 @@ export async function insertAfterSection(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'inserting after section', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{"pattern": "## Goal", "content": "Step 1 complete", "date": "2026-02-14"}', '{"pattern": "## Changes", "section": "## Progress", "content": "Tests passing"}']
+        },
+        pattern: {
+          suggestion: 'Pattern must be a non-empty string to search for (typically a section heading)',
+          examples: ['{"pattern": "## Goal", "content": "Progress update"}', '{"pattern": "## Phase 1", "section": "## Phase 1 Results", "content": "Complete"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to insert',
+          examples: ['{"pattern": "## Implementation", "content": "Added feature X"}', '{"pattern": "## Testing", "content": "✅ All green"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -445,6 +588,22 @@ export async function insertBeforeSection(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'inserting before section', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
+          examples: ['{"pattern": "## Summary", "content": "Prerequisites note", "date": "2026-02-14"}', '{"pattern": "## Results", "section": "## Setup", "content": "Environment ready"}']
+        },
+        pattern: {
+          suggestion: 'Pattern must be a non-empty string to search for (typically a section heading)',
+          examples: ['{"pattern": "## Conclusion", "content": "Important context"}', '{"pattern": "## Next Steps", "section": "## Current State", "content": "Ready for next phase"}']
+        },
+        content: {
+          suggestion: 'Content must be a non-empty string to insert',
+          examples: ['{"pattern": "## Summary", "content": "Key point to remember"}', '{"pattern": "## End", "content": "Final notes"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
