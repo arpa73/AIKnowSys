@@ -195,6 +195,22 @@ import type { MyType } from './types.js';  // ✅ type-only import
 const targetDir = path.resolve(options.dir || process.cwd());
 ```
 
+**Barrel exports (Code Organization):**
+```typescript
+// Use barrel exports (api.ts, index.ts) when:
+// - Multiple modules need to import from same package
+// - Consolidating public API surface
+// - Hiding internal implementation details
+
+// Example: mcp-server/src/api.ts exports all public tools
+export { querySessionsSqlite, queryPlansSqlite } from './tools/sqlite-query.js';
+export { getCriticalInvariants } from './tools/context.js';
+
+// Usage: Import from barrel instead of individual files
+import { querySessionsSqlite, getCriticalInvariants } from '../../mcp-server/src/api.js';
+// vs 4+ separate import statements
+```
+
 ---
 
 ## 7. Common Gotchas
