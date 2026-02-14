@@ -64,7 +64,7 @@ describe('Integration: Fixed MCP Tools', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error');
+      expect(result.content[0].text).toContain('Invalid parameter');
     });
   });
 
@@ -93,7 +93,7 @@ describe('Integration: Fixed MCP Tools', () => {
       });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error');
+      expect(result.content[0].text).toContain('Invalid parameter');
     });
   });
 
@@ -102,6 +102,11 @@ describe('Integration: Fixed MCP Tools', () => {
       const result = await validateSkill({
         skillPath: '.github/skills/tdd-workflow/SKILL.md'
       });
+
+      // Debug: log the result
+      if (result.isError) {
+        console.log('ERROR RESULT:', JSON.stringify(result, null, 2));
+      }
 
       // Verify success (no error)
       expect(result.isError).not.toBe(true);
