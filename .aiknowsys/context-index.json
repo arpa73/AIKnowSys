@@ -1,0 +1,434 @@
+{
+  "version": 1,
+  "updated": "2026-02-14T21:19:53.010Z",
+  "plans": [
+    {
+      "id": "PLAN_integration_test_plan",
+      "title": "Integration Test Plan",
+      "status": "ACTIVE",
+      "author": "arno-paffen",
+      "created": "2026-02-14T21:19:53.011Z",
+      "updated": "2026-02-14T21:19:53.011Z",
+      "file": "PLAN_integration_test_plan.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771103992889",
+      "title": "Test Plan 1771103992889",
+      "status": "ACTIVE",
+      "author": "arno",
+      "created": "2026-02-14T21:19:53.012Z",
+      "updated": "2026-02-14T21:19:53.012Z",
+      "file": "PLAN_test_plan_1771103992889.md"
+    },
+    {
+      "id": "PLAN_ai_autonomous_maintenance",
+      "title": "Plan: AI-Powered Autonomous Maintenance",
+      "status": "PLANNED",
+      "author": "unknown",
+      "created": "2026-02-14T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.013Z",
+      "file": "PLAN_ai_autonomous_maintenance.md"
+    },
+    {
+      "id": "PLAN_ai_ux_future_vision",
+      "title": "PLAN: AI UX Future Vision",
+      "status": "\"PLANNED\"",
+      "author": "\"Planner\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.014Z",
+      "topics": [
+        "ai-ux",
+        "semantic-search",
+        "time-travel",
+        "advanced-features",
+        "research"
+      ],
+      "file": "PLAN_ai_ux_future_vision.md"
+    },
+    {
+      "id": "PLAN_ai_ux_quick_wins",
+      "title": "PLAN: AI UX Quick Wins",
+      "status": "\"PLANNED\"",
+      "author": "\"Planner\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.014Z",
+      "topics": [
+        "ai-ux",
+        "error-handling",
+        "progressive-detail",
+        "self-improving"
+      ],
+      "file": "PLAN_ai_ux_quick_wins.md"
+    },
+    {
+      "id": "PLAN_ai_ux_smart_tools",
+      "title": "PLAN: AI UX Smart Tools",
+      "status": "\"PLANNED\"",
+      "author": "\"Planner\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.015Z",
+      "topics": [
+        "ai-ux",
+        "smart-query",
+        "knowledge-graph",
+        "batch-operations",
+        "discovery"
+      ],
+      "file": "PLAN_ai_ux_smart_tools.md"
+    },
+    {
+      "id": "PLAN_bundle_mcp_server_with_main_package",
+      "title": "Implementation Plan: Bundle MCP Server with Main Package",
+      "status": "\"PLANNED\"",
+      "author": "\"arno-paffen\"",
+      "created": "2026-02-08T23:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.016Z",
+      "topics": [
+        "mcp",
+        "bundling",
+        "distribution",
+        "npm"
+      ],
+      "file": "PLAN_bundle_mcp_server_with_main_package.md"
+    },
+    {
+      "id": "PLAN_claude_memory_comparison",
+      "title": "Implementation Plan: Claude Memory Tool Comparison Document",
+      "status": "\"PLANNED\"",
+      "author": "\"arno-paffen\"",
+      "created": "2026-02-07T23:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.017Z",
+      "file": "PLAN_claude_memory_comparison.md"
+    }
+  ],
+  "sessions": [
+    {
+      "date": "2026-01-25",
+      "topic": "v0.4.0 Release - Memory & Learning",
+      "file": "sessions/2026-01-25-session.md",
+      "created": "2026-01-25T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.021Z"
+    },
+    {
+      "date": "2026-01-26",
+      "topic": "v0.5.0 Test Coverage Implementation",
+      "file": "sessions/2026-01-26-session.md",
+      "created": "2026-01-26T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.023Z"
+    },
+    {
+      "date": "2026-01-27",
+      "topic": "P1 Fixes - ESLint, CI, init.js Refactor",
+      "plan": "Architect tool permissions & gitignore updates  ",
+      "file": "sessions/2026-01-27-session.md",
+      "created": "2026-01-27T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.025Z"
+    },
+    {
+      "date": "2026-01-28",
+      "topic": "Architect Session File Auto-Creation",
+      "file": "sessions/2026-01-28-session.md",
+      "created": "2026-01-28T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.026Z"
+    },
+    {
+      "date": "2026-01-29",
+      "topic": "Custom Agent Format Restoration",
+      "plan": "Progress indicator implementation (scan, audit, migrate)  ",
+      "file": "sessions/2026-01-29-session.md",
+      "created": "2026-01-29T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.028Z"
+    },
+    {
+      "date": "2026-01-30",
+      "topic": "Multiple Features + Documentation",
+      "plan": "[PLAN_essentials_compression.md](PLAN_essentials_compression.md)",
+      "file": "sessions/2026-01-30-session.md",
+      "created": "2026-01-30T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.029Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 4 Implementation & Review",
+      "file": "sessions/2026-01-31-phase4-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.029Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 5 - Context & Learning",
+      "plan": "Phase 5 implementation - Context preservation & learning system  ",
+      "file": "sessions/2026-01-31-phase5-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.030Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 6 - Collaboration & CI/CD Integration",
+      "file": "sessions/2026-01-31-phase6-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.031Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 7 Implementation Session",
+      "file": "sessions/2026-01-31-phase7-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.032Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "Phase 8 Implementation Session",
+      "plan": "Hooks Documentation Completion (All 5 Phases)  ",
+      "file": "sessions/2026-01-31-phase8-implementation.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.032Z"
+    },
+    {
+      "date": "2026-01-31",
+      "topic": "ESSENTIALS Compression System + VSCode Hooks Phases 1 & 2",
+      "plan": "Workspace Maintenance & Archiving  ",
+      "file": "sessions/2026-01-31-session.md",
+      "created": "2026-01-31T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.035Z"
+    },
+    {
+      "date": "2026-02-01",
+      "topic": "Legacy Script Cleanup + Cross-Platform Enhancement + Personal Patterns Phase 1",
+      "plan": "[PLAN_remove_deprecated_scripts.md](PLAN_remove_deprecated_scripts.md)  ",
+      "file": "sessions/2026-02-01-session.md",
+      "created": "2026-02-01T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.036Z"
+    },
+    {
+      "date": "2026-02-02",
+      "topic": "Skill Audit & Cleanup Planning",
+      "plan": "CI Test Failures Fix - 17 failures across 3 categories  ",
+      "file": "sessions/2026-02-02-session.md",
+      "created": "2026-02-02T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.037Z"
+    },
+    {
+      "date": "2026-02-03",
+      "topic": "TypeScript Migration Phase 4-6",
+      "plan": "[PLAN_deliverables_validation_protocol.md](../PLAN_deliverables_validation_protocol.md)  ",
+      "file": "sessions/2026-02-03-session.md",
+      "created": "2026-02-03T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.038Z"
+    },
+    {
+      "date": "2026-02-04",
+      "topic": "TypeScript Migration",
+      "plan": "archive-plans Bug Fixes and Enhancement",
+      "file": "sessions/2026-02-04-session.md",
+      "created": "2026-02-04T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.039Z"
+    },
+    {
+      "date": "2026-02-05",
+      "topic": "TypeScript Migration Phase 8 Implementation",
+      "plan": "[PLAN_context_query_system.md](../PLAN_context_query_system.md) (1470 lines)  ",
+      "file": "sessions/2026-02-05-session.md",
+      "created": "2026-02-05T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.039Z"
+    },
+    {
+      "date": "2026-02-06",
+      "topic": "VSCode Hooks Configuration + setupHooks() Bug Fixes + JSON Storage Review",
+      "plan": "VSCode hooks configuration fix + setupHooks() installation bugs  ",
+      "file": "sessions/2026-02-06-session.md",
+      "created": "2026-02-06T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.039Z"
+    },
+    {
+      "date": "2026-02-07",
+      "topic": "Phase A.5 Review - ESSENTIALS Decomposition",
+      "plan": "[PLAN_milestone_changelog.md](../PLAN_milestone_changelog.md)  ",
+      "file": "sessions/2026-02-07-session.md",
+      "created": "2026-02-07T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.040Z"
+    },
+    {
+      "date": "2026-02-08",
+      "topic": "Session 2 Completion - Mutation Workflow",
+      "topics": [
+        "Session 2 completion",
+        "mutation workflow implementation",
+        "pre-commit hooks",
+        "YAML validation",
+        "MCP SDK upgrade"
+      ],
+      "plan": "PLAN_session_mutation_workflow.md  ",
+      "file": "sessions/2026-02-08-session.md",
+      "created": "2026-02-08T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.045Z"
+    },
+    {
+      "date": "2026-02-09",
+      "topic": "MCP Server Bug Fix & Integration Tests",
+      "topics": [
+        "MCP",
+        "testing",
+        "integration-tests",
+        "bug-fix",
+        "get_skill_by_name"
+      ],
+      "plan": "\"PLAN_mcp_bugfix_skill_lookup\"",
+      "file": "sessions/2026-02-09-session.md",
+      "created": "2026-02-09T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.045Z"
+    },
+    {
+      "date": "2026-02-10",
+      "topic": "Phase 2 Batch 1 - Mutation Commands Refactor",
+      "plan": "Phase 2 Batch 1 - Mutation Commands Refactor  ",
+      "file": "sessions/2026-02-10-session.md",
+      "created": "2026-02-10T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.046Z"
+    },
+    {
+      "date": "2026-02-11",
+      "topic": "Session: 2026-02-11",
+      "plan": "[PLAN_mcp_only_architecture_migration.md](.aiknowsys/PLAN_mcp_only_architecture_migration.md)",
+      "file": "sessions/2026-02-11-session.md",
+      "created": "2026-02-11T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.046Z"
+    },
+    {
+      "date": "2026-02-12",
+      "topic": "Phase 1: Migration Tools & Enhanced MCP (Started 20:40)",
+      "plan": "PLAN_mcp_only_architecture_migration",
+      "file": "sessions/2026-02-12-phase1-session.md",
+      "created": "2026-02-12T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.047Z"
+    },
+    {
+      "date": "2026-02-12",
+      "topic": "Phase 2 Documentation & Cleanup",
+      "topics": [
+        "documentation",
+        "cleanup",
+        "phase-2",
+        "changelog",
+        "readme"
+      ],
+      "plan": "[PLAN_mcp_only_architecture_migration.md](../ PLAN_mcp_only_architecture_migration.md) (1536 lines, comprehensive)",
+      "file": "sessions/2026-02-12-session.md",
+      "created": "2026-02-12T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.048Z"
+    },
+    {
+      "date": "2026-02-13",
+      "topic": "Session: 2026-02-13 - Phase 1 Days 4-11",
+      "topics": [
+        "phase1-week1",
+        "phase1-week2",
+        "phase1-week3",
+        "mcp-tools",
+        "sqlite",
+        "migration",
+        "testing",
+        "bug-fix",
+        "planning",
+        "natural-language-api"
+      ],
+      "plan": "CLI option naming bug fix  ",
+      "file": "sessions/2026-02-13-session.md",
+      "created": "2026-02-13T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.050Z"
+    },
+    {
+      "date": "2026-02-14",
+      "topic": "Session: 2026-02-14 - MCP Token Optimization",
+      "topics": [
+        "mcp-tools",
+        "token-optimization",
+        "performance",
+        "ai-ux",
+        "tdd"
+      ],
+      "file": "sessions/2026-02-14-mcp-token-optimization.md",
+      "created": "2026-02-14T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.053Z"
+    },
+    {
+      "date": "2026-02-14",
+      "topic": "Session: 2026-02-14 - MCP Code Execution Optimization Planning",
+      "topics": [
+        "mcp-optimization",
+        "code-execution",
+        "anthropic-research",
+        "planning",
+        "token-efficiency",
+        "infrastructure-fixes"
+      ],
+      "plan": "Conversational Error Messages (Phases 1.1, 1.2, 1.3 - query.ts)  ",
+      "file": "sessions/2026-02-14-session.md",
+      "created": "2026-02-14T00:00:00.000Z",
+      "updated": "2026-02-14T21:19:53.055Z"
+    }
+  ],
+  "learned": [
+    {
+      "file": "learned/agent-mode-boundaries.md",
+      "name": "Agent Mode Boundary Enforcement",
+      "type": "debugging_techniques, project_specific",
+      "triggers": "mode rushing, implement instead of plan, agent boundaries, mode instructions ignored",
+      "status": "validated",
+      "created": "2026-01-30",
+      "updated": "2026-01-30"
+    },
+    {
+      "file": "learned/bash-script-tdd.md",
+      "name": "bash-script-tdd",
+      "description": "Test-Driven Development workflow for bash scripts using Node.js test runner. Write comprehensive tests for bash utilities to catch bugs before production.",
+      "trigger_words": "[bash TDD, test bash script, bash testability, script testing, test shell script]",
+      "created": "2026-02-06",
+      "origin": "cleanup-test-dirs.sh implementation",
+      "pattern_type": "testing_workflow"
+    },
+    {
+      "file": "learned/hook-troubleshooting.md",
+      "name": "hook-troubleshooting",
+      "pattern_type": "debugging_technique",
+      "trigger_words": "",
+      "discovered": "\"2026-02-08\"",
+      "context": "\"Diagnosed why VSCode hooks weren't executing during investigation of PLAN_deliverables_sync_hooks\"",
+      "updated": "\"2026-02-08\"",
+      "status": "\"RESOLVED (v0.11.0+)\" # Shell wrappers implemented"
+    },
+    {
+      "file": "learned/plan-management.md",
+      "name": "plan-management",
+      "triggers": "multiple plans, pause plan, switch plans, plan pointer, concurrent work, overwrite, team plans, multi-dev",
+      "applies_to": "[planner, developer]",
+      "related_patterns": "[session-continuity, context-preservation, multi-developer-collaboration]",
+      "problem_solved": "plan-overwrites, data-loss, context-switching, merge-conflicts",
+      "type": "project_specific",
+      "confidence": "high",
+      "last_validated": "2026-02-02"
+    },
+    {
+      "file": "learned/template-maintenance.md",
+      "name": "template-maintenance",
+      "description": "Workflow for maintaining AIKnowSys deliverable templates",
+      "triggers": "[\"update templates\", \"fix template contamination\", \"migrate templates\", \"template format change\"]",
+      "category": "maintainer",
+      "version": "1.0.0"
+    },
+    {
+      "file": "learned/ux-improvements-from-dogfooding.md",
+      "name": "UX Improvements from Dogfooding",
+      "type": "project_specific, user_corrections",
+      "triggers": "dogfooding, real-world testing, UX feedback, user friction, clipboard integration, status visibility, auto-copy",
+      "status": "validated",
+      "created": "2026-01-30",
+      "updated": "2026-01-30"
+    },
+    {
+      "file": "learned/vscode-file-operations.md",
+      "name": "vscode-file-operations",
+      "description": "Troubleshoot mysterious file operation failures when using AI assistants in VSCode. Detects and resolves VSCode file watcher conflicts that cause 'file doesn't exist' or 'file already exists' errors. VSCode users only."
+    }
+  ]
+}
