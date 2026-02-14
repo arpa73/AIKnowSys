@@ -58,6 +58,52 @@ In GitHub Copilot chat, the AI should now have access to these tools:
 
 The AI will use these automatically when needed - you don't need to explicitly call them.
 
+## Testing MCP Tools
+
+You can test individual MCP tools directly from the command line using the `mcp-test` command:
+
+```bash
+# Test database stats
+npx aiknowsys mcp-test get-db-stats '{}'
+
+# Test critical invariants
+npx aiknowsys mcp-test get-invariants '{}'
+
+# Query sessions (natural language)
+npx aiknowsys mcp-test query-sessions '{"when":"last week"}'
+
+# Query active plans
+npx aiknowsys mcp-test get-active-plans '{}'
+
+# Search context
+npx aiknowsys mcp-test search-context '{"query":"MCP testing"}'
+
+# Find relevant skill
+npx aiknowsys mcp-test find-skill '{"task":"refactoring"}'
+```
+
+**Available tools:**
+- `get-db-stats` - Database statistics
+- `get-invariants` - Critical project rules
+- `get-validation-matrix` - Validation commands by file type
+- `get-active-plans` - Active implementation plans
+- `get-recent-sessions` - Recent session history
+- `query-sessions` - Query sessions with filters
+- `query-plans` - Query plans with filters
+- `query-patterns` - Query learned patterns
+- `search-context` - Full-text search across all context
+- `find-skill` - Find relevant skill for a task
+
+**Flags:**
+- `--silent` - Suppress output (useful for scripting)
+- `--json` - JSON-only output (no formatting)
+
+**Smart features:**
+- Auto-detects database path (no manual configuration!)
+- Pretty-prints JSON results
+- Shows execution time
+- Color-coded success/error messages
+
 ## Development
 
 ### Run in development mode
