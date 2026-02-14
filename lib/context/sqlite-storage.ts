@@ -533,6 +533,187 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Query sessions metadata WITHOUT content (token-efficient)
+   * Returns only metadata fields, excludes heavy content field
+   * @param filters - Optional filters for date, date range, topic, plan, status
+   * @returns Promise resolving to session count and array of metadata-only rows
+   * @throws Error if database not initialized
+   */
+  async querySessionsMetadata(filters?: SessionFilters & { status?: string }): Promise<{ count: number; sessions: any[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    // Select everything EXCEPT content column
+    let query = 'SELECT id, project_id, date, topic, status, plan_id, duration, topics, phases, created_at, updated_at FROM sessions WHERE 1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.date) {
+        query += ' AND date = ?';
+        params.push(filters.date);
+      }
+      
+      if (filters.dateAfter) {
+        query += ' AND date >= ?';
+        params.push(filters.dateAfter);
+      }
+      
+      if (filters.dateBefore) {
+        query += ' AND date <= ?';
+        params.push(filters.dateBefore);
+      }
+      
+      if (filters.days) {
+        const daysAgo = new Date();
+        daysAgo.setDate(daysAgo.getDate() - filters.days);
+        query += ' AND date >= ?';
+        params.push(daysAgo.toISOString().split('T')[0]);
+      }
+      
+      if (filters.topic) {
+        query += ' AND (topic LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.plan) {
+        query += ' AND plan_id = ?';
+        params.push(filters.plan);
+      }
+
+
+      if (filters.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+    }
+    
+    query += ' ORDER BY date DESC';
+    
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params);
+    
+    return {
+      count: rows.length,
+      sessions: rows
+    };
+  }
+
+  /**
+   * Query plans metadata WITHOUT content (token-efficient)
+   * Returns only metadata fields, excludes heavy content field
+   * @param filters - Optional filters for status, author, topic, priority
+   * @returns Promise resolving to plan count and array of metadata-only rows
+   * @throws Error if database not initialized
+   */
+  async queryPlansMetadata(filters?: PlanFilters & { priority?: string; idStartsWith?: string }): Promise<{ count: number; plans: any[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    // Select everything EXCEPT content column
+    let query = 'SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE 1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.idStartsWith) {
+        query += ' AND id LIKE ?';
+        params.push(`${filters.idStartsWith}%`);
+      }
+      
+      if (filters.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters.author) {
+        query += ' AND author = ?';
+        params.push(filters.author);
+      }
+      
+      if (filters.topic) {
+        query += ' AND (title LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.priority) {
+        query += ' AND priority = ?';
+        params.push(filters.priority);
+      }
+      
+      if (filters.updatedAfter) {
+        query += ' AND updated_at > ?';
+        params.push(filters.updatedAfter);
+      }
+      
+      if (filters.updatedBefore) {
+        query += ' AND updated_at < ?';
+        params.push(filters.updatedBefore);
+      }
+    }
+    
+    query += ' ORDER BY updated_at DESC';
+    
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params);
+    
+    return {
+      count: rows.length,
+      plans: rows
+    };
+  }
+
+  /**
+   * Query learned patterns metadata WITHOUT content (token-efficient)
+   * Returns only metadata fields for patterns (stored as plans with 'learned_' prefix)
+   * @param filters - Optional filters for category, keywords
+   * @returns Promise resolving to pattern count and array of metadata-only rows
+   * @throws Error if database not initialized
+   */
+  async queryLearnedPatternsMetadata(filters?: { category?: string; keywords?: string[] }): Promise<{ count: number; patterns: any[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    // Select everything EXCEPT content column, filter to learned patterns only
+    let query = "SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE id LIKE 'learned_%'";
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.category) {
+        query += ' AND type = ?';
+        params.push(filters.category);
+      }
+      
+      if (filters.keywords && filters.keywords.length > 0) {
+        query += ' AND (';
+        const keywordConditions = filters.keywords.map(() => 'topics LIKE ?').join(' OR ');
+        query += keywordConditions + ')';
+        filters.keywords.forEach(keyword => params.push(`%${keyword}%`));
+      }
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params);
+    
+    return {
+      count: rows.length,
+      patterns: rows
+    };
+  }
+
+  /**
    * Get database statistics using optimized COUNT(*) queries
    * Much faster than loading all records into memory
    * @returns Promise resolving to record counts by type

@@ -25,14 +25,15 @@ import {
  * @returns MCP-compliant response with session data
  */
 export async function querySessionsSqlite(params: {
-  dbPath: string;
+  dbPath?: string;
   dateAfter?: string;
   dateBefore?: string;
   topic?: string;
   status?: string;
 }) {
   try {
-    const result = await querySessionsCore(params);
+    const dbPath = params.dbPath || '.aiknowsys/knowledge.db';
+    const result = await querySessionsCore({ ...params, dbPath });
 
     return {
       content: [
@@ -70,14 +71,15 @@ export async function querySessionsSqlite(params: {
  * @returns MCP-compliant response with plan data
  */
 export async function queryPlansSqlite(params: {
-  dbPath: string;
+  dbPath?: string;
   status?: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
   author?: string;
   topic?: string;
   priority?: 'high' | 'medium' | 'low';
 }) {
   try {
-    const result = await queryPlansCore(params);
+    const dbPath = params.dbPath || '.aiknowsys/knowledge.db';
+    const result = await queryPlansCore({ ...params, dbPath });
 
     return {
       content: [
@@ -116,12 +118,13 @@ export async function queryPlansSqlite(params: {
  * @returns MCP-compliant response with pattern data
  */
 export async function queryLearnedPatternsSqlite(params: {
-  dbPath: string;
+  dbPath?: string;
   category?: string;
   keywords?: string[];
 }) {
   try {
-    const result = await queryLearnedPatternsCore(params);
+    const dbPath = params.dbPath || '.aiknowsys/knowledge.db';
+    const result = await queryLearnedPatternsCore({ ...params, dbPath });
 
     return {
       content: [
@@ -160,12 +163,13 @@ export async function queryLearnedPatternsSqlite(params: {
  * @returns MCP-compliant response with search results
  */
 export async function searchContextSqlite(params: {
-  dbPath: string;
+  dbPath?: string;
   query: string;
   limit?: number;
 }) {
   try {
-    const result = await searchContextCore(params);
+    const dbPath = params.dbPath || '.aiknowsys/knowledge.db';
+    const result = await searchContextCore({ ...params, dbPath });
 
     return {
       content: [
@@ -205,10 +209,11 @@ export async function searchContextSqlite(params: {
  * @returns MCP-compliant response with statistics
  */
 export async function getDbStatsSqlite(params: {
-  dbPath: string;
+  dbPath?: string;
 }) {
   try {
-    const result = await getDbStatsCore(params);
+    const dbPath = params.dbPath || '.aiknowsys/knowledge.db';
+    const result = await getDbStatsCore({ dbPath });
 
     return {
       content: [

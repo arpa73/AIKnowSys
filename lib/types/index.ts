@@ -151,6 +151,7 @@ export interface QuerySessionsOptions {
   dateBefore?: string;
   topic?: string;
   status?: string;
+  includeContent?: boolean; // Default: false (metadata only for token efficiency)
 }
 
 export interface QueryPlansOptions {
@@ -159,12 +160,14 @@ export interface QueryPlansOptions {
   author?: string;
   topic?: string;
   priority?: 'high' | 'medium' | 'low';
+  includeContent?: boolean; // Default: false (metadata only for token efficiency)
 }
 
 export interface QueryLearnedPatternsOptions {
   dbPath: string;
   category?: string;
   keywords?: string[];
+  includeContent?: boolean; // Default: false (metadata only for token efficiency)
 }
 
 export interface SearchContextOptions {
@@ -188,6 +191,17 @@ export interface SessionRecord {
   updated_at?: string;
 }
 
+// Metadata-only (no content) - for token-efficient browsing
+export interface SessionMetadata {
+  date: string;
+  title: string;
+  goal?: string;
+  status?: string;
+  topics: string[];
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface PlanRecord {
   id: string;
   title: string;
@@ -200,11 +214,32 @@ export interface PlanRecord {
   updated_at: string;
 }
 
+// Metadata-only (no content) - for token-efficient browsing
+export interface PlanMetadata {
+  id: string;
+  title: string;
+  status: string;
+  author?: string;
+  priority?: string;
+  type?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LearnedPatternRecord {
   id: string;
   category: string;
   title: string;
   content: string;
+  keywords: string[];
+  created_at: string;
+}
+
+// Metadata-only (no content) - for token-efficient browsing
+export interface LearnedPatternMetadata {
+  id: string;
+  category: string;
+  title: string;
   keywords: string[];
   created_at: string;
 }
@@ -219,17 +254,17 @@ export interface SearchResult {
 
 export interface QuerySessionsResult {
   count: number;
-  sessions: SessionRecord[];
+  sessions: SessionRecord[] | SessionMetadata[];
 }
 
 export interface QueryPlansResult {
   count: number;
-  plans: PlanRecord[];
+  plans: PlanRecord[] | PlanMetadata[];
 }
 
 export interface QueryLearnedPatternsResult {
   count: number;
-  patterns: LearnedPatternRecord[];
+  patterns: LearnedPatternRecord[] | LearnedPatternMetadata[];
 }
 
 export interface SearchContextResult {

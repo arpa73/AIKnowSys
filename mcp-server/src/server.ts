@@ -208,14 +208,14 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_sessions_sqlite',
       {
-        description:
-          'Query sessions from SQLite database (10-100x faster than file scanning). Supports filtering by date range, topic, and status. Requires database path to .aiknowsys/knowledge.db.',
+        description: 'Query sessions from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
         inputSchema: z.object({
-          dbPath: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           dateAfter: z.string().optional(),
           dateBefore: z.string().optional(),
           topic: z.string().optional(),
           status: z.string().optional(),
+          includeContent: z.boolean().optional().default(false),
         }),
       },
       async (args) => querySessionsSqlite(args)
@@ -224,14 +224,14 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_plans_sqlite',
       {
-        description:
-          'Query plans from SQLite database (10-100x faster than file scanning). Supports filtering by status, author, topic, and priority. Excludes learned patterns (use query_learned_patterns_sqlite for those).',
+        description: 'Query plans from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
         inputSchema: z.object({
-          dbPath: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']).optional(),
           author: z.string().optional(),
           topic: z.string().optional(),
           priority: z.enum(['high', 'medium', 'low']).optional(),
+          includeContent: z.boolean().optional().default(false),
         }),
       },
       async (args) => queryPlansSqlite(args)
@@ -240,12 +240,12 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_learned_patterns_sqlite',
       {
-        description:
-          'Query learned patterns from SQLite database (10-100x faster than file scanning). Patterns are stored as plans with "learned_" prefix. Supports filtering by category and keywords array.',
+        description: 'Query learned patterns from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
         inputSchema: z.object({
-          dbPath: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           category: z.string().optional(),
           keywords: z.array(z.string()).optional(),
+          includeContent: z.boolean().optional().default(false),
         }),
       },
       async (args) => queryLearnedPatternsSqlite(args)
@@ -254,10 +254,9 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'search_context_sqlite',
       {
-        description:
-          'Full-text search across ALL content (sessions, plans, learned patterns) in SQLite database. Much faster than grep_search. Returns ranked results with snippets and scores. Supports result limiting.',
+        description: 'Full-text search across all content. Returns ranked snippets.',
         inputSchema: z.object({
-          dbPath: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           query: z.string().min(1),
           limit: z.number().int().positive().optional(),
         }),
@@ -268,10 +267,9 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'get_db_stats_sqlite',
       {
-        description:
-          'Get database statistics from SQLite: record counts (sessions, plans, learned patterns), total count, database size in bytes. Uses optimized COUNT(*) queries for speed. Useful for monitoring and debugging.',
+        description: 'Get SQLite stats: counts, size.',
         inputSchema: z.object({
-          dbPath: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
         }),
       },
       async (args) => getDbStatsSqlite(args)

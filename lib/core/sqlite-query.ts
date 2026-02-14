@@ -30,8 +30,8 @@ import type {
 /**
  * Query sessions from SQLite database
  * 
- * @param options - Query filters (dateAfter, dateBefore, topic, status)
- * @returns Session records matching filters
+ * @param options - Query filters (dateAfter, dateBefore, topic, status, includeContent)
+ * @returns Session records matching filters (metadata-only by default for token efficiency)
  */
 export async function querySessionsSqlite(
   options: QuerySessionsOptions
@@ -41,28 +41,58 @@ export async function querySessionsSqlite(
   await storage.init(dbPath);
   
   try {
-    const result = await storage.queryFullSessions({
-      dateAfter: options.dateAfter,
-      dateBefore: options.dateBefore,
-      topic: options.topic,
-      status: options.status,
-    });
+    const includeContent = options.includeContent ?? false; // Default to metadata-only
     
-    const sessions: SessionRecord[] = result.sessions.map((row) => ({
-      date: row.date,
-      title: row.topic,
-      goal: row.topic,
-      status: row.status as 'active' | 'paused' | 'complete',
-      topics: row.topics ? JSON.parse(row.topics) : [],
-      content: row.content,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    }));
-    
-    return {
-      count: sessions.length,
-      sessions,
-    };
+    if (includeContent) {
+      // Full content mode
+      const result = await storage.queryFullSessions({
+        dateAfter: options.dateAfter,
+        dateBefore: options.dateBefore,
+        topic: options.topic,
+        status: options.status,
+      });
+      
+      const sessions: SessionRecord[] = result.sessions.map((row) => ({
+        date: row.date,
+        title: row.topic,
+        goal: row.topic,
+        status: row.status as 'active' | 'paused' | 'complete',
+        topics: row.topics ? JSON.parse(row.topics) : [],
+        content: row.content,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+      
+      return {
+        count: sessions.length,
+        sessions,
+      };
+    } else {
+      // Metadata-only mode (default) - 95% token savings
+      const result = await storage.querySessionsMetadata({
+        dateAfter: options.dateAfter,
+        dateBefore: options.dateBefore,
+        topic: options.topic,
+        status: options.status,
+      });
+      
+      const sessions = result.sessions.map((row: any) => ({
+        date: row.date,
+        title: row.topic,
+        topic: row.topic, // Include for consistency with full mode
+        goal: row.topic,
+        status: row.status as 'active' | 'paused' | 'complete',
+        topics: row.topics ? JSON.parse(row.topics) : [],
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        // No content field - token efficient!
+      }));
+      
+      return {
+        count: sessions.length,
+        sessions,
+      };
+    }
   } finally {
     storage.close();
   }
@@ -71,8 +101,8 @@ export async function querySessionsSqlite(
 /**
  * Query plans from SQLite database
  * 
- * @param options - Query filters (status, author, topic, priority)
- * @returns Plan records matching filters
+ * @param options - Query filters (status, author, topic, priority, includeContent)
+ * @returns Plan records matching filters (metadata-only by default for token efficiency)
  */
 export async function queryPlansSqlite(
   options: QueryPlansOptions
@@ -82,32 +112,65 @@ export async function queryPlansSqlite(
   await storage.init(dbPath);
   
   try {
-    const result = await storage.queryFullPlans({
-      status: options.status,
-      author: options.author,
-      topic: options.topic,
-      priority: options.priority,
-    });
+    const includeContent = options.includeContent ?? false; // Default to metadata-only
     
-    // Filter out learned patterns (they have separate query function)
-    const plans: PlanRecord[] = result.plans
-      .filter((row) => !row.id.startsWith('learned_'))
-      .map((row) => ({
-        id: row.id,
-        title: row.title,
-        status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
-        author: row.author,
-        priority: row.priority || 'medium',
-        type: row.type || 'feature',
-        content: row.content,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-      }));
-    
-    return {
-      count: plans.length,
-      plans,
-    };
+    if (includeContent) {
+      // Full content mode
+      const result = await storage.queryFullPlans({
+        status: options.status,
+        author: options.author,
+        topic: options.topic,
+        priority: options.priority,
+      });
+      
+      // Filter out learned patterns (they have separate query function)
+      const plans: PlanRecord[] = result.plans
+        .filter((row) => !row.id.startsWith('learned_'))
+        .map((row) => ({
+          id: row.id,
+          title: row.title,
+          status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
+          author: row.author,
+          priority: row.priority || 'medium',
+          type: row.type || 'feature',
+          content: row.content,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+        }));
+      
+      return {
+        count: plans.length,
+        plans,
+      };
+    } else {
+      // Metadata-only mode (default) - 95% token savings
+      const result = await storage.queryPlansMetadata({
+        status: options.status,
+        author: options.author,
+        topic: options.topic,
+        priority: options.priority,
+      });
+      
+      // Filter out learned patterns
+      const plans = result.plans
+        .filter((row: any) => !row.id.startsWith('learned_'))
+        .map((row: any) => ({
+          id: row.id,
+          title: row.title,
+          status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
+          author: row.author,
+          priority: row.priority || 'medium',
+          type: row.type || 'feature',
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          // No content field - token efficient!
+        }));
+      
+      return {
+        count: plans.length,
+        plans,
+      };
+    }
   } finally {
     storage.close();
   }
@@ -118,8 +181,8 @@ export async function queryPlansSqlite(
  * 
  * Note: Learned patterns are stored as plans with id starting with 'learned_'
  * 
- * @param options - Query filters (category, keywords)
- * @returns Pattern records matching filters
+ * @param options - Query filters (category, keywords, includeContent)
+ * @returns Pattern records matching filters (metadata-only by default for token efficiency)
  */
 export async function queryLearnedPatternsSqlite(
   options: QueryLearnedPatternsOptions
@@ -129,35 +192,59 @@ export async function queryLearnedPatternsSqlite(
   await storage.init(dbPath);
   
   try {
-    // Query only learned patterns (plans with 'learned_' prefix)
-    const result = await storage.queryFullPlans({
-      idStartsWith: 'learned_'
-    });
+    const includeContent = options.includeContent ?? false; // Default to metadata-only
     
-    let patterns = result.plans.map((row): LearnedPatternRecord => ({
+    if (includeContent) {
+      // Full content mode
+      const result = await storage.queryFullPlans({
+        idStartsWith: 'learned_'
+      });
+      
+      let patterns = result.plans.map((row): LearnedPatternRecord => ({
+          id: row.id,
+          category: row.type || 'general',
+          title: row.title,
+          content: row.content,
+          keywords: row.topics ? JSON.parse(row.topics) : [],
+          created_at: row.created_at,
+        }));
+      
+      // Apply filters in memory
+      if (options.category) {
+        patterns = patterns.filter((p) => p.category === options.category);
+      }
+      
+      if (options.keywords && options.keywords.length > 0) {
+        patterns = patterns.filter((p) =>
+          options.keywords!.some((keyword) => p.keywords.includes(keyword))
+        );
+      }
+      
+      return {
+        count: patterns.length,
+        patterns,
+      };
+    } else {
+      // Metadata-only mode (default) - 95% token savings
+      const result = await storage.queryLearnedPatternsMetadata({
+        category: options.category,
+        keywords: options.keywords,
+      });
+      
+      const patterns = result.patterns.map((row: any) => ({
         id: row.id,
         category: row.type || 'general',
         title: row.title,
-        content: row.content,
         keywords: row.topics ? JSON.parse(row.topics) : [],
         created_at: row.created_at,
+        // No content field - token efficient!
       }));
-    
-    // Apply filters in memory
-    if (options.category) {
-      patterns = patterns.filter((p) => p.category === options.category);
+      
+      return {
+        count: patterns.length,
+        patterns,
+      };
     }
-    
-    if (options.keywords && options.keywords.length > 0) {
-      patterns = patterns.filter((p) =>
-        options.keywords!.some((keyword) => p.keywords.includes(keyword))
-      );
-    }
-    
-    return {
-      count: patterns.length,
-      patterns,
-    };
   } finally {
     storage.close();
   }

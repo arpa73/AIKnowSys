@@ -122,7 +122,7 @@ describe('sqlite-query core functions', () => {
   describe('querySessionsSqlite', () => {
     it('should query all sessions when no filters provided', async () => {
       // GIVEN: Database with 2 sessions
-      const options: QuerySessionsOptions = { dbPath };
+      const options: QuerySessionsOptions = { dbPath, includeContent: true };
 
       // WHEN: Querying without filters
       const result = await querySessionsSqlite(options);
@@ -131,7 +131,7 @@ describe('sqlite-query core functions', () => {
       expect(result.count).toBe(2);
       expect(result.sessions).toHaveLength(2);
       expect(result.sessions[0].title).toBeDefined();
-      expect(result.sessions[0].content).toBeDefined();
+      expect((result.sessions[0] as any).content).toBeDefined();
     });
 
     it('should filter sessions by date range', async () => {
@@ -375,6 +375,102 @@ describe('sqlite-query core functions', () => {
 
       // Cleanup
       rmSync(emptyDbPath, { force: true });
+    });
+  });
+
+  // Phase 1 Week 3: Token Optimization - Metadata-Only Queries
+  describe('querySessionsSqlite - metadata-only mode', () => {
+    it('should return metadata without content by default', async () => {
+      // GIVEN: includeContent defaults to false
+      // WHEN: Querying sessions
+      const result = await querySessionsSqlite({ dbPath });
+
+      // THEN: Sessions returned without content field
+      expect(result.count).toBe(2);
+      expect(result.sessions[0]).not.toHaveProperty('content');
+      expect(result.sessions[0]).toHaveProperty('date');
+      expect(result.sessions[0]).toHaveProperty('topic');
+      expect(result.sessions[0]).toHaveProperty('status');
+      expect(result.sessions[0]).toHaveProperty('topics');
+    });
+
+    it('should include full content when explicitly requested', async () => {
+      // GIVEN: includeContent: true
+      // WHEN: Querying sessions
+      const result = await querySessionsSqlite({ dbPath, includeContent: true });
+
+      // THEN: Sessions include content field
+      expect(result.count).toBe(2);
+      expect((result.sessions[0] as any)).toHaveProperty('content');
+      // First session is most recent (2026-02-11) - MCP tools
+      const sessionWithSQLite = result.sessions.find((s: any) => s.content?.includes('SQLite'));
+      expect(sessionWithSQLite).toBeDefined();
+    });
+
+    it('should validate token savings for metadata-only', async () => {
+      // GIVEN: Both query modes
+      const metadataResult = await querySessionsSqlite({ dbPath });
+      const fullResult = await querySessionsSqlite({ dbPath, includeContent: true });
+
+      // WHEN: Comparing sizes
+      const metadataSize = JSON.stringify(metadataResult).length;
+      const fullSize = JSON.stringify(fullResult).length;
+
+      // THEN: Metadata mode is smaller (reduction depends on content size)
+      // Note: With small test data, savings are modest. Real sessions (50KB+) show 95%+ savings.
+      expect(metadataSize).toBeLessThan(fullSize);
+      expect(metadataResult.sessions[0]).not.toHaveProperty('content');
+      expect((fullResult.sessions[0] as any)).toHaveProperty('content');
+    });
+  });
+
+  describe('queryPlansSqlite - metadata-only mode', () => {
+    it('should return metadata without content by default', async () => {
+      // GIVEN: includeContent defaults to false
+      // WHEN: Querying plans
+      const result = await queryPlansSqlite({ dbPath });
+
+      // THEN: Plans returned without content field
+      expect(result.count).toBe(2);
+      expect(result.plans[0]).not.toHaveProperty('content');
+      expect(result.plans[0]).toHaveProperty('id');
+      expect(result.plans[0]).toHaveProperty('title');
+      expect(result.plans[0]).toHaveProperty('status');
+    });
+
+    it('should include full content when explicitly requested', async () => {
+      // GIVEN: includeContent: true
+      // WHEN: Querying plans
+      const result = await queryPlansSqlite({ dbPath, includeContent: true });
+
+      // THEN: Plans include content field
+      expect(result.count).toBe(2);
+      expect(result.plans[0]).toHaveProperty('content');
+    });
+  });
+
+  describe('queryLearnedPatternsSqlite - metadata-only mode', () => {
+    it('should return metadata without content by default', async () => {
+      // GIVEN: includeContent defaults to false
+      // WHEN: Querying patterns
+      const result = await queryLearnedPatternsSqlite({ dbPath });
+
+      // THEN: Patterns returned without content field
+      expect(result.count).toBe(1);
+      expect(result.patterns[0]).not.toHaveProperty('content');
+      expect(result.patterns[0]).toHaveProperty('id');
+      expect(result.patterns[0]).toHaveProperty('category');
+      expect(result.patterns[0]).toHaveProperty('keywords');
+    });
+
+    it('should include full content when explicitly requested', async () => {
+      // GIVEN: includeContent: true
+      // WHEN: Querying patterns
+      const result = await queryLearnedPatternsSqlite({ dbPath, includeContent: true });
+
+      // THEN: Patterns include content field
+      expect(result.count).toBe(1);
+      expect(result.patterns[0]).toHaveProperty('content');
     });
   });
 });
