@@ -1,15 +1,16 @@
 ---
 title: "Natural Language Query API Design"
-status: ACTIVE
+status: COMPLETE
 priority: medium
 created: 2026-02-13
+completed: 2026-02-14
 author: Planner
 topics: ["mcp-tools", "natural-language", "ai-ux", "api-design"]
 ---
 
 # PLAN: Natural Language Query API
 
-**Status:** 🎯 ACTIVE  
+**Status:** ✅ COMPLETE (2026-02-14)
 **Priority:** 🟡 MEDIUM (Part of MCP Tools AI UX Overhaul)  
 **Created:** 2026-02-13  
 **Goal:** Enable conversational queries like "Show me sessions from last week about MCP"
