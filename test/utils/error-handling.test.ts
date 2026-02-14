@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import os from 'os';
 import { SqliteStorage } from '../../lib/context/sqlite-storage.js';
 import { findKnowledgeDb } from '../../lib/utils/find-knowledge-db.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 describe('Database Error Messages (Phase 3 - Better Error Handling)', () => {
-  const testDir = path.join(__dirname, '../../test-tmp-error-handling');
+  // Use isolated temp directory outside project to prevent finding parent .aiknowsys/
+  const testDir = path.join(os.tmpdir(), 'aiknowsys-test-error-handling-' + process.pid);
   
   beforeEach(async () => {
     // Clean up test directory

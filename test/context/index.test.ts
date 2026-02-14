@@ -68,8 +68,8 @@ describe('createStorage factory', () => {
 
     it('should throw error for unsupported adapter types', async () => {
       await expect(
-        createStorage(tmpDir, { adapter: 'sqlite' as any })
-      ).rejects.toThrow('Unsupported storage adapter: sqlite');
+        createStorage(tmpDir, { adapter: 'mongodb' as any })
+      ).rejects.toThrow('Unsupported storage adapter: mongodb');
     });
 
     it('should return storage adapter with all required methods', async () => {

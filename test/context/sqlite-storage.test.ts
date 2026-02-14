@@ -199,40 +199,48 @@ describe('SqliteStorage', () => {
         updated: '2026-02-11T00:00:00Z'
       });
       
-      // Insert test sessions
+      // Insert test sessions (use relative dates for 'days' filter test)
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const twoDaysAgo = new Date(today);
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      const threeDaysAgo = new Date(today);
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      
       const testSessions: Array<Omit<SessionMetadata, 'file'> & { id: string; project_id: string; content: string; status: string }> = [
         {
-          id: 'session-2026-02-12',
+          id: 'session-today',
           project_id: testProjectId,
-          date: '2026-02-12',
+          date: today.toISOString().split('T')[0],
           topic: 'SQLite Implementation',
           status: 'active',
           topics: ['database', 'storage'],
-          created: '2026-02-12T00:00:00Z',
-          updated: '2026-02-12T00:00:00Z',
+          created: today.toISOString(),
+          updated: today.toISOString(),
           content: '# Session\n\nTest content'
         },
         {
-          id: 'session-2026-02-11',
+          id: 'session-yesterday',
           project_id: testProjectId,
-          date: '2026-02-11',
+          date: yesterday.toISOString().split('T')[0],
           topic: 'Phase 2 Completion',
           status: 'complete',
           plan: 'PLAN_phase2',  // plan field matches SessionMetadata interface
           topics: ['phase-2', 'documentation'],
-          created: '2026-02-11T00:00:00Z',
-          updated: '2026-02-11T00:00:00Z',
+          created: yesterday.toISOString(),
+          updated: yesterday.toISOString(),
           content: '# Phase 2\n\nTest content'
         },
         {
-          id: 'session-2026-02-10',
+          id: 'session-three-days-ago',
           project_id: testProjectId,
-          date: '2026-02-10',
+          date: threeDaysAgo.toISOString().split('T')[0],
           topic: 'Bug Fixes',
           status: 'complete',
           topics: ['bugfix'],
-          created: '2026-02-10T00:00:00Z',
-          updated: '2026-02-10T00:00:00Z',
+          created: threeDaysAgo.toISOString(),
+          updated: threeDaysAgo.toISOString(),
           content: '# Bug Fixes\n\nTest content'
         }
       ];
@@ -250,16 +258,26 @@ describe('SqliteStorage', () => {
     });
 
     it('should filter sessions by exact date', async () => {
-      const result = await storage.querySessions({ date: '2026-02-12' });
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      const result = await storage.querySessions({ date: todayStr });
       
       expect(result.count).toBe(1);
-      expect(result.sessions[0].date).toBe('2026-02-12');
+      expect(result.sessions[0].date).toBe(todayStr);
     });
 
     it('should filter sessions by date range', async () => {
+      // Use relative dates for reliability
+      const today = new Date();
+      const fourDaysAgo = new Date(today);
+      fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
       const result = await storage.querySessions({
-        dateAfter: '2026-02-10',
-        dateBefore: '2026-02-13'
+        dateAfter: fourDaysAgo.toISOString().split('T')[0],
+        dateBefore: tomorrow.toISOString().split('T')[0]
       });
       
       expect(result.count).toBe(3);
