@@ -220,18 +220,18 @@ describe('Mutation Tools', () => {
       expect(result.content[0].text).toContain('content');
     });
 
-    it('should return conversational error for prepend without content', async () => {
+    it('should return conversational error for unsupported prepend operation', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
       
       const result = await updatePlan({
         planId: 'PLAN_test',
         operation: 'prepend'
-        // Missing content
+        // Note: 'prepend' not in discriminated union - unsupported operation
       });
       
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter');
-      expect(result.content[0].text).toContain('content');
+      expect(result.content[0].text).toContain('operation');
     });
 
     it('should return conversational error for set-status without status', async () => {

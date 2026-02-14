@@ -2,9 +2,11 @@ import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 import { z } from 'zod';
-import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { promisify } from 'util';
 import { execFile } from 'child_process';
+import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
+import { handleZodError } from './utils/error-helpers.js';
+import type { FieldErrorMap } from './utils/error-helpers.js';
 
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
@@ -114,32 +116,16 @@ export async function createSession(params: unknown) {
   } catch (error) {
     // Handle Zod validation errors with conversational responses
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      
-      if (field === 'title') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'title',
-          'Session title must be at least 3 characters',
-          ['{ "title": "Implement Feature X" }', '{ "title": "Debug Memory Leak" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'topics') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'topics',
-          'Topics must be an array of strings',
-          ['{ "topics": ["feature", "backend"] }', '{ "topics": ["bug-fix", "ui"] }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
+      return handleZodError(error, 'session creation', {
+        title: {
+          suggestion: 'Session title must be at least 3 characters',
+          examples: ['{ "title": "Implement Feature X" }', '{ "title": "Debug Memory Leak" }']
+        },
+        topics: {
+          suggestion: 'Topics must be an array of strings (optional parameter for categorization)',
+          examples: ['{ "topics": ["feature", "backend"] }', '{ "topics": ["bug-fix", "ui"] }']
+        }
+      });
     }
     
     // Generic validation failure
@@ -209,44 +195,20 @@ export async function updateSession(params: unknown) {
   } catch (error) {
     // Handle Zod validation errors with conversational responses
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      
-      if (field === 'date') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'date',
-          'Date must be in YYYY-MM-DD format',
-          ['{ "date": "2026-02-08" }', '{ "date": "2026-01-15" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'operation') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'operation',
-          'Must be one of: append, prepend, insert-after, insert-before',
-          ['{ "operation": "append" }', '{ "operation": "prepend" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'section') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'section',
-          'Section name must be at least 1 character',
-          ['{ "section": "## Progress" }', '{ "section": "Implementation Notes" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
+      return handleZodError(error, 'session update', {
+        date: {
+          suggestion: 'Date must be in YYYY-MM-DD format',
+          examples: ['{ "date": "2026-02-08" }', '{ "date": "2026-01-15" }']
+        },
+        operation: {
+          suggestion: 'Must be one of: append, prepend, insert-after, insert-before',
+          examples: ['{ "operation": "append" }', '{ "operation": "prepend" }']
+        },
+        section: {
+          suggestion: 'Section name must be at least 1 character',
+          examples: ['{ "section": "## Progress" }', '{ "section": "Implementation Notes" }']
+        }
+      });
     }
     
     // Generic validation failure
@@ -298,32 +260,16 @@ export async function createPlan(params: unknown) {
   } catch (error) {
     // Handle Zod validation errors with conversational responses
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      
-      if (field === 'title') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'title',
-          'Plan title must be at least 3 characters',
-          ['{ "title": "Add Payment Integration" }', '{ "title": "Refactor Auth System" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'topics') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'topics',
-          'Topics must be an array of strings',
-          ['{ "topics": ["payment", "stripe"] }', '{ "topics": ["auth", "security"] }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
+      return handleZodError(error, 'plan creation', {
+        title: {
+          suggestion: 'Plan title must be at least 3 characters',
+          examples: ['{ "title": "Add Payment Integration" }', '{ "title": "Refactor Auth System" }']
+        },
+        topics: {
+          suggestion: 'Topics must be an array of strings (optional parameter for categorization)',
+          examples: ['{ "topics": ["payment", "stripe"] }', '{ "topics": ["auth", "security"] }']
+        }
+      });
     }
     
     // Generic validation failure
@@ -369,57 +315,24 @@ export async function updatePlan(params: unknown) {
   } catch (error) {
     // Handle Zod validation errors with conversational responses
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      const code = firstError.code;
-      
-      if (field === 'planId') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'planId',
-          'Plan ID must start with PLAN_',
-          ['{ "planId": "PLAN_feature_auth" }', '{ "planId": "PLAN_refactor_db" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'operation' && code === 'invalid_union_discriminator') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'operation',
-          'Must be one of: set-status, append',
-          ['{ "operation": "set-status", "status": "ACTIVE" }', '{ "operation": "append", "content": "Phase 1 complete" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'content') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'content',
-          'Content is required for append/prepend operations',
-          ['{ "operation": "append", "content": "Completed milestone 1" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
-      
-      if (field === 'status') {
-        const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
-          'status',
-          'Must be one of: ACTIVE, PAUSED, COMPLETE, CANCELLED',
-          ['{ "operation": "set-status", "status": "ACTIVE" }', '{ "operation": "set-status", "status": "COMPLETE" }']
-        );
-        return {
-          content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
-          isError: true
-        };
-      }
+      return handleZodError(error, 'plan update', {
+        planId: {
+          suggestion: 'Plan ID must start with PLAN_',
+          examples: ['{ "planId": "PLAN_feature_auth" }', '{ "planId": "PLAN_refactor_db" }']
+        },
+        operation: {
+          suggestion: 'Must be one of: set-status, append',
+          examples: ['{ "operation": "set-status", "status": "ACTIVE" }', '{ "operation": "append", "content": "Phase 1 complete" }']
+        },
+        content: {
+          suggestion: 'Content is required for append operations',
+          examples: ['{ "operation": "append", "content": "Completed milestone 1" }']
+        },
+        status: {
+          suggestion: 'Must be one of: ACTIVE, PAUSED, COMPLETE, CANCELLED',
+          examples: ['{ "operation": "set-status", "status": "ACTIVE" }', '{ "operation": "set-status", "status": "COMPLETE" }']
+        }
+      });
     }
     
     // Generic validation failure
