@@ -537,8 +537,10 @@ program
 program
   .command('mcp-test <tool-name> [args-json]')
   .description('Test MCP tools with JSON arguments (no dbPath needed!)')
-  .action(async (toolName, argsJson) => {
-    await mcpTest(toolName, argsJson);
+  .option('--silent', 'Suppress output (for scripting)')
+  .option('--json', 'Output raw JSON (no pretty-print)')
+  .action(async (toolName, argsJson, options) => {
+    await mcpTest(toolName, argsJson, { _silent: options.silent, json: options.json });
   });
 
 // Default command - show help with styled banner

@@ -20,9 +20,11 @@
  * - Shows execution time
  * - Color-coded success/error
  * - Parameter preview
+ * - Supports --silent and --json flags
  */
 
 import chalk from 'chalk';
+import { createLogger } from '../logger.js';
 
 // Import MCP tool functions
 import {
@@ -63,6 +65,17 @@ const TOOLS: Record<string, (args: any) => Promise<any>> = {
 };
 
 /**
+ * MCP Test command options
+ */
+export interface McpTestOptions {
+  /** Output raw JSON (no pretty-print) */
+  json?: boolean;
+  
+  /** Silent mode (suppress output) */
+  _silent?: boolean;
+}
+
+/**
  * Pretty-print JSON with syntax highlighting
  */
 function prettyPrint(data: unknown): string {
@@ -79,18 +92,27 @@ function prettyPrint(data: unknown): string {
 /**
  * Main test command
  */
-export async function mcpTest(toolName: string, argsJson: string = '{}') {
+export async function mcpTest(
+  toolName: string,
+  argsJson: string = '{}',
+  options: McpTestOptions = {}
+) {
+  const log = createLogger(options._silent);
   const startTime = Date.now();
   
-  console.log(chalk.bold.blue('\n🧪 MCP Tool Test\n'));
-  console.log(chalk.dim('─'.repeat(60)));
+  // Show header unless in JSON mode
+  if (!options.json) {
+    log.header('MCP Tool Test', '🧪');
+    log.dim('─'.repeat(60));
+  }
   
   // Validate tool exists
   if (!TOOLS[toolName as keyof typeof TOOLS]) {
-    console.error(chalk.red(`❌ Unknown tool: ${toolName}`));
-    console.log(chalk.dim('\nAvailable tools:'));
+    log.error(`Unknown tool: ${toolName}`);
+    log.blank();
+    log.dim('Available tools:');
     Object.keys(TOOLS).forEach(name => {
-      console.log(chalk.dim(`  • ${name}`));
+      log.dim(`  • ${name}`);
     });
     process.exit(1);
   }
@@ -99,12 +121,14 @@ export async function mcpTest(toolName: string, argsJson: string = '{}') {
   let args: Record<string, unknown>;
   try {
     args = JSON.parse(argsJson);
-    console.log(chalk.bold('Tool:'), chalk.cyan(toolName));
-    console.log(chalk.bold('Args:'), prettyPrint(args));
-    console.log(chalk.dim('─'.repeat(60)));
+    if (!options.json) {
+      log.log(chalk.bold('Tool:'), chalk.cyan(toolName));
+      log.log(chalk.bold('Args:'), prettyPrint(args));
+      log.dim('─'.repeat(60));
+    }
   } catch {
-    console.error(chalk.red(`❌ Invalid JSON arguments: ${argsJson}`));
-    console.error(chalk.dim('Expected format: {"key":"value"}'));
+    log.error(`Invalid JSON arguments: ${argsJson}`);
+    log.dim('Expected format: {"key":"value"}');
     process.exit(1);
   }
   
@@ -115,27 +139,39 @@ export async function mcpTest(toolName: string, argsJson: string = '{}') {
     
     const duration = Date.now() - startTime;
     
-    console.log(chalk.green.bold('\n✅ SUCCESS'));
-    console.log(chalk.dim(`Execution time: ${duration}ms\n`));
-    
     // Extract text from MCP response format if present
     const output = result.content?.[0]?.text 
       ? JSON.parse(result.content[0].text)
       : result;
     
-    console.log(chalk.bold('Result:'));
-    console.log(prettyPrint(output));
-    console.log();
+    // JSON output mode (for scripting) - early return with just the data
+    if (options.json) {
+      console.log(JSON.stringify(output, null, 2));
+      return output;
+    }
+    
+    // Human-readable output
+    log.blank();
+    log.success('SUCCESS');
+    log.dim(`Execution time: ${duration}ms`);
+    log.blank();
+    log.log(chalk.bold('Result:'));
+    log.log(prettyPrint(output));
+    log.blank();
+    
+    return output;
     
   } catch (error) {
     const duration = Date.now() - startTime;
     
-    console.log(chalk.red.bold('\n❌ ERROR'));
-    console.log(chalk.dim(`Execution time: ${duration}ms\n`));
+    log.blank();
+    log.error('ERROR');
+    log.dim(`Execution time: ${duration}ms`);
+    log.blank();
     
     const message = error instanceof Error ? error.message : String(error);
-    console.error(chalk.red(message));
-    console.log();
+    log.log(chalk.red(message));
+    log.blank();
     
     process.exit(1);
   }
