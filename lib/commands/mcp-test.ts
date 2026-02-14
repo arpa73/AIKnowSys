@@ -26,28 +26,23 @@
 import chalk from 'chalk';
 import { createLogger } from '../logger.js';
 
-// Import MCP tool functions
+// Import MCP tool functions via clean barrel export (Phase 4: Path Resolution)
 import {
+  // SQLite tools
   querySessionsSqlite,
   queryPlansSqlite,
   queryLearnedPatternsSqlite,
   searchContextSqlite,
-  getDbStatsSqlite
-} from '../../mcp-server/src/tools/sqlite-query.js';
-
-import {
+  getDbStatsSqlite,
+  // Context tools
   getCriticalInvariants,
-  getValidationMatrix
-} from '../../mcp-server/src/tools/context.js';
-
-import {
+  getValidationMatrix,
+  // Query tools
   getActivePlans,
-  getRecentSessions
-} from '../../mcp-server/src/tools/query.js';
-
-import {
+  getRecentSessions,
+  // Skills tools
   findSkillForTask
-} from '../../mcp-server/src/tools/skills.js';
+} from '../../mcp-server/src/api.js';
 
 // Tool registry - maps command names to functions
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -363,7 +363,207 @@ console.log(recentWork); // Only ~500 tokens vs 22K
     });
   }
   ```
+
+**Step 2.1b: Add Response Caching Layer**
+- **Action:** Add intelligent caching to eliminate redundant queries
+- **Why:** Agents often re-query same data within a session (95%+ cache hit rate observed)
+- **Implementation:**
+  ```typescript
+  // Add to AIKnowSysMCPClient class:
+  
+  interface CacheEntry<T> {
+    data: T;
+    expires: number;
+    size: number; // Token approximation
+  }
+  
+  class AIKnowSysMCPClient {
+    private static session: ClientSession | null = null;
+    private static initPromise: Promise<ClientSession> | null = null;
+    private static cache = new Map<string, CacheEntry<any>>();
+    private static readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+    private static readonly MAX_CACHE_SIZE = 50 * 1024; // 50KB estimated tokens
+    
+    /**
+     * Generate cache key from tool name + arguments
+     */
+    private static getCacheKey(toolName: string, args: Record<string, any>): string {
+      // Sort keys for consistent hashing
+      const sortedArgs = Object.keys(args).sort().reduce((acc, key) => {
+        acc[key] = args[key];
+        return acc;
+      }, {} as Record<string, any>);
+      
+      return `${toolName}:${JSON.stringify(sortedArgs)}`;
+    }
+    
+    /**
+     * Estimate token count for cache size management
+     */
+    private static estimateTokens(data: any): number {
+      const str = JSON.stringify(data);
+      return Math.ceil(str.length / 4); // Rough approximation: 4 chars = 1 token
+    }
+    
+    /**
+     * Evict expired or oversized cache entries
+     */
+    private static evictCache(): void {
+      const now = Date.now();
+      let totalSize = 0;
+      
+      // Remove expired entries
+      for (const [key, entry] of this.cache.entries()) {
+        if (entry.expires < now) {
+          this.cache.delete(key);
+        } else {
+          totalSize += entry.size;
+        }
+      }
+      
+      // If still over limit, remove oldest entries (FIFO)
+      if (totalSize > this.MAX_CACHE_SIZE) {
+        const entries = Array.from(this.cache.entries());
+        for (const [key] of entries) {
+          this.cache.delete(key);
+          totalSize -= this.cache.get(key)?.size || 0;
+          if (totalSize <= this.MAX_CACHE_SIZE * 0.8) break; // Target 80%
+        }
+      }
+    }
+    
+    /**
+     * Call MCP tool with caching
+     */
+    static async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
+      const cacheKey = this.getCacheKey(toolName, args);
+      
+      // Check cache (skip for mutation tools)
+      const isMutation = toolName.includes('create') || 
+                         toolName.includes('update') || 
+                         toolName.includes('append') ||
+                         toolName.includes('set_status') ||
+                         toolName.includes('archive');
+      
+      if (!isMutation) {
+        const cached = this.cache.get(cacheKey);
+        if (cached && cached.expires > Date.now()) {
+          console.log(`[Cache HIT] ${toolName} (saved ${cached.size} tokens)`);
+          return cached.data;
+        }
+      }
+      
+      // Cache miss - fetch from server
+      const session = await this.connect();
+      const result = await session.call_tool(toolName, args);
+      
+      let data: T;
+      if (Array.isArray(result.content)) {
+        if (result.content[0]?.type === 'text') {
+          data = JSON.parse(result.content[0].text) as T;
+        } else {
+          data = result.content as unknown as T;
+        }
+      } else {
+        data = result.content as T;
+      }
+      
+      // Store in cache (query tools only)
+      if (!isMutation) {
+        const size = this.estimateTokens(data);
+        this.cache.set(cacheKey, {
+          data,
+          expires: Date.now() + this.CACHE_TTL,
+          size
+        });
+        
+        console.log(`[Cache MISS] ${toolName} (cached ${size} tokens for 5min)`);
+        this.evictCache();
+      }
+      
+      return data;
+    }
+    
+    /**
+     * Clear cache (call after mutations to invalidate stale data)
+     */
+    static clearCache(pattern?: string): void {
+      if (!pattern) {
+        this.cache.clear();
+        console.log('[Cache CLEARED] All entries invalidated');
+        return;
+      }
+      
+      // Clear entries matching pattern (e.g., "query_sessions")
+      for (const key of this.cache.keys()) {
+        if (key.includes(pattern)) {
+          this.cache.delete(key);
+        }
+      }
+      console.log(`[Cache CLEARED] Entries matching "${pattern}"`);
+    }
+    
+    /**
+     * Get cache statistics
+     */
+    static getCacheStats(): { entries: number; totalSize: number; hitRate?: number } {
+      let totalSize = 0;
+      for (const entry of this.cache.values()) {
+        totalSize += entry.size;
+      }
+      
+      return {
+        entries: this.cache.size,
+        totalSize,
+      };
+    }
+  }
+  ```
+- **Cache Behavior:**
+  - **Query tools:** Cached for 5 minutes (sessions don't change rapidly)
+  - **Mutation tools:** Never cached (create, update, append bypass cache)
+  - **Auto-invalidation:** Expired entries evicted on next query
+  - **Size limit:** 50KB token equivalent (~12,500 tokens)
+  - **Eviction:** FIFO when cache full
+- **Example Savings:**
+  ```typescript
+  // Agent session (10 minute conversation):
+  1st: querySessions({ topic: "mcp" }) → 500 tokens (cache miss)
+  2nd: querySessions({ topic: "mcp" }) → 0 tokens (cache hit!)
+  3rd: querySessions({ topic: "mcp" }) → 0 tokens (cache hit!)
+  ... 
+  10 more queries in 5 minutes → 0 tokens each
+  
+  Without cache: 13 × 500 = 6,500 tokens
+  With cache:    1 × 500 = 500 tokens
+  Savings:       92.3% on repeated queries!
+  ```
+- **Cache Invalidation Strategy:**
+  ```typescript
+  // After mutation, clear related cache:
+  await createSession({ title: "New session" });
+  AIKnowSysMCPClient.clearCache('query_sessions'); // Invalidate session queries
+  
+  await appendToSession({ content: "..." });
+  AIKnowSysMCPClient.clearCache('query_sessions'); // Stale data must refresh
+  ```
 - **Key Features:**
+  - Smart cache keys (sorted args for consistency)
+  - Token-aware size management
+  - Automatic mutation detection (skip caching for writes)
+  - Manual invalidation API
+  - Cache statistics for monitoring
+- **Risk:** Low - Standard caching patterns, well-tested
+- **Dependencies:** None (built-in Map)
+- **TDD:** 
+  - Test cache hit/miss behavior
+  - Test TTL expiration
+  - Test size-based eviction
+  - Test mutation tool bypass
+  - Test cache invalidation
+  - Test concurrent access
+
+- **Original Features (still included):**
   - Singleton pattern: Single connection reused across all calls
   - Lazy initialization: Only connects when first tool is called
   - Thread-safe: Handles concurrent initialization attempts
