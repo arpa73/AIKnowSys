@@ -6,6 +6,21 @@ This folder contains all project documentation organized by category.
 
 ---
 
+## 📚 Core Documentation
+
+### 🆚 [AIKnowSys vs GitHub Copilot Memory](copilot-memory-comparison.md)
+**Why AIKnowSys?** Understand the advantages of explicit, permanent, platform-agnostic knowledge management
+
+- 🔒 **100% Local** - Privacy-first, never leaves your machine
+- ♾️ **Permanent** - Knowledge lasts forever (not 28-day expiration)
+- 🌍 **Any AI Tool** - Works with Claude, ChatGPT, Cursor, etc.
+- 📖 **Human-Readable** - Markdown files you control
+- 🤝 **Team Shareable** - Commit to git, everyone benefits
+
+**[Read full comparison →](copilot-memory-comparison.md)**
+
+---
+
 ## 📚 Directory Structure
 
 ### ⚡ [Agent Skills](../.github/skills/) - Step-by-Step Workflows
@@ -17,6 +32,16 @@ This folder contains all project documentation organized by category.
 - **[dependency-updates](../.github/skills/dependency-updates/SKILL.md)** - Safe dependency updates
 - **[documentation-management](../.github/skills/documentation-management/SKILL.md)** - AI-optimized docs, changelog archiving
 - **[skill-creator](../.github/skills/skill-creator/SKILL.md)** - Create new skills from guides
+
+### 🚀 [Advanced Workflows](advanced-workflows.md)
+**Powerful patterns for complex scenarios**
+
+- **[OpenSpec + Plan Management Integration](advanced-workflows.md#openspec--plan-management-integration)** - Combine proposal-driven design with fine-grained task tracking for large features
+
+### 🔄 [Processes & Maintenance](deliverables-review-process.md)
+**Keeping AIKnowSys deliverables current**
+
+- **[Quarterly Deliverables Review](deliverables-review-process.md)** - Process for reviewing skills, stack templates, and documentation against current framework versions using Context7
 
 ### 🎓 [guides/](guides/) - How-To Guides & References
 Human-readable guides and detailed documentation

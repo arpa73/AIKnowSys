@@ -1,0 +1,11 @@
+{
+  "github.copilot.chat.mcpServers": {
+    "aiknowsys": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/mcp-server/dist/mcp-server/src/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

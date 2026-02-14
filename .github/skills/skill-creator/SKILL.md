@@ -198,6 +198,73 @@ Before finalizing a skill:
 - [ ] Examples show expected input/output
 - [ ] No duplicate content from other skills
 
+## Creating Learned Patterns
+
+**Learned patterns** are project-specific discoveries saved to `.aiknowsys/learned/` that capture:
+- Error resolutions
+- User corrections
+- Workarounds
+- Debugging techniques  
+- Project conventions
+
+### When to Create a Learned Pattern
+
+Create learned patterns when:
+- You discover a recurring error with consistent solution
+- User corrects same mistake multiple times
+- You find a workaround for library/framework issue
+- A debugging technique works well
+- Project-specific convention emerges
+
+### Learned Pattern Format
+
+Save to `.aiknowsys/learned/<pattern-name>.md`:
+
+```markdown
+# Learned Pattern: Descriptive Title
+
+**Pattern Type:** error_resolution | user_corrections | workarounds | debugging_techniques | project_specific  
+**Created:** YYYY-MM-DD  
+**Trigger Words:** "keyword1", "keyword2", "keyword3"
+
+## When to Use
+
+One sentence describing when to apply this pattern.
+
+## Problem
+
+Describe the issue or situation that prompted this pattern.
+
+## Discovery Context
+
+How/when was this discovered? What was happening?
+
+## Solution
+
+Step-by-step solution or code examples.
+
+**Code example:**
+\```language
+// Show the fix
+\```
+
+## Related
+
+- Link to relevant files
+- Related documentation
+- Similar patterns
+```
+
+### Example: Creating a Learned Pattern Right Now
+
+If you discover Django N+1 query issue repeatedly:
+
+1. Create `.aiknowsys/learned/django-query-optimization.md`
+2. Use the format above
+3. Include trigger words like "slow query", "n+1", "performance"
+4. Document the select_related()/prefetch_related() solution
+5. Save for future reuse
+
 ## Common Patterns in Our Project
 
 When creating skills for this codebase, note:

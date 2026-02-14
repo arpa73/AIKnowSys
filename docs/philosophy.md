@@ -48,6 +48,46 @@ From gnwebsite project (before knowledge system):
 
 ### Core Principles
 
+#### 0. **Documentation Before Code - The Foundation**
+
+**Philosophy:** Architecture must be documented before implementation begins.
+
+**The Rule:** For new projects, AI must help:
+1. **Discuss & Design** → What are we building? What technologies?
+2. **Document Architecture** → Fill CODEBASE_ESSENTIALS.md with decisions
+3. **Build Following Docs** → Implement according to documented patterns
+
+**Why this order matters:**
+
+❌ **Wrong order (Code → Docs):**
+```
+User: "Build me a web app"
+AI: Creates files, writes code
+AI: Documents what it built
+Problem: Architecture is reactive, not intentional
+```
+
+✅ **Right order (Docs → Code):**
+```
+User: "Build me a web app"  
+AI: Discusses requirements, proposes architecture
+AI: Documents patterns in CODEBASE_ESSENTIALS.md
+AI: Builds code following documented patterns
+Benefit: Intentional architecture, documented from day 1
+```
+
+**Real impact:**
+- Prevents "we'll document later" (never happens)
+- Forces architectural thinking upfront
+- Creates single source of truth from project start
+- AI has context for all future changes
+
+**The Bootstrap Prompt enforces this:**
+- Step 1: Discuss & design
+- Step 2: Document architecture in knowledge system
+- Step 3: Build codebase following documented patterns
+- ⚠️ IMPORTANT: Complete steps 1-2 BEFORE writing any code!
+
 #### 1. **CODEBASE_ESSENTIALS.md - Your Project's Constitution**
 
 **Philosophy:** If it's critical to know, it must be written down.

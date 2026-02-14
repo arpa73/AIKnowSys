@@ -10,11 +10,10 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/     # Commented out - this ignores Python lib BUT also our JS lib folder!
 lib64/
 parts/
 sdist/
@@ -23,6 +22,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# TypeScript build output
+dist/
 
 # Virtual environments
 venv/
@@ -46,6 +48,9 @@ Thumbs.db
 .env.local
 *.local
 
+# Test artifacts
+test-fixtures/
+
 # Logs
 *.log
 
@@ -58,13 +63,25 @@ yarn-error.log*
 # Build outputs
 *.min.js
 *.min.css
-dist/
 out/
 
 # Test coverage
 coverage/
 .coverage
 htmlcov/
+
+# Vitest
+.vitest/
+
+# Test temporary files
+test/tmp/
+
+# Temporary test/scan directories (created during development)
+test-*/
+temp-*/
+tmp-*/
+*-test-*/
+scan-test-*/
 
 # Rust
 target/

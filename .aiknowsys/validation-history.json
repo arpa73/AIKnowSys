@@ -1,0 +1,58 @@
+{
+  "2026-02-06": {
+    "standalone": {
+      "runs": 158,
+      "failures": 0,
+      "avgDuration": 213
+    }
+  },
+  "2026-02-07": {
+    "standalone": {
+      "runs": 80,
+      "failures": 0,
+      "avgDuration": 248
+    }
+  },
+  "2026-02-08": {
+    "standalone": {
+      "runs": 48,
+      "failures": 0,
+      "avgDuration": 359
+    }
+  },
+  "2026-02-09": {
+    "standalone": {
+      "runs": 40,
+      "failures": 0,
+      "avgDuration": 197
+    }
+  },
+  "2026-02-10": {
+    "standalone": {
+      "runs": 18,
+      "failures": 0,
+      "avgDuration": 212
+    }
+  },
+  "2026-02-11": {
+    "standalone": {
+      "runs": 22,
+      "failures": 0,
+      "avgDuration": 160
+    }
+  },
+  "2026-02-12": {
+    "standalone": {
+      "runs": 14,
+      "failures": 0,
+      "avgDuration": 198
+    }
+  },
+  "2026-02-13": {
+    "standalone": {
+      "runs": 4,
+      "failures": 0,
+      "avgDuration": 232
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/skill-detector.sh",
+        "powershell": ".github/hooks/skill-detector.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/skill-prereq-check.sh",
+        "powershell": ".github/hooks/skill-prereq-check.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/tdd-reminder.sh",
+        "powershell": ".github/hooks/tdd-reminder.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/mutation-enforcement.sh",
+        "powershell": ".github/hooks/mutation-enforcement.ps1",
+        "cwd": ".",
+        "timeoutSec": 2,
+        "description": "Enforce mutation commands for session/plan files"
+      }
+    ],
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/session-start.sh",
+        "powershell": ".github/hooks/session-start.ps1",
+        "cwd": ".",
+        "timeoutSec": 5
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/migration-check.sh",
+        "powershell": ".github/hooks/migration-check.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/doc-sync.sh",
+        "powershell": ".github/hooks/doc-sync.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/collaboration-check.sh",
+        "powershell": ".github/hooks/collaboration-check.ps1",
+        "cwd": ".",
+        "timeoutSec": 3
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/workspace-health.sh",
+        "powershell": ".github/hooks/workspace-health.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/quality-health.sh",
+        "powershell": ".github/hooks/quality-health.ps1",
+        "cwd": ".",
+        "timeoutSec": 3
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/performance-monitor.sh",
+        "powershell": ".github/hooks/performance-monitor.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      },
+      {
+        "type": "command",
+        "bash": ".github/hooks/session-end.sh",
+        "powershell": ".github/hooks/session-end.ps1",
+        "cwd": ".",
+        "timeoutSec": 5
+      }
+    ],
+    "stop": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/validation-reminder.sh",
+        "powershell": ".github/hooks/validation-reminder.ps1",
+        "cwd": ".",
+        "timeoutSec": 2
+      }
+    ]
+  }
+}

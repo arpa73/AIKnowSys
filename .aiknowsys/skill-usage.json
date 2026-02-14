@@ -1,0 +1,14 @@
+{
+  "skills": {
+    "code-refactoring": {
+      "count": 1037,
+      "firstUsed": "2026-01-31T11:53:05.001Z",
+      "lastUsed": "2026-02-14T17:00:56.632Z"
+    },
+    "feature-implementation": {
+      "count": 2,
+      "firstUsed": "2026-02-13T21:58:16.546Z",
+      "lastUsed": "2026-02-14T09:27:28.868Z"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "aiknowsys",
-  "version": "0.0.1",
+  "version": "0.10.0",
   "description": "AI-Powered Development Workflow for Consistent, High-Quality Code",
   "keywords": [
     "ai",
@@ -14,9 +14,6 @@
   ],
   "author": "arpa73",
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/arpa73/aiknowsys.git"
@@ -32,25 +29,64 @@
   },
   "files": [
     "bin/",
-    "lib/",
+    "dist/",
     "templates/",
     "scripts/",
-    "AGENTS.template.md",
-    "CODEBASE_CHANGELOG.template.md",
-    "CODEBASE_ESSENTIALS.template.md"
+    "SETUP_GUIDE.md",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "node bin/cli.js --help",
-    "prepublishOnly": "node bin/cli.js --help && npm pack --dry-run",
+    "build": "tsc",
+    "postbuild": "mkdir -p dist/scripts dist/lib/context && cp package.json dist/ && cp scripts/*.js scripts/*.cjs scripts/*.mjs dist/scripts/ 2>/dev/null || true && cp lib/context/schema.sql dist/lib/context/ 2>/dev/null || true",
+    "build:watch": "tsc --watch",
+    "dev": "tsc --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "bash scripts/cleanup-test-dirs.sh",
+    "clean:dry-run": "bash scripts/cleanup-test-dirs.sh --dry-run",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:cli": "node bin/cli.js --help",
+    "lint": "eslint lib/ bin/ test/",
+    "lint:fix": "eslint lib/ bin/ test/ --fix",
+    "install-hooks": "node templates/scripts/install-git-hooks.cjs",
+    "generate:hooks": "node scripts/generate-hook-wrappers.js",
+    "update:hooks-config": "node scripts/update-hooks-config.js",
+    "prepublishOnly": "npm run build && npm run lint && npm run test:cli && npm pack --dry-run",
     "postversion": "git push && git push --tags"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "chalk": "^5.6.2",
+    "clipboardy": "^4.0.0",
     "commander": "^14.0.2",
     "inquirer": "^13.2.1",
-    "ora": "^9.1.0"
+    "ora": "^9.1.0",
+    "yaml": "^2.8.2"
+  },
+  "optionalDependencies": {
+    "aiknowsys-plugin-context7": "file:./plugins/aiknowsys-plugin-context7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/inquirer": "^9.0.9",
+    "@types/node": "^22.19.11",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
+    "c8": "^10.1.3",
+    "eslint": "^9.39.2",
+    "globals": "^17.2.0",
+    "ts-morph": "^27.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }

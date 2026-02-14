@@ -30,8 +30,8 @@ The knowledge system template includes **placeholders** that you must fill in ba
 ### Decision Points
 
 **1. Starting from scratch or migrating existing project?**
-- **New project:** Use `scripts/setup.sh` (interactive prompts)
-- **Existing project:** Use `scripts/migrate-existing.sh` (auto-detection)
+- **New project:** Use `npx aiknowsys init` (interactive prompts)
+- **Existing project:** Use `npx aiknowsys migrate` (auto-detection)
 
 **2. What's your primary tech stack?**
 - Determines which validation commands to use
@@ -52,20 +52,18 @@ The knowledge system template includes **placeholders** that you must fill in ba
 **When to use:** Starting a greenfield project.
 
 ```bash
-# 1. Clone or download aiknowsys
-git clone https://github.com/your-org/aiknowsys.git
-
-# 2. Copy template files to your project
-cp -r aiknowsys/templates/* /path/to/your/project/
-cp -r aiknowsys/scripts /path/to/your/project/
-cp -r aiknowsys/.github /path/to/your/project/
-
-# 3. Run interactive setup
+# Navigate to your project directory
 cd /path/to/your/project
-bash scripts/setup.sh
+
+# Run interactive setup
+npx aiknowsys init
+
+# Or with options
+npx aiknowsys init --stack nextjs  # Use pre-built stack template
+npx aiknowsys init --template minimal  # Use minimal template
 ```
 
-**What setup.sh does:**
+**What `init` does:**
 1. Detects existing code (if any)
 2. Prompts for language (TypeScript/Python/Rust/Go/Other)
 3. Prompts for framework (Vue/React/Django/Actix/etc.)
@@ -88,19 +86,17 @@ bash scripts/setup.sh
 **When to use:** Adding knowledge system to established codebase.
 
 ```bash
-# 1. Clone or download aiknowsys
-git clone https://github.com/your-org/aiknowsys.git
-
-# 2. Copy files to your project
-cp -r aiknowsys/scripts /path/to/your/project/
-cp -r aiknowsys/templates /path/to/your/project/
-
-# 3. Run migration workflow
+# Navigate to your existing project
 cd /path/to/your/project
-bash scripts/migrate-existing.sh
+
+# Run migration workflow
+npx aiknowsys migrate
+
+# Or scan only (no agent/skill installation)
+npx aiknowsys scan
 ```
 
-**What migrate-existing.sh does:**
+**What `migrate` does:**
 1. Scans your codebase (`package.json`, `pyproject.toml`, etc.)
 2. Detects tech stack automatically
 3. Discovers test commands from package.json/Makefile/CI
@@ -541,6 +537,47 @@ You enforce: KISS, DRY, SOLID, YAGNI principles from {{ESSENTIALS_PATH}}
 ```markdown
 You enforce: KISS, DRY, SOLID, YAGNI principles from CODEBASE_ESSENTIALS.md
 ```
+
+#### Frontmatter Fields: `model` and `tools` (Advanced)
+
+The YAML frontmatter controls agent behavior beyond just instructions. Here are the key fields:
+
+| Field | What It Controls | Common Pitfalls |
+|-------|------------------|-----------------|
+| `name` | Agent identifier (must match filename) | Mismatch breaks handoffs |
+| `description` | Agent's role/purpose | Too generic = unclear responsibilities |
+| `argument-hint` | Placeholder text in chat | Not user-facing critical |
+| `tools` | Capabilities (search, edit, etc.) | Too restrictive = can't function; too permissive = unexpected actions |
+| `model` | AI model selection | Host environment may override |
+| `handoffs` | Automated workflow transitions | `send: true` required for auto-handoff |
+
+**Where to edit:**
+- **In your installed project:** Edit `.github/agents/developer.agent.md`, `architect.agent.md`, `planner.agent.md`
+- **In this template repo:** Edit `templates/agents/*.agent.template.md` to change defaults
+
+**`tools` Examples:**
+
+Developer (needs full implementation capabilities):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile']
+```
+
+SeniorArchitect (needs to write review artifacts and update sessions):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile']
+```
+
+Planner (needs broader capabilities for research and planning):
+```yaml
+tools: ['search', 'edit/editFiles', 'edit/createFile', 'todo', 'agent', 'web']
+```
+
+**Common Issues:**
+- **Architect can't write `.aiknowsys/PENDING_REVIEW.md`** → Add `'edit/editFiles', 'edit/createFile'` to tools
+- **Agent can't read CODEBASE_ESSENTIALS.md** → Add `'search'` to tools
+- **Auto-handoff doesn't work** → Ensure `send: true` in handoffs configuration
+
+**Tradeoff:** More tools = more capability, but also more potential for unexpected file modifications. Follow least privilege principle.
 
 ---
 

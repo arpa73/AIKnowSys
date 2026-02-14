@@ -1,0 +1,124 @@
+{
+  "$schema": "https://github.com/arpa73/aiknowsys/schemas/hook-config.json",
+  "version": 1,
+  
+  "filePatterns": {
+    "implementation": [
+      "lib/**/*.js",
+      "bin/**/*.js",
+      "templates/**/*.js"
+    ],
+    "tests": [
+      "test/**/*.test.js"
+    ],
+    "exclude": [
+      "node_modules/**",
+      "dist/**",
+      ".github/**"
+    ]
+  },
+  
+  "validationCommands": [
+    "npm test",
+    "npm run test",
+    "node --test"
+  ],
+  
+  "skills": {
+    "code-refactoring": {
+      "path": "code-refactoring/SKILL.md",
+      "triggers": {
+        "keywords": ["refactor", "clean up", "simplify", "extract function", "remove duplication"],
+        "files": []
+      },
+      "autoLoad": true,
+      "priority": "high",
+      "description": "Test-driven refactoring workflow"
+    },
+    
+    "feature-implementation": {
+      "path": "feature-implementation/SKILL.md",
+      "triggers": {
+        "keywords": ["add command", "new feature", "implement", "create endpoint"],
+        "files": ["lib/commands/**/*.js"]
+      },
+      "autoLoad": true,
+      "priority": "high",
+      "description": "Feature implementation workflow"
+    },
+    
+    "dependency-updates": {
+      "path": "dependency-updates/SKILL.md",
+      "triggers": {
+        "keywords": ["update deps", "upgrade packages", "npm update", "dependency"],
+        "files": ["package.json", "package-lock.json"]
+      },
+      "autoLoad": false,
+      "requiresConfirmation": true,
+      "priority": "high",
+      "description": "Safe dependency upgrade workflow"
+    },
+    
+    "tdd-workflow": {
+      "path": "tdd-workflow/SKILL.md",
+      "triggers": {
+        "keywords": ["write tests", "TDD", "test first", "red green refactor"],
+        "files": ["test/**/*.test.js"]
+      },
+      "autoLoad": true,
+      "priority": "high",
+      "description": "Test-driven development methodology"
+    },
+    
+    "skill-creator": {
+      "path": "skill-creator/SKILL.md",
+      "triggers": {
+        "keywords": ["create skill", "new skill", "make skill"],
+        "files": [".github/skills/**/SKILL.md"]
+      },
+      "autoLoad": true,
+      "priority": "medium",
+      "description": "Create new Agent Skills"
+    },
+    
+    "validation-troubleshooting": {
+      "path": "validation-troubleshooting/SKILL.md",
+      "triggers": {
+        "keywords": ["tests fail", "validation error", "build broken"],
+        "files": []
+      },
+      "autoLoad": true,
+      "priority": "high",
+      "description": "Debug validation failures"
+    }
+  },
+  
+  "skillDetection": {
+    "enabled": true,
+    "showRecommendations": true,
+    "trackUsage": true,
+    "conversationContextDepth": 5
+  },
+  
+  "workspaceHealth": {
+    "enabled": true,
+    "sessionArchiveThreshold": 30,
+    "planArchiveThreshold": 7,
+    "checkTempFiles": true
+  },
+  
+  "qualityChecks": {
+    "essentialsMaxLines": 800,
+    "validateLinks": true,
+    "validateTemplates": true,
+    "scanPatterns": true,
+    "excludePatterns": [
+      "node_modules",
+      ".git",
+      "dist",
+      "build",
+      "templates",
+      ".aiknowsys/archive"
+    ]
+  }
+}

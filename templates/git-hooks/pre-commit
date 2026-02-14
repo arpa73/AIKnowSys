@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# Pre-commit Git Hook - TDD Compliance & Linting Check
+#
+# 1. Runs ESLint on staged files
+# 2. Ensures that changes to lib/ directory include corresponding test changes
+#
+# Installation:
+#   chmod +x .git/hooks/pre-commit
+#   (This file should be copied to .git/hooks/pre-commit)
+#
+
+# Run linter on staged files
+echo "🔍 Running ESLint on staged files..."
+
+# Get staged .js files
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep "\.js$" || true)
+
+if [ -n "$STAGED_JS" ]; then
+    echo "📝 Linting staged JavaScript files..."
+    
+    # Run eslint on staged files
+    if ! npx eslint $STAGED_JS; then
+        echo ""
+        echo "❌ ESLint failed!"
+        echo "💡 Fix linting errors or run: npm run lint:fix"
+        echo ""
+        exit 1
+    fi
+    
+    echo "✅ ESLint passed!"
+    echo ""
+fi
+
+echo "🔍 Running TDD compliance check..."
+
+# Check if lib/ files are staged
+LIB_STAGED=$(git diff --cached --name-only | grep "^lib/" || true)
+
+if [ -n "$LIB_STAGED" ]; then
+    echo "📝 Detected staged changes in lib/:"
+    echo "$LIB_STAGED" | sed 's/^/   - /'
+    
+    # Check if test/ files are also staged
+    TEST_STAGED=$(git diff --cached --name-only | grep "^test/" || true)
+    
+    if [ -z "$TEST_STAGED" ]; then
+        echo ""
+        echo "⚠️  WARNING: Staging lib/ changes without test/ changes"
+        echo ""
+        echo "Critical Invariant #7: Test-Driven Development (TDD)"
+        echo "→ Tests should be written BEFORE implementation"
+        echo "→ Follow RED-GREEN-REFACTOR cycle"
+        echo ""
+        echo "Did you follow TDD?"
+        echo "  🔴 RED: Write failing test first"
+        echo "  🟢 GREEN: Implement minimal code to pass"
+        echo "  🔵 REFACTOR: Clean up while keeping tests green"
+        echo ""
+        
+        read -p "Continue with commit anyway? (y/N) " -n 1 -r
+        echo
+        
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            echo "❌ Commit aborted"
+            echo "💡 Tip: Stage your test files with: git add test/"
+            echo ""
+            exit 1
+        else
+            echo ""
+            echo "⚠️  Proceeding without test changes (you chose to override)"
+            echo "📝 Consider documenting this TDD violation in CODEBASE_CHANGELOG.md"
+            echo ""
+        fi
+    else
+        echo "✅ Found staged test changes:"
+        echo "$TEST_STAGED" | sed 's/^/   - /'
+        echo ""
+        echo "✅ TDD compliance check passed!"
+    fi
+else
+    echo "ℹ️  No changes in lib/ directory"
+fi
+
+echo ""

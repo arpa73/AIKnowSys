@@ -1,4 +1,4 @@
-# aiknowsys - Knowledge System Template
+# AIKnowSys - Knowledge System Template
 
 **AI-Powered Development Workflow for Consistent, High-Quality Code**
 
@@ -12,11 +12,28 @@ A battle-tested knowledge management system that enables AI-assisted development
 
 A structured workflow system consisting of:
 
-1. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
-2. **Custom Agents** (Developer + Architect) - Automated code review enforcing KISS/DRY/SOLID/YAGNI
-3. **Skills System** - Domain-specific how-to guides for common tasks
-4. **Changelog** - Session-by-session validation and learning history
-5. **Validation Matrix** - Mandatory test running before completion
+1. **MCP Server** - 31 Model Context Protocol tools for AI agents (⚡ instant context access, 10-100x faster than subprocess)
+2. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
+3. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
+4. **Skills System** - Domain-specific how-to guides for common tasks
+5. **Changelog** - Session-by-session validation and learning history
+6. **Validation Matrix** - Mandatory test running before completion
+7. **Multi-Developer Collaboration** - Per-developer plan tracking and reviews prevent merge conflicts (Phase 2)
+8. **Multi-Plan Support** - Work on multiple initiatives simultaneously without losing context
+9. **OpenSpec + Plan Integration** - Combine proposal-driven design with task tracking ([see advanced workflows](docs/advanced-workflows.md))
+10. **ESSENTIALS Compression** - Automated detection and extraction of bloat to keep ESSENTIALS lean (600-800 lines)
+11. **VSCode Hooks** - 17 intelligent hooks for GitHub Copilot: session tracking, TDD enforcement, skill detection, health monitoring, collaboration alerts, performance tracking, migration assistance, and git collaboration reminders (optional)
+
+**MCP Tools Enable (All Instant ⚡):**
+- Query plans/sessions (direct core imports, <1ms response)
+- Create/update sessions/plans with YAML validation
+- Search historical context across all files
+- Validate deliverables and check TDD compliance
+- Access skills and learned patterns
+
+**Performance:** Phase 2 extraction achieved 10-100x speedup by replacing subprocess calls with direct core function imports.
+
+**CLI Alternative:** All MCP tools have CLI equivalents (`npx aiknowsys`) for when MCP server isn't configured.
 
 **Result:** AI assistants that understand your codebase, follow your patterns, and catch issues before production.
 
@@ -44,6 +61,66 @@ From production use in gnwebsite:
 | Patterns exist in tribal knowledge | Patterns documented and enforced |
 | Each session restarts context | Historical context preserved |
 
+### Intelligent Automation with VSCode Hooks
+
+**17 lifecycle hooks** that run automatically during GitHub Copilot sessions:
+
+✅ **Never forget tests** - TDD reminder before editing code  
+✅ **Never skip validation** - Validation reminder before claiming "done"  
+✅ **Auto-detect skills** - Suggests relevant guides based on your prompt  
+✅ **Health monitoring** - Alerts on disk space, lint errors, type issues  
+✅ **Avoid conflicts** - Detects concurrent work on same files  
+✅ **Track performance** - Warns on test regressions (>20% slower)  
+✅ **Stay updated** - Migration alerts for version mismatches  
+✅ **Fresh docs** - Staleness warnings for outdated documentation  
+✅ **Team collaboration** - Remind to share patterns, show teammates' active plans (git hooks)  
+
+**[Learn more about hooks →](docs/vscode-hooks-guide.md)**
+
+### vs GitHub Copilot Memory
+
+AIKnowSys complements (or replaces) GitHub's Copilot Memory with key advantages:
+
+🔒 **100% Local** - Never leaves your machine (privacy-first)  
+♾️ **Permanent** - Knowledge lasts forever (not 28-day expiration)  
+🌍 **Any AI Tool** - Works with Claude, ChatGPT, Cursor, etc. (not locked to Copilot)  
+📖 **Human-Readable** - Markdown files you can read and edit (not opaque AI format)  
+✍️ **You Control** - Decide what's documented (not AI-decided patterns)  
+🤝 **Team Shareable** - Commit to git, everyone benefits (not subscription-locked)  
+
+**[Read full comparison →](docs/copilot-memory-comparison.md)**
+
+### Plugin Ecosystem
+
+Extend aiknowsys with optional plugins for additional capabilities:
+
+**🔌 Available Plugins:**
+
+- **[aiknowsys-plugin-context7](https://www.npmjs.com/package/aiknowsys-plugin-context7)** - Context7 MCP integration
+  - Validate skills/stacks against current library documentation
+  - Query up-to-date framework docs (Next.js, Vue, React, etc.)
+  - Detect framework updates and breaking changes
+  - Generate validation reports for monthly reviews
+  - CI/CD integration for automated quality checks
+
+**Installation:**
+```bash
+npm install aiknowsys-plugin-context7
+
+# Plugin discovered automatically
+npx aiknowsys --help
+# Shows: validate-deliverables, query-docs commands
+```
+
+**Plugin Architecture:**
+- 🔌 Zero impact on core (optional dependencies)
+- 🎯 Auto-discovered via package.json
+- 📦 Separate npm packages
+- 🧪 Independent testing
+- 📖 Full documentation
+
+**[See plugin development guide →](docs/plugin-architecture.md)**
+
 ---
 
 ## Quick Start
@@ -52,74 +129,615 @@ From production use in gnwebsite:
 
 ```bash
 # For new projects - interactive setup
-npx aiknowsys init
+npx  init
+
+# For new projects with pre-built stack template
+npx  init --stack nextjs
 
 # For existing projects - auto-detect and migrate
-npx aiknowsys migrate
+npx  migrate
 
 # Or install globally
-npm install -g aiknowsys
-aiknowsys init
+npm install -g 
+ init
 ```
+
+**🚀 Pre-built Stack Templates:**
+
+Skip most customization work with production-ready stack templates:
+
+```bash
+# List available stacks
+npx  init --list-stacks
+
+# Initialize with Next.js stack
+npx  init --stack nextjs
+
+# Initialize with Vue + Express full-stack monorepo
+npx  init --stack vue-express
+```
+
+**Available stacks:**
+- `nextjs` - Next.js 15 + App Router + TypeScript + Tailwind + Prisma
+- `vue-express` - Vue 3 + Express full-stack monorepo with shared types
+
+Each stack template includes:
+- ✅ Pre-filled Technology Snapshot
+- ✅ Stack-specific validation matrix with proper commands
+- ✅ Core patterns and conventions for the stack
+- ✅ Common gotchas and solutions
+- ✅ Testing patterns and examples
+- ✅ Architecture decisions (why this stack)
+
+**Setup time:** 2-3 minutes (vs 10-15 min interactive, vs 45 min manual)
 
 **Available commands:**
 
-| Command | Description |
-|---------|-------------|
-| `npx aiknowsys init` | Initialize for a new project |
-| `npx aiknowsys migrate` | Full migration for existing projects |
-| `npx aiknowsys scan` | Scan codebase and generate draft ESSENTIALS |
-| `npx aiknowsys install-agents` | Install Developer + Architect agents |
-| `npx aiknowsys install-skills` | Install universal skills |
+| Command | Description | Auto-installs agents/skills? |
+|---------|-------------|------------------------------|
+| `npx  init` | Initialize for a new project | ✅ Yes |
+| `npx  migrate` | Full migration for existing projects | ✅ Yes |
+| `npx  scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
+| `npx  update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
+| `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
+| `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
+| `npx aiknowsys audit` | Find common issues and pattern violations | N/A (analysis) |
+| `npx aiknowsys compress-essentials --analyze` | Preview ESSENTIALS compression opportunities | N/A (analysis) |
+| `npx aiknowsys compress-essentials --auto` | Auto-extract verbose sections to docs/ | N/A (maintenance) |
+| `npx aiknowsys compress-essentials --interactive` | Interactive compression workflow | N/A (maintenance) |
+| `npx aiknowsys install-agents` | Install Planner + Developer + Architect agents | N/A (standalone) |
+| `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
+| `npx aiknowsys enable <feature>` | Enable and install a specific feature | N/A (feature management) |
+| `npx aiknowsys disable <feature>` | Disable a feature (optionally remove files) | N/A (feature management) |
+| `npx aiknowsys uninstall` | Remove AIKnowSys completely from project | N/A (cleanup) |
 
-### Alternative: Manual Setup
+**🤔 `init` vs `migrate` - Which Should I Use?**
 
-<details>
-<summary>Click to expand manual setup instructions</summary>
+- **`init`** → Recommended for everyone (new OR existing projects)
+  - Detects your situation and offers appropriate options
+  - For existing projects: choose "🔍 Scan Codebase" → runs migrate workflow
+  - More user-friendly with guided choices
 
-#### For New Projects
+- **`migrate`** → Direct path for existing projects only
+  - Skips the setup menu, goes straight to scanning
+  - Same result as `init` → "Scan Codebase"
+  - Use if you prefer fewer prompts
+
+**TL;DR:** Both do the same thing for existing code. `init` with "Scan Codebase" literally calls `migrate` internally. Just use `init` unless you want to skip the setup mode selection.
+
+**💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
+
+---
+
+### 🎯 Advanced: Custom Essentials Filename
+
+All commands support the `--essentials` (or `-e`) flag to use a custom filename instead of `CODEBASE_ESSENTIALS.md`:
 
 ```bash
-# Clone the template
-git clone https://github.com/YOUR_ORG/aiknowsys.git
-cd aiknowsys
+# Initialize with custom filename
+npx aiknowsys init --essentials ARCHITECTURE.md
 
-# Run interactive setup
-./scripts/setup.sh
-
-# Follow prompts to customize for your tech stack
-# Files will be generated with your configuration
+# All other commands work with the same flag
+npx aiknowsys check --essentials ARCHITECTURE.md
+npx aiknowsys sync --essentials ARCHITECTURE.md
+npx aiknowsys audit --essentials ARCHITECTURE.md
+npx aiknowsys update --essentials ARCHITECTURE.md
+npx aiknowsys migrate --essentials ARCHITECTURE.md
+npx aiknowsys install-agents --essentials ARCHITECTURE.md
 ```
 
-#### For Existing Projects
+**Common Use Cases:**
+
+1. **Corporate Naming Standards**
+   ```bash
+   # Your company requires "ENGINEERING_GUIDE.md"
+   npx aiknowsys init --essentials ENGINEERING_GUIDE.md
+   ```
+
+2. **Monorepo Organization**
+   ```bash
+   # Different essentials per package
+   cd packages/backend
+   npx aiknowsys init --essentials BACKEND_ESSENTIALS.md
+   
+   cd packages/frontend
+   npx aiknowsys init --essentials FRONTEND_ESSENTIALS.md
+   ```
+
+3. **Localization**
+   ```bash
+   # Non-English teams
+   npx aiknowsys init --essentials CODEBASE_ESSENTIALS_FR.md
+   npx aiknowsys init --essentials コードベース要点.md
+   ```
+
+4. **Legacy Project Migration**
+   ```bash
+   # You already have "CONTRIBUTING.md" or "ARCHITECTURE.md"
+   npx aiknowsys init --essentials ARCHITECTURE.md
+   ```
+
+**Important Notes:**
+- Custom agents will automatically reference your custom filename
+- All validation and maintenance commands work seamlessly
+- The system defaults to `CODEBASE_ESSENTIALS.md` if flag not provided
+- Backwards compatible - existing projects continue working without changes
+
+---
+
+**📋 Template Options:**
+
+- **Minimal Template** (10 sections): For learning projects, prototypes, and simple tools
+  ```bash
+  npx  init --template minimal
+  ```
+  Includes: Tech Stack, Validation Matrix, Structure, Patterns, Invariants, Gotchas, Testing, Architecture, Change Management, Workflow
+
+- **Full Template** (13+ sections): For production projects and complex systems (default)
+  ```bash
+  npx  init --template full  # or just: npx  init
+  ```
+  Includes all minimal sections + Security, Performance, Accessibility
+
+See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled example using the minimal template.
+
+---
+
+### ⚡ Optional: Set Up Custom Instructions (Recommended)
+
+**Make AI agents autonomously load context** instead of manually prompting every session:
 
 ```bash
-# Clone into your project
-git clone https://github.com/YOUR_ORG/aiknowsys.git temp-template
-cp -r temp-template/scripts ./
-cp -r temp-template/templates ./
-
-# Run migration workflow
-./scripts/migrate-existing.sh
-
-# Scanner will:
-# 1. Detect your tech stack automatically
-# 2. Generate draft CODEBASE_ESSENTIALS.md (70% complete)
-# 3. Install custom agents
-# 4. Set up universal skills
-# 5. Initialize changelog
-
-# Complete TODO sections in CODEBASE_ESSENTIALS.md
-# Start using: @Developer <your request>
+# View custom instructions template
+cat docs/custom-instructions-template.md
 ```
 
-</details>
+**What this does:**
+- ✅ Auto-loads active plans and recent sessions at every session start
+- ✅ Enforces TDD workflow (write tests first)
+- ✅ Optimizes MCP tool usage (10-100x faster than file reading)
+- ✅ Makes AGENTS.md workflow automatic
+
+**Quick setup:**
+1. Copy instructions from `docs/custom-instructions-template.md`
+2. Paste into your AI client settings:
+   - **Claude Desktop:** Settings → Custom Instructions
+   - **VS Code:** Settings → GitHub Copilot System Prompt
+   - **Cursor:** Create `.cursorrules` in project root
+   - **Windsurf:** Create `.windsurfrules` in project root
+
+**Setup time:** 2 minutes (one-time, massive ongoing benefit)
+
+See [docs/custom-instructions-template.md](docs/custom-instructions-template.md) for detailed instructions.
+
+---
+
+**🚀 Enhanced Interactive Setup (Manual Mode):**
+
+Manual mode now asks intelligent questions about your project and automatically fills many placeholders:
+
+- ✅ **Technology Snapshot**: Framework, language, build tool, package manager
+- ✅ **Validation Matrix**: Auto-generates test, lint, type-check commands
+- ✅ **Tooling Details**: Database, linter, test framework selections
+- ✅ **Individual Commands**: {{TEST_CMD}}, {{LINT_CMD}}, {{TYPE_CHECK_CMD}} all filled
+
+**Before**: 50+ placeholders to fill manually
+**After**: Only structure and pattern placeholders remain (for AI or human completion)
+
+This significantly reduces setup time while maintaining flexibility for project-specific details.
+
+**🔍 Verification & Maintenance Commands:**
+
+New commands to validate and maintain your knowledge system:
+
+```bash
+# Validate your setup
+npx  check
+# ✓ Checks required files exist
+# ✓ Verifies agents and skills installed
+# ✓ Detects unfilled placeholders
+# ✓ Validates validation matrix
+
+# Fix redundancy (sync validation matrix reference)
+npx  sync
+# Updates AGENTS.md to reference ESSENTIALS.md (DRY principle)
+
+# Find issues and violations
+npx  audit
+# ⚠️ Detects validation matrix duplication
+# ⚠️ Finds generic placeholder values
+# ⚠️ Checks file size bloat
+# ℹ️ Suggests improvements
+```
+
+**When to use:**
+- `check` - Before committing, after setup, or when troubleshooting
+- `sync` - After upgrading from old templates with duplicated validation matrix
+- `audit` - Periodic health checks, before releases, or when reviewing code quality
+
+### 🗜️ Keeping ESSENTIALS Lean
+
+CODEBASE_ESSENTIALS.md should stay focused (600-800 lines recommended). Use compression commands to extract verbose content:
+
+```bash
+# Check if ESSENTIALS is bloated
+npx aiknowsys check
+# ⚠️ ESSENTIALS: 1400 lines (recommended: <800)
+
+# Preview what can be extracted
+npx aiknowsys compress-essentials --analyze
+# Shows verbose sections and where to extract them
+
+# Auto-extract verbose sections to docs/patterns/
+npx aiknowsys compress-essentials --auto
+# Moves code examples, updates references, preserves structure
+
+# Interactive mode for manual control
+npx aiknowsys compress-essentials --interactive
+# Step-by-step compression with previews
+```
+
+### 🔧 Feature Management
+
+Manage features after initial setup:
+
+```bash
+# Enable a feature that was skipped during init
+npx aiknowsys enable skills
+npx aiknowsys enable vscodeHooks
+npx aiknowsys enable tddEnforcement
+
+# Disable a feature (keeps files by default)
+npx aiknowsys disable openspec
+
+# Disable and remove files
+npx aiknowsys disable skills --remove-files
+
+# Remove AIKnowSys completely
+npx aiknowsys uninstall
+# ⚠️ Removes all AIKnowSys files with safety prompts
+# Option to keep user data (.aiknowsys/learned, sessions)
+```
+
+**Available features:**
+- `agents` - Developer + Architect + Planner custom agents
+- `skills` - Universal skills library (.github/skills/)
+- `vscodeHooks` - VS Code session hooks for auto-context loading
+- `sessionPersistence` - Session tracking (.aiknowsys/sessions/)
+- `tddEnforcement` - TDD git hooks and GitHub Actions
+- `openspec` - OpenSpec integration for change proposals
+
+**When to use:**
+- Skip optional features during init, add them later
+- Experiment with features without reinstalling
+- Clean up unused features to reduce repository size
+- Complete removal when migrating away from AIKnowSys
+
+**Prevention (built into templates):**
+- Template hints guide AI toward concise examples (<15 lines)
+- Post-init check warns if ESSENTIALS >800 lines after setup
+- Monthly `check` command catches growth early
+
+**Why this matters:**
+- Faster AI context loading (fewer tokens)
+- Easier navigation and maintenance
+- Better signal-to-noise ratio
+
+**See:** [docs/essentials-compression-guide.md](docs/essentials-compression-guide.md) for detailed guide
+
+---
+
+## 🔍 Enhanced Auto-Detection
+
+The `scan` command has been significantly enhanced to auto-detect and pre-fill more information:
+
+**Now detects 15+ technology categories:**
+- ✅ **Database**: PostgreSQL, MySQL, MongoDB, SQLite
+- ✅ **ORM**: Prisma, Drizzle, TypeORM, Sequelize, Mongoose
+- ✅ **State Management**: Pinia, Redux, Zustand, MobX, Jotai
+- ✅ **API Client**: Axios, TanStack Query
+- ✅ **Authentication**: NextAuth, Passport, Auth0, Supabase, Firebase
+- ✅ **Styling**: Tailwind CSS, Material UI, Styled Components, Emotion, Sass
+- ✅ **Code Patterns**: API routes, auth middleware, error handling, validation
+
+**Before:**
+```markdown
+## 3. Core Patterns
+
+### API Calls
+TODO: How do you make API calls?
+```
+
+**After:**
+```markdown
+## 3. Core Patterns
+
+### API Calls
+Detected: Axios
+TODO: Document standard usage pattern
+Example: How do you create API instances? Base URL configuration?
+```
+
+**Impact:** Reduces manual setup work by 40-50%, provides context-aware hints for completion.
+
+---
+
+## 📚 Example Templates
+
+**New in v0.3.0:** Completed example templates to guide your setup!
+
+**See:** [`docs/examples/`](docs/examples/)
+- **[CODEBASE_ESSENTIALS.example.md](docs/examples/CODEBASE_ESSENTIALS.example.md)** - Fully-filled example (TaskAPI - Express/TypeScript/Prisma)
+- **[README.md](docs/examples/README.md)** - How to use examples effectively
+
+**Workflow:**
+1. Read example to understand format and level of detail
+2. Run `npx  scan` to generate draft for your project
+3. Use example as reference while filling TODOs
+4. Copy structure, not content (write your own patterns!)
+
+**What makes a good example:**
+
+❌ **Too Generic:**
+```markdown
+### API Calls
+We use axios for API calls.
+```
+
+✅ **Specific & Useful:**
+```markdown
+### API Calls
+```typescript
+// src/lib/api.ts - All API calls use this instance
+import axios from 'axios';
+
+export const api = axios.create({
+  baseURL: '/api',
+  timeout: 5000
+});
+
+// Usage in components
+const tasks = await api.get('/tasks');
+```
+**Why:** Centralized config, consistent timeout, easy to mock in tests
+```
+
+**Based on user feedback:** "Templates can feel overwhelming without seeing a completed example" - this addresses the #1 priority from usability testing.
+
+---
+
+## 🧪 TDD Enforcement System
+
+**New in v0.3.1:** Multi-layered enforcement of Test-Driven Development to prevent "implement first, test later" violations.
+
+### The Problem
+
+Even with TDD documented in `CODEBASE_ESSENTIALS.md` as Critical Invariant #7, it's easy to forget and write implementation before tests (we did this ourselves and caught it!).
+
+### The Solution: 4 Layers of Enforcement
+
+#### Layer 1: Pre-Work Checklist (AGENTS.md)
+
+Every AI session now starts with explicit TDD reminder:
+
+```markdown
+**Step 3: Check TDD Requirement**
+  - [ ] 🔴 RED: Write failing test FIRST
+  - [ ] 🟢 GREEN: Implement minimal code to pass
+  - [ ] 🔵 REFACTOR: Clean up while keeping tests green
+```
+
+#### Layer 2: TDD Self-Audit (AGENTS.md Step 3½)
+
+Before validation, AI must self-audit:
+
+```markdown
+Did you follow RED-GREEN-REFACTOR?
+- [ ] Wrote test BEFORE implementation (RED)
+- [ ] Saw test fail first
+- [ ] Implemented minimal code (GREEN)
+- [ ] Refactored while keeping tests green
+
+If NO to any: Document violation in CODEBASE_CHANGELOG.md
+```
+
+#### Layer 3: Git Hook (Local Enforcement)
+
+Pre-commit hook checks for test changes:
+
+```bash
+# Install git hooks (cross-platform)
+node scripts/install-git-hooks.cjs
+# Or: npm run install-hooks
+
+# Now when you commit lib/ without test/ changes:
+⚠️  WARNING: Staging lib/ changes without test/ changes
+
+Did you follow TDD?
+  🔴 RED: Write failing test first
+  🟢 GREEN: Implement minimal code to pass
+  🔵 REFACTOR: Clean up while keeping tests green
+
+Continue with commit anyway? (y/N)
+```
+
+**See:** `.git-hooks/README.md` for hook documentation
+
+#### Layer 4: GitHub Actions (CI Enforcement)
+
+PR checks enforce TDD compliance:
+
+```yaml
+# .github/workflows/tdd-compliance.yml
+# Fails CI if lib/ changed without test/ changes
+```
+
+**See workflow:** [`.github/workflows/tdd-compliance.yml`](.github/workflows/tdd-compliance.yml)
+
+### Skills Integration
+
+**New skill:** `.github/skills/tdd-workflow/SKILL.md`
+
+Complete TDD guide with:
+- RED-GREEN-REFACTOR cycle explained
+- Step-by-step examples
+- Common pitfalls and solutions
+- Integration with project workflow
+
+**Trigger words:** "implement", "add feature", "TDD", "test first", "red-green-refactor"
+
+**Enhanced:** `.github/skills/feature-implementation/SKILL.md` now includes Phase 0: TDD Setup (mandatory before implementation)
+
+### Why This Matters
+
+**From our own experience:**
+
+We violated our own TDD requirement during the automation enhancement session (v0.3.0). We implemented scan auto-detection features, THEN wrote tests. This backwards approach:
+
+❌ Lost design benefits of test-first thinking  
+❌ Tests became "verification" not "design"  
+✅ Still achieved test coverage (28/28 passing)  
+✅ Documented violation as lesson learned  
+
+**The lesson:** Even rule creators forget rules when moving fast. Having multiple enforcement layers prevents this.
+
+**Learn more:**
+- See [CODEBASE_CHANGELOG.md](CODEBASE_CHANGELOG.md) "Automation Enhancements" session
+- Read [.github/skills/tdd-workflow/SKILL.md](.github/skills/tdd-workflow/SKILL.md)
+- Review [.git-hooks/README.md](.git-hooks/README.md)
+
+
+
+## AI Tool Compatibility
+
+### ✅ Works with ANY AI Tool
+
+These components work with **all AI assistants** (Claude Desktop, ChatGPT, Cursor, Gemini CLI, etc.):
+
+- **`CODEBASE_ESSENTIALS.md`** - Reference this file manually: `@CODEBASE_ESSENTIALS.md`
+- **`AGENTS.md`** - Copy/paste workflow instructions to any AI
+- **`CODEBASE_CHANGELOG.md`** - Historical context for any AI
+- **`.github/skills/`** - Read skills with: `@.github/skills/feature-implementation/SKILL.md`
+
+You can use the core knowledge system with any AI tool by manually referencing these files.
+
+### 🎯 GitHub Copilot-Specific Features
+
+These features **only work in VS Code with GitHub Copilot Chat**:
+
+- **Custom Agents** (`@Developer`, `@SeniorArchitect`) - Automatic agent triggering
+- **Auto-handoff workflow** - Developer → Architect review pipeline
+- **`.github/agents/`** directory - Auto-loaded by Copilot's Agent Skills feature
+
+**Without Copilot:** You can still follow the Developer → Architect workflow by manually copying prompts to your AI tool. The automation just won't be automatic.
+
+### 🔮 Roadmap: Multi-Tool Support
+
+**Planned for near future:**
+- **Claude Desktop MCP Server** - Native agent support for Claude Desktop
+- **Cursor integration** - Custom agent support
+- **Universal agent format** - Tool-agnostic agent definitions
+
+Stay tuned for updates!
 
 ---
 
 ## Core Components
 
-### 1. CODEBASE_ESSENTIALS.md
+### 1. AI Knowledge System (.aiknowsys/)
+
+**Purpose:** Structured memory and continuous learning for AI assistants.
+
+When you run `init`, AIKnowSys creates a `.aiknowsys/` directory that enables AI assistants to maintain context across sessions and accumulate project-specific knowledge over time.
+
+**Directory Structure:**
+```
+.aiknowsys/
+├── CURRENT_PLAN.md  # ✅ Committed - Team index (auto-generated)
+├── PLAN_*.md        # ✅ Committed - Implementation plans
+├── plans/           # ✅ Committed - Per-developer plan pointers
+│   ├── README.md    # ✅ Committed - Workflow explanation
+│   └── active-<username>.md  # ✅ Committed - Your active plan
+├── reviews/         # 🚫 Gitignored - Per-developer reviews
+│   ├── README.md    # ✅ Committed - Workflow explanation
+│   └── PENDING_<username>.md # 🚫 Temporary architect reviews
+├── sessions/        # 🚫 Gitignored - Temporary session working memory
+│   ├── README.md    # ✅ Committed - Explains purpose
+│   └── YYYY-MM-DD-session.md  # 🚫 Daily session notes (not committed)
+├── learned/         # ✅ Committed - Permanent project-specific patterns
+│   ├── README.md    # ✅ Committed - Explains pattern format
+│   └── *.md         # ✅ Committed - Discovered patterns
+└── personal/        # 🚫 Gitignored - Personal patterns
+    └── <username>/  # 🚫 Your personal patterns
+```
+
+#### Session Files (Temporary)
+
+**What they are:**
+- Working memory for a single AI conversation
+- Created/updated during complex multi-step work
+- Automatically loaded by AI agents at session start
+
+**Why gitignored:**
+- Session-specific context (like IDE workspace files)
+- Not useful to other developers or other AI sessions
+- Prevents git history clutter
+
+**Benefits:**
+- ✅ Context continuity across messages in same session
+- ✅ AI remembers what you worked on last time
+- ✅ Complex multi-step work doesn't lose progress
+
+#### Learned Patterns (Permanent)
+
+**What they are:**
+- Discovered patterns applicable to whole project
+- Reusable across all AI assistants and team members
+- Examples: Custom validation rules, debugging techniques, library-specific gotchas
+
+**Why committed:**
+- Valuable team knowledge
+- Helps onboard new developers
+- AI assistants get smarter with each session
+- Project knowledge accumulates over time
+
+**Benefits:**
+- ✅ Reduced repeated explanations
+- ✅ Team-wide pattern sharing
+- ✅ AI learns from mistakes and successes
+
+#### Review Files (Ephemeral)
+
+**What they are:**
+- Detailed code reviews created by Architect agent
+- Scoped per developer (no conflicts in team environments)
+- Deleted after Developer addresses issues
+- Temporary handoff mechanism between agents
+
+**Example workflow:**
+1. Developer implements feature
+2. Architect writes review to `reviews/PENDING_<username>.md`
+3. Developer reads review and fixes issues
+4. Developer deletes `reviews/PENDING_<username>.md`
+
+#### Gitignore Configuration
+
+The init command automatically adds:
+
+```gitignore
+# Session-specific AI memory (temporary, not committed)
+.aiknowsys/sessions/*.md
+!.aiknowsys/sessions/README.md
+.aiknowsys/reviews/
+!.aiknowsys/reviews/README.md
+.aiknowsys/personal/
+# Note: .aiknowsys/learned/ IS committed (project-specific patterns)
+# Note: .aiknowsys/plans/ IS committed (team plan tracking)
+```
+
+**Validation:** Run `npx aiknowsys audit` to check if gitignore is configured correctly.
+
+### 2. CODEBASE_ESSENTIALS.md
 
 **Purpose:** Single-source reference for architecture, patterns, and critical invariants.
 
@@ -137,14 +755,32 @@ cp -r temp-template/templates ./
 
 **Why it matters:** AI reads this at session start, ensuring all suggestions align with your architecture.
 
-### 2. Custom Agents (Developer + Architect)
+### 2. Custom Agents (Planner → Developer → Architect)
 
-**Purpose:** Automated quality gate enforcing documented patterns.
+**Purpose:** Three-agent workflow with automated quality gates enforcing documented patterns.
+
+**Platform:** GitHub Copilot in VS Code (other AI tools: see [AI Tool Compatibility](#ai-tool-compatibility))
 
 **Workflow:**
 ```
-User → @Developer → Implements feature → Auto-handoff → @SeniorArchitect → Reviews against ESSENTIALS → ✅ Approve or 🔄 Refactor
+User → @Planner → Creates implementation plan → Writes to PLAN_*.md →
+  @Developer → Updates plans/active-<username>.md → Implements feature → Auto-handoff →
+    @SeniorArchitect → Reviews against ESSENTIALS → Writes to reviews/PENDING_<username>.md → ✅ Approve or 🔄 Refactor
 ```
+
+**What Planner does:**
+- Breaks down complex features into actionable steps
+- Identifies architectural concerns and dependencies
+- Documents implementation plan in `PLAN_*.md`
+- Updates developer's plan pointer in `plans/active-<username>.md`
+- Ensures proper sequencing and risk mitigation
+
+**What Developer does:**
+- Reads implementation plan from `plans/active-<username>.md` pointer
+- Implements features following project patterns
+- Writes tests (TDD if enabled, coverage testing otherwise)
+- Validates all changes before handoff
+- Auto-calls Architect for code review
 
 **What Architect checks:**
 - KISS (Keep It Simple) - No unnecessary complexity
@@ -165,6 +801,7 @@ User → @Developer → Implements feature → Auto-handoff → @SeniorArchitect
 - `code-refactoring` - Test-driven refactoring patterns
 - `testing-best-practices` - Framework-agnostic testing guide
 - `skill-creator` - How to create new skills
+- `tdd-workflow` - Test-Driven Development (RED-GREEN-REFACTOR cycle)
 
 **Custom skills you can add:**
 - Feature implementation workflows
@@ -407,58 +1044,23 @@ Confirm docs updated
 
 ---
 
-## Installation Options
+## Deprecated Installation Methods
 
-### Option 1: Interactive Setup (New Projects)
+<details>
+<summary>⚠️ Old bash scripts (removed in v0.9.0) - Click for migration path</summary>
 
-```bash
-./scripts/setup.sh
-```
-
-**Prompts for:**
-- Primary language (TypeScript/Python/Rust/Go)
-- Framework (Vue/React/Django/FastAPI/etc)
-- Testing tools (Vitest/Jest/pytest/cargo test)
-- Package manager (npm/pip/cargo/go mod)
-
-**Generates:**
-- CODEBASE_ESSENTIALS.md with validation commands
-- AGENTS.md with workflow instructions
-- Custom agents configured for your stack
-- Universal skills installed
-
-### Option 2: Codebase Scanner (Existing Projects)
+The original bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have been removed. They are fully replaced by CLI commands:
 
 ```bash
-./scripts/migrate-existing.sh
+# Old (removed)                   →  New (use this)
+./scripts/setup.sh               →  npx aiknowsys init
+./scripts/migrate-existing.sh    →  npx aiknowsys migrate  
+./scripts/scan-codebase.sh       →  npx aiknowsys scan
 ```
 
-**Automatically detects:**
-- Tech stack from package files
-- Test commands from package.json/Makefile/CI
-- Project structure
-- Key dependencies
+See [scripts/README.md](scripts/README.md) for full details.
 
-**Generates:**
-- Draft CODEBASE_ESSENTIALS.md (70% complete)
-- TODO sections for manual patterns
-- Validation matrix
-- Changelog initialized
-
-**Time saved:** ~3-4 hours of manual documentation
-
-### Option 3: Manual Setup
-
-```bash
-# Copy templates
-cp templates/CODEBASE_ESSENTIALS.template.md CODEBASE_ESSENTIALS.md
-cp templates/AGENTS.template.md AGENTS.md
-cp -r templates/agents/ .github/agents/
-
-# Customize for your project
-# Fill in {{PLACEHOLDERS}}
-# Add your patterns and conventions
-```
+</details>
 
 ---
 
@@ -508,6 +1110,11 @@ Edit `.github/agents/architect.agent.md`:
 - Components must be accessible (WCAG AA)
 - Errors must use structured logging
 ```
+
+**Advanced:** Customize agent `model` and `tools` frontmatter fields:
+- See `.github/agents/USAGE.txt` section "Customizing `model` and `tools`"
+- Or [docs/customization-guide.md](docs/customization-guide.md) for full field reference
+- Control which AI model each agent uses and what capabilities they have
 
 **3. Create Custom Skills**
 
@@ -638,6 +1245,9 @@ A: Create separate validation commands per language. Example: `pytest` for Pytho
 
 **Q: Can I use this without AI assistants?**  
 A: Yes! The documentation and workflow benefit human developers too. Think of it as "docs that AI can also read."
+
+**Q: Does this only work with GitHub Copilot?**  
+A: No! Core knowledge files (CODEBASE_ESSENTIALS.md, skills) work with any AI tool. The custom agents (`@Developer`, `@SeniorArchitect`) require GitHub Copilot in VS Code, but you can manually follow the same workflow with Claude Desktop, ChatGPT, Cursor, or any AI assistant. See [AI Tool Compatibility](#ai-tool-compatibility) for details.
 
 **Q: How do I update the system as my project evolves?**  
 A: Update CODEBASE_ESSENTIALS.md when patterns change. Agents automatically enforce the updated patterns. Add changelog entry documenting the evolution.

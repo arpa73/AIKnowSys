@@ -1,0 +1,35 @@
+{
+  "name": "aiknowsys-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server for AIKnowSys - provides AI agents with structured access to knowledge system",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "mkdir -p dist/lib/context && cp ../lib/context/schema.sql dist/lib/context/",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "knowledge-management"
+  ],
+  "author": "arpa73",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "latest"
+  }
+}
