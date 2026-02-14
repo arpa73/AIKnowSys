@@ -151,6 +151,15 @@ describe('Validation Tools', () => {
       expect(data).toHaveProperty('exitCode');
     });
 
+    it('should return conversational error for invalid fix parameter type', async () => {
+      const { validateDeliverables } = await import('../../src/tools/validation.js');
+      const result = await validateDeliverables({ fix: 'yes' });  // Should be boolean
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid parameter 'fix'");
+      expect(result.content[0].text).toContain('boolean');
+    });
+
     it('should validate parameter schema', async () => {
       vi.mocked(validateDeliverablesCore).mockResolvedValue({
         passed: true,
@@ -204,19 +213,22 @@ describe('Validation Tools', () => {
       expect(result.content[0].text).toContain('without test file');
     });
 
-    it('should handle empty file list', async () => {
+    it('should return conversational error for empty file list', async () => {
       const { checkTddCompliance } = await import('../../src/tools/validation.js');
       const result = await checkTddCompliance({ changedFiles: [] });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error checking TDD compliance');
+      expect(result.content[0].text).toContain("Invalid parameter 'changedFiles'");
+      expect(result.content[0].text).toContain('at least 1 file');
     });
 
-    it('should validate changedFiles is array', async () => {
+    it('should return conversational error for non-array changedFiles', async () => {
       const { checkTddCompliance } = await import('../../src/tools/validation.js');
       const result = await checkTddCompliance({ changedFiles: 'not-an-array' });
 
       expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid parameter 'changedFiles'");
+      expect(result.content[0].text).toContain('array of file paths');
     });
   });
 
@@ -274,19 +286,22 @@ describe('Validation Tools', () => {
       expect(result.content[0].text).toContain('Missing YAML frontmatter');
     });
 
-    it('should require skillPath parameter (even if not used)', async () => {
+    it('should return conversational error for missing skillPath', async () => {
       const { validateSkill } = await import('../../src/tools/validation.js');
       const result = await validateSkill({});
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error validating skill');
+      expect(result.content[0].text).toContain("Invalid parameter 'skillPath'");
+      expect(result.content[0].text).toContain('at least 1 character');
     });
 
-    it('should validate path format', async () => {
+    it('should return conversational error for empty skillPath', async () => {
       const { validateSkill } = await import('../../src/tools/validation.js');
       const result = await validateSkill({ skillPath: '' });
 
       expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid parameter 'skillPath'");
+      expect(result.content[0].text).toContain('at least 1 character');
     });
   });
 });

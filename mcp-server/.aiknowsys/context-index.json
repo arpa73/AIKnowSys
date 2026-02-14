@@ -1,24 +1,24 @@
 {
   "version": 1,
-  "updated": "2026-02-14T12:54:20.156Z",
+  "updated": "2026-02-14T19:16:49.409Z",
   "plans": [
     {
       "id": "PLAN_template_sync_add_mcp_tools_documentation",
       "title": "Template Sync: Add MCP Tools Documentation",
       "status": "ACTIVE",
       "author": "arno-paffen",
-      "created": "2026-02-14T12:54:20.157Z",
-      "updated": "2026-02-14T12:54:20.157Z",
+      "created": "2026-02-14T19:16:49.412Z",
+      "updated": "2026-02-14T19:16:49.412Z",
       "file": "PLAN_template_sync_add_mcp_tools_documentation.md"
     },
     {
-      "id": "PLAN_test_plan_1771073660149",
-      "title": "Test Plan 1771073660149",
+      "id": "PLAN_test_plan_1771096609388",
+      "title": "Test Plan 1771096609388",
       "status": "ACTIVE",
       "author": "arno",
-      "created": "2026-02-14T12:54:20.158Z",
-      "updated": "2026-02-14T12:54:20.158Z",
-      "file": "PLAN_test_plan_1771073660149.md"
+      "created": "2026-02-14T19:16:49.415Z",
+      "updated": "2026-02-14T19:16:49.415Z",
+      "file": "PLAN_test_plan_1771096609388.md"
     },
     {
       "id": "PLAN_integration_test_plan",
@@ -26,7 +26,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno-paffen\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.158Z",
+      "updated": "2026-02-14T19:16:49.420Z",
       "file": "PLAN_integration_test_plan.md"
     },
     {
@@ -35,7 +35,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.159Z",
+      "updated": "2026-02-14T19:16:49.420Z",
       "file": "PLAN_test_plan_1771010560184.md"
     },
     {
@@ -44,7 +44,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.159Z",
+      "updated": "2026-02-14T19:16:49.422Z",
       "file": "PLAN_test_plan_1771020373558.md"
     },
     {
@@ -53,7 +53,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.159Z",
+      "updated": "2026-02-14T19:16:49.422Z",
       "file": "PLAN_test_plan_1771020446876.md"
     },
     {
@@ -62,8 +62,80 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-13T23:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.159Z",
+      "updated": "2026-02-14T19:16:49.423Z",
       "file": "PLAN_test_plan_1771071827265.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771073660149",
+      "title": "Implementation Plan: Test Plan 1771073660149",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.423Z",
+      "file": "PLAN_test_plan_1771073660149.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771088179368",
+      "title": "Implementation Plan: Test Plan 1771088179368",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.424Z",
+      "file": "PLAN_test_plan_1771088179368.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771088349892",
+      "title": "Implementation Plan: Test Plan 1771088349892",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.427Z",
+      "file": "PLAN_test_plan_1771088349892.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771088390867",
+      "title": "Implementation Plan: Test Plan 1771088390867",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.427Z",
+      "file": "PLAN_test_plan_1771088390867.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771095589978",
+      "title": "Implementation Plan: Test Plan 1771095589978",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.428Z",
+      "file": "PLAN_test_plan_1771095589978.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771096544091",
+      "title": "Implementation Plan: Test Plan 1771096544091",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.429Z",
+      "file": "PLAN_test_plan_1771096544091.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771096564594",
+      "title": "Implementation Plan: Test Plan 1771096564594",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.429Z",
+      "file": "PLAN_test_plan_1771096564594.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771096587723",
+      "title": "Implementation Plan: Test Plan 1771096587723",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T19:16:49.430Z",
+      "file": "PLAN_test_plan_1771096587723.md"
     }
   ],
   "sessions": [
@@ -79,7 +151,7 @@
       ],
       "file": "sessions/2026-02-12-session.md",
       "created": "2026-02-12T00:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.161Z"
+      "updated": "2026-02-14T19:16:49.432Z"
     },
     {
       "date": "2026-02-13",
@@ -87,7 +159,7 @@
       "topics": [],
       "file": "sessions/2026-02-13-session.md",
       "created": "2026-02-13T00:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.162Z"
+      "updated": "2026-02-14T19:16:49.433Z"
     },
     {
       "date": "2026-02-14",
@@ -95,7 +167,7 @@
       "topics": [],
       "file": "sessions/2026-02-14-session.md",
       "created": "2026-02-14T00:00:00.000Z",
-      "updated": "2026-02-14T12:54:20.162Z"
+      "updated": "2026-02-14T19:16:49.434Z"
     }
   ],
   "learned": []

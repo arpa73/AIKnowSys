@@ -134,7 +134,7 @@ describe('AIFriendlyErrorBuilder', () => {
     it('should detect camelCase vs dash-case confusion', () => {
       const error = AIFriendlyErrorBuilder.invalidParameter(
         'appendSection',
-        "CLI options use dash-case: --append-section"
+        'CLI options use dash-case: --append-section'
       );
 
       expect(error.error.suggestion).toContain('dash-case');

@@ -175,7 +175,7 @@ export async function mcpTest(
     const error = AIFriendlyErrorBuilder.validationFailed(
       'arguments',
       'Invalid JSON format',
-      `'{"key": "value"}'`
+      '\'{"key": "value"}\''
     );
     
     // In JSON mode, return the structured error

@@ -15,6 +15,8 @@ import { dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 import { z } from 'zod';
 import { validateDeliverablesCore } from '../../../lib/core/validate-deliverables.js';
+import { handleZodError } from './utils/error-helpers.js';
+import type { FieldErrorMap } from './utils/error-helpers.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -84,6 +86,16 @@ export async function validateDeliverables(params: unknown) {
       }]
     };
   } catch (error) {
+    // Handle Zod validation errors with conversational responses
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'deliverables validation', {
+        fix: {
+          suggestion: 'Fix parameter must be a boolean (true or false)',
+          examples: ['{ "fix": true }', '{ "fix": false }']
+        }
+      });
+    }
+    
     const message = error instanceof Error ? error.message : String(error);
     return {
       content: [{ 
@@ -119,6 +131,16 @@ export async function checkTddCompliance(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    // Handle Zod validation errors with conversational responses
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'TDD compliance check', {
+        changedFiles: {
+          suggestion: 'Changed files must be an array of file paths with at least 1 file',
+          examples: ['{ "changedFiles": ["lib/utils/parser.ts"] }', '{ "changedFiles": ["lib/core/index.ts", "test/core/index.test.ts"] }']
+        }
+      });
+    }
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -152,6 +174,16 @@ export async function validateSkill(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    // Handle Zod validation errors with conversational responses
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'skill validation', {
+        skillPath: {
+          suggestion: 'Skill path must be at least 1 character (e.g., skill file path)',
+          examples: ['{ "skillPath": ".github/skills/tdd-workflow/SKILL.md" }', '{ "skillPath": ".github/skills/feature-implementation/SKILL.md" }']
+        }
+      });
+    }
+    
     return {
       content: [{ 
         type: 'text' as const, 
