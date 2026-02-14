@@ -208,8 +208,22 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_sessions_sqlite',
       {
-        description: 'Query sessions from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
+        description: `Query sessions with flexible natural language or structured parameters.
+
+Examples:
+  Natural language: { when: "last week", about: "MCP testing" }
+  Relative dates: { last: 7, unit: "days", topic: "sqlite" }
+  Structured: { dateAfter: "2026-02-06", topic: "mcp-tools" }
+
+Returns metadata-only by default (95% savings). Set includeContent:true for full content.`,
         inputSchema: z.object({
+          // Natural language
+          when: z.string().optional(),
+          about: z.string().optional(),
+          // Relative dates
+          last: z.number().optional(),
+          unit: z.enum(['days', 'weeks', 'months']).optional(),
+          // Structured (backwards compatible)
           dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           dateAfter: z.string().optional(),
           dateBefore: z.string().optional(),
@@ -224,8 +238,22 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_plans_sqlite',
       {
-        description: 'Query plans from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
+        description: `Query plans with flexible natural language or structured parameters.
+
+Examples:
+  Natural language: { when: "last month", about: "optimization", status: "ACTIVE" }
+  Relative dates: { last: 30, unit: "days", topic: "mcp-tools" }
+  Structured: { status: "ACTIVE", author: "arno-paffen" }
+
+Returns metadata-only by default (95% savings). Set includeContent:true for full content.`,
         inputSchema: z.object({
+          // Natural language
+          when: z.string().optional(),
+          about: z.string().optional(),
+          // Relative dates
+          last: z.number().optional(),
+          unit: z.enum(['days', 'weeks', 'months']).optional(),
+          // Structured (backwards compatible)
           dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']).optional(),
           author: z.string().optional(),
@@ -240,8 +268,22 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_learned_patterns_sqlite',
       {
-        description: 'Query learned patterns from SQLite. Returns metadata-only by default (95% token savings). Set includeContent:true for full content.',
+        description: `Query learned patterns with flexible natural language or structured parameters.
+
+Examples:
+  Natural language: { when: "last week", about: "error resolution" }
+  Relative dates: { last: 14, unit: "days", category: "workarounds" }
+  Structured: { category: "error_resolution", keywords: ["yaml", "parsing"] }
+
+Returns metadata-only by default (95% savings). Set includeContent:true for full content.`,
         inputSchema: z.object({
+          // Natural language
+          when: z.string().optional(),
+          about: z.string().optional(),
+          // Relative dates
+          last: z.number().optional(),
+          unit: z.enum(['days', 'weeks', 'months']).optional(),
+          // Structured (backwards compatible)
           dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
           category: z.string().optional(),
           keywords: z.array(z.string()).optional(),

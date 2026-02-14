@@ -1,9 +1,9 @@
 # aiknowsys - Codebase Essentials
 
-> **Last Updated:** February 7, 2026  
+> **Last Updated:** February 14, 2026  
 > **Purpose:** AI-Powered Development Workflow Template  
 > **Maintainer:** arpa73  
-> **Version:** v0.10.0 (MCP-First Architecture)
+> **Version:** v0.10.0 (MCP-First Architecture + Natural Language Query API)
 
 ⚠️ **CRITICAL:** AIKnowSys requires MCP server to function.  
 **Skills, context, validation** are all MCP-powered (10-100x faster than file reading).
@@ -22,7 +22,7 @@
 | Terminal UI | Chalk 5.x, Ora 9.x |
 | Package Manager | npm |
 | Distribution | npm registry |
-| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (31 tools for AI agents)** |
+| **MCP Server** | **@modelcontextprotocol/sdk 1.26.0 (36 tools for AI agents)** |
 
 ---
 
@@ -454,6 +454,54 @@ mcp_aiknowsys_query_sessions_sqlite({
 3. Re-run migration after creating new sessions/plans/patterns
 
 **See:** [mcp-server/SETUP.md](mcp-server/SETUP.md) for full setup guide
+
+**Natural Language Query API (Layer 3 - v0.12.0+):**
+
+All SQLite query tools accept **conversational parameters** alongside structured filters:
+
+```typescript
+// Style 1: Natural language (conversational)
+mcp_aiknowsys_query_sessions_sqlite({
+  when: "last week",
+  about: "MCP testing"
+})
+
+// Style 2: Relative dates (human-friendly)
+mcp_aiknowsys_query_sessions_sqlite({
+  last: 7,
+  unit: "days",
+  topic: "sqlite"
+})
+
+// Style 3: Structured (backward compatible)
+mcp_aiknowsys_query_sessions_sqlite({
+  dateAfter: "2026-02-07",
+  topic: "mcp-tools"
+})
+
+// All three styles work! Priority: when > last/unit > dateAfter
+```
+
+**Supported natural language time expressions:**
+- Keywords: `"yesterday"`, `"today"`, `"last week"`, `"last month"`, `"this week"`, `"this month"`
+- Time ago: `"3 days ago"`, `"2 weeks ago"`, `"1 month ago"`
+- Case insensitive: `"Last Week"`, `"YESTERDAY"`, `"3 Days Ago"`
+- Extract from queries: `"show me sessions from last week"` → extracts "last week"
+
+**Supported tools:**
+- `mcp_aiknowsys_query_sessions_sqlite({ when, about, last, unit })`
+- `mcp_aiknowsys_query_plans_sqlite({ when, about, last, unit })`
+- `mcp_aiknowsys_query_learned_patterns_sqlite({ when, about, last, unit })`
+
+**Implementation:**
+- Parser: [mcp-server/src/utils/time-parser.ts](mcp-server/src/utils/time-parser.ts) (UTC-aware)
+- Converter: [mcp-server/src/utils/query-parser.ts](mcp-server/src/utils/query-parser.ts)
+- Tests: 28 time parser tests + 31 query parser tests (all passing)
+
+**Why this matters:**
+- Agents can use conversational queries (`when: "yesterday"`) instead of computing dates
+- Backward compatible - all existing structured queries still work
+- Priority-based: Natural language > Relative > Structured (predictable behavior)
 
 ### MCP vs CLI vs File Reading
 

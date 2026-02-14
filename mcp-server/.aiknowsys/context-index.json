@@ -1,24 +1,24 @@
 {
   "version": 1,
-  "updated": "2026-02-14T09:16:32.048Z",
+  "updated": "2026-02-14T12:54:20.156Z",
   "plans": [
     {
       "id": "PLAN_template_sync_add_mcp_tools_documentation",
       "title": "Template Sync: Add MCP Tools Documentation",
       "status": "ACTIVE",
       "author": "arno-paffen",
-      "created": "2026-02-14T09:16:32.048Z",
-      "updated": "2026-02-14T09:16:32.048Z",
+      "created": "2026-02-14T12:54:20.157Z",
+      "updated": "2026-02-14T12:54:20.157Z",
       "file": "PLAN_template_sync_add_mcp_tools_documentation.md"
     },
     {
-      "id": "PLAN_test_plan_1771020446876",
-      "title": "Test Plan 1771020446876",
+      "id": "PLAN_test_plan_1771073660149",
+      "title": "Test Plan 1771073660149",
       "status": "ACTIVE",
       "author": "arno",
-      "created": "2026-02-14T09:16:32.049Z",
-      "updated": "2026-02-14T09:16:32.049Z",
-      "file": "PLAN_test_plan_1771020446876.md"
+      "created": "2026-02-14T12:54:20.158Z",
+      "updated": "2026-02-14T12:54:20.158Z",
+      "file": "PLAN_test_plan_1771073660149.md"
     },
     {
       "id": "PLAN_integration_test_plan",
@@ -26,7 +26,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno-paffen\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.049Z",
+      "updated": "2026-02-14T12:54:20.158Z",
       "file": "PLAN_integration_test_plan.md"
     },
     {
@@ -35,7 +35,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.050Z",
+      "updated": "2026-02-14T12:54:20.159Z",
       "file": "PLAN_test_plan_1771010560184.md"
     },
     {
@@ -44,8 +44,26 @@
       "status": "\"PLANNED\"",
       "author": "\"arno\"",
       "created": "2026-02-12T23:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.050Z",
+      "updated": "2026-02-14T12:54:20.159Z",
       "file": "PLAN_test_plan_1771020373558.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771020446876",
+      "title": "Implementation Plan: Test Plan 1771020446876",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-12T23:00:00.000Z",
+      "updated": "2026-02-14T12:54:20.159Z",
+      "file": "PLAN_test_plan_1771020446876.md"
+    },
+    {
+      "id": "PLAN_test_plan_1771071827265",
+      "title": "Implementation Plan: Test Plan 1771071827265",
+      "status": "\"PLANNED\"",
+      "author": "\"arno\"",
+      "created": "2026-02-13T23:00:00.000Z",
+      "updated": "2026-02-14T12:54:20.159Z",
+      "file": "PLAN_test_plan_1771071827265.md"
     }
   ],
   "sessions": [
@@ -61,7 +79,7 @@
       ],
       "file": "sessions/2026-02-12-session.md",
       "created": "2026-02-12T00:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.051Z"
+      "updated": "2026-02-14T12:54:20.161Z"
     },
     {
       "date": "2026-02-13",
@@ -69,20 +87,15 @@
       "topics": [],
       "file": "sessions/2026-02-13-session.md",
       "created": "2026-02-13T00:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.052Z"
+      "updated": "2026-02-14T12:54:20.162Z"
     },
     {
       "date": "2026-02-14",
       "topic": "MCP Token Optimization - Quick Fix + Full Implementation",
-      "topics": [
-        "mcp-tools",
-        "token-optimization",
-        "performance",
-        "ai-ux"
-      ],
+      "topics": [],
       "file": "sessions/2026-02-14-session.md",
       "created": "2026-02-14T00:00:00.000Z",
-      "updated": "2026-02-14T09:16:32.052Z"
+      "updated": "2026-02-14T12:54:20.162Z"
     }
   ],
   "learned": []

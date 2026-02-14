@@ -103,7 +103,11 @@ describe('querySessionsSqlite (MCP Tool)', () => {
 
     await querySessionsSqlite(filters);
 
-    expect(querySessionsCore).toHaveBeenCalledWith(filters);
+    // Expect parsed parameters (includes default includeContent: false)
+    expect(querySessionsCore).toHaveBeenCalledWith({
+      ...filters,
+      includeContent: false, // Default added by parseQueryParams
+    });
   });
 });
 

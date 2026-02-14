@@ -1,14 +1,26 @@
 # Active Plan: arno-paffen
 
-**Currently Working On:** None  
-**Status:** ✅ COMPLETE  
-**Last Updated:** 2026-02-13
+**Currently Working On:** 🎯 Natural Language Query API (Layer 3)  
+**Plan File:** [PLAN_natural_language_query_api.md](../../PLAN_natural_language_query_api.md)  
+**Status:** 🔄 ACTIVE  
+**Started:** 2026-02-14  
+**Last Updated:** 2026-02-14
+
+---
+
+## Current Focus
+
+Implementing conversational query API for MCP tools.
+
+**Goal:** Enable queries like `{ when: "last week", about: "MCP" }` instead of rigid structured parameters.
+
+**Timeline:** 2.5 hours (4 steps)
 
 ---
 
 ## Recent Work
 
-Previously completed: **Fix MCP Mutation Tools CLI Option Bug** (2026-02-13)
+Previously completed: **MCP Token Optimization** (2026-02-14) - 97% token savings achieved
 
 ---
 
