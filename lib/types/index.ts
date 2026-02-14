@@ -49,6 +49,52 @@ export interface PlanFile {
   updated: Date;
 }
 
+// AI-Friendly Response Types (v0.11.0+)
+
+export type ErrorType = 
+  | 'InvalidParameter'
+  | 'ToolNotFound'
+  | 'ValidationFailed'
+  | 'MissingRequired'
+  | 'DatabaseError'
+  | 'FileSystemError';
+
+export interface UsageExample {
+  description: string;
+  example: string;
+}
+
+export interface AIFriendlyError {
+  success: false;
+  error: {
+    type: ErrorType;
+    message: string;
+    parameter?: string;
+    suggestion?: string;
+    correct_usage?: UsageExample[];
+    docs_url?: string;
+    similar_errors?: string[];
+  };
+}
+
+export interface ResponseMeta {
+  tokens_used?: number;
+  hint?: string;
+  alternative?: {
+    query: string;
+    savings: string;
+  };
+  cache_status?: string;
+}
+
+export interface SuccessResponse<T> {
+  success: true;
+  data: T;
+  meta?: ResponseMeta;
+}
+
+export type MCPResponse<T> = SuccessResponse<T> | AIFriendlyError;
+
 export interface SessionEntry {
   timestamp: Date;
   type: 'planning' | 'implementation' | 'review' | 'testing';
