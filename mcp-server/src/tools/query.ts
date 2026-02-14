@@ -8,6 +8,7 @@
  * for 10-100x faster execution vs CLI subprocess spawning.
  */
 
+import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { queryPlansCore } from '../../../lib/core/query-plans.js';
 import { querySessionsCore } from '../../../lib/core/query-sessions.js';
 import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
@@ -36,16 +37,17 @@ export async function getActivePlans() {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'query',
+      message,
+      'Check that .aiknowsys/ directory exists and contains valid plan files'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to query active plans: ${message}`,
-            count: 0,
-            plans: [],
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };
@@ -91,17 +93,31 @@ export async function queryPlansWithFilters(params: {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    
+    // Detect parameter validation errors
+    if (message.includes('Invalid status') || message.includes('status')) {
+      const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
+        'status',
+        'Use one of: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED',
+        ['{ "status": "ACTIVE" }', '{ "status": "PAUSED" }']
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      };
+    }
+
+    // Generic validation failure
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'filters',
+      message,
+      'Check filter syntax. Valid filters: status, author, topic, updatedAfter, updatedBefore'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to query plans: ${message}`,
-            filters: params,
-            count: 0,
-            plans: [],
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };
@@ -149,17 +165,31 @@ export async function querySessionsWithFilters(params: {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    
+    // Detect date format errors
+    if (message.includes('date') || message.includes('Invalid date format')) {
+      const errorResponse = AIFriendlyErrorBuilder.invalidParameter(
+        'date',
+        'Use YYYY-MM-DD format (e.g., 2026-02-08)',
+        ['{ "date": "2026-02-08" }', '{ "dateAfter": "2026-02-01", "dateBefore": "2026-02-08" }']
+      );
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      };
+    }
+
+    // Generic validation failure
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'filters',
+      message,
+      'Check filter syntax. Valid filters: date, dateAfter, dateBefore, topic, plan, days'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to query sessions: ${message}`,
-            filters: params,
-            count: 0,
-            sessions: [],
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };
@@ -225,14 +255,17 @@ export async function rebuildContextIndex() {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'rebuild-index',
+      message,
+      'Ensure .aiknowsys/ directory exists and files are readable'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to rebuild index: ${message}`,
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };
@@ -267,14 +300,17 @@ export async function syncPlans() {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'sync-plans',
+      message,
+      'Check that .aiknowsys/plans/ contains valid active-*.md files'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to sync plans: ${message}`,
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };
@@ -312,16 +348,17 @@ export async function getRecentSessions(days: number = 7) {
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'days',
+      message,
+      'Use a positive number for days parameter (e.g., 7, 30, 90)'
+    );
+
     return {
       content: [
         {
           type: 'text' as const,
-          text: JSON.stringify({
-            error: true,
-            message: `Failed to query sessions: ${message}`,
-            count: 0,
-            sessions: [],
-          }),
+          text: JSON.stringify(errorResponse, null, 2),
         },
       ],
     };

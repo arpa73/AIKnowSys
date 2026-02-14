@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getActivePlans, getRecentSessions } from '../../src/tools/query.js';
+import { getActivePlans, getRecentSessions, queryPlansWithFilters, querySessionsWithFilters } from '../../src/tools/query.js';
 
 // Mock the core query functions
 vi.mock('../../../lib/core/query-plans.js', () => ({
@@ -82,10 +82,10 @@ describe('getActivePlans', () => {
     const result = await getActivePlans();
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.error).toBe(true);
-    expect(data.message).toContain('Database error');
-    expect(data.count).toBe(0);
-    expect(data.plans).toEqual([]);
+    expect(data.success).toBe(false);
+    expect(data.error.message).toContain('Database error');
+    expect(data.error.type).toBe('ValidationFailed');
+    expect(data.error.suggestion).toBeDefined();
   });
 
   it('should return MCP-compliant response format', async () => {
@@ -173,10 +173,10 @@ describe('getRecentSessions', () => {
     const result = await getRecentSessions(7);
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.error).toBe(true);
-    expect(data.message).toContain('File read error');
-    expect(data.count).toBe(0);
-    expect(data.sessions).toEqual([]);
+    expect(data.success).toBe(false);
+    expect(data.error.message).toContain('File read error');
+    expect(data.error.type).toBe('ValidationFailed');
+    expect(data.error.suggestion).toBeDefined();
   });
 
   it('should return MCP-compliant response format', async () => {
@@ -188,5 +188,62 @@ describe('getRecentSessions', () => {
     expect(Array.isArray(result.content)).toBe(true);
     expect(result.content[0]).toHaveProperty('type', 'text');
     expect(result.content[0]).toHaveProperty('text');
+  });
+});
+
+describe('conversational error handling', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return structured errors for database failures', async () => {
+    vi.mocked(queryPlansCore).mockRejectedValue(new Error('SQLITE_ERROR: database locked'));
+
+    const result = await getActivePlans();
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
+    expect(data.error.type).toBe('ValidationFailed');
+    expect(data.error.message).toContain('database locked');
+    expect(data.error.suggestion).toBeDefined();
+    expect(data.error.docs_url).toBeDefined();
+  });
+
+  it('should return structured errors for query filter errors', async () => {
+    vi.mocked(queryPlansCore).mockRejectedValue(new Error('Invalid status value'));
+
+    const result = await queryPlansWithFilters({ status: 'INVALID' as any });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.success).toBe(false);
+    expect(data.error.type).toBe('InvalidParameter');
+    expect(data.error.parameter).toBe('status');
+    expect(data.error.message).toBe("Invalid parameter 'status'");
+    expect(data.error.suggestion).toContain('ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED');
+  });
+
+  it('should return structured errors for session filter errors', async () => {
+    vi.mocked(querySessionsCore).mockRejectedValue(new Error('Invalid date format'));
+
+    const result = await querySessionsWithFilters({ date: 'invalid' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.success).toBe(false);
+    expect(data.error.type).toBe('InvalidParameter');
+    expect(data.error.parameter).toBe('date');
+    expect(data.error.message).toBe("Invalid parameter 'date'");
+    expect(data.error.suggestion).toContain('YYYY-MM-DD');
+  });
+
+  it('should return structured errors with usage examples', async () => {
+    vi.mocked(querySessionsCore).mockRejectedValue(new Error('No parameters provided'));
+
+    const result = await querySessionsWithFilters({});
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.success).toBe(false);
+    expect(data.error.suggestion).toBeDefined();
+    expect(data.error.docs_url).toMatch(/AIKnowSys|aiknowsys/i);
   });
 });
