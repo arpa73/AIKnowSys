@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { searchContextCore } from '../../../lib/core/search-context.js';
+import { handleZodError, MCPErrorResponse } from './utils/error-helpers.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -44,6 +45,18 @@ export async function searchContext(params: unknown) {
       }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'searching context', {
+        query: {
+          suggestion: 'Query must be a non-empty string to search for',
+          examples: ['{"query": "MCP server", "type": "all"}', '{"query": "Phase 2A", "type": "sessions"}']
+        },
+        type: {
+          suggestion: 'Type must be one of: all, sessions, plans, learned',
+          examples: ['{"query": "refactoring", "type": "learned"}', '{"query": "tools", "type": "plans"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -74,6 +87,18 @@ export async function findPattern(params: unknown) {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'finding pattern', {
+        keywords: {
+          suggestion: 'Keywords must be an array of strings with at least one keyword',
+          examples: ['{"keywords": ["mcp", "sdk"], "category": "all"}', '{"keywords": ["hook"], "category": "workarounds"}']
+        },
+        category: {
+          suggestion: 'Category is optional (defaults to "all")',
+          examples: ['{"keywords": ["error"], "category": "error_resolution"}', '{"keywords": ["test"]}}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 
@@ -106,6 +131,14 @@ export async function getSkillByName(params: unknown) {
       content: [{ type: 'text' as const, text: content }]
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'getting skill', {
+        skillName: {
+          suggestion: 'Skill name must be a non-empty string (exact folder name in .github/skills/)',
+          examples: ['{"skillName": "feature-implementation"}', '{"skillName": "refactoring-workflow"}']
+        }
+      });
+    }
     return {
       content: [{ 
         type: 'text' as const, 

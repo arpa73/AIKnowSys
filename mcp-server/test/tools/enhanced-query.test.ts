@@ -3,6 +3,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mock fs/promises for file reading (used by getSkillByName)
 const mockReadFile = vi.fn();
 
+// Mock execFile for findPattern (child_process)
+const mockExecFileAsync = vi.fn();
+
 // Mock searchContextCore (used by searchContext)
 vi.mock('../../../lib/core/search-context.js', () => ({
   searchContextCore: vi.fn()
@@ -14,6 +17,15 @@ vi.mock('fs/promises', () => ({
   }
 }));
 
+// Mock child_process execFile (used by findPattern)
+vi.mock('child_process', () => ({
+  execFile: vi.fn()
+}));
+
+vi.mock('util', () => ({
+  promisify: vi.fn((fn) => mockExecFileAsync)
+}));
+
 // Import after mocking
 import { searchContextCore } from '../../../lib/core/search-context.js';
 
@@ -21,6 +33,7 @@ describe('Enhanced Query Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockReadFile.mockReset();
+    mockExecFileAsync.mockReset();
   });
 
   describe('search_context', () => {
@@ -116,7 +129,9 @@ describe('Enhanced Query Tools', () => {
       const result = await searchContext({ type: 'all' });
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error searching context');
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'query'");
+      expect(errorText).toContain('Query must be a non-empty string');
     });
 
     it('should validate type enum', async () => {
@@ -127,6 +142,9 @@ describe('Enhanced Query Tools', () => {
       });
 
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'type'");
+      expect(errorText).toContain('Type must be one of: all, sessions, plans, learned');
     });
 
     it('should handle no results', async () => {
@@ -183,6 +201,9 @@ describe('Enhanced Query Tools', () => {
       const result = await findPattern({ category: 'all' });
 
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'keywords'");
+      expect(errorText).toContain('Keywords must be an array of strings');
     });
 
     it('should validate keywords is array', async () => {
@@ -193,6 +214,9 @@ describe('Enhanced Query Tools', () => {
       });
 
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'keywords'");
+      expect(errorText).toContain('Keywords must be an array of strings');
     });
 
     it('should handle no results', async () => {
@@ -246,7 +270,9 @@ describe('Enhanced Query Tools', () => {
       const result = await getSkillByName({});
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error getting skill');
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'skillName'");
+      expect(errorText).toContain('Skill name must be a non-empty string');
     });
 
     it('should validate skillName is non-empty', async () => {
@@ -254,6 +280,9 @@ describe('Enhanced Query Tools', () => {
       const result = await getSkillByName({ skillName: '' });
 
       expect(result.isError).toBe(true);
+      const errorText = result.content[0].text;
+      expect(errorText).toContain("Invalid parameter 'skillName'");
+      expect(errorText).toContain('Skill name must be a non-empty string');
     });
 
     it('should handle file read errors gracefully', async () => {
