@@ -11,6 +11,7 @@
 
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { join } from 'path';
 import { z } from 'zod';
 import { validateDeliverablesCore } from '../../../lib/core/validate-deliverables.js';
 import { handleZodError } from './utils/error-helpers.js';
@@ -142,12 +143,14 @@ export async function validateSkill(params: unknown) {
     
     // Use the validate command with skills type
     // Note: Currently validates ALL skills (--file flag doesn't exist in CLI)
-    const args = ['aiknowsys', 'validate', '--type', 'skills'];
+    // Use node + bin/cli.js directly to avoid npx resolving to stale node_modules version
+    const cliPath = join(PROJECT_ROOT, 'bin', 'cli.js');
+    const args = [cliPath, 'validate', '-t', 'skills'];
     
     // Future enhancement: Filter output for specific skill path
     // For now, returns validation results for all skills
     
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    const { stdout } = await execFileAsync('node', args, { cwd: PROJECT_ROOT });
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]

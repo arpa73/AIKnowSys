@@ -23,7 +23,8 @@ export function getProjectRoot(): string {
   
   // Try up to 10 levels (should be more than enough)
   for (let i = 0; i < 10; i++) {
-    if (existsSync(resolve(current, '.aiknowsys'))) {
+    // Check for .aiknowsys/ AND bin/cli.js (to avoid mcp-server/.aiknowsys/ test artifacts)
+    if (existsSync(resolve(current, '.aiknowsys')) && existsSync(resolve(current, 'bin', 'cli.js'))) {
       cachedRoot = current;
       return current;
     }
@@ -36,7 +37,8 @@ export function getProjectRoot(): string {
   }
   
   throw new Error(
-    'Could not locate project root (.aiknowsys/ not found). ' +
-    'Are you running from outside an AIKnowSys project?'
+    'Could not locate AIKnowSys project root.\n' +
+    'Expected: .aiknowsys/ directory AND bin/cli.js file in same directory.\n' +
+    'Are you running from outside an AIKnowSys project or in a test subdirectory?'
   );
 }

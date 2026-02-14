@@ -256,13 +256,13 @@ describe('Validation Tools', () => {
         skillPath: '.github/skills/tdd-workflow/SKILL.md'
       });
 
-      // Verify correct CLI arguments (NO --file flag)
+      // Verify correct CLI arguments (uses node + bin/cli.js, not npx)
       expect(mockExecFileAsync).toHaveBeenCalledWith(
-        'npx',
+        'node',
         expect.arrayContaining([
-          'aiknowsys',
+          expect.stringContaining('bin/cli.js'),
           'validate',
-          '--type', 'skills'
+          '-t', 'skills'
         ]),
         expect.anything()  // Accept cwd options object
       );

@@ -109,3 +109,7 @@ workdocs/
 
 # AIKnowSys - Multi-developer collaboration
 .aiknowsys/reviews/
+
+# MCP test artifacts (test cleanup)
+mcp-server/.aiknowsys/
+mcp-server/test-tmp-*/
