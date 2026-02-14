@@ -80,6 +80,48 @@ This optimization is **only valuable for users with code execution environments*
 
 ## 🏗️ Proposed Architecture
 
+### Architectural Decision: Hybrid Client Approach (Scenario B)
+
+**Three Options Considered:**
+
+**Scenario A: IDE Clients Only**
+- Current state: Claude Code, VS Code, Opencode CLI handle MCP
+- Pros: Zero custom code, works today
+- Cons: Can't implement code execution pattern
+
+**Scenario C: Full Custom Client**
+- Build standalone CLI that manages LLM + MCP orchestration
+- Pros: Full control
+- Cons: High maintenance, lose IDE integration, duplicate work
+
+**✅ Scenario B: Minimal Client for Code Execution (CHOSEN)**
+- Keep IDE integration for main usage (direct tool calls)
+- Add lightweight client wrapper for code execution pattern only
+- Best of both worlds
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Main Usage: You → Claude Code → AIKnowSys MCP Server        │
+│ (Direct tool calls via IDE MCP client)                      │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Code Execution: You → Code → mcp-apis/client.ts → Server    │
+│ (Import wrappers, filter in code, return summaries)         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Why Hybrid:**
+1. Keeps IDE benefits (autocomplete, debugging, ecosystem improvements)
+2. Adds code execution pattern (Anthropic optimization)
+3. Minimal maintenance (~100 lines of client code)
+4. Connection pooling (one connection, many tool calls)
+
+**Reference:** [MCP Client Development Docs](https://modelcontextprotocol.io/docs/develop/build-client)
+
+---
+
 ### Hybrid Approach: Support Both Modes
 
 **Mode 1: Direct Tools (Current - Keep for compatibility)**
@@ -218,18 +260,122 @@ console.log(recentWork); // Only ~500 tokens vs 22K
 - **Implementation:**
   ```typescript
   // mcp-apis/client.ts
+  import { ClientSession, StdioServerParameters } from '@modelcontextprotocol/sdk/client/stdio.js';
+  import { stdio_client } from '@modelcontextprotocol/sdk/client/stdio.js';
+  
+  /**
+   * Minimal MCP client for code execution environments.
+   * Maintains single connection, reused across all tool calls.
+   * Pattern: Scenario B (Hybrid) - minimal client for wrappers only.
+   */
+  class AIKnowSysMCPClient {
+    private static session: ClientSession | null = null;
+    private static initPromise: Promise<ClientSession> | null = null;
+    
+    /**
+     * Connect to AIKnowSys MCP server (lazy initialization, singleton pattern)
+     */
+    static async connect(): Promise<ClientSession> {
+      // Return existing session if already connected
+      if (this.session) return this.session;
+      
+      // Return in-flight connection if currently connecting
+      if (this.initPromise) return this.initPromise;
+      
+      // Initialize new connection
+      this.initPromise = (async () => {
+        const serverParams: StdioServerParameters = {
+          command: 'node',
+          args: [new URL('../../mcp-server/src/index.js', import.meta.url).pathname],
+          env: process.env
+        };
+        
+        const transport = await stdio_client(serverParams);
+        const session = new ClientSession(transport.stdio, transport.write);
+        await session.initialize();
+        
+        this.session = session;
+        this.initPromise = null;
+        return session;
+      })();
+      
+      return this.initPromise;
+    }
+    
+    /**
+     * Call MCP tool with type-safe response
+     */
+    static async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
+      const session = await this.connect();
+      const result = await session.call_tool(toolName, args);
+      
+      // Handle MCP response format (content array vs direct content)
+      if (Array.isArray(result.content)) {
+        // Text response
+        if (result.content[0]?.type === 'text') {
+          return JSON.parse(result.content[0].text) as T;
+        }
+        return result.content as unknown as T;
+      }
+      
+      return result.content as T;
+    }
+    
+    /**
+     * Cleanup connection (call on process exit)
+     */
+    static async disconnect(): Promise<void> {
+      if (this.session) {
+        // MCP sessions auto-close on transport close
+        this.session = null;
+      }
+    }
+  }
+  
+  /**
+   * Public API: Call any AIKnowSys MCP tool
+   * 
+   * @example
+   * const invariants = await callMCPTool('mcp_aiknowsys_get_critical_invariants', {});
+   * const sessions = await callMCPTool('mcp_aiknowsys_query_sessions_sqlite', { 
+   *   topic: 'mcp-tools',
+   *   includeContent: false 
+   * });
+   */
   export async function callMCPTool<T>(
-    toolName: string, 
-    args: Record<string, any>
+    toolName: string,
+    args: Record<string, any> = {}
   ): Promise<T> {
-    // Connect to MCP server (stdio transport)
-    // Invoke tool with args
-    // Return typed result
+    return AIKnowSysMCPClient.callTool<T>(toolName, args);
+  }
+  
+  /**
+   * Cleanup helper for graceful shutdown
+   */
+  export async function disconnectMCP(): Promise<void> {
+    return AIKnowSysMCPClient.disconnect();
+  }
+  
+  // Auto-cleanup on process exit
+  if (typeof process !== 'undefined') {
+    process.on('exit', () => {
+      AIKnowSysMCPClient.disconnect();
+    });
   }
   ```
-- **Risk:** Medium - MCP client initialization in code execution environment
-- **Dependencies:** None
-- **TDD:** Write tests for client connection and tool invocation
+- **Key Features:**
+  - Singleton pattern: Single connection reused across all calls
+  - Lazy initialization: Only connects when first tool is called
+  - Thread-safe: Handles concurrent initialization attempts
+  - Auto-cleanup: Disconnects on process exit
+  - Type-safe: Generic `<T>` for tool responses
+- **Risk:** Low - Following MCP SDK official patterns (see MCP docs)
+- **Dependencies:** `@modelcontextprotocol/sdk` (already in package.json)
+- **TDD:** 
+  - Test connection establishment
+  - Test singleton behavior (multiple calls = one connection)
+  - Test tool invocation with mock server
+  - Test error handling (server unavailable, tool not found)
 
 **Step 2.2: Generate Wrapper Files for Query Tools**
 - **Action:** Create TypeScript wrappers for 15 query tools
@@ -242,15 +388,118 @@ console.log(recentWork); // Only ~500 tokens vs 22K
   - `mcp-apis/aiknowsys/query/query_sessions_sqlite.ts`
   - ... (all query tools)
 - **Why:** Enable progressive disclosure - load only query tools when needed
-- **Pattern:**
+- **Pattern (simple tool, no parameters):**
   ```typescript
-  /** [Tool description from MCP schema] */
-  export async function toolName(input: InputType): Promise<OutputType> {
-    return callMCPTool<OutputType>('mcp_aiknowsys_tool_name', input);
+  // mcp-apis/aiknowsys/query/get_critical_invariants.ts
+  import { callMCPTool } from '../../client.js';
+  
+  export interface CriticalInvariant {
+    rule: string;
+    rationale: string;
+    category: string;
+  }
+  
+  /**
+   * Returns the 8 critical invariants that must ALWAYS be enforced.
+   * These are non-optional rules that prevent bugs and maintain code quality.
+   * 
+   * Use this instead of reading CODEBASE_ESSENTIALS.md manually.
+   * 
+   * @returns Array of 8 critical invariants
+   * @example
+   * const invariants = await getCriticalInvariants();
+   * console.log(invariants.length); // 8
+   */
+  export async function getCriticalInvariants(): Promise<CriticalInvariant[]> {
+    return callMCPTool<CriticalInvariant[]>(
+      'mcp_aiknowsys_get_critical_invariants',
+      {}
+    );
   }
   ```
+- **Pattern (complex tool, with parameters):**
+  ```typescript
+  // mcp-apis/aiknowsys/query/query_sessions_sqlite.ts
+  import { callMCPTool } from '../../client.js';
+  
+  export interface QuerySessionsOptions {
+    /** Filter by date after (YYYY-MM-DD) */
+    dateAfter?: string;
+    /** Filter by date before (YYYY-MM-DD) */
+    dateBefore?: string;
+    /** Filter by topic keyword */
+    topic?: string;
+    /** Filter by status */
+    status?: 'in-progress' | 'complete' | 'abandoned';
+    /** Include full content (default: false, metadata only) */
+    includeContent?: boolean;
+    /** Extract specific markdown section */
+    section?: string;
+    /** Database path (default: .aiknowsys/knowledge.db) */
+    dbPath?: string;
+  }
+  
+  export interface SessionMetadata {
+    id: string;
+    date: string;
+    title: string;
+    topics: string[];
+    status: string;
+  }
+  
+  export interface SessionFull extends SessionMetadata {
+    content: string;
+  }
+  
+  /**
+   * Query sessions with flexible filters.
+   * Default returns metadata only (95% token savings).
+   * 
+   * @param options - Query filters and options
+   * @returns Array of sessions (metadata or full content)
+   * 
+   * @example
+   * // Metadata only (500 tokens vs 22K)
+   * const sessions = await querySessionsSqlite({ 
+   *   topic: 'mcp-tools',
+   *   dateAfter: '2026-02-01'
+   * });
+   * 
+   * @example
+   * // Full content (opt-in)
+   * const full = await querySessionsSqlite({ 
+   *   topic: 'mcp-tools',
+   *   includeContent: true
+   * });
+   * 
+   * @example
+   * // Specific section
+   * const section = await querySessionsSqlite({
+   *   date: '2026-02-13',
+   *   section: 'Day 10'
+   * });
+   */
+  export async function querySessionsSqlite(
+    options: QuerySessionsOptions = {}
+  ): Promise<SessionMetadata[] | SessionFull[]> {
+    return callMCPTool(
+      'mcp_aiknowsys_query_sessions_sqlite',
+      options
+    );
+  }
+  ```
+- **Why wrap instead of direct calls:**
+  - Type safety: TypeScript knows parameter types and return types
+  - Documentation: JSDoc comments in code (better than tool descriptions)
+  - Progressive loading: Only read wrapper files you need
+  - Autocomplete: IDEs suggest parameters and return fields
+  - Versioning: Can add client-side validation or transforms
 - **Risk:** Low - code generation, follow prototype pattern
-- **TDD:** Integration tests for each wrapper
+- **TDD:** 
+  - Integration tests for each wrapper
+  - Verify wrappers match MCP tool schemas
+  - Test type safety (TypeScript compilation)
+  - Test examples in JSDoc comments
 
 **Step 2.3: Generate Wrapper Files for Mutation Tools**
 - **Action:** Create TypeScript wrappers for 10 mutation tools
