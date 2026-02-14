@@ -1,12 +1,10 @@
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { existsSync } from 'fs';
 import { z } from 'zod';
 import { promisify } from 'util';
 import { execFile } from 'child_process';
 import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { handleZodError } from './utils/error-helpers.js';
 import type { FieldErrorMap } from './utils/error-helpers.js';
+import { getProjectRoot } from './utils/project-root.js';
 
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
@@ -17,33 +15,7 @@ import { updateSessionCore } from '../../../lib/core/update-session.js';
 
 // Temporary: Keep execFileAsync for functions not yet refactored
 const execFileAsync = promisify(execFile);
-
-// Get actual file location (works in any execution context)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Find project root by searching for .aiknowsys/ directory
-// This works in both development (src/) and production (dist/) environments
-function findProjectRoot(): string {
-  let current = __dirname;
-  
-  // Try up to 10 levels (should be more than enough)
-  for (let i = 0; i < 10; i++) {
-    if (existsSync(resolve(current, '.aiknowsys'))) {
-      return current;
-    }
-    const parent = resolve(current, '..');
-    if (parent === current) {
-      // Reached filesystem root
-      break;
-    }
-    current = parent;
-  }
-  
-  throw new Error('Could not locate project root (.aiknowsys/ not found)');
-}
-
-const PROJECT_ROOT = findProjectRoot();
+const PROJECT_ROOT = getProjectRoot();
 
 // Zod schemas for validation
 const createSessionSchema = z.object({

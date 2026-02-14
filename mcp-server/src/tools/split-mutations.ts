@@ -1,38 +1,10 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { existsSync } from 'fs';
 import { z } from 'zod';
+import { getProjectRoot } from './utils/project-root.js';
 
 const execFileAsync = promisify(execFile);
-
-// Get actual file location (works in any execution context)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Find project root by searching for .aiknowsys/ directory
-// This works in both development (src/) and production (dist/) environments
-function findProjectRoot(): string {
-  let current = __dirname;
-  
-  // Try up to 10 levels (should be more than enough)
-  for (let i = 0; i < 10; i++) {
-    if (existsSync(resolve(current, '.aiknowsys'))) {
-      return current;
-    }
-    const parent = resolve(current, '..');
-    if (parent === current) {
-      // Reached filesystem root
-      break;
-    }
-    current = parent;
-  }
-  
-  throw new Error('Could not locate project root (.aiknowsys/ not found)');
-}
-
-const PROJECT_ROOT = findProjectRoot();
+const PROJECT_ROOT = getProjectRoot();
 
 // ============================================================================
 // METADATA MUTATION TOOLS (YAML Frontmatter Updates)
