@@ -76,7 +76,7 @@ export async function querySessionsSqlite(
         status: options.status,
       });
       
-      const sessions = result.sessions.map((row: any) => ({
+      const sessions = result.sessions.map((row) => ({
         date: row.date,
         title: row.topic,
         topic: row.topic, // Include for consistency with full mode
@@ -153,8 +153,8 @@ export async function queryPlansSqlite(
       
       // Filter out learned patterns
       const plans = result.plans
-        .filter((row: any) => !row.id.startsWith('learned_'))
-        .map((row: any) => ({
+        .filter((row) => !row.id.startsWith('learned_'))
+        .map((row) => ({
           id: row.id,
           title: row.title,
           status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
@@ -231,7 +231,7 @@ export async function queryLearnedPatternsSqlite(
         keywords: options.keywords,
       });
       
-      const patterns = result.patterns.map((row: any) => ({
+      const patterns = result.patterns.map((row) => ({
         id: row.id,
         category: row.type || 'general',
         title: row.title,

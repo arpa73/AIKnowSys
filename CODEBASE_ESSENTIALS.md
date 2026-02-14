@@ -420,6 +420,34 @@ mcp_aiknowsys_search_context_sqlite({
 // Performance: ~18ms average
 ```
 
+**Token Optimization Pattern (v0.12.0+):**
+
+All SQLite query tools support the `includeContent` parameter for token efficiency:
+
+```typescript
+// Default: Metadata-only (95%+ token savings)
+mcp_aiknowsys_query_sessions_sqlite({
+  dateAfter: "2026-02-01"
+  // includeContent defaults to false
+})
+// Returns: ~1KB for 4 sessions (date, title, status, topics, timestamps)
+// No content field - ideal for navigation/discovery
+
+// Opt-in: Full content (when you need analysis)
+mcp_aiknowsys_query_sessions_sqlite({
+  dateAfter: "2026-02-01",
+  includeContent: true
+})
+// Returns: ~90KB for same 4 sessions (includes full markdown content)
+// Use for deep analysis or when specific details needed
+```
+
+**When to use:**
+- **Metadata-only (default):** Browsing sessions by date/topic, listing plans, discovering patterns
+- **Full content:** Reading specific session details, code review, troubleshooting
+
+**Performance impact:** 97.4% token reduction (validated Feb 2026)
+
 **Setup Required:**
 1. Run `npx aiknowsys migrate-to-sqlite` to create `.aiknowsys/knowledge.db`
 2. Database must exist before using SQLite tools
