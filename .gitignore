@@ -77,3 +77,8 @@ Cargo.lock
 
 # npm files
 .npmrc
+
+workdocs/
+test/
+test-fixtures/
+dist/
