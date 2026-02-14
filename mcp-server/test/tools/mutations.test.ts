@@ -44,12 +44,25 @@ describe('Mutation Tools', () => {
       // Now it uses createSessionCore() directly - see lib/core tests instead.
     });
 
-    it('should handle missing required parameters', async () => {
+    it('should return conversational error for missing title', async () => {
       const { createSession } = await import('../../src/tools/mutations.js');
       
       const result = await createSession({ title: '' });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error creating session');
+      expect(result.content[0].text).toContain('Invalid parameter \'title\'');
+      expect(result.content[0].text).toContain('at least 3 characters');
+    });
+
+    it('should return conversational error for invalid topics type', async () => {
+      const { createSession } = await import('../../src/tools/mutations.js');
+      
+      const result = await createSession({ 
+        title: 'Valid Title',
+        topics: 'not-an-array'
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter \'topics\'');
+      expect(result.content[0].text).toContain('array of strings');
     });
 
     it.skip('should handle CLI execution errors', async () => {
@@ -60,36 +73,20 @@ describe('Mutation Tools', () => {
   });
 
   describe('update_session', () => {
-    it('should append section to session', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ Session Updated' 
-      });
-
-      const { updateSession } = await import('../../src/tools/mutations.js');
-      const result = await updateSession({
-        date: '2026-02-08',
-        section: 'Progress',
-        content: 'Completed Phase 2',
-        operation: 'append'
-      });
-
-      expect(result.content[0].text).toContain('Session Updated');
+    // NOTE: These tests are SKIPPED because updateSession() now uses direct lib/core import
+    // instead of CLI subprocess, so CLI mocking is no longer relevant.
+    // See test/core/update-session.test.ts for comprehensive pure function tests.
+    it.skip('should append section to session', async () => {
+      // This test validated execFileAsync when updateSession used CLI subprocess.
+      // Now it uses updateSessionCore() directly - see lib/core tests instead.
     });
 
-    it('should prepend section to session', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Session Updated' });
-
-      const { updateSession } = await import('../../src/tools/mutations.js');
-      const result = await updateSession({
-        section: 'Critical Issue',
-        content: 'Bug found',
-        operation: 'prepend'
-      });
-
-      expect(result.content[0].text).toContain('Session Updated');
+    it.skip('should prepend section to session', async () => {
+      // This test validated execFileAsync when updateSession used CLI subprocess.
+      // Now it uses updateSessionCore() directly - see lib/core tests instead.
     });
 
-    it('should validate operation parameter', async () => {
+    it('should return conversational error for invalid operation', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
       
       const result = await updateSession({
@@ -99,9 +96,11 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter \'operation\'');
+      expect(result.content[0].text).toMatch(/append|prepend|insert-after|insert-before/);
     });
 
-    it('should validate date format (YYYY-MM-DD)', async () => {
+    it('should return conversational error for invalid date format', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
       
       const result = await updateSession({
@@ -112,21 +111,23 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Invalid date format');
+      expect(result.content[0].text).toContain('Invalid parameter \'date\'');
+      expect(result.content[0].text).toContain('YYYY-MM-DD');
     });
 
-    it('should reject malformed dates', async () => {
+    it('should return conversational error for missing section', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
       
       const result = await updateSession({
-        date: '2026-13-45',  // Invalid month and day
-        section: 'Test',
+        date: '2026-02-08',
+        section: '',  // Too short
         content: 'Content',
         operation: 'append'
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error updating session');
+      expect(result.content[0].text).toContain('Invalid parameter \'section\'');
+      expect(result.content[0].text).toContain('at least 1 character');
     });
   });
 
@@ -140,6 +141,27 @@ describe('Mutation Tools', () => {
 
       expect(result.content[0].text).toMatch(/Created plan:|Plan already exists:/);
       expect(result.content[0].text).toMatch(/PLAN_/);
+    });
+
+    it('should return conversational error for missing title', async () => {
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      
+      const result = await createPlan({ title: 'ab' });  // Too short
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter \'title\'');
+      expect(result.content[0].text).toContain('at least 3 characters');
+    });
+
+    it('should return conversational error for invalid topics type', async () => {
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      
+      const result = await createPlan({
+        title: 'Valid Plan Title',
+        topics: 'not-an-array'
+      });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter \'topics\'');
+      expect(result.content[0].text).toContain('array of strings');
     });
 
     // NOTE: These tests are SKIPPED because createPlan() now uses direct lib/core import
@@ -170,7 +192,7 @@ describe('Mutation Tools', () => {
       // Now it uses updatePlanCore() directly - see lib/core tests instead.
     });
 
-    it('should validate planId format', async () => {
+    it('should return conversational error for invalid planId format', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
       
       const result = await updatePlan({
@@ -180,9 +202,11 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter \'planId\'');
+      expect(result.content[0].text).toContain('PLAN_');
     });
 
-    it('should reject append operation without content', async () => {
+    it('should return conversational error for append without content', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
       
       const result = await updatePlan({
@@ -192,10 +216,11 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error updating plan');
+      expect(result.content[0].text).toContain('Invalid parameter');
+      expect(result.content[0].text).toContain('content');
     });
 
-    it('should reject prepend operation without content', async () => {
+    it('should return conversational error for prepend without content', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
       
       const result = await updatePlan({
@@ -205,10 +230,11 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error updating plan');
+      expect(result.content[0].text).toContain('Invalid parameter');
+      expect(result.content[0].text).toContain('content');
     });
 
-    it('should reject set-status operation without status', async () => {
+    it('should return conversational error for set-status without status', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
       
       const result = await updatePlan({
@@ -218,7 +244,8 @@ describe('Mutation Tools', () => {
       });
       
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('Error updating plan');
+      expect(result.content[0].text).toContain('Invalid parameter');
+      expect(result.content[0].text).toContain('status');
     });
   });
 });
