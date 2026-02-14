@@ -25,6 +25,7 @@
 
 import chalk from 'chalk';
 import { createLogger } from '../logger.js';
+import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
 
 // Import MCP tool functions via clean barrel export (Phase 4: Path Resolution)
 import {
@@ -58,6 +59,41 @@ const TOOLS: Record<string, (args: any) => Promise<any>> = {
   'get-recent-sessions': getRecentSessions,
   'find-skill': findSkillForTask
 };
+
+/**
+ * Find similar tool names using simple string similarity
+ */
+function findSimilarTools(input: string): string[] {
+  const toolNames = Object.keys(TOOLS);
+  const similar: string[] = [];
+  
+  for (const name of toolNames) {
+    // Check for substring match
+    if (name.includes(input) || input.includes(name)) {
+      similar.push(name);
+      continue;
+    }
+    
+    // Check for partial word match (e.g., "query-session" → "query-sessions")
+    const inputParts = input.split('-');
+    const nameParts = name.split('-');
+    
+    let matches = 0;
+    for (const inputPart of inputParts) {
+      for (const namePart of nameParts) {
+        if (inputPart === namePart || namePart.startsWith(inputPart)) {
+          matches++;
+        }
+      }
+    }
+    
+    if (matches >= inputParts.length - 1) {
+      similar.push(name);
+    }
+  }
+  
+  return similar.slice(0, 5); // Max 5 suggestions
+}
 
 /**
  * MCP Test command options
@@ -103,7 +139,21 @@ export async function mcpTest(
   
   // Validate tool exists
   if (!TOOLS[toolName as keyof typeof TOOLS]) {
+    const similar = findSimilarTools(toolName);
+    const error = AIFriendlyErrorBuilder.toolNotFound(toolName, similar);
+    
+    // In JSON mode, return the structured error
+    if (options.json) {
+      console.log(JSON.stringify(error, null, 2));
+      return error;
+    }
+    
+    // Human-readable error output
     log.error(`Unknown tool: ${toolName}`);
+    if (similar.length > 0) {
+      log.blank();
+      log.dim(`Did you mean: ${similar.join(', ')}?`);
+    }
     log.blank();
     log.dim('Available tools:');
     Object.keys(TOOLS).forEach(name => {
@@ -121,9 +171,23 @@ export async function mcpTest(
       log.log(chalk.bold('Args:'), prettyPrint(args));
       log.dim('─'.repeat(60));
     }
-  } catch {
+  } catch (parseError) {
+    const error = AIFriendlyErrorBuilder.validationFailed(
+      'arguments',
+      'Invalid JSON format',
+      `'{"key": "value"}'`
+    );
+    
+    // In JSON mode, return the structured error
+    if (options.json) {
+      console.log(JSON.stringify(error, null, 2));
+      return error;
+    }
+    
+    // Human-readable error output
     log.error(`Invalid JSON arguments: ${argsJson}`);
     log.dim('Expected format: {"key":"value"}');
+    log.dim(`Example: npx aiknowsys mcp-test ${toolName} '{"topic":"test"}'`);
     process.exit(1);
   }
   
