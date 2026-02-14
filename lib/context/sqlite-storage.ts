@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import { StorageAdapter } from './storage-adapter.js';
+import { wrapDatabaseError } from '../utils/database-errors.js';
 import type {
   PlanMetadata,
   SessionMetadata,
@@ -93,15 +94,19 @@ export class SqliteStorage extends StorageAdapter {
     const dbDir = path.dirname(dbPath);
     await fs.mkdir(dbDir, { recursive: true });
     
-
-    // Open/create database
-    this.db = new Database(dbPath);
-    
-    // Enable foreign keys
-    this.db.pragma('foreign_keys = ON');
-    
-    // Initialize schema
-    await this.initSchema();
+    try {
+      // Open/create database
+      this.db = new Database(dbPath);
+      
+      // Enable foreign keys
+      this.db.pragma('foreign_keys = ON');
+      
+      // Initialize schema
+      await this.initSchema();
+    } catch (error) {
+      // Wrap database errors with helpful troubleshooting context
+      throw wrapDatabaseError(error, 'initialize database', dbPath);
+    }
   }
 
   private async initSchema(): Promise<void> {
