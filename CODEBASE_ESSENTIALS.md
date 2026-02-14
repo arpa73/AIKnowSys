@@ -211,6 +211,64 @@ import { querySessionsSqlite, getCriticalInvariants } from '../../mcp-server/src
 // vs 4+ separate import statements
 ```
 
+**Error Response Patterns (v0.11.0+):**
+
+All commands and MCP tools use structured error responses for AI agents.
+
+```typescript
+import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
+
+// Invalid parameter (typo, case, missing)
+AIFriendlyErrorBuilder.invalidParameter(
+  'status',
+  'Use one of: ACTIVE, PAUSED, COMPLETE',
+  ['{ "status": "ACTIVE" }']  // examples (optional)
+);
+
+// Tool/command not found
+AIFriendlyErrorBuilder.toolNotFound('query-session', ['query-sessions']);
+
+// Validation failure
+AIFriendlyErrorBuilder.validationFailed(
+  'filters',
+  'Invalid date format',
+  'Use YYYY-MM-DD'
+);
+
+// Missing required parameter
+AIFriendlyErrorBuilder.missingRequired(
+  'dbPath',
+  'Path to SQLite database',
+  ['/path/to/db.sqlite']
+);
+```
+
+**Response format:**
+```typescript
+{
+  success: false,
+  error: {
+    type: 'InvalidParameter' | 'ToolNotFound' | 'ValidationFailed' | 'MissingRequired',
+    message: string,             // Human-readable description
+    parameter?: string,          // Which param failed
+    suggestion?: string,         // How to fix
+    similar_errors?: string[],   // Typo suggestions
+    correct_usage?: UsageExample[], // Working examples
+    docs_url: string            // Documentation link
+  }
+}
+```
+
+**When to use:**
+- CLI commands parsing user input
+- MCP tools with parameter validation
+- Any error AI agents need to learn from
+
+**Why:**
+- Reduces blind retries (agent gets guidance)
+- Self-improving (learns correct syntax)
+- Token efficient (one error teaches pattern)
+
 ---
 
 ## 7. Common Gotchas
