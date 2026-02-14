@@ -8,11 +8,6 @@
  */
 
 import { parseTimeExpression, formatDate } from '../utils/time-parser.js';
-import type {
-  QuerySessionsOptions,
-  QueryPlansOptions,
-  QueryLearnedPatternsOptions,
-} from '../../../lib/types/index.js';
 
 interface FlexibleQueryParams {
   // Natural language

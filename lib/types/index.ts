@@ -171,13 +171,13 @@ export interface QueryLearnedPatternsOptions {
 }
 
 export interface SearchContextOptions {
-  dbPath: string;
+  dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
   query: string;
   limit?: number;
 }
 
 export interface DbStatsOptions {
-  dbPath: string;
+  dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
 }
 
 export interface SessionRecord {

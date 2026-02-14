@@ -106,12 +106,13 @@ export async function querySessionsSqlite(
  * Query plans from SQLite database
  * 
  * @param options - Query filters (status, author, topic, priority, includeContent)
+ *                  dbPath is optional - will auto-detect if not provided
  * @returns Plan records matching filters (metadata-only by default for token efficiency)
  */
 export async function queryPlansSqlite(
   options: QueryPlansOptions
 ): Promise<QueryPlansResult> {
-  const dbPath = resolve(options.dbPath);
+  const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
   
@@ -186,12 +187,13 @@ export async function queryPlansSqlite(
  * Note: Learned patterns are stored as plans with id starting with 'learned_'
  * 
  * @param options - Query filters (category, keywords, includeContent)
+ *                  dbPath is optional - will auto-detect if not provided
  * @returns Pattern records matching filters (metadata-only by default for token efficiency)
  */
 export async function queryLearnedPatternsSqlite(
   options: QueryLearnedPatternsOptions
 ): Promise<QueryLearnedPatternsResult> {
-  const dbPath = resolve(options.dbPath);
+  const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
   
@@ -258,12 +260,13 @@ export async function queryLearnedPatternsSqlite(
  * Full-text search across all content in SQLite database
  * 
  * @param options - Search query and optional result limit
+ *                  dbPath is optional - will auto-detect if not provided
  * @returns Search results with snippets and relevance scores
  */
 export async function searchContextSqlite(
   options: SearchContextOptions
 ): Promise<SearchContextResult> {
-  const dbPath = resolve(options.dbPath);
+  const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
   
@@ -338,13 +341,13 @@ export async function searchContextSqlite(
 /**
  * Get database statistics
  * 
- * @param options - Database path
+ * @param options - Database path (optional - will auto-detect if not provided)
  * @returns Record counts and database metadata
  */
 export async function getDbStats(
   options: DbStatsOptions
 ): Promise<DbStatsResult> {
-  const dbPath = resolve(options.dbPath);
+  const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
   

@@ -48,13 +48,13 @@ export function findKnowledgeDb(startDir: string = process.cwd()): string {
   
   // Database not found - throw helpful error
   throw new Error(
-    `Database not found: .aiknowsys/knowledge.db\n\n` +
+    'Database not found: .aiknowsys/knowledge.db\n\n' +
     `Searched from: ${startDir}\n` +
     `Current directory: ${process.cwd()}\n\n` +
-    `Troubleshooting:\n` +
-    `  1. Run 'npx aiknowsys migrate-to-sqlite' to create the database\n` +
-    `  2. Make sure you're in a project using AIKnowSys\n` +
-    `  3. Check that .aiknowsys/ directory exists\n\n` +
-    `Expected database location: <project-root>/.aiknowsys/knowledge.db`
+    'Troubleshooting:\n' +
+    '  1. Run \'npx aiknowsys migrate-to-sqlite\' to create the database\n' +
+    '  2. Make sure you\'re in a project using AIKnowSys\n' +
+    '  3. Check that .aiknowsys/ directory exists\n\n' +
+    'Expected database location: <project-root>/.aiknowsys/knowledge.db'
   );
 }

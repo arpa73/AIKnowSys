@@ -39,6 +39,7 @@ import { createSession } from '../dist/lib/commands/create-session.js';
 import { updateSession } from '../dist/lib/commands/update-session.js';
 import { createPlan } from '../dist/lib/commands/create-plan.js';
 import { updatePlan } from '../dist/lib/commands/update-plan.js';
+import { mcpTest } from '../dist/lib/commands/mcp-test.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
 
 // Get version from package.json
@@ -531,6 +532,13 @@ program
   .option('-y, --yes', 'Skip confirmation prompts')
   .action(async (options) => {
     await uninstall(options);
+  });
+
+program
+  .command('mcp-test <tool-name> [args-json]')
+  .description('Test MCP tools with JSON arguments (no dbPath needed!)')
+  .action(async (toolName, argsJson) => {
+    await mcpTest(toolName, argsJson);
   });
 
 // Default command - show help with styled banner
