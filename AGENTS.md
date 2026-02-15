@@ -107,7 +107,13 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 
 **🎯 MCP Tools Available (Prefer These!):**
 
-See **📦 MCP TOOLS REFERENCE** section below for complete list of 15 tools.
+See **📦 MCP TOOLS REFERENCE** section below for complete list.
+
+**Dynamic Toolset (v0.12.0 - Token Efficient):**
+- `aiknowsys_search_tools()` - Find tools by natural language (200 tokens)
+- `aiknowsys_describe_tools()` - Load schemas on-demand (400 tokens/tool)
+- `aiknowsys_execute_tool()` - Execute with validation
+- Total: ~900 tokens vs 29K (97% reduction for full workflow)
 
 **Common operations:**
 - Get context: `mcp_aiknowsys_get_critical_invariants()`, `get_recent_sessions()`, `get_active_plans()`
@@ -167,6 +173,75 @@ See **📦 MCP TOOLS REFERENCE** section below for complete list of 15 tools.
 - Returns: Relevant skill workflow for task
 - Purpose: Natural language → skill matching
 - Speed: Keyword matching vs hoping trigger words match
+
+### 🎯 Dynamic Toolset (Token-Efficient Discovery)
+
+**⚡ NEW (v0.12.0): Token-efficient discovery pattern**
+
+**Savings:** 93.75% upfront (29K → 1.8K tokens) | 97% per workflow (29K → 900 tokens)
+
+Instead of loading all 36 tool schemas upfront (29K tokens), use dynamic discovery:
+
+**Note:** Dynamic tools use `aiknowsys_*` prefix (not `mcp_aiknowsys_*`) following the Speakeasy pattern convention for meta-tooling.
+
+**`aiknowsys_search_tools({ query, tags?, limit? })`**
+- Returns: Top 5 matching tools with relevance scores
+- Purpose: Natural language tool discovery
+- Examples:
+  - `{ query: "sessions" }` → Find session-related tools
+  - `{ query: "category:sqlite" }` → Filter by category
+  - `{ query: "create", tags: ["mutation"] }` → Combined filters
+- Performance: ~10ms, returns ~200 tokens (vs 29K upfront)
+
+**`aiknowsys_describe_tools({ tools: ["tool1", "tool2"] })`**
+- Returns: Full JSON schemas for requested tools only
+- Purpose: Lazy-load schemas on-demand
+- Example: `{ tools: ["query_sessions_sqlite", "create_session"] }`
+- Performance: ~50ms, ~400 tokens per tool schema
+
+**`aiknowsys_execute_tool({ tool, arguments })`**
+- Returns: Execution result or validation error
+- Purpose: Execute discovered tools with validation
+- Example: `{ tool: "query_sessions_sqlite", arguments: { mode: "preview" } }`
+- Performance: Same as direct tool call + ~2ms validation overhead
+
+**Workflow Example:**
+```typescript
+// 1. Search for tools (200 tokens)
+const search = await aiknowsys_search_tools({ query: "sessions" });
+// Returns: ["query_sessions_sqlite", "create_session", ...]
+
+// 2. Describe one tool (400 tokens)
+const describe = await aiknowsys_describe_tools({ 
+  tools: ["query_sessions_sqlite"] 
+});
+// Returns: { inputSchema: {...}, description: "..." }
+
+// 3. Execute with validated arguments (300 tokens response)
+const result = await aiknowsys_execute_tool({
+  tool: "query_sessions_sqlite",
+  arguments: { mode: "preview", last: 7, unit: "days" }
+});
+// Total: ~900 tokens vs 29,000 tokens (97% reduction!)
+```
+
+**Categories Available:**
+- `context` - Critical invariants, validation matrix, patterns
+- `query` - Sessions, plans, search (file-based)
+- `mutation` - Create/update sessions and plans
+- `validation` - Deliverables, TDD, skills
+- `sqlite` - High-performance database queries
+
+**When to Use:**
+- ✅ **First time using AIKnowSys** - Discover tools naturally
+- ✅ **Uncertain which tool to use** - Search by intent, not name
+- ✅ **Token-constrained context** - Only load schemas you need
+- ❌ **You know the exact tool** - Direct call is faster (skip search/describe)
+- ❌ **Frequently used tools** - Schemas cached in conversation history
+
+**Backward Compatibility:**
+All 36 tools remain available for direct calls (e.g., `mcp_aiknowsys_get_critical_invariants()`).
+Dynamic toolset is optional for discovery, not required.
 
 ### Query Tools (SQLite - Fastest)
 
@@ -230,6 +305,11 @@ get_critical_invariants()      // Load rules
 get_active_plans()              // Know what's in progress
 get_recent_sessions({ days: 7 }) // Build on previous work
 
+// ✅ Tool discovery (when uncertain)
+aiknowsys_search_tools({ query: "sessions" })        // Find relevant tools
+aiknowsys_describe_tools({ tools: ["tool_name"] })   // Get schema
+aiknowsys_execute_tool({ tool: "...", arguments })   // Execute with validation
+
 // ✅ Finding information
 search_context_sqlite({ query: "error handling" })  // Full-text search
 query_sessions_sqlite({ topic: "mcp-tools" })        // Filter sessions
@@ -239,6 +319,10 @@ find_skill_for_task({ task: "refactoring" })         // Get workflow
 create_plan({ title: "Add feature X" })
 append_to_session({ section: "## Progress", content: "..." })
 set_plan_status({ planId: "PLAN_xyz", status: "COMPLETE" })
+
+// ✅ Direct tool calls (when you know exactly what you need)
+get_critical_invariants()      // Faster than search → describe → execute
+query_sessions_sqlite({ ... }) // Skip discovery if tool name known
 
 // ❌ Avoid
 read_file("CODEBASE_ESSENTIALS.md")  // Use get_critical_invariants() instead

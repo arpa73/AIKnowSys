@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 36 tools', async () => {
+  it('should register all 39 tools (36 direct + 3 dynamic)', async () => {
     const server = new AIKnowSysServer();
     
     // Access the internal low-level server instance
@@ -15,10 +15,15 @@ describe('MCP Server Registration', () => {
       params: {}
     });
 
-    expect(response.tools).toHaveLength(36);
+    expect(response.tools).toHaveLength(39);
     
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);
+    
+    // Dynamic toolset (Phase 2 - NEW)
+    expect(toolNames).toContain('aiknowsys_search_tools');
+    expect(toolNames).toContain('aiknowsys_describe_tools');
+    expect(toolNames).toContain('aiknowsys_execute_tool');
     
     // Context tools
     expect(toolNames).toContain('get_critical_invariants');

@@ -224,10 +224,6 @@ export async function archivePlans(params: unknown) {
       });
     }    
     // Handle CLI execution errors
-    const cliError = handleCLIError(error, 'archiving sessions');
-    if (cliError) return cliError;
-        
-    // Handle CLI execution errors
     const cliError = handleCLIError(error, 'archiving plans');
     if (cliError) return cliError;
     

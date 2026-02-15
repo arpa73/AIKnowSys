@@ -2,6 +2,15 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
+// Dynamic toolset infrastructure (Phase 2)
+import {
+  ToolRegistry,
+  TOOL_METADATA,
+  searchToolsHandler,
+  describeToolsHandler,
+  executeToolHandler,
+} from './dynamic-toolset/index.js';
+
 // Tool implementations
 import { getCriticalInvariants, getValidationMatrix } from './tools/context.js';
 import { 
@@ -42,6 +51,7 @@ import {
 
 export class AIKnowSysServer {
   private server: McpServer;
+  private toolRegistry: ToolRegistry;
 
   constructor() {
     this.server = new McpServer(
@@ -56,11 +66,111 @@ export class AIKnowSysServer {
       }
     );
 
+    // Initialize tool registry with all tool metadata
+    this.toolRegistry = new ToolRegistry();
+    TOOL_METADATA.forEach((tool) => this.toolRegistry.register(tool));
+
     this.setupToolHandlers();
     this.setupErrorHandling();
   }
 
   private setupToolHandlers() {
+    // ==================== DYNAMIC TOOLSET (Phase 2) ====================
+    // 3 tools that provide access to all 36 tools via search/describe/execute
+
+    this.server.registerTool(
+      'aiknowsys_search_tools',
+      {
+        description: `Search for relevant AIKnowSys tools using natural language or keywords.
+
+**How it works:**
+- Use natural language: "find session query tools", "create plan"
+- Filter by category: "category:sqlite", "category:mutation"  
+- Filter by tags: tags: ["sqlite", "fast"]
+- Returns top 5 results by default (configurable via limit)
+
+**Categories available:**
+- context: Core project context (invariants, validation, patterns)
+- query: Query sessions, plans, and learned patterns
+- mutation: Create and modify sessions and plans
+- validation: Validate deliverables, TDD, and skills
+- sqlite: High-performance database queries
+
+**Examples:**
+- { query: "sessions" } → Find all session-related tools
+- { query: "category:sqlite" } → Find all SQLite tools
+- { query: "create", tags: ["mutation"] } → Find creation tools
+- { query: "validation" } → Find validation tools
+
+Returns tool names, descriptions, categories, and relevance scores.`,
+        inputSchema: z.object({
+          query: z.string().describe('Search query (keywords or category filter)'),
+          tags: z.array(z.string()).optional().describe('Filter by tags (all must match)'),
+          limit: z.number().optional().default(5).describe('Maximum results to return'),
+        }),
+      },
+      async (args) => searchToolsHandler(this.toolRegistry, args)
+    );
+
+    this.server.registerTool(
+      'aiknowsys_describe_tools',
+      {
+        description: `Get detailed schemas for specific tools (lazy loading).
+
+**How it works:**
+- Takes array of tool names from search results
+- Returns full parameter schemas, descriptions, and categories
+- Only loads schemas you actually need (token efficient)
+
+**Example workflow:**
+1. aiknowsys_search_tools({ query: "sessions" })
+2. aiknowsys_describe_tools({ tools: ["query_sessions_sqlite", "create_session"] })
+3. aiknowsys_execute_tool({ tool: "query_sessions_sqlite", arguments: {...} })
+
+**Example:**
+{ tools: ["query_sessions_sqlite", "create_session"] }
+
+Returns JSON schemas for each tool (Zod schemas converted to JSON Schema format).`,
+        inputSchema: z.object({
+          tools: z.array(z.string()).describe('Array of tool names to get schemas for'),
+        }),
+      },
+      async (args) => describeToolsHandler(this.toolRegistry, args)
+    );
+
+    this.server.registerTool(
+      'aiknowsys_execute_tool',
+      {
+        description: `Execute a specific tool with validated arguments.
+
+**How it works:**
+- Validates arguments against tool's schema
+- Executes the tool handler  
+- Returns results or detailed error messages
+
+**Example workflow:**
+1. Search: aiknowsys_search_tools({ query: "sessions" })
+2. Describe: aiknowsys_describe_tools({ tools: ["query_sessions_sqlite"] })
+3. Execute: aiknowsys_execute_tool({ tool: "query_sessions_sqlite", arguments: { mode: "preview" } })
+
+**Example:**
+{
+  tool: "query_sessions_sqlite",
+  arguments: { mode: "preview", last: 7, unit: "days" }
+}
+
+Returns execution result or validation error with details.`,
+        inputSchema: z.object({
+          tool: z.string().describe('Tool name to execute'),
+          arguments: z.record(z.any()).describe('Tool arguments (validated against schema)'),
+        }),
+      },
+      async (args) => executeToolHandler(this.toolRegistry, args)
+    );
+
+    // ==================== DIRECT TOOL ACCESS (36 tools) ====================
+    // Legacy/direct access - will be deprecated in Phase 3
+    
     // Phase 1: Context Query Tools
     this.server.registerTool(
       'get_critical_invariants',
@@ -284,6 +394,9 @@ Natural language also supported:
           topic: z.string().optional(),
           priority: z.enum(['high', 'medium', 'low']).optional(),
           includeContent: z.boolean().optional().default(false), // DEPRECATED: Use mode instead
+        }),
+      },
+      async (args) => queryPlansSqlite(args)
     );
 
     this.server.registerTool(
