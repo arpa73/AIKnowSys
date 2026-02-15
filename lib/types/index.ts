@@ -190,6 +190,23 @@ export interface MigrateToSqliteResult {
   dbPath?: string;
 }
 
+// Event-Sourced Migration (Phase 2.1)
+export interface MigrateToEventsOptions {
+  dir: string;
+  dbPath: string;
+  sessionId?: string;
+  planId?: string;
+  all?: boolean;
+  verbose?: boolean;
+  dryRun?: boolean;
+}
+
+export interface MigrateToEventsResult {
+  sessions: MigrationStats;
+  plans: MigrationStats;
+  dbPath?: string;
+}
+
 // SQLite Query types (Phase 1 Week 2)
 export type QueryMode = 'preview' | 'metadata' | 'section' | 'full';
 

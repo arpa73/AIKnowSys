@@ -30,6 +30,7 @@ import { syncPlans } from '../dist/lib/commands/sync-plans.js';
 import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { migrateEssentials } from '../dist/lib/commands/migrate-essentials.js';
 import { migrateToSqlite } from '../dist/lib/commands/migrate-to-sqlite.js';
+import { migrateToEvents } from '../dist/lib/commands/migrate-to-events.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
@@ -150,6 +151,28 @@ program
   .option('--dry-run', 'Preview migration without creating database')
   .option('-v, --verbose', 'Show detailed progress')
   .action(migrateToSqlite);
+
+program
+  .command('migrate-to-events')
+  .description('Migrate markdown sessions/plans to event-sourced storage (Phase 2.1: Hybrid Storage)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('-s, --session <id>', 'Migrate specific session by ID')
+  .option('-p, --plan <id>', 'Migrate specific plan by ID')
+  .option('--all', 'Migrate all sessions and plans')
+  .option('--dry-run', 'Preview migration without making changes')
+  .option('-v, --verbose', 'Show detailed progress')
+  .action(async (options) => {
+    await migrateToEvents({
+      dir: options.dir || '.',
+      dbPath: options.dbPath || './knowledge.db',
+      sessionId: options.session,
+      planId: options.plan,
+      all: options.all,
+      dryRun: options.dryRun,
+      verbose: options.verbose
+    });
+  });
 
 program
   .command('audit')
