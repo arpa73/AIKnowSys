@@ -7,6 +7,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { SqliteStorage } from '../context/sqlite-storage.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
+import { createLogger } from '../logger.js';
 import type { ExportSessionsOptions, ExportSessionsResult } from '../types/index.js';
 
 /**
@@ -42,13 +43,14 @@ import type { ExportSessionsOptions, ExportSessionsResult } from '../types/index
  * });
  */
 export async function exportSessions(
-  options: ExportSessionsOptions
+  options: ExportSessionsOptions & { _silent?: boolean }
 ): Promise<ExportSessionsResult> {
-  const { dbPath, outputDir, from, to, projectId, dryRun, verbose } = options;
+  const { dbPath, outputDir, from, to, projectId, dryRun, verbose, _silent } = options;
+  const log = createLogger(_silent);
 
   let exported = 0;
   let failed = 0;
-  let skipped = 0;
+  const skipped = 0;
   const errors: Array<{ sessionId: string; error: string }> = [];
 
   try {
@@ -73,13 +75,13 @@ export async function exportSessions(
       const sessions = await storage.querySessionsWithFilters({ from, to, projectId });
 
       if (verbose) {
-        console.log(`Found ${sessions.length} session(s) to export`);
+        log.info(`Found ${sessions.length} session(s) to export`);
       }
 
       // Handle empty results
       if (sessions.length === 0) {
         if (verbose) {
-          console.log('No sessions found matching filters');
+          log.info('No sessions found matching filters');
         }
         await storage.close();
         return {
@@ -114,7 +116,7 @@ export async function exportSessions(
       for (const session of sessions) {
         try {
           if (verbose) {
-            console.log(`${dryRun ? '[DRY RUN] ' : ''}Exporting ${session.id}...`);
+            log.info(`${dryRun ? '[DRY RUN] ' : ''}Exporting ${session.id}...`);
           }
 
           // Query events for session
@@ -160,7 +162,7 @@ export async function exportSessions(
           });
 
           if (verbose) {
-            console.error(`Failed to export ${session.id}: ${message}`);
+            log.error(`Failed to export ${session.id}: ${message}`);
           }
         }
       }

@@ -186,7 +186,7 @@ program
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
   .option('-v, --verbose', 'Show detailed event information')
   .action(async (id, options) => {
-    await exportSession({
+    const result = await exportSession({
       dir: options.dir || '.',
       dbPath: options.dbPath || './knowledge.db',
       sessionId: id,
@@ -194,6 +194,30 @@ program
       output: options.output,
       verbose: options.verbose
     });
+
+    // Handle result
+    if (!result.success) {
+      console.error(chalk.red('✗'), result.error);
+      process.exit(1);
+    }
+
+    // Output markdown to stdout if no file specified
+    if (!options.output && result.markdown) {
+      console.log(result.markdown);
+    }
+
+    // Show success message if file written
+    if (result.outputPath) {
+      console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
+      if (options.verbose && result.eventCount) {
+        console.log(chalk.dim(`  ${result.eventCount} events processed`));
+      }
+    }
+
+    // Show warning if present
+    if (result.warning) {
+      console.warn(chalk.yellow('⚠'), result.warning);
+    }
   });
 
 program
@@ -208,7 +232,7 @@ program
   .option('--dry-run', 'Preview export without writing files')
   .option('-v, --verbose', 'Show detailed progress for each session')
   .action(async (options) => {
-    await exportSessions({
+    const result = await exportSessions({
       dir: options.dir || '.',
       dbPath: options.dbPath || './knowledge.db',
       outputDir: options.outputDir,
@@ -218,6 +242,40 @@ program
       dryRun: options.dryRun,
       verbose: options.verbose
     });
+
+    // Handle result
+    if (!result.success) {
+      console.error(chalk.red('✗'), result.error);
+      if (result.errors && result.errors.length > 0) {
+        console.error(chalk.dim('\nErrors:'));
+        result.errors.forEach(err => {
+          console.error(chalk.dim(`  ${err.sessionId}: ${err.error}`));
+        });
+      }
+      process.exit(1);
+    }
+
+    // Show statistics
+    if (options.dryRun) {
+      console.log(chalk.yellow('🔍 DRY RUN MODE'));
+    }
+    
+    console.log(chalk.green('✓'), `Export complete`);
+    console.log(chalk.dim(`  Exported: ${result.exported}`));
+    if (result.failed > 0) {
+      console.log(chalk.yellow(`  Failed: ${result.failed}`));
+    }
+    if (result.skipped > 0) {
+      console.log(chalk.dim(`  Skipped: ${result.skipped}`));
+    }
+    if (result.outputDir) {
+      console.log(chalk.dim(`  Output: ${result.outputDir}`));
+    }
+
+    // Show individual errors if any
+    if (result.errors && result.errors.length > 0 && !options.verbose) {
+      console.log(chalk.yellow('\n⚠ Some exports failed. Use --verbose for details.'));
+    }
   });
 
 program
