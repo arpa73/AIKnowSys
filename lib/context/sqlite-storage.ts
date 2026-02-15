@@ -1380,6 +1380,23 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Query sessions by date
+   * @param date - Session date (YYYY-MM-DD format)
+   * @returns Promise resolving to array of session rows (ordered by created_at ASC)
+   */
+  async querySessionsByDate(date: string): Promise<SessionRow[]> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before querying.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare('SELECT * FROM sessions WHERE date = ? ORDER BY created_at ASC');
+    return stmt.all(date) as SessionRow[];
+  }
+
+  /**
    * Get plan by ID with content
    * @param planId - Plan ID
    * @returns Promise resolving to plan row or null

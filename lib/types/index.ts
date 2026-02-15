@@ -207,6 +207,45 @@ export interface MigrateToEventsResult {
   dbPath?: string;
 }
 
+// Markdown Export (Phase 3)
+export interface ExportSessionOptions {
+  sessionId?: string;
+  date?: string;
+  dbPath: string;
+  output?: string;
+  verbose?: boolean;
+}
+
+export interface ExportSessionResult {
+  success: boolean;
+  markdown?: string;
+  sessionId?: string;
+  eventCount?: number;
+  outputPath?: string;
+  error?: string;
+  warning?: string;
+  verbose?: boolean;
+}
+
+export interface ExportSessionsOptions {
+  dbPath: string;
+  outputDir: string;
+  from?: string;
+  to?: string;
+  projectId?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+}
+
+export interface ExportSessionsResult {
+  success: boolean;
+  exported: number;
+  failed: number;
+  skipped: number;
+  outputDir?: string;
+  errors?: Array<{ sessionId: string; error: string }>;
+}
+
 // SQLite Query types (Phase 1 Week 2)
 export type QueryMode = 'preview' | 'metadata' | 'section' | 'full';
 
