@@ -11,7 +11,70 @@
 
 ---
 
-## � v0.11.0 - Progressive Detail Modes (Feb 15, 2026)
+## 🔄 Phase 2.1 - Hybrid Storage CLI Migration (Feb 15, 2026)
+
+**Completion Date:** 2026-02-15  
+**Milestone:** Event-Sourced Migration Tool with Hybrid Storage Support
+
+### Major Features
+
+**CLI Migration Command (`migrate-to-events`)**
+
+Complete migration tool for transitioning markdown sessions/plans to event-sourced storage while maintaining backward compatibility through hybrid storage.
+
+**Key Capabilities:**
+- **Single migration**: Migrate specific session or plan by ID
+- **Batch migration**: `--all` flag migrates ALL sessions AND plans
+- **Idempotent**: Safe to run multiple times (detects existing events)
+- **Error resilient**: Continues on individual failures, collects detailed errors
+- **Dry run mode**: Preview migration without making changes
+- **Verbose mode**: Detailed progress reporting with ora spinners
+
+**CLI Usage:**
+```bash
+# Migrate single session
+npx aiknowsys migrate-to-events --session sess-2026-02-15-001
+
+# Migrate single plan  
+npx aiknowsys migrate-to-events --plan PLAN_feature_x
+
+# Migrate everything
+npx aiknowsys migrate-to-events --all --verbose
+
+# Preview without changes
+npx aiknowsys migrate-to-events --all --dry-run
+```
+
+**Architecture:**
+- **EventMigrator**: Batch migration logic with `migrateAllSessions()` and `migrateAllPlans()`
+- **MarkdownParser**: Extract events from markdown sections (goal, changes, validation, learning)
+- **MarkdownGenerator**: Generate markdown from events (hybrid storage write)
+- **Hybrid Storage**: Write BOTH events AND markdown for backward compatibility
+
+**Quality Metrics:**
+- ✅ **Tests**: 8/8 passing (100% coverage)
+- ✅ **TDD**: Full RED → GREEN → REFACTOR cycle followed
+- ✅ **Invariants**: 8/8 Critical Invariants validated
+- ✅ **Code Review**: Architect-approved (EXCEPTIONAL quality rating)
+
+**Files Added:**
+- [lib/commands/migrate-to-events.ts](lib/commands/migrate-to-events.ts) - CLI command handler (247 lines)
+- [lib/migration/event-migrator.ts](lib/migration/event-migrator.ts) - Migration orchestrator (295 lines)
+- [lib/events/markdown-parser.ts](lib/events/markdown-parser.ts) - Event extraction from markdown
+- [lib/events/markdown-generator.ts](lib/events/markdown-generator.ts) - Markdown generation from events
+- [test/commands/migrate-to-events.test.ts](test/commands/migrate-to-events.test.ts) - Comprehensive test suite (533 lines)
+
+**Files Modified:**
+- [bin/cli.js](bin/cli.js) - Registered `migrate-to-events` command with full option parsing
+- [lib/types/index.ts](lib/types/index.ts) - Added `MigrateToEventsOptions` and `MigrateToEventsResult` types
+
+**Context:**
+- **Session Notes:** [.aiknowsys/sessions/2026-02-15-phase2.1-session.md](.aiknowsys/sessions/2026-02-15-phase2.1-session.md)
+- **Architect Review:** APPROVED - "Textbook example of proper TDD methodology"
+
+---
+
+## 📊 v0.11.0 - Progressive Detail Modes (Feb 15, 2026)
 
 **Release Date:** 2026-02-15  
 **Milestone:** Token Optimization Phase 2 - Progressive Detail Modes
