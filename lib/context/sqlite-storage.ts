@@ -1397,6 +1397,47 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Query sessions with filters (for bulk operations)
+   * @param filters - Query filters (date range, project ID)
+   * @returns Promise resolving to array of session rows (ordered by date ASC, created_at ASC)
+   */
+  async querySessionsWithFilters(filters: {
+    from?: string;
+    to?: string;
+    projectId?: string;
+  }): Promise<SessionRow[]> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before querying.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    let query = 'SELECT * FROM sessions WHERE 1=1';
+    const params: any[] = [];
+
+    if (filters.from) {
+      query += ' AND date >= ?';
+      params.push(filters.from);
+    }
+
+    if (filters.to) {
+      query += ' AND date <= ?';
+      params.push(filters.to);
+    }
+
+    if (filters.projectId) {
+      query += ' AND project_id = ?';
+      params.push(filters.projectId);
+    }
+
+    query += ' ORDER BY date ASC, created_at ASC';
+
+    const stmt = this.db.prepare(query);
+    return stmt.all(...params) as SessionRow[];
+  }
+
+  /**
    * Get plan by ID with content
    * @param planId - Plan ID
    * @returns Promise resolving to plan row or null

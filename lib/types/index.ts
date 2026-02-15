@@ -243,6 +243,7 @@ export interface ExportSessionsResult {
   failed: number;
   skipped: number;
   outputDir?: string;
+  error?: string;
   errors?: Array<{ sessionId: string; error: string }>;
 }
 
