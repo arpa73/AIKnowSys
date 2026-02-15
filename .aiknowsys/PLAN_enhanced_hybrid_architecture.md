@@ -1,7 +1,10 @@
 # Implementation Plan: Enhanced Hybrid Architecture (Index-First Writes)
 
-**Status:** 🎯 PLANNING  
+**Status:** ❌ SUPERSEDED  
+**Superseded by:** PLAN_knowledge_bank_evolution.md  
 **Created:** 2026-02-09  
+**Archived:** 2026-02-15  
+**Reason:** Halfway solution. Full knowledge bank evolution provides better long-term architecture.  
 **Goal:** Mutation commands write BOTH index + markdown to ensure MCP speed + human readability + git workflow
 
 ---

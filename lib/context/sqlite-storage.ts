@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url';
 import Database from 'better-sqlite3';
 import { StorageAdapter } from './storage-adapter.js';
 import { wrapDatabaseError } from '../utils/database-errors.js';
+import { QUERY_LIMITS } from '../utils/query-modes.js';
 import type {
   PlanMetadata,
   SessionMetadata,
@@ -671,6 +672,246 @@ export class SqliteStorage extends StorageAdapter {
     return {
       count: rows.length,
       plans: rows
+    };
+  }
+
+  /**
+   * Get session statistics (ultra-lightweight preview)
+   * Returns aggregate data for browsing without content
+   * @param filters - Optional filters for date, date range, topic, status
+   * @returns Promise resolving to session statistics
+   * @throws Error if database not initialized
+   */
+  async getSessionStats(filters?: SessionFilters & { status?: string }): Promise<import('../types/index.js').SessionStats> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    // Build WHERE clause for filters
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.dateAfter) {
+        whereClause += ' AND date >= ?';
+        params.push(filters.dateAfter);
+      }
+      
+      if (filters.dateBefore) {
+        whereClause += ' AND date <= ?';
+        params.push(filters.dateBefore);
+      }
+      
+      if (filters.topic) {
+        whereClause += ' AND (topic LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.status) {
+        whereClause += ' AND status = ?';
+        params.push(filters.status);
+      }
+    }
+    
+    // Get aggregate stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total,
+        MIN(date) as earliest,
+        MAX(date) as latest
+      FROM sessions 
+      WHERE ${whereClause}
+    `;
+    
+    const stats = this.db.prepare(statsQuery).get(...params) as { total: number; earliest: string | null; latest: string | null };
+    
+    // Get status counts
+    const statusQuery = `
+      SELECT status, COUNT(*) as count
+      FROM sessions
+      WHERE ${whereClause}
+      GROUP BY status
+    `;
+    
+    const statusRows = this.db.prepare(statusQuery).all(...params) as Array<{ status: string; count: number }>;
+    
+    // Get unique topics (aggregate from JSON arrays)
+    const topicsQuery = `
+      SELECT DISTINCT topics
+      FROM sessions
+      WHERE ${whereClause} AND topics IS NOT NULL
+    `;
+    
+    const topicsRows = this.db.prepare(topicsQuery).all(...params) as Array<{ topics: string }>;
+    const uniqueTopics = new Set<string>();
+    
+    for (const row of topicsRows) {
+      try {
+        const topics = JSON.parse(row.topics);
+        for (const topic of topics) {
+          uniqueTopics.add(topic);
+        }
+      } catch {
+        // Skip invalid JSON
+      }
+    }
+    
+    // Get session previews (lightweight)
+    const previewQuery = `
+      SELECT date, topic as title, status, topics
+      FROM sessions
+      WHERE ${whereClause}
+      ORDER BY date DESC
+      LIMIT ${QUERY_LIMITS.PREVIEW_SESSION_LIMIT}
+    `;
+    
+    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{ 
+      date: string; 
+      title: string; 
+      status: string; 
+      topics: string | null;
+    }>;
+    
+    const sessions = previewRows.map(row => ({
+      date: row.date,
+      title: row.title,
+      topics_count: row.topics ? JSON.parse(row.topics).length : 0,
+      status: row.status
+    }));
+    
+    return {
+      count: stats.total,
+      earliest: stats.earliest || undefined,
+      latest: stats.latest || undefined,
+      uniqueTopics: Array.from(uniqueTopics).slice(0, QUERY_LIMITS.MAX_UNIQUE_TOPICS),
+      statusCounts: statusRows,
+      sessions
+    };
+  }
+
+  /**
+   * Get plan statistics (ultra-lightweight preview)
+   * Returns aggregate data for browsing without content
+   * @param filters - Optional filters for status, author, topic, priority
+   * @returns Promise resolving to plan statistics
+   * @throws Error if database not initialized
+   */
+  async getPlanStats(filters?: PlanFilters & { priority?: string }): Promise<import('../types/index.js').PlanStats> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+    
+    // Build WHERE clause for filters
+    let whereClause = '1=1';
+    const params: any[] = [];
+    
+    if (filters) {
+      if (filters.status) {
+        whereClause += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters.author) {
+        whereClause += ' AND author = ?';
+        params.push(filters.author);
+      }
+      
+      if (filters.topic) {
+        whereClause += ' AND (title LIKE ? OR topics LIKE ?)';
+        params.push(`%${filters.topic}%`, `%${filters.topic}%`);
+      }
+      
+      if (filters.priority) {
+        whereClause += ' AND priority = ?';
+        params.push(filters.priority);
+      }
+    }
+    
+    // Get aggregate stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total,
+        MIN(created_at) as earliest_created,
+        MAX(updated_at) as latest_updated
+      FROM plans 
+      WHERE ${whereClause}
+    `;
+    
+    const stats = this.db.prepare(statsQuery).get(...params) as { 
+      total: number; 
+      earliest_created: string | null; 
+      latest_updated: string | null;
+    };
+    
+    // Get status counts
+    const statusQuery = `
+      SELECT status, COUNT(*) as count
+      FROM plans
+      WHERE ${whereClause}
+      GROUP BY status
+    `;
+    
+    const statusRows = this.db.prepare(statusQuery).all(...params) as Array<{ status: string; count: number }>;
+    
+    // Get unique topics
+    const topicsQuery = `
+      SELECT DISTINCT topics
+      FROM plans
+      WHERE ${whereClause} AND topics IS NOT NULL
+    `;
+    
+    const topicsRows = this.db.prepare(topicsQuery).all(...params) as Array<{ topics: string }>;
+    const uniqueTopics = new Set<string>();
+    
+    for (const row of topicsRows) {
+      try {
+        const topics = JSON.parse(row.topics);
+        for (const topic of topics) {
+          uniqueTopics.add(topic);
+        }
+      } catch {
+        // Skip invalid JSON
+      }
+    }
+    
+    // Get plan previews (lightweight)
+    const previewQuery = `
+      SELECT id, title, status, created_at, topics
+      FROM plans
+      WHERE ${whereClause}
+      ORDER BY updated_at DESC
+      LIMIT ${QUERY_LIMITS.PREVIEW_PLAN_LIMIT}
+    `;
+    
+    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{ 
+      id: string; 
+      title: string; 
+      status: string;
+      created_at: string;
+      topics: string | null;
+    }>;
+    
+    const plans = previewRows.map(row => ({
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      topics_count: row.topics ? JSON.parse(row.topics).length : 0,
+      created_at: row.created_at
+    }));
+    
+    return {
+      count: stats.total,
+      earliestCreated: stats.earliest_created || undefined,
+      latestUpdated: stats.latest_updated || undefined,
+      uniqueTopics: Array.from(uniqueTopics).slice(0, QUERY_LIMITS.MAX_UNIQUE_TOPICS),
+      statusCounts: statusRows,
+      plans
     };
   }
 

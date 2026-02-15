@@ -191,13 +191,17 @@ export interface MigrateToSqliteResult {
 }
 
 // SQLite Query types (Phase 1 Week 2)
+export type QueryMode = 'preview' | 'metadata' | 'section' | 'full';
+
 export interface QuerySessionsOptions {
   dbPath?: string; // Optional: Auto-detects knowledge.db if not provided
   dateAfter?: string;
   dateBefore?: string;
   topic?: string;
   status?: string;
-  includeContent?: boolean; // Default: false (metadata only for token efficiency)
+  includeContent?: boolean; // DEPRECATED: Use mode instead
+  mode?: QueryMode; // Default: 'metadata' (preview = 150 tokens, metadata = 500, section = 1.2K, full = 22K)
+  section?: string; // For mode='section': specific section to extract
 }
 
 export interface QueryPlansOptions {
@@ -206,7 +210,9 @@ export interface QueryPlansOptions {
   author?: string;
   topic?: string;
   priority?: 'high' | 'medium' | 'low';
-  includeContent?: boolean; // Default: false (metadata only for token efficiency)
+  includeContent?: boolean; // DEPRECATED: Use mode instead
+  mode?: QueryMode; // Default: 'metadata' (preview = 150 tokens, metadata = 500, section = 1.2K, full = 22K)
+  section?: string; // For mode='section': specific section to extract
 }
 
 export interface QueryLearnedPatternsOptions {
@@ -246,6 +252,40 @@ export interface SessionMetadata {
   topics: string[];
   created_at: string;
   updated_at?: string;
+}
+
+// Preview-only (ultra-lightweight) - for browsing/counting
+export interface SessionPreview {
+  date: string;
+  title: string;
+  topics_count: number;
+  status?: string;
+}
+
+export interface SessionStats {
+  count: number;
+  earliest?: string;
+  latest?: string;
+  uniqueTopics: string[];
+  statusCounts: Array<{ status: string; count: number }>;
+  sessions: SessionPreview[];
+}
+
+export interface PlanPreview {
+  id: string;
+  title: string;
+  status: string;
+  topics_count: number;
+  created_at: string;
+}
+
+export interface PlanStats {
+  count: number;
+  earliestCreated?: string;
+  latestUpdated?: string;
+  uniqueTopics: string[];
+  statusCounts: Array<{ status: string; count: number }>;
+  plans: PlanPreview[];
 }
 
 export interface PlanRecord {
@@ -298,14 +338,93 @@ export interface SearchResult {
   score: number;
 }
 
+// Section-specific types (for mode='section')
+export interface SessionSection {
+  date: string;
+  title: string;
+  goal: string;
+  status: 'active' | 'paused' | 'complete';
+  topics: string[];
+  section: string;
+  section_content: string;
+  section_found: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlanSection {
+  id: string;
+  title: string;
+  status: 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED';
+  section: string;
+  section_content: string;
+  section_found: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Mode-specific result types (for function overloads)
+export interface SessionsPreviewResult {
+  count: number;
+  date_range?: string;
+  topics: string[];
+  status_counts: Array<{ status: string; count: number }>;
+  sessions: SessionPreview[];
+}
+
+export interface SessionsMetadataResult {
+  count: number;
+  sessions: SessionMetadata[];
+}
+
+export interface SessionsFullResult {
+  count: number;
+  sessions: SessionRecord[];
+}
+
+export interface SessionsSectionResult {
+  count: number;
+  sessions: SessionSection[];
+}
+
+export interface PlansPreviewResult {
+  count: number;
+  date_range?: string;
+  topics: string[];
+  status_counts: Array<{ status: string; count: number }>;
+  plans: PlanPreview[];
+}
+
+export interface PlansMetadataResult {
+  count: number;
+  plans: PlanMetadata[];
+}
+
+export interface PlansFullResult {
+  count: number;
+  plans: PlanRecord[];
+}
+
+export interface PlansSectionResult {
+  count: number;
+  plans: PlanSection[];
+}
+
+// Generic result types (for backward compatibility)
 export interface QuerySessionsResult {
   count: number;
-  sessions: SessionRecord[] | SessionMetadata[];
+  sessions: SessionRecord[] | SessionMetadata[] | SessionPreview[] | SessionSection[];
+  date_range?: string;
+  topics?: string[];
+  status_counts?: Array<{ status: string; count: number }>;
 }
 
 export interface QueryPlansResult {
   count: number;
-  plans: PlanRecord[] | PlanMetadata[];
+  plans: PlanRecord[] | PlanMetadata[] | PlanPreview[] | PlanSection[];
+  date_range?: string;
+  topics?: string[];
+  status_counts?: Array<{ status: string; count: number }>;
 }
 
 export interface QueryLearnedPatternsResult {

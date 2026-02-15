@@ -10,6 +10,135 @@
 
 ---
 
+## 🎯 Core Philosophy
+
+These principles guide every architectural decision in AIKnowSys.
+
+### 1. Great AI UX === Great Human UX
+
+**If AI agents struggle to access knowledge, humans will too.**
+
+- Token-efficient representations benefit both AI (context window) and humans (scan time)
+- Structured queries (CLI/SQL) are clearer than "grep through 100 markdown files"
+- Semantic search serves AI (embeddings) and humans (natural language) equally
+- **Corollary:** Optimize for the most constrained consumer (AI context limits), everyone benefits
+
+### 2. Knowledge Accessibility > Data Collection
+
+**Knowledge that's hard to access becomes useless data slop.**
+
+- **Easy retrieval:** `aiknowsys search "authentication patterns"` (not: find, grep, scroll, read)
+- **Cross-project context:** Query patterns from ALL projects, not just current repo
+- **Semantic discovery:** Find relevant knowledge even when keywords don't match
+- **On-demand views:** Generate human-readable exports when needed, don't force storage format
+
+**Anti-pattern:** Collecting knowledge in files that are never queried = data hoarding, not knowledge management.
+
+### 3. Separation of Concerns: Database, Git, Markdown
+
+**Each layer serves its purpose. Don't conflate them.**
+
+```
+┌─────────────────────────────────────┐
+│  GIT = Code (version control)       │  ← Project source, tests, config
+│  - Versioned, branched, merged      │  ← Changes tracked, code reviewed
+│  - Single source of truth for code  │  ← npm dependencies, build config
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│  DATABASE = Knowledge (query layer) │  ← Sessions, plans, events, patterns
+│  - Structured, indexed, searchable  │  ← SQL queries, semantic search
+│  - Source of truth for knowledge    │  ← Cross-project knowledge graph
+└─────────────────────────────────────┘
+
+┌─────────────────────────────────────┐
+│  MARKDOWN = View (human convenience)│  ← On-demand exports for reading
+│  - Generated from database          │  ← Sharing, printing, reviewing
+│  - NOT tracked in git               │  ← Ephemeral, not source of truth
+└─────────────────────────────────────┘
+```
+
+**Why separation matters:**
+- ✅ **No merge conflicts** on knowledge (database handles concurrent writes)
+- ✅ **No git bloat** (knowledge doesn't inflate repo size)
+- ✅ **Better queries** (SQL/semantic search vs grep)
+- ✅ **Clear ownership** (code changes = git, knowledge updates = database)
+
+### 4. Database-First, Event-Sourced Architecture
+
+**Store atomic facts (events), not narrative documents (markdown).**
+
+**Old model (document-based):**
+```markdown
+# Session: Add Auth (Feb 15, 2026)
+Goal: JWT authentication
+[80KB of narrative text...]
+```
+- 160K tokens per session
+- Hard to query specific facts
+- 20-30% formatting overhead
+
+**New model (event-sourced):**
+```json
+{"type": "decision_made", "decision": "Use JWT", "rationale": "..."}
+{"type": "task_completed", "task": "JWT impl", "tests_passing": 42}
+{"type": "pattern_discovered", "pattern": "Token refresh strategy"}
+```
+- 2K tokens for same knowledge (98% reduction)
+- Queryable by type, date, project
+- Semantic search via embeddings
+
+**Benefits:**
+- ✅ AI-native format (structured data, not prose)
+- ✅ Efficient storage and retrieval
+- ✅ Cross-project pattern discovery
+- ✅ Markdown generated on-demand (best of both worlds)
+
+### 5. Privacy-First, Independently Hosted
+
+**Your knowledge stays yours. Local-first architecture with optional cloud.**
+
+**The AIKnowSys difference:**
+```
+Commercial Knowledge Bases          AIKnowSys
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Microsoft/Google Copilot Memories   Local SQLite database
+→ Stored on their servers           → Stored on YOUR disk
+→ Subject to their terms             → You control access
+→ Data mining for AI training        → Private by default
+
+Anthropic/OpenAI Knowledge Bases    Local embeddings
+→ API calls, usage tracked           → Local generation (all-MiniLM-L6-v2)
+→ Vendor lock-in                     → Portable (SQLite export)
+→ Privacy concerns                   → Offline-capable
+```
+
+**Architecture choices for privacy:**
+- ✅ **Local-first:** SQLite database on user's machine (not cloud-required)
+- ✅ **Local embeddings:** Generate vectors locally (no API calls to leak content)
+- ✅ **Optional Postgres:** Self-hosted (Railway, Docker) or managed (your choice)
+- ✅ **Portable:** Standard SQLite format, export to JSON anytime
+- ✅ **No telemetry:** Knowledge queries don't phone home
+- ✅ **Transparent:** Open source, inspect what it does
+
+**The privacy roadmap:**
+- **Today:** Local SQLite, local embeddings, full privacy
+- **Team scale:** Self-hosted Postgres (Railway, Docker, AWS RDS)
+- **Never:** Mandatory cloud storage, vendor lock-in, data mining
+
+**Why this matters:**
+> Knowledge about your code, your decisions, your patterns is sensitive IP.  
+> Commercial knowledge bases trade convenience for control.  
+> AIKnowSys trades nothing - you get both.
+
+**Differentiation:**
+- Microsoft Copilot Memory: Great UX, zero privacy guarantees
+- Google Gemini Knowledge: Integrated, but locked to Google ecosystem  
+- Anthropic Projects: Powerful, but your data trains their models
+- **AIKnowSys: Private, portable, independently hosted - YOU control it**
+
+---
+
 ## 1. Technology Snapshot
 
 | Component | Technology |
@@ -494,33 +623,66 @@ mcp_aiknowsys_search_context_sqlite({
 // Performance: ~18ms average
 ```
 
-**Token Optimization Pattern (v0.12.0+):**
+**Token Optimization Pattern (v0.11.0+):**
 
-All SQLite query tools support the `includeContent` parameter for token efficiency:
+All SQLite query tools support **4 levels of detail** for token efficiency:
+
+| Mode | Tokens | Use Case | Fields Returned |
+|------|--------|----------|-----------------|
+| `preview` | ~150 | Browse by date/topic | Count, date range, topics, status counts, previews (top 20) |
+| `metadata` | ~500 | List sessions/plans | All fields EXCEPT content (DEFAULT) |
+| `section` | ~1.2K | Extract specific section | Metadata + extracted markdown section |
+| `full` | ~22K | Deep analysis | Everything (metadata + full content) |
+
+**Examples:**
 
 ```typescript
-// Default: Metadata-only (95%+ token savings)
+// Preview mode: Ultra-lightweight discovery (150 tokens)
+mcp_aiknowsys_query_sessions_sqlite({
+  mode: 'preview',
+  dateAfter: "2026-02-01"
+})
+// Returns: Stats + top 20 session previews, no content
+
+// Metadata mode: DEFAULT - browse without content (500 tokens)
 mcp_aiknowsys_query_sessions_sqlite({
   dateAfter: "2026-02-01"
-  // includeContent defaults to false
+  // mode defaults to 'metadata'
 })
-// Returns: ~1KB for 4 sessions (date, title, status, topics, timestamps)
-// No content field - ideal for navigation/discovery
+// Returns: All metadata fields, no content (97.7% token savings)
 
-// Opt-in: Full content (when you need analysis)
+// Section mode: Extract specific heading (1.2K tokens)
 mcp_aiknowsys_query_sessions_sqlite({
-  dateAfter: "2026-02-01",
-  includeContent: true
+  mode: 'section',
+  section: '## Progress',
+  dateAfter: "2026-02-01"
 })
-// Returns: ~90KB for same 4 sessions (includes full markdown content)
-// Use for deep analysis or when specific details needed
+// Returns: Metadata + content under "## Progress" heading only
+// Includes section_found: boolean to indicate if section exists
+
+// Full mode: When you need it all (22K tokens)
+mcp_aiknowsys_query_sessions_sqlite({
+  mode: 'full',
+  dateAfter: "2026-02-01"
+})
+// Returns: Everything (use sparingly!)
+
+// Legacy backward compatibility
+mcp_aiknowsys_query_sessions_sqlite({
+  includeContent: true  // Auto-maps to mode: 'full'
+})
 ```
 
-**When to use:**
-- **Metadata-only (default):** Browsing sessions by date/topic, listing plans, discovering patterns
-- **Full content:** Reading specific session details, code review, troubleshooting
+**Token Savings Measured (Feb 2026):**
+- Browse 4 sessions: 22K tokens → **150 tokens (99.3% savings)** with preview mode
+- Browse 4 sessions: 22K tokens → **500 tokens (97.7% savings)** with metadata mode (default)
+- Extract one section: 22K tokens → **1.2K tokens (94.5% savings)** with section mode
 
-**Performance impact:** 97.4% token reduction (validated Feb 2026)
+**When to use:**
+- **Preview mode:** Initial discovery, counting, topic browsing
+- **Metadata mode (default):** Listing sessions/plans without content (most common use case)
+- **Section mode:** Extracting specific markdown sections (e.g., "## Progress", "## Goal")
+- **Full mode:** Deep analysis, code review, when you need complete content
 
 **Setup Required:**
 1. Run `npx aiknowsys migrate-to-sqlite` to create `.aiknowsys/knowledge.db`

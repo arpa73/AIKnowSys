@@ -208,15 +208,27 @@ export class AIKnowSysServer {
     this.server.registerTool(
       'query_sessions_sqlite',
       {
-        description: `Query sessions with flexible natural language or structured parameters.
+        description: `Query sessions with 4 levels of detail for token efficiency:
+
+MODES (default: metadata):
+  preview    - Ultra-light summary (~150 tokens) → counts, dates, topics
+  metadata   - Full metadata, no content (~500 tokens) → browsing
+  section    - Specific section only (~1.2K tokens) → targeted extraction  
+  full       - Everything (~22K tokens) → complete sessions
 
 Examples:
-  Natural language: { when: "last week", about: "MCP testing" }
-  Relative dates: { last: 7, unit: "days", topic: "sqlite" }
-  Structured: { dateAfter: "2026-02-06", topic: "mcp-tools" }
+  { topic: "mcp", mode: "preview" }          # Just counts and dates (150 tokens)
+  { topic: "mcp" }                            # Metadata only (default, 500 tokens)
+  { dateAfter: "2026-02-01", mode: "metadata" } # Explicit metadata mode
+  { id: "session-1", mode: "section", section: "## Progress" } # Extract specific section
+  { id: "session-1", mode: "full" }          # Complete session (22K tokens)
 
-Returns metadata-only by default (95% savings). Set includeContent:true for full content.`,
+Natural language also supported:
+  { when: "last week", about: "MCP testing", mode: "preview" }`,
         inputSchema: z.object({
+          // MODE (Feature 2: Progressive Detail)
+          mode: z.enum(['preview', 'metadata', 'section', 'full']).optional().default('metadata'),
+          section: z.string().optional(),
           // Natural language
           when: z.string().optional(),
           about: z.string().optional(),
@@ -229,7 +241,7 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
           dateBefore: z.string().optional(),
           topic: z.string().optional(),
           status: z.string().optional(),
-          includeContent: z.boolean().optional().default(false),
+          includeContent: z.boolean().optional().default(false), // DEPRECATED: Use mode instead
         }),
       },
       async (args) => querySessionsSqlite(args)
@@ -238,15 +250,27 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
     this.server.registerTool(
       'query_plans_sqlite',
       {
-        description: `Query plans with flexible natural language or structured parameters.
+        description: `Query plans with 4 levels of detail for token efficiency:
+
+MODES (default: metadata):
+  preview    - Ultra-light summary (~150 tokens) → counts, status, topics
+  metadata   - Full metadata, no content (~500 tokens) → browsing
+  section    - Specific section only (~1.2K tokens) → targeted extraction  
+  full       - Everything (~22K tokens) → complete plans
 
 Examples:
-  Natural language: { when: "last month", about: "optimization", status: "ACTIVE" }
-  Relative dates: { last: 30, unit: "days", topic: "mcp-tools" }
-  Structured: { status: "ACTIVE", author: "arno-paffen" }
+  { status: "ACTIVE", mode: "preview" }      # Just counts and stats (150 tokens)
+  { status: "ACTIVE" }                        # Metadata only (default, 500 tokens)
+  { author: "arno-paffen", mode: "metadata" } # Explicit metadata mode
+  { id: "PLAN_feature_auth", mode: "section", section: "## Implementation" }
+  { id: "PLAN_feature_auth", mode: "full" }  # Complete plan (22K tokens)
 
-Returns metadata-only by default (95% savings). Set includeContent:true for full content.`,
+Natural language also supported:
+  { when: "last month", about: "optimization", status: "ACTIVE", mode: "preview" }`,
         inputSchema: z.object({
+          // MODE (Feature 2: Progressive Detail)
+          mode: z.enum(['preview', 'metadata', 'section', 'full']).optional().default('metadata'),
+          section: z.string().optional(),
           // Natural language
           when: z.string().optional(),
           about: z.string().optional(),
@@ -259,10 +283,7 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
           author: z.string().optional(),
           topic: z.string().optional(),
           priority: z.enum(['high', 'medium', 'low']).optional(),
-          includeContent: z.boolean().optional().default(false),
-        }),
-      },
-      async (args) => queryPlansSqlite(args)
+          includeContent: z.boolean().optional().default(false), // DEPRECATED: Use mode instead
     );
 
     this.server.registerTool(

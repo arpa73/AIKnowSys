@@ -14,6 +14,7 @@ import { SqliteStorage } from '../context/sqlite-storage.js';
 import { statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { findKnowledgeDb } from '../utils/find-knowledge-db.js';
+import { resolveQueryMode, extractMarkdownSection } from '../utils/query-modes.js';
 import type {
   QuerySessionsOptions,
   QueryPlansOptions,
@@ -21,7 +22,15 @@ import type {
   SearchContextOptions,
   DbStatsOptions,
   QuerySessionsResult,
+  SessionsPreviewResult,
+  SessionsMetadataResult,
+  SessionsFullResult,
+  SessionsSectionResult,
   QueryPlansResult,
+  PlansPreviewResult,
+  PlansMetadataResult,
+  PlansFullResult,
+  PlansSectionResult,
   QueryLearnedPatternsResult,
   SearchContextResult,
   DbStatsResult,
@@ -30,12 +39,55 @@ import type {
   LearnedPatternRecord,
 } from '../types/index.js';
 
+// Function overloads for type-safe query modes
+
+/**
+ * Query sessions in preview mode (ultra-lightweight stats)
+ */
+export async function querySessionsSqlite(
+  options: QuerySessionsOptions & { mode: 'preview' }
+): Promise<SessionsPreviewResult>;
+
+/**
+ * Query sessions in metadata mode (no content)
+ */
+export async function querySessionsSqlite(
+  options: QuerySessionsOptions & { mode: 'metadata' }
+): Promise<SessionsMetadataResult>;
+
+/**
+ * Query sessions in full mode (everything including content)
+ */
+export async function querySessionsSqlite(
+  options: QuerySessionsOptions & { mode: 'full' }
+): Promise<SessionsFullResult>;
+
+/**
+ * Query sessions in section mode (extract specific markdown section)
+ */
+export async function querySessionsSqlite(
+  options: QuerySessionsOptions & { mode: 'section'; section: string }
+): Promise<SessionsSectionResult>;
+
+/**
+ * Query sessions with default metadata mode
+ */
+export async function querySessionsSqlite(
+  options: QuerySessionsOptions
+): Promise<SessionsMetadataResult>;
+
 /**
  * Query sessions from SQLite database
  * 
- * @param options - Query filters (dateAfter, dateBefore, topic, status, includeContent)
+ * Supports 4 levels of detail:
+ * - preview: Ultra-light summary (~150 tokens) - counts, dates, topics
+ * - metadata: Full metadata, no content (~500 tokens) [DEFAULT]
+ * - section: Specific section from content (~1.2K tokens)
+ * - full: Everything (~22K tokens)
+ * 
+ * @param options - Query filters and mode selection
  *                  dbPath is optional - will auto-detect if not provided
- * @returns Session records matching filters (metadata-only by default for token efficiency)
+ * @returns Session records matching filters in requested detail level
  */
 export async function querySessionsSqlite(
   options: QuerySessionsOptions
@@ -45,9 +97,28 @@ export async function querySessionsSqlite(
   await storage.init(dbPath);
   
   try {
-    const includeContent = options.includeContent ?? false; // Default to metadata-only
+    // Determine mode using utility (supports legacy includeContent flag)
+    const mode = resolveQueryMode(options);
     
-    if (includeContent) {
+    if (mode === 'preview') {
+      // Ultra-lightweight: just stats and previews
+      const stats = await storage.getSessionStats({
+        dateAfter: options.dateAfter,
+        dateBefore: options.dateBefore,
+        topic: options.topic,
+        status: options.status,
+      });
+      
+      return {
+        count: stats.count,
+        date_range: stats.earliest && stats.latest ? `${stats.earliest} to ${stats.latest}` : undefined,
+        topics: stats.uniqueTopics,
+        status_counts: stats.statusCounts,
+        sessions: stats.sessions,
+      }
+    }
+    
+    if (mode === 'full') {
       // Full content mode
       const result = await storage.queryFullSessions({
         dateAfter: options.dateAfter,
@@ -71,43 +142,120 @@ export async function querySessionsSqlite(
         count: sessions.length,
         sessions,
       };
-    } else {
-      // Metadata-only mode (default) - 95% token savings
-      const result = await storage.querySessionsMetadata({
+    }
+    
+    // section and metadata modes both use metadata query
+    const result = await storage.querySessionsMetadata({
+      dateAfter: options.dateAfter,
+      dateBefore: options.dateBefore,
+      topic: options.topic,
+      status: options.status,
+    });
+    
+    if (mode === 'section' && options.section) {
+      // Section extraction mode - get full content, extract section
+      const fullResult = await storage.queryFullSessions({
         dateAfter: options.dateAfter,
         dateBefore: options.dateBefore,
         topic: options.topic,
         status: options.status,
       });
       
-      const sessions = result.sessions.map((row) => ({
-        date: row.date,
-        title: row.topic,
-        topic: row.topic, // Include for consistency with full mode
-        goal: row.topic,
-        status: row.status as 'active' | 'paused' | 'complete',
-        topics: row.topics ? JSON.parse(row.topics) : [],
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        // No content field - token efficient!
-      }));
+      const sessions = fullResult.sessions.map((row) => {
+        // Extract requested section using utility function
+        const extraction = extractMarkdownSection(row.content, options.section!);
+        
+        return {
+          date: row.date,
+          title: row.topic,
+          goal: row.topic,
+          status: row.status as 'active' | 'paused' | 'complete',
+          topics: row.topics ? JSON.parse(row.topics) : [],
+          section: options.section!,
+          section_content: extraction.content,
+          section_found: extraction.found,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+        };
+      });
       
       return {
         count: sessions.length,
         sessions,
       };
     }
+    
+    // Default: metadata-only mode (95% token savings vs full)
+    const sessions = result.sessions.map((row) => ({
+      date: row.date,
+      title: row.topic,
+      topic: row.topic, // Include for consistency
+      goal: row.topic,
+      status: row.status as 'active' | 'paused' | 'complete',
+      topics: row.topics ? JSON.parse(row.topics) : [],
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      // No content field - token efficient!
+    }));
+    
+    return {
+      count: sessions.length,
+      sessions,
+    };
   } finally {
     storage.close();
   }
 }
 
+// Function overloads for queryPlansSqlite
+
+/**
+ * Query plans in preview mode (ultra-lightweight stats)
+ */
+export async function queryPlansSqlite(
+  options: QueryPlansOptions & { mode: 'preview' }
+): Promise<PlansPreviewResult>;
+
+/**
+ * Query plans in metadata mode (no content)
+ */
+export async function queryPlansSqlite(
+  options: QueryPlansOptions & { mode: 'metadata' }
+): Promise<PlansMetadataResult>;
+
+/**
+ * Query plans in full mode (everything including content)
+ */
+export async function queryPlansSqlite(
+  options: QueryPlansOptions & { mode: 'full' }
+): Promise<PlansFullResult>;
+
+/**
+ * Query plans in section mode (extract specific markdown section)
+ */
+export async function queryPlansSqlite(
+  options: QueryPlansOptions & { mode: 'section'; section: string }
+): Promise<PlansSectionResult>;
+
+/**
+ * Query plans with default metadata mode
+ */
+export async function queryPlansSqlite(
+  options: QueryPlansOptions
+): Promise<PlansMetadataResult>;
+
 /**
  * Query plans from SQLite database
  * 
- * @param options - Query filters (status, author, topic, priority, includeContent)
+ * Supports 4 levels of detail:
+ * - preview: Ultra-light summary (~150 tokens) - counts, dates, topics
+ * - metadata: Full metadata, no content (~500 tokens) [DEFAULT]
+ * - section: Specific section from content (~1.2K tokens)
+ * - full: Everything (~22K tokens)
+ * 
+ * @param options - Query filters and mode selection
  *                  dbPath is optional - will auto-detect if not provided
- * @returns Plan records matching filters (metadata-only by default for token efficiency)
+ * @returns Plan records matching filters in requested detail level
  */
 export async function queryPlansSqlite(
   options: QueryPlansOptions
@@ -117,9 +265,30 @@ export async function queryPlansSqlite(
   await storage.init(dbPath);
   
   try {
-    const includeContent = options.includeContent ?? false; // Default to metadata-only
+    // Determine mode using utility (supports legacy includeContent flag)
+    const mode = resolveQueryMode(options);
     
-    if (includeContent) {
+    if (mode === 'preview') {
+      // Ultra-lightweight: just stats and previews
+      const stats = await storage.getPlanStats({
+        status: options.status,
+        author: options.author,
+        topic: options.topic,
+        priority: options.priority,
+      });
+      
+      return {
+        count: stats.count,
+        date_range: stats.earliestCreated && stats.latestUpdated 
+          ? `${stats.earliestCreated} to ${stats.latestUpdated}` 
+          : undefined,
+        topics: stats.uniqueTopics,
+        status_counts: stats.statusCounts,
+        plans: stats.plans,
+      };
+    }
+    
+    if (mode === 'full') {
       // Full content mode
       const result = await storage.queryFullPlans({
         status: options.status,
@@ -147,35 +316,68 @@ export async function queryPlansSqlite(
         count: plans.length,
         plans,
       };
-    } else {
-      // Metadata-only mode (default) - 95% token savings
-      const result = await storage.queryPlansMetadata({
+    }
+    
+    // section and metadata modes both start with metadata query
+    const result = await storage.queryPlansMetadata({
+      status: options.status,
+      author: options.author,
+      topic: options.topic,
+      priority: options.priority,
+    });
+    
+    if (mode === 'section' && options.section) {
+      // Section extraction mode - get full content, extract section
+      const fullResult = await storage.queryFullPlans({
         status: options.status,
         author: options.author,
         topic: options.topic,
         priority: options.priority,
       });
       
-      // Filter out learned patterns
-      const plans = result.plans
+      const plans = fullResult.plans
         .filter((row) => !row.id.startsWith('learned_'))
-        .map((row) => ({
-          id: row.id,
-          title: row.title,
-          status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
-          author: row.author,
-          priority: row.priority || 'medium',
-          type: row.type || 'feature',
-          created_at: row.created_at,
-          updated_at: row.updated_at,
-          // No content field - token efficient!
-        }));
+        .map((row) => {
+          // Extract requested section using utility function
+          const extraction = extractMarkdownSection(row.content, options.section!);
+          
+          return {
+            id: row.id,
+            title: row.title,
+            status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
+            section: options.section!,
+            section_content: extraction.content,
+            section_found: extraction.found,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          };
+        });
       
       return {
         count: plans.length,
         plans,
       };
     }
+    
+    // Default: metadata-only mode (95% token savings vs full)
+    const plans = result.plans
+      .filter((row) => !row.id.startsWith('learned_'))
+      .map((row) => ({
+        id: row.id,
+        title: row.title,
+        status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
+        author: row.author,
+        priority: row.priority || 'medium',
+        type: row.type || 'feature',
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        // No content field - token efficient!
+      }));
+    
+    return {
+      count: plans.length,
+      plans,
+    };
   } finally {
     storage.close();
   }

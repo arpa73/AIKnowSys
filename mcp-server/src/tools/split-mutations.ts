@@ -2,7 +2,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { z } from 'zod';
 import { getProjectRoot } from './utils/project-root.js';
-import { handleZodError, MCPErrorResponse } from './utils/error-helpers.js';
+import { handleZodError, handleCLIError, MCPErrorResponse } from './utils/error-helpers.js';
 
 const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
@@ -65,6 +65,11 @@ export async function updateSessionMetadata(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'updating session metadata');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -217,7 +222,15 @@ export async function archivePlans(params: unknown) {
           examples: ['{"days": 30}', '{"status": "PAUSED", "days": 60}']
         }
       });
-    }
+    }    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'archiving sessions');
+    if (cliError) return cliError;
+        
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'archiving plans');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -269,8 +282,11 @@ export async function setPlanStatus(params: unknown) {
           examples: ['{"planId": "PLAN_test", "status": "ACTIVE"}', '{"planId": "PLAN_test", "status": "PAUSED"}']
         }
       });
-    }
-    return {
+    }    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'updating plan metadata');
+    if (cliError) return cliError;
+        return {
       content: [{ 
         type: 'text' as const, 
         text: `Error setting plan status: ${error instanceof Error ? error.message : String(error)}` 
@@ -318,6 +334,11 @@ export async function appendToPlan(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'appending to plan');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -366,6 +387,11 @@ export async function prependToPlan(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'prepending to plan');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -424,6 +450,11 @@ export async function appendToSession(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'appending to session');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -461,22 +492,8 @@ export async function prependToSession(params: unknown) {
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {    if (error instanceof z.ZodError) {
-      return handleZodError(error, 'appending to session', {
-        date: {
-          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
-          examples: ['{"section": "## Progress", "content": "Fixed bug X", "date": "2026-02-14"}', '{"section": "## Notes", "content": "Testing complete"}']
-        },
-        section: {
-          suggestion: 'Section heading (optional, defaults to "## Update")',
-          examples: ['{"section": "## Changes", "content": "Updated tests"}', '{"section": "## Key Learning", "content": "Pattern discovered"}']
-        },
-        content: {
-          suggestion: 'Content must be a non-empty string to append',
-          examples: ['{"content": "Phase 1 complete"}', '{"section": "## Validation", "content": "✅ All tests passing"}']
-        }
-      });
-    }    if (error instanceof z.ZodError) {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return handleZodError(error, 'prepending to session', {
         date: {
           suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
@@ -492,6 +509,11 @@ export async function prependToSession(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'prepending to session');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -548,6 +570,11 @@ export async function insertAfterSection(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'inserting after section');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
@@ -604,6 +631,11 @@ export async function insertBeforeSection(params: unknown) {
         }
       });
     }
+    
+    // Handle CLI execution errors
+    const cliError = handleCLIError(error, 'inserting before section');
+    if (cliError) return cliError;
+    
     return {
       content: [{ 
         type: 'text' as const, 
