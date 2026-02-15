@@ -31,6 +31,8 @@ import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { migrateEssentials } from '../dist/lib/commands/migrate-essentials.js';
 import { migrateToSqlite } from '../dist/lib/commands/migrate-to-sqlite.js';
 import { migrateToEvents } from '../dist/lib/commands/migrate-to-events.js';
+import { exportSession } from '../dist/lib/commands/export-session.js';
+import { exportSessions } from '../dist/lib/commands/export-sessions.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
@@ -169,6 +171,50 @@ program
       sessionId: options.session,
       planId: options.plan,
       all: options.all,
+      dryRun: options.dryRun,
+      verbose: options.verbose
+    });
+  });
+
+program
+  .command('export-session')
+  .description('Export single session from event storage as markdown (Phase 3: Markdown Exports)')
+  .argument('[id]', 'Session ID to export (optional if --date provided)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('--date <YYYY-MM-DD>', 'Export session by date (alternative to ID)')
+  .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('-v, --verbose', 'Show detailed event information')
+  .action(async (id, options) => {
+    await exportSession({
+      dir: options.dir || '.',
+      dbPath: options.dbPath || './knowledge.db',
+      sessionId: id,
+      date: options.date,
+      output: options.output,
+      verbose: options.verbose
+    });
+  });
+
+program
+  .command('export-sessions')
+  .description('Export multiple sessions as markdown with filtering (Phase 3: Markdown Exports)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('--output-dir <path>', 'Output directory for exported markdown files (required)')
+  .option('--from <YYYY-MM-DD>', 'Filter: sessions from date (inclusive)')
+  .option('--to <YYYY-MM-DD>', 'Filter: sessions to date (inclusive)')
+  .option('--project-id <id>', 'Filter: sessions for specific project')
+  .option('--dry-run', 'Preview export without writing files')
+  .option('-v, --verbose', 'Show detailed progress for each session')
+  .action(async (options) => {
+    await exportSessions({
+      dir: options.dir || '.',
+      dbPath: options.dbPath || './knowledge.db',
+      outputDir: options.outputDir,
+      from: options.from,
+      to: options.to,
+      projectId: options.projectId,
       dryRun: options.dryRun,
       verbose: options.verbose
     });

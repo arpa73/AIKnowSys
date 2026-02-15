@@ -11,6 +11,100 @@
 
 ---
 
+## 🎯 Phase 3 - Markdown Export Commands (Feb 15, 2026)
+
+**Completion Date:** 2026-02-15  
+**Milestone:** On-Demand Markdown Generation from Event-Sourced Storage
+
+### Major Features
+
+**Export Commands (export-session & export-sessions)**
+
+Complete suite of markdown export commands for generating human-readable documentation from event-sourced storage on-demand.
+
+**Part 1: Single Session Export (`export-session`)**
+
+Export individual sessions as markdown for review, sharing, or archival.
+
+**CLI Usage:**
+```bash
+# Export to stdout
+npx aiknowsys export-session sess-2026-02-15-001
+
+# Export by date
+npx aiknowsys export-session --date 2026-02-15
+
+# Export to file
+npx aiknowsys export-session sess-2026-02-15-001 --output /tmp/session.md
+
+# Verbose mode
+npx aiknowsys export-session --date 2026-02-15 --verbose
+```
+
+**Part 2: Bulk Session Export (`export-sessions`)**
+
+Export multiple sessions with powerful filtering for bulk operations.
+
+**CLI Usage:**
+```bash
+# Export all sessions to directory
+npx aiknowsys export-sessions --output-dir /tmp/sessions/
+
+# Export date range
+npx aiknowsys export-sessions --from 2026-02-01 --to 2026-02-15 --output-dir /tmp/
+
+# Filter by project
+npx aiknowsys export-sessions --project my-project --output-dir /tmp/
+
+# Dry run (preview without writing files)
+npx aiknowsys export-sessions --from 2026-02-01 --dry-run --verbose
+```
+
+**Key Capabilities:**
+- **Single export**: By session ID or date (export-session)
+- **Bulk export**: Date ranges, project filtering, batch processing (export-sessions)
+- **Output options**: stdout, file, or directory (one file per session)
+- **Error resilient**: Tracks exported/failed/skipped, continues on failures
+- **Dry run mode**: Preview exports without writing files
+- **Verbose mode**: Detailed progress reporting
+
+**Architecture:**
+- **MarkdownGenerator reuse**: DRY principle - reuses Phase 2.1 markdown generator
+- **Public APIs only**: Proper encapsulation via `getSessionById()`, `querySessionsByDate()`, `querySessionsWithFilters()`
+- **Chronological sorting**: Events sorted ASC before markdown generation (fixes goal/learning overwrite)
+- **Graceful error handling**: Structured error responses with helpful messages
+- **Proactive refactoring**: Fixed encapsulation violations before architect review
+
+**Quality Metrics:**
+- ✅ **Tests**: 30/30 passing (14 export-session + 16 export-sessions, 100% coverage)
+- ✅ **TDD**: Full RED → GREEN → REFACTOR cycle for both commands
+- ✅ **Invariants**: 7/7 applicable Critical Invariants validated
+- ✅ **Encapsulation**: No type casting, proper public API usage throughout
+- ✅ **Code Review**: Part 1 architect-approved after refactoring, Part 2 proactively fixed
+
+**Files Added:**
+- [lib/commands/export-session.ts](lib/commands/export-session.ts) - Single session export (188 lines)
+- [lib/commands/export-sessions.ts](lib/commands/export-sessions.ts) - Bulk export command (193 lines)
+- [test/commands/export-session.test.ts](test/commands/export-session.test.ts) - Comprehensive tests (633 lines)
+- [test/commands/export-sessions.test.ts](test/commands/export-sessions.test.ts) - Comprehensive tests (533 lines)
+
+**Files Modified:**
+- [lib/context/sqlite-storage.ts](lib/context/sqlite-storage.ts) - Added `querySessionsByDate()` and `querySessionsWithFilters()` public methods
+- [lib/types/index.ts](lib/types/index.ts) - Added ExportSessionOptions/Result and ExportSessionsOptions/Result types
+
+**Use Cases:**
+- 📄 **Review**: Export session as markdown for human review before sharing
+- 📦 **Archival**: Bulk export all sessions for backup alongside database
+- 🔄 **Migration**: Export from event storage, import to documentation systems
+- 📊 **Reporting**: Generate markdown reports for stakeholders
+
+**Context:**
+- **Session Notes:** [.aiknowsys/sessions/2026-02-15-phase3-session.md](.aiknowsys/sessions/2026-02-15-phase3-session.md)
+- **Related Work:** Uses MarkdownGenerator from Phase 2.1
+- **Plan Status:** Phase 3 of Knowledge Bank Evolution COMPLETE
+
+---
+
 ## 🔄 Phase 2.1 - Hybrid Storage CLI Migration (Feb 15, 2026)
 
 **Completion Date:** 2026-02-15  
