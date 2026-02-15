@@ -577,6 +577,75 @@ mcp_aiknowsys_archive_plans({
 - Use `update_*_metadata` for YAML frontmatter changes
 - Use `set_plan_status` / `archive_*` for lifecycle management
 
+### Cross-Repository Queries (Phase 1 - ✅ Implemented)
+
+**Default Behavior:** All queries are **project-scoped** (only see current project data)
+
+**New Capabilities:**
+- Query across all projects in global database
+- Filter by specific project ID
+- Direct database path access
+
+**Project-Scoped Queries (Default):**
+```typescript
+// CLI
+npx aiknowsys query-plans --status ACTIVE
+// Returns: Only active plans from current project
+
+// Programmatic API
+const result = await queryPlans({ status: 'ACTIVE' });
+```
+
+**Cross-Project Queries:**
+```typescript
+// CLI
+npx aiknowsys query-plans --status ACTIVE --all-projects
+// Returns: Active plans from ALL projects in global DB
+
+// Programmatic API
+const result = await queryPlans({ 
+  status: 'ACTIVE', 
+  allProjects: true 
+});
+```
+
+**Filter by Specific Project:**
+```typescript
+// CLI
+npx aiknowsys query-plans --project-id myorg-myrepo
+// Returns: Only plans from specified project
+
+// Programmatic API
+const result = await queryPlans({ 
+  projectId: 'myorg-myrepo' 
+});
+```
+
+**Direct Database Path:**
+```typescript
+// CLI
+npx aiknowsys query-sessions --days 7 --all-projects
+// Uses global DB at ~/.aiknowsys/knowledge.db
+
+// Programmatic API
+const result = await querySessions({ 
+  days: 7,
+  dbPath: '~/.aiknowsys/knowledge.db',
+  allProjects: true
+});
+```
+
+**Available in Commands:**
+- `query-plans --all-projects --project-id <id>`
+- `query-sessions --all-projects --project-id <id>`
+- `search-context` (always cross-project when using global DB)
+
+**Project Isolation:**
+- ✅ Default queries scope to current project (backward compatible)
+- ✅ Cross-project requires explicit flag (safety)
+- ✅ Project ID derived from directory name (sanitized)
+- ✅ Global database location: `~/.aiknowsys/knowledge.db`
+
 **SQLite Backend Tools (Phase 1 - Experimental):**
 ```typescript
 // Get database statistics

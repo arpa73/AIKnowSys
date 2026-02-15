@@ -42,6 +42,9 @@ export interface PlanMetadata {
  * Session metadata extracted from sessions/*.md files
  */
 export interface SessionMetadata {
+  /** Session identifier (from database - Phase 1) */
+  id?: string;
+  
   /** Session date (YYYY-MM-DD format) */
   date: string;
   
@@ -94,7 +97,7 @@ export interface SearchResult {
 }
 
 /**
- * Storage adapter query filters for plans
+ * Storage adapter query filters for plans (Phase 1: Cross-Repository)
  */
 export interface PlanFilters {
   /** Filter by plan status */
@@ -111,10 +114,16 @@ export interface PlanFilters {
   
   /** Filter by date range (plans updated before this date) */
   updatedBefore?: string;
+  
+  /** Filter by specific project ID (Phase 1: Cross-Repository) */
+  projectId?: string;
+  
+  /** Query across all projects (default: false - current project only) */
+  allProjects?: boolean;
 }
 
 /**
- * Storage adapter query filters for sessions
+ * Storage adapter query filters for sessions (Phase 1: Cross-Repository)
  */
 export interface SessionFilters {
   /** Filter by date (exact match YYYY-MM-DD) */
@@ -134,6 +143,12 @@ export interface SessionFilters {
   
   /** Filter by related plan */
   plan?: string;
+  
+  /** Filter by specific project ID (Phase 1: Cross-Repository) */
+  projectId?: string;
+  
+  /** Query across all projects (default: false - current project only) */
+  allProjects?: boolean;
 }
 
 /**

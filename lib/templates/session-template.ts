@@ -77,6 +77,16 @@ status: "${status}"
 ## Changes
 [Document changes as you make them]
 
+## Findings & Technical Debt
+[Track discoveries, workarounds, and deferred improvements]
+
+<!--
+### Finding: [Brief description]
+**Impact:** HIGH/MEDIUM/LOW
+**Status:** INVESTIGATING / WORKAROUND / DEFERRED / FIXED
+**Action:** [What needs to be done]
+-->
+
 ## Notes for Next Session
 [Important context to remember]
 `;

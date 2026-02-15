@@ -1,23 +1,23 @@
 {
   "version": 1,
-  "updated": "2026-02-15T09:08:55.773Z",
+  "updated": "2026-02-15T21:40:02.054Z",
   "plans": [
     {
-      "id": "PLAN_integration_test_plan",
-      "title": "Integration Test Plan",
+      "id": "PLAN_knowledge_bank_evolution",
+      "title": "Knowledge Bank Evolution - Cross-Repo AI-Native Storage",
       "status": "ACTIVE",
       "author": "arno-paffen",
-      "created": "2026-02-15T09:08:55.776Z",
-      "updated": "2026-02-15T09:08:55.776Z",
-      "file": "PLAN_integration_test_plan.md"
+      "created": "2026-02-15T21:40:02.056Z",
+      "updated": "2026-02-15T21:40:02.056Z",
+      "file": "PLAN_knowledge_bank_evolution.md"
     },
     {
       "id": "PLAN_test_plan_1771146535693",
       "title": "Test Plan 1771146535693",
       "status": "ACTIVE",
       "author": "arno",
-      "created": "2026-02-15T09:08:55.778Z",
-      "updated": "2026-02-15T09:08:55.778Z",
+      "created": "2026-02-15T21:40:02.059Z",
+      "updated": "2026-02-15T21:40:02.059Z",
       "file": "PLAN_test_plan_1771146535693.md"
     },
     {
@@ -25,9 +25,26 @@
       "title": "AIKnowSys Plans - Dependency Analysis & Roadmap",
       "status": "PLANNED",
       "author": "unknown",
-      "created": "2026-02-15T09:08:55.780Z",
-      "updated": "2026-02-15T09:08:55.781Z",
+      "created": "2026-02-15T21:40:02.060Z",
+      "updated": "2026-02-15T21:40:02.060Z",
       "file": "PLAN_DEPENDENCY_ANALYSIS.md"
+    },
+    {
+      "id": "PLAN_acp_vs_mcp_research",
+      "title": "PLAN: Protocol Research - MCP vs ACP vs A2A",
+      "status": "\"PLANNED\"",
+      "author": "\"Planner\"",
+      "created": "2026-02-14T23:00:00.000Z",
+      "updated": "2026-02-15T00:00:00.000Z",
+      "topics": [
+        "research",
+        "poc",
+        "acp",
+        "mcp",
+        "a2a",
+        "protocol-comparison"
+      ],
+      "file": "PLAN_acp_vs_mcp_research.md"
     },
     {
       "id": "PLAN_ai_autonomous_maintenance",
@@ -35,7 +52,7 @@
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-14T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.784Z",
+      "updated": "2026-02-15T21:40:02.062Z",
       "file": "PLAN_ai_autonomous_maintenance.md"
     },
     {
@@ -44,7 +61,7 @@
       "status": "\"PLANNED\"",
       "author": "\"Planner\"",
       "created": "2026-02-13T23:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.786Z",
+      "updated": "2026-02-15T21:40:02.062Z",
       "topics": [
         "ai-ux",
         "semantic-search",
@@ -60,7 +77,7 @@
       "status": "\"PLANNED\"",
       "author": "\"Planner\"",
       "created": "2026-02-13T23:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.787Z",
+      "updated": "2026-02-15T21:40:02.063Z",
       "topics": [
         "ai-ux",
         "error-handling",
@@ -75,7 +92,7 @@
       "status": "\"PLANNED\"",
       "author": "\"Planner\"",
       "created": "2026-02-13T23:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.788Z",
+      "updated": "2026-02-15T21:40:02.063Z",
       "topics": [
         "ai-ux",
         "smart-query",
@@ -91,7 +108,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno-paffen\"",
       "created": "2026-02-08T23:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.788Z",
+      "updated": "2026-02-15T21:40:02.064Z",
       "topics": [
         "mcp",
         "bundling",
@@ -106,7 +123,7 @@
       "status": "\"PLANNED\"",
       "author": "\"arno-paffen\"",
       "created": "2026-02-07T23:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.790Z",
+      "updated": "2026-02-15T21:40:02.065Z",
       "file": "PLAN_claude_memory_comparison.md"
     }
   ],
@@ -116,14 +133,14 @@
       "topic": "v0.4.0 Release - Memory & Learning",
       "file": "sessions/2026-01-25-session.md",
       "created": "2026-01-25T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.795Z"
+      "updated": "2026-02-15T21:40:02.070Z"
     },
     {
       "date": "2026-01-26",
       "topic": "v0.5.0 Test Coverage Implementation",
       "file": "sessions/2026-01-26-session.md",
       "created": "2026-01-26T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.796Z"
+      "updated": "2026-02-15T21:40:02.071Z"
     },
     {
       "date": "2026-01-27",
@@ -131,14 +148,14 @@
       "plan": "Architect tool permissions & gitignore updates  ",
       "file": "sessions/2026-01-27-session.md",
       "created": "2026-01-27T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.797Z"
+      "updated": "2026-02-15T21:40:02.073Z"
     },
     {
       "date": "2026-01-28",
       "topic": "Architect Session File Auto-Creation",
       "file": "sessions/2026-01-28-session.md",
       "created": "2026-01-28T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.798Z"
+      "updated": "2026-02-15T21:40:02.074Z"
     },
     {
       "date": "2026-01-29",
@@ -146,7 +163,7 @@
       "plan": "Progress indicator implementation (scan, audit, migrate)  ",
       "file": "sessions/2026-01-29-session.md",
       "created": "2026-01-29T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.799Z"
+      "updated": "2026-02-15T21:40:02.074Z"
     },
     {
       "date": "2026-01-30",
@@ -154,14 +171,14 @@
       "plan": "[PLAN_essentials_compression.md](PLAN_essentials_compression.md)",
       "file": "sessions/2026-01-30-session.md",
       "created": "2026-01-30T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.802Z"
+      "updated": "2026-02-15T21:40:02.075Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 4 Implementation & Review",
       "file": "sessions/2026-01-31-phase4-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.802Z"
+      "updated": "2026-02-15T21:40:02.075Z"
     },
     {
       "date": "2026-01-31",
@@ -169,21 +186,21 @@
       "plan": "Phase 5 implementation - Context preservation & learning system  ",
       "file": "sessions/2026-01-31-phase5-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.803Z"
+      "updated": "2026-02-15T21:40:02.076Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 6 - Collaboration & CI/CD Integration",
       "file": "sessions/2026-01-31-phase6-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.803Z"
+      "updated": "2026-02-15T21:40:02.076Z"
     },
     {
       "date": "2026-01-31",
       "topic": "Phase 7 Implementation Session",
       "file": "sessions/2026-01-31-phase7-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.803Z"
+      "updated": "2026-02-15T21:40:02.077Z"
     },
     {
       "date": "2026-01-31",
@@ -191,7 +208,7 @@
       "plan": "Hooks Documentation Completion (All 5 Phases)  ",
       "file": "sessions/2026-01-31-phase8-implementation.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.804Z"
+      "updated": "2026-02-15T21:40:02.077Z"
     },
     {
       "date": "2026-01-31",
@@ -199,7 +216,7 @@
       "plan": "Workspace Maintenance & Archiving  ",
       "file": "sessions/2026-01-31-session.md",
       "created": "2026-01-31T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.804Z"
+      "updated": "2026-02-15T21:40:02.077Z"
     },
     {
       "date": "2026-02-01",
@@ -207,7 +224,7 @@
       "plan": "[PLAN_remove_deprecated_scripts.md](PLAN_remove_deprecated_scripts.md)  ",
       "file": "sessions/2026-02-01-session.md",
       "created": "2026-02-01T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.805Z"
+      "updated": "2026-02-15T21:40:02.078Z"
     },
     {
       "date": "2026-02-02",
@@ -215,7 +232,7 @@
       "plan": "CI Test Failures Fix - 17 failures across 3 categories  ",
       "file": "sessions/2026-02-02-session.md",
       "created": "2026-02-02T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.806Z"
+      "updated": "2026-02-15T21:40:02.079Z"
     },
     {
       "date": "2026-02-03",
@@ -223,7 +240,7 @@
       "plan": "[PLAN_deliverables_validation_protocol.md](../PLAN_deliverables_validation_protocol.md)  ",
       "file": "sessions/2026-02-03-session.md",
       "created": "2026-02-03T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.806Z"
+      "updated": "2026-02-15T21:40:02.080Z"
     },
     {
       "date": "2026-02-04",
@@ -231,7 +248,7 @@
       "plan": "archive-plans Bug Fixes and Enhancement",
       "file": "sessions/2026-02-04-session.md",
       "created": "2026-02-04T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.807Z"
+      "updated": "2026-02-15T21:40:02.081Z"
     },
     {
       "date": "2026-02-05",
@@ -239,7 +256,7 @@
       "plan": "[PLAN_context_query_system.md](../PLAN_context_query_system.md) (1470 lines)  ",
       "file": "sessions/2026-02-05-session.md",
       "created": "2026-02-05T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.808Z"
+      "updated": "2026-02-15T21:40:02.082Z"
     },
     {
       "date": "2026-02-06",
@@ -247,7 +264,7 @@
       "plan": "VSCode hooks configuration fix + setupHooks() installation bugs  ",
       "file": "sessions/2026-02-06-session.md",
       "created": "2026-02-06T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.809Z"
+      "updated": "2026-02-15T21:40:02.088Z"
     },
     {
       "date": "2026-02-07",
@@ -255,7 +272,7 @@
       "plan": "[PLAN_milestone_changelog.md](../PLAN_milestone_changelog.md)  ",
       "file": "sessions/2026-02-07-session.md",
       "created": "2026-02-07T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.820Z"
+      "updated": "2026-02-15T21:40:02.090Z"
     },
     {
       "date": "2026-02-08",
@@ -270,7 +287,7 @@
       "plan": "PLAN_session_mutation_workflow.md  ",
       "file": "sessions/2026-02-08-session.md",
       "created": "2026-02-08T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.821Z"
+      "updated": "2026-02-15T21:40:02.092Z"
     },
     {
       "date": "2026-02-09",
@@ -285,7 +302,7 @@
       "plan": "\"PLAN_mcp_bugfix_skill_lookup\"",
       "file": "sessions/2026-02-09-session.md",
       "created": "2026-02-09T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.822Z"
+      "updated": "2026-02-15T21:40:02.093Z"
     },
     {
       "date": "2026-02-10",
@@ -293,7 +310,7 @@
       "plan": "Phase 2 Batch 1 - Mutation Commands Refactor  ",
       "file": "sessions/2026-02-10-session.md",
       "created": "2026-02-10T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.823Z"
+      "updated": "2026-02-15T21:40:02.094Z"
     },
     {
       "date": "2026-02-11",
@@ -301,7 +318,7 @@
       "plan": "[PLAN_mcp_only_architecture_migration.md](.aiknowsys/PLAN_mcp_only_architecture_migration.md)",
       "file": "sessions/2026-02-11-session.md",
       "created": "2026-02-11T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.823Z"
+      "updated": "2026-02-15T21:40:02.095Z"
     },
     {
       "date": "2026-02-12",
@@ -309,7 +326,7 @@
       "plan": "PLAN_mcp_only_architecture_migration",
       "file": "sessions/2026-02-12-phase1-session.md",
       "created": "2026-02-12T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.824Z"
+      "updated": "2026-02-15T21:40:02.096Z"
     },
     {
       "date": "2026-02-12",
@@ -324,7 +341,7 @@
       "plan": "[PLAN_mcp_only_architecture_migration.md](../ PLAN_mcp_only_architecture_migration.md) (1536 lines, comprehensive)",
       "file": "sessions/2026-02-12-session.md",
       "created": "2026-02-12T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.824Z"
+      "updated": "2026-02-15T21:40:02.097Z"
     },
     {
       "date": "2026-02-13",
@@ -344,7 +361,7 @@
       "plan": "CLI option naming bug fix  ",
       "file": "sessions/2026-02-13-session.md",
       "created": "2026-02-13T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.825Z"
+      "updated": "2026-02-15T21:40:02.097Z"
     },
     {
       "date": "2026-02-14",
@@ -359,7 +376,7 @@
       "plan": "Code quality and documentation completeness  ",
       "file": "sessions/2026-02-14-mcp-token-optimization.md",
       "created": "2026-02-14T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.826Z"
+      "updated": "2026-02-15T21:40:02.098Z"
     },
     {
       "date": "2026-02-14",
@@ -375,7 +392,63 @@
       "plan": "Conversational Error Messages (Phases 1.1, 1.2, 1.3 - query.ts)  ",
       "file": "sessions/2026-02-14-session.md",
       "created": "2026-02-14T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.828Z"
+      "updated": "2026-02-15T21:40:02.099Z"
+    },
+    {
+      "date": "2026-02-15",
+      "topic": "Phase 1 - Cross-Repository Foundation",
+      "topics": [
+        "phase-1",
+        "cross-repo",
+        "global-database",
+        "project-isolation",
+        "knowledge-bank"
+      ],
+      "plan": "\"knowledge_bank_evolution\"",
+      "file": "sessions/2026-02-15-phase1-session.md",
+      "created": "2026-02-15T00:00:00.000Z",
+      "updated": "2026-02-15T21:40:02.100Z"
+    },
+    {
+      "date": "2026-02-15",
+      "topic": "Session: Phase 2 - Event-Sourced Storage Implementation",
+      "topics": [
+        "phase-2",
+        "event-sourcing",
+        "knowledge-events",
+        "tdd",
+        "hybrid-storage"
+      ],
+      "plan": "\"knowledge_bank_evolution\"",
+      "file": "sessions/2026-02-15-phase2-session.md",
+      "created": "2026-02-15T00:00:00.000Z",
+      "updated": "2026-02-15T21:40:02.100Z"
+    },
+    {
+      "date": "2026-02-15",
+      "topic": "Phase 2.1 - Hybrid Storage + Migration Tool",
+      "topics": [
+        "event-sourced-storage",
+        "hybrid-storage",
+        "migration",
+        "backward-compatibility"
+      ],
+      "file": "sessions/2026-02-15-phase2.1-session.md",
+      "created": "2026-02-15T00:00:00.000Z",
+      "updated": "2026-02-15T21:40:02.101Z"
+    },
+    {
+      "date": "2026-02-15",
+      "topic": "Phase 3 - Markdown Export Commands",
+      "topics": [
+        "phase-3",
+        "markdown-export",
+        "cli-commands",
+        "knowledge-bank"
+      ],
+      "file": "sessions/2026-02-15-phase3-session.md",
+      "created": "2026-02-15T00:00:00.000Z",
+      "updated": "2026-02-15T21:40:02.102Z"
     },
     {
       "date": "2026-02-15",
@@ -389,7 +462,7 @@
       ],
       "file": "sessions/2026-02-15-rust-rewrite-analysis.md",
       "created": "2026-02-15T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.833Z"
+      "updated": "2026-02-15T21:40:02.103Z"
     },
     {
       "date": "2026-02-15",
@@ -405,7 +478,7 @@
       "plan": "[PLAN_mcp_dynamic_toolsets.md](../PLAN_mcp_dynamic_toolsets.md)  ",
       "file": "sessions/2026-02-15-session.md",
       "created": "2026-02-15T00:00:00.000Z",
-      "updated": "2026-02-15T09:08:55.836Z"
+      "updated": "2026-02-15T21:40:02.104Z"
     }
   ],
   "learned": [

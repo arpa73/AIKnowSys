@@ -27,7 +27,7 @@ import { createStorage, type PlanFilters } from '../context/index.js';
 const VALID_STATUSES = ['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED'];
 
 /**
- * Query plan filters
+ * Query plan filters (Phase 1: Cross-Repository support)
  */
 export interface QueryPlansOptions {
   status?: 'PLANNED' | 'ACTIVE' | 'PAUSED' | 'COMPLETE' | 'CANCELLED';
@@ -36,15 +36,19 @@ export interface QueryPlansOptions {
   updatedAfter?: string;
   updatedBefore?: string;
   dir?: string;
+  dbPath?: string;
+  projectId?: string; // Filter by specific project ID
+  allProjects?: boolean; // Query across all projects (default: false)
 }
 
 /**
- * Query result structure
+ * Query result structure (Phase 1: Includes projectId for cross-repo support)
  */
 export interface QueryPlansResult {
   count: number;
   plans: Array<{
     id: string;
+    projectId?: string; // Optional for backward compatibility (will be required in Phase 1 complete)
     title: string;
     author: string;
     status: string;
@@ -91,23 +95,35 @@ export async function queryPlansCore(
     );
   }
   
-  // Get target directory - ALWAYS resolve user input to absolute path
-  // (Critical Invariant #2: Absolute Paths Required)
-  const workingDir = targetDir 
-    ? path.resolve(targetDir)
-    : (options.dir ? path.resolve(options.dir) : process.cwd());
+  // Phase 1: Support explicit dbPath for cross-repository queries
+  let storage: any;
   
-  // Create storage adapter
-  const storage = await createStorage(workingDir, { autoRebuild: true });
+  if (options.dbPath) {
+    // Direct database path provided - create SqliteStorage directly
+    const { SqliteStorage } = await import('../context/sqlite-storage.js');
+    storage = new SqliteStorage();
+    await storage.init(options.dbPath);
+  } else {
+    // Get target directory - ALWAYS resolve user input to absolute path
+    // (Critical Invariant #2: Absolute Paths Required)
+    const workingDir = targetDir 
+      ? path.resolve(targetDir)
+      : (options.dir ? path.resolve(options.dir) : process.cwd());
+    
+    // Create storage adapter (uses DatabaseLocator for global DB by default)
+    storage = await createStorage(workingDir, { autoRebuild: true });
+  }
   
   try {
-    // Build filters object
+    // Build filters object (Phase 1: Cross-Repository support)
     const filters: PlanFilters = {};
     if (options.status) filters.status = options.status;
     if (options.author) filters.author = options.author;
     if (options.topic) filters.topic = options.topic;
     if (options.updatedAfter) filters.updatedAfter = options.updatedAfter;
     if (options.updatedBefore) filters.updatedBefore = options.updatedBefore;
+    if (options.projectId) filters.projectId = options.projectId;
+    if (options.allProjects !== undefined) filters.allProjects = options.allProjects;
     
     // Query storage (read-only operation)
     const result = await storage.queryPlans(filters);

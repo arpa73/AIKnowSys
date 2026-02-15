@@ -11,7 +11,82 @@
 
 ---
 
-## 🎯 Phase 3 - Markdown Export Commands (Feb 15, 2026)
+## �️ Phase 1 - Cross-Repository Foundation (Feb 15, 2026)
+
+**Completion Date:** 2026-02-15  
+**Milestone:** Global SQLite database with multi-project query support
+
+### Major Features
+
+**Cross-Repository Query Support**
+
+Query sessions and plans across multiple projects using a shared global database at `~/.aiknowsys/knowledge.db`.
+
+**Architecture (95% Pre-Existing, 5% Implemented Today):**
+- ✅ **Schema** (pre-existing): `projects` table with foreign keys on `sessions.project_id` and `plans.project_id`
+- ✅ **DatabaseLocator** (pre-existing): 3-tier priority (AIKNOWSYS_DB_PATH env > .aiknowsys.config > ~/.aiknowsys/knowledge.db)
+- ✅ **Project Detection** (pre-existing): Automatic via git remote → owner-repo, fallback to directory name, sanitized
+- ✅ **Query Filtering** (NEW): `allProjects` flag and `projectId` filter for cross-repo queries
+- ✅ **Direct DB Access** (NEW): `dbPath` option for explicit database path specification
+
+**Query Options (NEW):**
+```typescript
+// Project-scoped query (default - only sees own project)
+await queryPlans({ status: 'ACTIVE' });
+
+// Cross-project query (sees all projects)
+await queryPlans({ status: 'ACTIVE', allProjects: true });
+
+// Specific project query
+await queryPlans({ projectId: 'myorg-myrepo' });
+
+// Explicit database path
+await queryPlans({ dbPath: '~/.aiknowsys/knowledge.db', allProjects: true });
+```
+
+**CLI Usage (Coming Soon - Phase 1b):**
+```bash
+# Query only current project (default)
+npx aiknowsys query-plans --status ACTIVE
+
+# Query across all projects
+npx aiknowsys query-plans --status ACTIVE --all-projects
+
+# Query specific project
+npx aiknowsys query-plans --project-id myorg-myrepo
+
+# Use global database explicitly
+AIKNOWSYS_DB_PATH=~/.aiknowsys/knowledge.db npx aiknowsys query-plans --all-projects
+```
+
+**Implementation Details:**
+- Modified `lib/types/index.ts`: Added `allProjects`, `projectId`, `dbPath` to QueryPlansOptions and QuerySessionsOptions
+- Modified `lib/context/types.ts`: Added cross-repo filters to PlanFilters and SessionFilters
+- Modified `lib/core/query-plans.ts`: Added dbPath support, passes cross-repo filters to storage
+- Modified `lib/core/query-sessions.ts`: Added dbPath support, passes cross-repo filters to storage
+- Modified `lib/context/sqlite-storage.ts`: Added project filtering logic (if !allProjects && projectId → WHERE project_id = ?)
+- Created `test/integration/cross-project-queries.test.ts`: 11 comprehensive integration tests
+
+**Test Coverage:**
+- ✅ 11/11 cross-project integration tests passing
+- ✅ Project-scoped queries (default behavior)
+- ✅ Cross-project queries (`allProjects: true`)
+- ✅ Project isolation verification
+- ✅ Global database usage
+- ✅ Cross-project filtering (status, author)
+
+**Validation:**
+- ✅ 1394/1395 total tests passing (99.93% pass rate)
+- ✅ No regression from existing functionality
+- ✅ TDD approach: RED → GREEN → REFACTOR
+
+**Related Work:**
+- See `.aiknowsys/sessions/2026-02-15-session.md` for detailed implementation notes
+- Phase 1b will add CLI flags (`--all-projects`, `--project-id`) to bin/cli.js commands
+
+---
+
+## �🎯 Phase 3 - Markdown Export Commands (Feb 15, 2026)
 
 **Completion Date:** 2026-02-15  
 **Milestone:** On-Demand Markdown Generation from Event-Sourced Storage

@@ -22,7 +22,7 @@ import path from 'path';
 import { createStorage, type SessionFilters } from '../context/index.js';
 
 /**
- * Query session filters
+ * Query session filters (Phase 1: Cross-Repository support)
  */
 export interface QuerySessionsOptions {
   date?: string;
@@ -32,20 +32,26 @@ export interface QuerySessionsOptions {
   plan?: string;
   days?: number;
   dir?: string;
+  dbPath?: string; // Phase 1: Direct database path for cross-repository queries
+  projectId?: string; // Phase 1: Filter by specific project ID
+  allProjects?: boolean; // Phase 1: Query across all projects (default: false)
 }
 
 /**
- * Query result structure
+ * Query result structure (Phase 1: Includes projectId for cross-repo support)
  */
 export interface QuerySessionsResult {
   count: number;
   sessions: Array<{
+    id?: string; // Session ID (from database)
     date: string;
+    projectId?: string; // Phase 1: Project identifier
     topic: string;
     plan?: string;
     duration?: string;
     phases?: string[];
     file: string;
+    topics?: string[]; // Topics array (v0.10.0+)
   }>;
 }
 
@@ -102,17 +108,27 @@ export async function querySessionsCore(
     throw new Error(`Invalid dateBefore format: ${options.dateBefore}. Expected YYYY-MM-DD`);
   }
   
-  // Get target directory - ALWAYS resolve user input to absolute path
-  // (Critical Invariant #2: Absolute Paths Required)
-  const workingDir = targetDir 
-    ? path.resolve(targetDir)
-    : (options.dir ? path.resolve(options.dir) : process.cwd());
+  // Phase 1: Support explicit dbPath for cross-repository queries
+  let storage: any;
   
-  // Create storage adapter
-  const storage = await createStorage(workingDir, { autoRebuild: true });
+  if (options.dbPath) {
+    // Direct database path provided - create SqliteStorage directly
+    const { SqliteStorage } = await import('../context/sqlite-storage.js');
+    storage = new SqliteStorage();
+    await storage.init(options.dbPath);
+  } else {
+    // Get target directory - ALWAYS resolve user input to absolute path
+    // (Critical Invariant #2: Absolute Paths Required)
+    const workingDir = targetDir 
+      ? path.resolve(targetDir)
+      : (options.dir ? path.resolve(options.dir) : process.cwd());
+    
+    // Create storage adapter (uses DatabaseLocator for global DB by default)
+    storage = await createStorage(workingDir, { autoRebuild: true });
+  }
   
   try {
-    // Build filters object
+    // Build filters object (Phase 1: Cross-Repository support)
     const filters: SessionFilters = {};
     
     // Handle --days convenience filter (calculates dateAfter from N days ago)
@@ -128,12 +144,14 @@ export async function querySessionsCore(
     if (options.dateBefore) filters.dateBefore = options.dateBefore;
     if (options.topic) filters.topic = options.topic;
     if (options.plan) filters.plan = options.plan;
+    if (options.projectId) filters.projectId = options.projectId;
+    if (options.allProjects !== undefined) filters.allProjects = options.allProjects;
     
     // Query storage (read-only operation)
     const result = await storage.querySessions(filters);
     
     // Sort sessions by date descending (newest first)
-    result.sessions.sort((a, b) => b.date.localeCompare(a.date));
+    result.sessions.sort((a: any, b: any) => b.date.localeCompare(a.date));
     
     // Return structured data
     return result;

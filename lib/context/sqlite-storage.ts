@@ -158,6 +158,17 @@ export class SqliteStorage extends StorageAdapter {
     const params: any[] = [];
     
     if (filters) {
+      // Phase 1: Cross-Repository support
+      // If allProjects is NOT set (default behavior), filter by projectId
+      // If projectId is explicitly provided, use that
+      // If allProjects is true, no project filtering
+      if (!filters.allProjects) {
+        if (filters.projectId) {
+          query += ' AND project_id = ?';
+          params.push(filters.projectId);
+        }
+      }
+      
       if (filters.status) {
         query += ' AND status = ?';
         params.push(filters.status);
@@ -229,6 +240,17 @@ export class SqliteStorage extends StorageAdapter {
     const params: any[] = [];
     
     if (filters) {
+      // Phase 1: Cross-Repository support
+      // If allProjects is NOT set (default behavior), filter by projectId
+      // If projectId is explicitly provided, use that
+      // If allProjects is true, no project filtering
+      if (!filters.allProjects) {
+        if (filters.projectId) {
+          query += ' AND project_id = ?';
+          params.push(filters.projectId);
+        }
+      }
+      
       if (filters.date) {
         query += ' AND date = ?';
         params.push(filters.date);
@@ -271,6 +293,7 @@ export class SqliteStorage extends StorageAdapter {
     
     const sessions: SessionMetadata[] = rows.map(row => {
       const session: SessionMetadata = {
+        id: row.id, // Phase 1: Include session ID for cross-repository support
         date: row.date,
         projectId: row.project_id,
         topic: row.topic,
@@ -618,11 +641,26 @@ export class SqliteStorage extends StorageAdapter {
     query += ' ORDER BY date DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...params) as SessionRow[];
+    
+    // Map to camelCase for consistency with querySessions()
+    const sessions = rows.map(row => ({
+      id: row.id,
+      projectId: row.project_id,
+      date: row.date,
+      topic: row.topic,
+      status: row.status,
+      planId: row.plan_id,
+      duration: row.duration,
+      topics: row.topics ? JSON.parse(row.topics) : [],
+      phases: row.phases ? JSON.parse(row.phases) : undefined,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
     
     return {
-      count: rows.length,
-      sessions: rows
+      count: sessions.length,
+      sessions
     };
   }
 
@@ -685,11 +723,26 @@ export class SqliteStorage extends StorageAdapter {
     query += ' ORDER BY updated_at DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...params) as PlanRow[];
+    
+    // Map to camelCase for consistency with queryPlans()
+    const plans = rows.map(row => ({
+      id: row.id,
+      projectId: row.project_id,
+      title: row.title,
+      status: row.status,
+      author: row.author,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      topics: row.topics ? JSON.parse(row.topics) : [],
+      description: row.description,
+      priority: row.priority,
+      type: row.type
+    }));
     
     return {
-      count: rows.length,
-      plans: rows
+      count: plans.length,
+      plans
     };
   }
 

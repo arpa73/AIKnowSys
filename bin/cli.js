@@ -441,6 +441,8 @@ program
   .option('-t, --topic <topic>', 'Filter by topic (fuzzy match)')
   .option('--updated-after <date>', 'Filter by plans updated after date (YYYY-MM-DD)')
   .option('--updated-before <date>', 'Filter by plans updated before date (YYYY-MM-DD)')
+  .option('--all-projects', 'Query across all projects in global database (default: current project only)')
+  .option('--project-id <id>', 'Filter by specific project ID')
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (options) => {
     await queryPlans(options);
@@ -456,6 +458,8 @@ program
   .option('-t, --topic <topic>', 'Filter by topic (fuzzy match)')
   .option('-p, --plan <plan>', 'Filter by plan reference')
   .option('--days <number>', 'Filter by sessions from last N days (convenience)')
+  .option('--all-projects', 'Query across all projects in global database (default: current project only)')
+  .option('--project-id <id>', 'Filter by specific project ID')
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (options) => {
     // Convert days to number if provided

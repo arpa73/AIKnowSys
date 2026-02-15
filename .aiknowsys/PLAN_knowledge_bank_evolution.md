@@ -26,6 +26,42 @@ started: "2026-02-15"
 
 ---
 
+
+## Progress
+
+**2026-02-15:** ## Phase 1 - Day 1: Architecture Discovery (Feb 15, 2026)
+
+**Status:** Investigation complete - ready for implementation
+
+**Discovery Summary:**
+- ✅ Schema design 100% complete (projects table, foreign keys, indexes)
+- ✅ DatabaseLocator with global DB logic complete
+- ✅ Migration tools use DatabaseLocator
+- ❌ Commands need DatabaseLocator integration
+- ❌ Need --all-projects flag
+
+**Implementation Plan (TDD):**
+
+### 1. Tests First (RED) - 2 hours
+- Test: DatabaseLocator integration in commands
+- Test: --all-projects flag functionality
+- Test: Cross-project queries return correct results
+- Test: Project isolation (queries filtered by projectId)
+
+### 2. Implementation (GREEN) - 3 hours
+- Refactor: Add DatabaseLocator to all query commands
+- Feature: --all-projects flag (removes project_id filter)
+- Migration: Update CLI defaults to use DatabaseLocator
+
+### 3. Documentation (REFACTOR) - 1 hour
+- Update README with global DB examples
+- Add .aiknowsys.config documentation
+- Update migration guide
+
+**Estimate:** 6 hours (1 day)
+
+**Starting:** Tests first - cross-project functionality
+
 ## Executive Summary
 
 **Vision:** Single `~/.aiknowsys/knowledge.db` storing knowledge across ALL projects, with AI-native event-sourced storage replacing markdown blobs.

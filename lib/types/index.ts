@@ -256,6 +256,8 @@ export interface QuerySessionsOptions {
   dateBefore?: string;
   topic?: string;
   status?: string;
+  projectId?: string; // Filter by specific project ID (Phase 1: Cross-Repository)
+  allProjects?: boolean; // Query across all projects (default: false - query current project only)
   includeContent?: boolean; // DEPRECATED: Use mode instead
   mode?: QueryMode; // Default: 'metadata' (preview = 150 tokens, metadata = 500, section = 1.2K, full = 22K)
   section?: string; // For mode='section': specific section to extract
@@ -267,6 +269,8 @@ export interface QueryPlansOptions {
   author?: string;
   topic?: string;
   priority?: 'high' | 'medium' | 'low';
+  projectId?: string; // Filter by specific project ID (Phase 1: Cross-Repository)
+  allProjects?: boolean; // Query across all projects (default: false - query current project only)
   includeContent?: boolean; // DEPRECATED: Use mode instead
   mode?: QueryMode; // Default: 'metadata' (preview = 150 tokens, metadata = 500, section = 1.2K, full = 22K)
   section?: string; // For mode='section': specific section to extract
