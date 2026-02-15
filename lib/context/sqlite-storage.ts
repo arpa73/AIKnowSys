@@ -11,6 +11,7 @@ import Database from 'better-sqlite3';
 import { StorageAdapter } from './storage-adapter.js';
 import { wrapDatabaseError } from '../utils/database-errors.js';
 import { QUERY_LIMITS } from '../utils/query-modes.js';
+import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
 import type {
   PlanMetadata,
   SessionMetadata,
@@ -19,11 +20,25 @@ import type {
   SessionFilters,
   SearchScope
 } from './types.js';
+import type { KnowledgeEvent, EventFilters } from '../events/types.js';
 
 /**
  * Database row interfaces for type-safe query results
  * Exported for use by core query functions that need full record access
  */
+
+/** Knowledge event row from database */
+interface KnowledgeEventRow {
+  event_id: string;
+  project_id: string;
+  session_id: string | null;
+  plan_id: string | null;
+  timestamp: string;
+  event_type: string;
+  data: string;  // JSON string
+  created_at: string;
+}
+
 export interface PlanRow {
   id: string;
   project_id: string;
@@ -178,6 +193,7 @@ export class SqliteStorage extends StorageAdapter {
     
     const plans: PlanMetadata[] = rows.map(row => ({
       id: row.id,
+      projectId: row.project_id,
       title: row.title,
       status: row.status as PlanMetadata['status'],
       author: row.author,
@@ -255,6 +271,7 @@ export class SqliteStorage extends StorageAdapter {
     const sessions: SessionMetadata[] = rows.map(row => {
       const session: SessionMetadata = {
         date: row.date,
+        projectId: row.project_id,
         topic: row.topic,
         topics: row.topics ? JSON.parse(row.topics) : [],
         file: `sessions/${row.date}-session.md`, // Virtual file path
@@ -1124,4 +1141,220 @@ export class SqliteStorage extends StorageAdapter {
       project.updated_at
     );
   }
+
+  /**
+   * Insert a knowledge event into storage
+   * Phase 2: Event-Sourced Storage
+   * @param event - Knowledge event to insert
+   */
+  async insertEvent(event: KnowledgeEvent): Promise<void> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized',
+        'Call init(targetDir) before inserting events. Example: await storage.init(process.cwd())'
+      );
+    }
+
+    // Validate required fields
+    if (!event.eventId?.trim()) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        'eventId',
+        'event.eventId = "evt_" + Date.now()'
+      );
+    }
+    if (!event.projectId?.trim()) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        'projectId',
+        'event.projectId = "my-project"'
+      );
+    }
+    if (!event.timestamp) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        'timestamp',
+        'event.timestamp = new Date().toISOString()'
+      );
+    }
+    // Validate ISO 8601 format
+    if (isNaN(Date.parse(event.timestamp))) {
+      throw AIFriendlyErrorBuilder.validationFailed(
+        'timestamp',
+        `Invalid timestamp format: ${event.timestamp}`,
+        'Use ISO 8601 format: new Date().toISOString() // "2026-02-15T14:00:00Z"'
+      );
+    }
+    if (!event.eventType) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        'eventType',
+        'event.eventType = EventType.SESSION_STARTED'
+      );
+    }
+    if (!event.data) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        'data',
+        'event.data = { goal: "Implement feature X" }'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO knowledge_events (
+        event_id, project_id, session_id, plan_id, timestamp, event_type, data, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      event.eventId,
+      event.projectId,
+      event.sessionId || null,
+      event.planId || null,
+      event.timestamp,
+      event.eventType,
+      JSON.stringify(event.data),
+      new Date().toISOString()
+    );
+  }
+
+  /**
+   * Map database row to KnowledgeEvent object
+   * Handles JSON parsing with error handling
+   * @private
+   */
+  private mapRowToEvent(row: KnowledgeEventRow): KnowledgeEvent {
+    let parsedData: any;
+    try {
+      parsedData = JSON.parse(row.data);
+    } catch (error) {
+      throw new Error(
+        `Failed to parse event data for event_id=${row.event_id}: ${(error as Error).message}. ` +
+        `Database may be corrupted. Data: ${row.data.substring(0, 100)}...`
+      );
+    }
+
+    return {
+      eventId: row.event_id,
+      projectId: row.project_id,
+      sessionId: row.session_id || undefined,
+      planId: row.plan_id || undefined,
+      timestamp: row.timestamp,
+      eventType: row.event_type as any,
+      data: parsedData
+    };
+  }
+
+  /**
+   * Get a knowledge event by ID
+   * @param eventId - Event ID to retrieve
+   * @returns Event or undefined if not found
+   */
+  async getEventById(eventId: string): Promise<KnowledgeEvent | undefined> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized',
+        'Call init(targetDir) before querying events'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      SELECT * FROM knowledge_events WHERE event_id = ?
+    `);
+
+    const row = stmt.get(eventId) as KnowledgeEventRow | undefined;
+    if (!row) {
+      return undefined;
+    }
+
+    return this.mapRowToEvent(row);
+  }
+
+  /**
+   * Query knowledge events with filters
+   * @param filters - Query filters (projectId, sessionId, planId, eventType, date range, limit)
+   * @returns Array of matching events (sorted newest first)
+   */
+  async queryEvents(filters: EventFilters): Promise<KnowledgeEvent[]> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized',
+        'Call init(targetDir) before querying events'
+      );
+    }
+
+    const whereClauses: string[] = [];
+    const params: any[] = [];
+
+    if (filters.projectId) {
+      whereClauses.push('project_id = ?');
+      params.push(filters.projectId);
+    }
+
+    if (filters.sessionId) {
+      whereClauses.push('session_id = ?');
+      params.push(filters.sessionId);
+    }
+
+    if (filters.planId) {
+      whereClauses.push('plan_id = ?');
+      params.push(filters.planId);
+    }
+
+    if (filters.eventType) {
+      whereClauses.push('event_type = ?');
+      params.push(filters.eventType);
+    }
+
+    if (filters.startDate) {
+      whereClauses.push('timestamp >= ?');
+      params.push(filters.startDate);
+    }
+
+    if (filters.endDate) {
+      whereClauses.push('timestamp <= ?');
+      params.push(filters.endDate);
+    }
+
+    const whereClause = whereClauses.length > 0 
+      ? `WHERE ${whereClauses.join(' AND ')}`
+      : '';
+    
+    const sql = `
+      SELECT * FROM knowledge_events
+      ${whereClause}
+      ORDER BY timestamp DESC
+      ${filters.limit ? 'LIMIT ?' : ''}
+    `;
+    
+    if (filters.limit) params.push(filters.limit);
+
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as KnowledgeEventRow[];
+
+    return rows.map(row => this.mapRowToEvent(row));
+  }
+
+  /**
+   * Full-text search on knowledge events
+   * @param query - Search query
+   * @returns Array of matching events with snippets
+   */
+  async searchEvents(query: string): Promise<KnowledgeEvent[]> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized',
+        'Call init(targetDir) before searching events'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      SELECT e.*
+      FROM events_fts f
+      JOIN knowledge_events e ON f.event_id = e.event_id
+      WHERE events_fts MATCH ?
+      ORDER BY e.timestamp DESC
+    `);
+
+    const rows = stmt.all(query) as KnowledgeEventRow[];
+
+    return rows.map(row => this.mapRowToEvent(row));
+  }
 }
+

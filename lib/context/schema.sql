@@ -70,6 +70,55 @@ CREATE TABLE IF NOT EXISTS patterns (
 
 CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category);
 
+-- Knowledge Events (Phase 2: Event-Sourced Storage)
+-- Structured events replace markdown blobs for AI-optimized queries
+CREATE TABLE IF NOT EXISTS knowledge_events (
+  event_id TEXT PRIMARY KEY,           -- Unique event identifier
+  project_id TEXT NOT NULL,            -- Project this event belongs to
+  session_id TEXT,                     -- Session this event was captured in
+  plan_id TEXT,                        -- Plan this event relates to
+  timestamp TEXT NOT NULL,             -- ISO 8601 timestamp
+  event_type TEXT NOT NULL,            -- Event type discriminator (task_completed, decision_made, etc.)
+  data TEXT NOT NULL,                  -- JSON event payload (structured by type)
+  created_at TEXT NOT NULL,            -- Event creation timestamp
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+  FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_events_project ON knowledge_events(project_id);
+CREATE INDEX IF NOT EXISTS idx_events_session ON knowledge_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_events_plan ON knowledge_events(plan_id);
+CREATE INDEX IF NOT EXISTS idx_events_type ON knowledge_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_events_timestamp ON knowledge_events(timestamp);
+
+-- Full-text search for event data
+CREATE VIRTUAL TABLE IF NOT EXISTS events_fts USING fts5(
+  event_id UNINDEXED,
+  event_type,
+  data,
+  content=knowledge_events,
+  content_rowid=rowid
+);
+
+-- Triggers to keep FTS index synchronized
+CREATE TRIGGER IF NOT EXISTS events_ai AFTER INSERT ON knowledge_events BEGIN
+  INSERT INTO events_fts(rowid, event_id, event_type, data)
+  VALUES (new.rowid, new.event_id, new.event_type, new.data);
+END;
+
+CREATE TRIGGER IF NOT EXISTS events_ad AFTER DELETE ON knowledge_events BEGIN
+  INSERT INTO events_fts(events_fts, rowid, event_id, event_type, data)
+  VALUES ('delete', old.rowid, old.event_id, old.event_type, old.data);
+END;
+
+CREATE TRIGGER IF NOT EXISTS events_au AFTER UPDATE ON knowledge_events BEGIN
+  INSERT INTO events_fts(events_fts, rowid, event_id, event_type, data)
+  VALUES ('delete', old.rowid, old.event_id, old.event_type, old.data);
+  INSERT INTO events_fts(rowid, event_id, event_type, data)
+  VALUES (new.rowid, new.event_id, new.event_type, new.data);
+END;
+
 -- Full-text search indices (SQLite FTS5)
 CREATE VIRTUAL TABLE IF NOT EXISTS plans_fts USING fts5(
   plan_id UNINDEXED,
