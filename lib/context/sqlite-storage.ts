@@ -21,6 +21,7 @@ import type {
   SearchScope
 } from './types.js';
 import type { KnowledgeEvent, EventFilters } from '../events/types.js';
+import { MarkdownGenerator } from '../events/markdown-generator.js';
 
 /**
  * Database row interfaces for type-safe query results
@@ -1355,6 +1356,181 @@ export class SqliteStorage extends StorageAdapter {
     const rows = stmt.all(query) as KnowledgeEventRow[];
 
     return rows.map(row => this.mapRowToEvent(row));
+  }
+
+  // ===== Phase 2.1: Hybrid Storage Methods =====
+
+  /**
+   * Get session by ID with content
+   * @param sessionId - Session ID
+   * @returns Promise resolving to session row or null
+   */
+  async getSessionById(sessionId: string): Promise<SessionRow | null> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before querying.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare('SELECT * FROM sessions WHERE id = ?');
+    const row = stmt.get(sessionId) as SessionRow | undefined;
+
+    return row || null;
+  }
+
+  /**
+   * Get plan by ID with content
+   * @param planId - Plan ID
+   * @returns Promise resolving to plan row or null
+   */
+  async getPlanById(planId: string): Promise<PlanRow | null> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before querying.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare('SELECT * FROM plans WHERE id = ?');
+    const row = stmt.get(planId) as PlanRow | undefined;
+
+    return row || null;
+  }
+
+  /**
+   * Get session content with intelligent fallback (hybrid read)
+   * 
+   * @param sessionId - Session identifier
+   * @returns Promise resolving to content object with format and markdown data
+   * 
+   * @remarks
+   * **Read Strategy:**
+   * 1. Try to read events from knowledge_events table
+   * 2. If events exist, generate markdown from events (primary path)
+   * 3. If no events, fallback to stored markdown in sessions.content (legacy path)
+   * 
+   * This enables gradual migration: new sessions use events, old sessions still work.
+   * 
+   * @throws Error if session not found
+   * 
+   * @example
+   * const content = await storage.getSessionContent('sess-2026-02-15-001');
+   * if (content.format === 'events') {
+   *   console.log('Using event-sourced content (new format)');
+   * } else {
+   *   console.log('Using legacy markdown (needs migration)');
+   * }
+   */
+  async getSessionContent(sessionId: string): Promise<{format: 'events' | 'markdown'; data: string }> {
+    // Try to get events first (with graceful fallback on corruption)
+    try {
+      const events = await this.queryEvents({ sessionId });
+
+      if (events.length > 0) {
+        // Generate markdown from events
+        const session = await this.getSessionById(sessionId);
+        const generator = new MarkdownGenerator();
+        return {
+          format: 'events',
+          data: generator.generateSessionMarkdown(events, session?.topic || 'Session')
+        };
+      }
+    } catch (error) {
+      // If events are corrupted, fall back to markdown
+      console.warn(`Failed to read events for session ${sessionId}, falling back to markdown:`, (error as Error).message);
+    }
+
+    // Fallback to stored markdown
+    const session = await this.getSessionById(sessionId);
+    if (!session) {
+      throw AIFriendlyErrorBuilder.missingRequired(
+        `Session ${sessionId} not found`,
+        'Check that the session ID is correct'
+      );
+    }
+
+    return {
+      format: 'markdown',
+      data: session.content || ''
+    };
+  }
+
+  /**
+   * Create session with event-sourced storage (hybrid write)
+   * 
+   * @param params - Session parameters including events array
+   * @param params.id - Unique session identifier
+   * @param params.projectId - Project this session belongs to
+   * @param params.date - Session date (YYYY-MM-DD)
+   * @param params.title - Session title
+   * @param params.topics - Array of topic strings
+   * @param params.events - Array of KnowledgeEvent objects to store
+   * @returns Promise resolving when complete
+   * 
+   * @remarks
+   * **Write Strategy (3 steps):**
+   * 1. Insert session record with empty content (satisfies foreign key constraint)
+   * 2. Insert all events into knowledge_events table (event-sourced storage)
+   * 3. Generate markdown from events and update sessions.content (backward compatibility)
+   * 
+   * This dual-write ensures:
+   * - New code can read from events (structured queries)
+   * - Old code can read from markdown (graceful degradation)
+   * - No data loss during transition period
+   * 
+   * @throws Error if database not initialized or insert fails
+   * 
+   * @example
+   * await storage.createSessionWithEvents({
+   *   id: 'sess-2026-02-15-001',
+   *   projectId: 'proj-001',
+   *   date: '2026-02-15',
+   *   title: 'Implement Feature X',
+   *   topics: ['feature-x', 'tdd'],
+   *   events: [sessionStartedEvent, taskCompletedEvent]
+   * });
+   */
+  async createSessionWithEvents(params: {
+    id: string;
+    projectId: string;
+    date: string;
+    title: string;
+    topics: string[];
+    events: KnowledgeEvent[];
+  }): Promise<void> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before creating.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    // Store session record FIRST (before events, to satisfy foreign key constraints)
+    const stmt = this.db.prepare(`
+      INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'active', '', ?, datetime('now'), datetime('now'))
+    `);
+
+    stmt.run(
+      params.id,
+      params.projectId,
+      params.date,
+      params.title,
+      JSON.stringify(params.topics)
+    );
+
+    // Store all events AFTER session record exists
+    for (const event of params.events) {
+      await this.insertEvent(event);
+    }
+
+    // Generate markdown from events and update session
+    const generator = new MarkdownGenerator();
+    const content = generator.generateSessionMarkdown(params.events, params.title);
+
+    const updateStmt = this.db.prepare('UPDATE sessions SET content = ? WHERE id = ?');
+    updateStmt.run(content, params.id);
   }
 }
 

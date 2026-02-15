@@ -10,6 +10,9 @@ export interface PlanMetadata {
   /** Plan identifier (filename without extension) */
   id: string;
   
+  /** Project identifier (for cross-repository support) */
+  projectId?: string;
+  
   /** Plan title (extracted from # heading or frontmatter) */
   title: string;
   
@@ -41,6 +44,9 @@ export interface PlanMetadata {
 export interface SessionMetadata {
   /** Session date (YYYY-MM-DD format) */
   date: string;
+  
+  /** Project identifier (for cross-repository support) */
+  projectId?: string;
   
   /** Session topic/title */
   topic: string;

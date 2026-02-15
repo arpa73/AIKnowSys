@@ -314,4 +314,104 @@ Plan details`;
       expect(result.learnedMigrated).toBe(3);
     });
   });
+
+  describe('Project ID Support (Phase 1: Cross-Repository)', () => {
+    it('should use real project ID from directory instead of hardcoded "default"', async () => {
+      // Setup test structure
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      const sessionsDir = path.join(aiknowsysDir, 'sessions');
+      await fs.mkdir(sessionsDir, { recursive: true });
+      
+      // Create test session file
+      const sessionContent = `---
+date: 2026-02-15
+topic: Test Session
+status: complete
+---
+
+Test content`;
+      
+      await fs.writeFile(path.join(sessionsDir, '2026-02-15-test.md'), sessionContent);
+      
+      // Migrate
+      const migrationResult = await coordinator.migrateFromDirectory(tmpDir);
+      
+      expect(migrationResult.sessionsMigrated).toBe(1);
+      
+      // Verify project_id is NOT "default" but derived from directory name
+      const sessionResult = await storage.querySessions({});
+      expect(sessionResult.sessions.length).toBe(1);
+      
+      // Should use directory-based project ID (sanitized)
+      const projId = sessionResult.sessions[0].projectId || (sessionResult.sessions[0] as any).project_id;
+      expect(projId).not.toBe('default');
+      expect(projId).toBeTruthy();
+      expect(projId).toMatch(/^test-tmp-migration-\d+$/); // Sanitized directory name
+    });
+
+    it('should create project record in database with proper metadata', async () => {
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      await fs.mkdir(aiknowsysDir, { recursive: true });
+      
+      // Create test plan file
+      const planContent = `---
+title: Test Plan
+author: test-user
+status: ACTIVE
+---
+
+Plan content`;
+      
+      await fs.writeFile(path.join(aiknowsysDir, 'PLAN_test.md'), planContent);
+      
+      // Migrate
+      await coordinator.migrateFromDirectory(tmpDir);
+      
+      // Verify project was created with correct metadata
+      // Note: We'll need to add a queryProjects method to SqliteStorage
+      const db = (storage as any).db;
+      const projects = db.prepare('SELECT * FROM projects').all();
+      
+      expect(projects.length).toBeGreaterThan(0);
+      const project = projects.find((p: {id: string}) => p.id !== 'default');
+      expect(project).toBeDefined();
+      expect(project.name).toBeTruthy();
+      expect(project.path).toBe(tmpDir); // Should store absolute path
+    });
+
+    it('should use same project ID for plans and sessions from same directory', async () => {
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      const sessionsDir = path.join(aiknowsysDir, 'sessions');
+      await fs.mkdir(sessionsDir, { recursive: true });
+      
+      // Create test files
+      await fs.writeFile(
+        path.join(aiknowsysDir, 'PLAN_test.md'),
+        '---\ntitle: Test Plan\nauthor: test\nstatus: ACTIVE\n---\nPlan'
+      );
+      await fs.writeFile(
+        path.join(sessionsDir, '2026-02-15-test.md'),
+        '---\ndate: 2026-02-15\n---\nSession'
+       );
+      
+      // Migrate
+      await coordinator.migrateFromDirectory(tmpDir);
+      
+      // Verify both use same project_id
+      const plans = await storage.queryPlans({});
+      const sessions = await storage.querySessions({});
+      
+      expect(plans.plans.length).toBe(1);
+      expect(sessions.sessions.length).toBe(1);
+      
+      const planProjId = plans.plans[0].projectId || (plans.plans[0] as any).project_id;
+      const sessionProjId = sessions.sessions[0].projectId || (sessions.sessions[0] as any).project_id;
+      
+      console.log('DEBUG (passing test): planProjectId=', planProjId);
+      console.log('DEBUG (passing test): sessionProjectId=', sessionProjId);
+      
+      expect(planProjId).toBe(sessionProjId);
+      expect(planProjId).not.toBe('default');
+    });
+  });
 });

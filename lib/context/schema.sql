@@ -120,72 +120,62 @@ CREATE TRIGGER IF NOT EXISTS events_au AFTER UPDATE ON knowledge_events BEGIN
 END;
 
 -- Full-text search indices (SQLite FTS5)
+-- Self-managed FTS tables (not external content) to avoid corruption with manual triggers
 CREATE VIRTUAL TABLE IF NOT EXISTS plans_fts USING fts5(
   plan_id UNINDEXED,
   title,
-  content,
-  content=plans,
-  content_rowid=rowid
+  content
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS sessions_fts USING fts5(
-  session_id UNINDEXED,
+  id UNINDEXED,
   topic,
-  content,
-  content=sessions,
-  content_rowid=rowid
+  content
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS patterns_fts USING fts5(
   pattern_id UNINDEXED,
   title,
-  content,
-  content=patterns,
-  content_rowid=rowid
+  content
 );
 
 -- Triggers to keep FTS indices in sync
+-- Note: Self-managed FTS (not using content= tables) to avoid SQLITE_CORRUPT_VTAB errors
 CREATE TRIGGER IF NOT EXISTS plans_ai AFTER INSERT ON plans BEGIN
-  INSERT INTO plans_fts (rowid, plan_id, title, content)
-  VALUES (new.rowid, new.id, new.title, new.content);
+  INSERT INTO plans_fts (plan_id, title, content)
+  VALUES (new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS plans_ad AFTER DELETE ON plans BEGIN
-  DELETE FROM plans_fts WHERE rowid = old.rowid;
+  DELETE FROM plans_fts WHERE plan_id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS plans_au AFTER UPDATE ON plans BEGIN
-  DELETE FROM plans_fts WHERE rowid = old.rowid;
-  INSERT INTO plans_fts (rowid, plan_id, title, content)
-  VALUES (new.rowid, new.id, new.title, new.content);
+  UPDATE plans_fts SET title = new.title, content = new.content WHERE plan_id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_ai AFTER INSERT ON sessions BEGIN
-  INSERT INTO sessions_fts (rowid, session_id, topic, content)
-  VALUES (new.rowid, new.id, new.topic, new.content);
+  INSERT INTO sessions_fts (id, topic, content)
+  VALUES (new.id, new.topic, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_ad AFTER DELETE ON sessions BEGIN
-  DELETE FROM sessions_fts WHERE rowid = old.rowid;
+  DELETE FROM sessions_fts WHERE id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_au AFTER UPDATE ON sessions BEGIN
-  DELETE FROM sessions_fts WHERE rowid = old.rowid;
-  INSERT INTO sessions_fts (rowid, session_id, topic, content)
-  VALUES (new.rowid, new.id, new.topic, new.content);
+  UPDATE sessions_fts SET topic = new.topic, content = new.content WHERE id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_ai AFTER INSERT ON patterns BEGIN
-  INSERT INTO patterns_fts (rowid, pattern_id, title, content)
-  VALUES (new.rowid, new.id, new.title, new.content);
+  INSERT INTO patterns_fts (pattern_id, title, content)
+  VALUES (new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_ad AFTER DELETE ON patterns BEGIN
-  DELETE FROM patterns_fts WHERE rowid = old.rowid;
+  DELETE FROM patterns_fts WHERE pattern_id = old.id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_au AFTER UPDATE ON patterns BEGIN
-  DELETE FROM patterns_fts WHERE rowid = old.rowid;
-  INSERT INTO patterns_fts (rowid, pattern_id, title, content)
-  VALUES (new.rowid, new.id, new.title, new.content);
+  UPDATE patterns_fts SET title = new.title, content = new.content WHERE pattern_id = old.id;
 END;

@@ -55,6 +55,21 @@ export class StorageAdapter {
   }
 
   /**
+   * Insert project metadata into storage.
+   * @param _project - Project metadata to store
+   */
+  async insertProject(_project: {
+    id: string;
+    name: string;
+    path?: string;
+    tech_stack?: any;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void> {
+    throw new Error('StorageAdapter.insertProject() must be implemented by subclass');
+  }
+
+  /**
    * Close storage connections and cleanup resources.
    */
   async close(): Promise<void> {

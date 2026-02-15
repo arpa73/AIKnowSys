@@ -5,9 +5,11 @@
 
 import { FileScanner, type FileInfo } from './file-scanner.js';
 import { MarkdownParser, type ParseResult } from './markdown-parser.js';
+import { DatabaseLocator } from '../context/database-locator.js';
 import type { SqliteStorage } from '../context/sqlite-storage.js';
 import type { SessionFrontmatter, PlanFrontmatter, LearnedFrontmatter } from './types.js';
 import { promises as fs } from 'fs';
+import path from 'path';
 
 export interface MigrationResult {
   /** Number of session files migrated */
@@ -35,10 +37,12 @@ export interface MigrationResult {
 export class MigrationCoordinator {
   private scanner: FileScanner;
   private parser: MarkdownParser;
+  private locator: DatabaseLocator;
   
   constructor(private storage: SqliteStorage) {
     this.scanner = new FileScanner();
     this.parser = new MarkdownParser();
+    this.locator = new DatabaseLocator();
   }
   
   /**
@@ -56,8 +60,12 @@ export class MigrationCoordinator {
       errors: []
     };
     
-    // Ensure default project exists in database
-    await this.ensureProjectExists('default', 'Default Project');
+    // Get project ID from directory using DatabaseLocator
+    const projectId = await this.locator.getProjectId(targetDir);
+    const projectName = path.basename(path.resolve(targetDir));
+    
+    // Ensure project exists in database
+    await this.ensureProjectExists(projectId, projectName, path.resolve(targetDir));
     
     // Scan directory for markdown files
     const scanResult = await this.scanner.scanDirectory(targetDir);
@@ -80,7 +88,7 @@ export class MigrationCoordinator {
         const planId = this.extractPlanId(fileInfo.filename);
         
         // Insert into database
-        const inserted = await this.insertPlan(fileInfo, parsed, planId);
+        const inserted = await this.insertPlan(fileInfo, parsed, planId, projectId);
         if (inserted) {
           result.plansMigrated++;
         } else {
@@ -106,7 +114,7 @@ export class MigrationCoordinator {
         }
         
         // Insert into database (learned patterns treated as searchable content)
-        const inserted = await this.insertLearned(fileInfo, parsed);
+        const inserted = await this.insertLearned(fileInfo, parsed, projectId);
         if (inserted) {
           result.learnedMigrated++;
         } else {
@@ -132,7 +140,7 @@ export class MigrationCoordinator {
         }
         
         // Insert into database
-        const inserted = await this.insertSession(fileInfo, parsed);
+        const inserted = await this.insertSession(fileInfo, parsed, projectId);
         if (inserted) {
           result.sessionsMigrated++;
         } else {
@@ -153,33 +161,44 @@ export class MigrationCoordinator {
    * Ensure a project exists in database
    * @param projectId - Project identifier
    * @param projectName - Project name
+   * @param projectPath - Absolute path to project directory
    */
-  private async ensureProjectExists(projectId: string, projectName: string): Promise<void> {
+  private async ensureProjectExists(projectId: string, projectName: string, projectPath?: string): Promise<void> {
     try {
       // Try to insert project - will fail if already exists
       const now = new Date().toISOString();
-      await (this.storage as any).insertProject({
+      await this.storage.insertProject({
         id: projectId,
         name: projectName,
+        path: projectPath,
         created_at: now,
         updated_at: now
       });
     } catch (error) {
-      // Ignore UNIQUE constraint errors (project already exists)
-      if (!(error as Error).message.includes('UNIQUE constraint')) {
-        throw error; // Re-throw other errors
+      if ((error as Error).message.includes('UNIQUE constraint')) {
+        // Project already exists - this is expected during re-migration
+        // No action needed, project data is already in database
+        return;
       }
+      // Unexpected error - re-throw with context
+      throw new Error(`Failed to create project ${projectId}: ${(error as Error).message}`);
     }
   }
   
   /**
    * Insert session into database
+   * @param projectId - Project identifier for this session
    * @returns true if inserted, false if skipped (already exists)
    */
   private async insertSession(
     fileInfo: FileInfo,
-    parsed: ParseResult<SessionFrontmatter>
+    parsed: ParseResult<SessionFrontmatter>,
+    projectId: string
   ): Promise<boolean> {
+    if (!projectId || projectId.trim() === '') {
+      throw new Error(`Cannot insert session: projectId is required but got "${projectId}"`);
+    }
+    
     const { frontmatter, content } = parsed;
     
     // Check if session already exists for this date
@@ -203,7 +222,7 @@ export class MigrationCoordinator {
     // Insert session in database
     await this.storage.insertSession({
       id: frontmatter.date || `session-${Date.now()}`,
-      project_id: 'default',
+      project_id: projectId,
       date: frontmatter.date || 'unknown',
       topic: frontmatter.topic || 'Untitled',
       status: frontmatter.status || 'complete',
@@ -221,13 +240,19 @@ export class MigrationCoordinator {
   
   /**
    * Insert plan into database
+   * @param projectId - Project identifier for this plan
    * @returns true if inserted, false if skipped (already exists)
    */
   private async insertPlan(
     fileInfo: FileInfo,
     parsed: ParseResult<PlanFrontmatter>,
-    planId: string
+    planId: string,
+    projectId: string
   ): Promise<boolean> {
+    if (!projectId || projectId.trim() === '') {
+      throw new Error(`Cannot insert plan: projectId is required but got "${projectId}"`);
+    }
+    
     const { frontmatter, content } = parsed;
     
     // Check if plan already exists (query all and filter by ID)
@@ -246,7 +271,7 @@ export class MigrationCoordinator {
     // Insert plan in database
     await this.storage.insertPlan({
       id: planId,
-      project_id: 'default',
+      project_id: projectId,
       title: frontmatter.title || 'Untitled Plan',
       status: frontmatter.status || 'PLANNED',
       author: frontmatter.author || 'unknown',
@@ -264,12 +289,18 @@ export class MigrationCoordinator {
   
   /**
    * Insert learned pattern into database
+   * @param projectId - Project identifier for this learned pattern
    * @returns true if inserted, false if skipped (already exists)
    */
   private async insertLearned(
     fileInfo: FileInfo,
-    parsed: ParseResult<LearnedFrontmatter>
+    parsed: ParseResult<LearnedFrontmatter>,
+    projectId: string
   ): Promise<boolean> {
+    if (!projectId || projectId.trim() === '') {
+      throw new Error(`Cannot insert learned pattern: projectId is required but got "${projectId}"`);
+    }
+    
     const { frontmatter, content } = parsed;
     
     // For learned patterns, we'll store them as searchable content
@@ -301,7 +332,7 @@ export class MigrationCoordinator {
     
     await this.storage.insertPlan({
       id: learnedId,
-      project_id: 'default',
+      project_id: projectId,
       title: category,
       status: 'COMPLETE',
       author: frontmatter.author || 'unknown',

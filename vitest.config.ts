@@ -7,6 +7,7 @@ export default defineConfig({
     include: ['test/**/*.test.{ts,js}'],  // Exclude .cjs (node:test files)
     exclude: ['**/node_modules/**', '**/dist/**', 'test/types/**'],  // Exclude type-only tests
     setupFiles: ['./vitest.setup.ts'],
+    cache: false,  // Disable caching to avoid stale module issues
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
