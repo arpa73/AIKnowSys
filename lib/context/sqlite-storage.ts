@@ -37,6 +37,7 @@ interface KnowledgeEventRow {
   timestamp: string;
   event_type: string;
   data: string;  // JSON string
+  embedding: Buffer | null;  // BLOB 384-dimensional vector (Phase 2.4)
   created_at: string;
 }
 
@@ -138,6 +139,24 @@ export class SqliteStorage extends StorageAdapter {
     
     // Execute schema (multiple statements)
     this.db.exec(schema);
+    
+    // Migration: Add embedding column if it doesn't exist (Phase 2.4)
+    // Check if embedding column exists
+    const tableInfo = this.db.pragma('table_info(knowledge_events)') as Array<{
+      cid: number;
+      name: string;
+      type: string;
+      notnull: number;
+      dflt_value: any;
+      pk: number;
+    }>;
+    
+    const hasEmbeddingColumn = tableInfo.some(col => col.name === 'embedding');
+    
+    if (!hasEmbeddingColumn) {
+      // Add embedding column to existing database
+      this.db.exec('ALTER TABLE knowledge_events ADD COLUMN embedding BLOB;');
+    }
   }
 
   /**
@@ -1200,8 +1219,9 @@ export class SqliteStorage extends StorageAdapter {
    * Insert a knowledge event into storage
    * Phase 2: Event-Sourced Storage
    * @param event - Knowledge event to insert
+   * @param embedding - Optional 384-dimensional embedding vector (Phase 2.4)
    */
-  async insertEvent(event: KnowledgeEvent): Promise<void> {
+  async insertEvent(event: KnowledgeEvent, embedding?: Float32Array): Promise<void> {
     if (!this.db) {
       throw AIFriendlyErrorBuilder.databaseError(
         'Database not initialized',
@@ -1249,11 +1269,31 @@ export class SqliteStorage extends StorageAdapter {
       );
     }
 
+    // Validate embedding if provided
+    let embeddingBuffer: Buffer | null = null;
+    if (embedding !== undefined) {
+      if (!(embedding instanceof Float32Array)) {
+        throw AIFriendlyErrorBuilder.validationFailed(
+          'embedding',
+          'Embedding must be Float32Array',
+          'Use: const embedding = await embeddingGenerator.embedEvent(event)'
+        );
+      }
+      if (embedding.length !== 384) {
+        throw AIFriendlyErrorBuilder.validationFailed(
+          'embedding',
+          `Embedding must have exactly 384 dimensions (got ${embedding.length})`,
+          'Expected dimensions from all-MiniLM-L6-v2 model'
+        );
+      }
+      embeddingBuffer = Buffer.from(embedding.buffer);
+    }
+
     const stmt = this.db.prepare(`
       INSERT INTO knowledge_events (
-        event_id, project_id, session_id, plan_id, timestamp, event_type, data, created_at
+        event_id, project_id, session_id, plan_id, timestamp, event_type, data, embedding, created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -1264,13 +1304,14 @@ export class SqliteStorage extends StorageAdapter {
       event.timestamp,
       event.eventType,
       JSON.stringify(event.data),
+      embeddingBuffer,
       new Date().toISOString()
     );
   }
 
   /**
    * Map database row to KnowledgeEvent object
-   * Handles JSON parsing with error handling
+   * Handles JSON parsing and embedding deserialization with error handling
    * @private
    */
   private mapRowToEvent(row: KnowledgeEventRow): KnowledgeEvent {
@@ -1284,6 +1325,32 @@ export class SqliteStorage extends StorageAdapter {
       );
     }
 
+    // Deserialize embedding from BLOB (if present)
+    let embedding: Float32Array | null = null;
+    if (row.embedding) {
+      try {
+        // Validate expected size (384 dimensions * 4 bytes = 1536 bytes)
+        if (row.embedding.length === 384 * 4) {
+          embedding = new Float32Array(
+            row.embedding.buffer,
+            row.embedding.byteOffset,
+            384
+          );
+        } else {
+          // Invalid size - data corruption, return null instead of throwing
+          console.warn(
+            `Invalid embedding size for event ${row.event_id}: ` +
+            `expected 1536 bytes, got ${row.embedding.length} bytes`
+          );
+        }
+      } catch (error) {
+        // Log warning but don't fail the query
+        console.warn(
+          `Failed to deserialize embedding for event ${row.event_id}: ${(error as Error).message}`
+        );
+      }
+    }
+
     return {
       eventId: row.event_id,
       projectId: row.project_id,
@@ -1291,7 +1358,8 @@ export class SqliteStorage extends StorageAdapter {
       planId: row.plan_id || undefined,
       timestamp: row.timestamp,
       eventType: row.event_type as any,
-      data: parsedData
+      data: parsedData,
+      embedding
     };
   }
 
@@ -1642,6 +1710,63 @@ export class SqliteStorage extends StorageAdapter {
 
     const updateStmt = this.db.prepare('UPDATE sessions SET content = ? WHERE id = ?');
     updateStmt.run(content, params.id);
+  }
+
+  /**
+   * Get table structure information (for testing and migrations)
+   * @param tableName - Name of table to inspect
+   * @returns Array of column information
+   * @internal For testing purposes only
+   */
+  async getTableInfo(tableName: string): Promise<Array<{
+    cid: number;
+    name: string;
+    type: string;
+    notnull: number;
+    dflt_value: any;
+    pk: number;
+  }>> {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+    
+    return this.db.pragma(`table_info(${tableName})`) as Array<{
+      cid: number;
+      name: string;
+      type: string;
+      notnull: number;
+      dflt_value: any;
+      pk: number;
+    }>;
+  }
+
+  /**
+   * Store a knowledge event (alias for insertEvent for test compatibility)
+   * @param projectId - Project ID for the event
+   * @param event - Knowledge event to store
+   * @param embedding - Optional 384-dimensional embedding vector
+   */
+  async storeEvent(
+    projectId: string,
+    event: KnowledgeEvent,
+    embedding?: Float32Array
+  ): Promise<void> {
+    // Ensure projectId matches
+    if (event.projectId !== projectId) {
+      throw new Error(
+        `Event projectId (${event.projectId}) does not match provided projectId (${projectId})`
+      );
+    }
+    return this.insertEvent(event, embedding);
+  }
+
+  /**
+   * Get event by ID (alias for getEventById for test compatibility)
+   * @param eventId - Event ID to retrieve
+   * @returns Event or undefined if not found
+   */
+  async getEvent(eventId: string): Promise<KnowledgeEvent | undefined> {
+    return this.getEventById(eventId);
   }
 }
 

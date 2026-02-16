@@ -47,6 +47,14 @@ export interface KnowledgeEvent {
   
   /** Structured event payload (varies by type) */
   data: EventData;
+  
+  /** 
+   * 384-dimensional embedding vector for semantic search (Phase 2.4)
+   * Generated from event content using all-MiniLM-L6-v2 model
+   * Stored as BLOB in database, returned as Float32Array in queries
+   * @optional Present only if embeddings have been generated
+   */
+  embedding?: Float32Array | null;
 }
 
 /**

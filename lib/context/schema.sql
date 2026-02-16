@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS knowledge_events (
   timestamp TEXT NOT NULL,             -- ISO 8601 timestamp
   event_type TEXT NOT NULL,            -- Event type discriminator (task_completed, decision_made, etc.)
   data TEXT NOT NULL,                  -- JSON event payload (structured by type)
+  embedding BLOB,                      -- 384-dimensional vector (Float32Array) for semantic search
   created_at TEXT NOT NULL,            -- Event creation timestamp
   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
   FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
