@@ -53,6 +53,58 @@ export interface SearchContextResult {
 
 const VALID_SCOPES = ['all', 'plans', 'sessions', 'learned'] as const;
 
+function validateWorkingDirectory(workingDir: string): void {
+  let stats: ReturnType<typeof statSync>;
+
+  try {
+    stats = statSync(workingDir);
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') {
+      throw new Error(
+        `Directory not found: ${workingDir}.\n` +
+        'Provide a valid project directory with --dir.'
+      );
+    }
+
+    if (error?.code === 'EACCES') {
+      throw new Error(
+        `Permission denied accessing: ${workingDir}.\n` +
+        'Check directory permissions or use --dir to specify a different path.'
+      );
+    }
+
+    throw new Error(
+      `Failed to access directory ${workingDir}: ${error?.message || String(error)}`
+    );
+  }
+
+  if (!stats.isDirectory()) {
+    throw new Error(
+      `Path exists but is not a directory: ${workingDir}.\n` +
+      'Provide a valid project directory with --dir.'
+    );
+  }
+}
+
+function getSearchStoragePreference(
+  options: SearchContextOptions,
+  targetDir?: string
+): 'local-json' | 'auto-detect' {
+  // Storage decision tree:
+  // 1) AIKNOWSYS_DB_PATH, projectId, or allProjects => auto-detect SQLite pathing
+  // 2) explicit targetDir/options.dir without cross-project flags => local JSON scan
+  // 3) fallback => auto-detect
+  if (process.env.AIKNOWSYS_DB_PATH || options.projectId || options.allProjects) {
+    return 'auto-detect';
+  }
+
+  if (targetDir || options.dir) {
+    return 'local-json';
+  }
+
+  return 'auto-detect';
+}
+
 /**
  * Full-text search across AIKnowSys knowledge system (PURE BUSINESS LOGIC)
  * 
@@ -103,25 +155,11 @@ export async function searchContextCore(
     ? path.resolve(targetDir)
     : (options.dir ? path.resolve(options.dir) : process.cwd());
 
-  try {
-    const stats = statSync(workingDir);
-    if (!stats.isDirectory()) {
-      throw new Error();
-    }
-  } catch {
-    throw new Error(
-      `Directory not found: ${workingDir}.\n` +
-      'Provide a valid project directory with --dir.'
-    );
-  }
+  validateWorkingDirectory(workingDir);
 
   // If a targetDir is explicitly provided (common in tests and isolated scans),
   // prefer local JSON storage unless cross-project SQLite behavior is requested.
-  const useLocalJsonSearch =
-    Boolean(targetDir || options.dir) &&
-    !options.projectId &&
-    !options.allProjects &&
-    !process.env.AIKNOWSYS_DB_PATH;
+  const useLocalJsonSearch = getSearchStoragePreference(options, targetDir) === 'local-json';
 
   let projectId = options.projectId;
   let storageAdapter: 'sqlite' | 'json' = 'json';

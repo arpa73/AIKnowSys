@@ -39,7 +39,11 @@ import type {
   LearnedPatternRecord,
 } from '../types/index.js';
 
-function parseTopics(topics: unknown): string[] {
+/**
+ * Parse topics from various input formats.
+ * @internal Exported for direct unit testing only.
+ */
+export function parseTopics(topics: unknown): string[] {
   if (!topics) {
     return [];
   }
