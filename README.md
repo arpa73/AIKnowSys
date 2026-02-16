@@ -574,6 +574,19 @@ PR checks enforce TDD compliance:
 
 **See workflow:** [`.github/workflows/tdd-compliance.yml`](.github/workflows/tdd-compliance.yml)
 
+Additional CI guard prevents Vitest project-routing regressions for tests importing `../../dist/lib/`:
+
+```yaml
+# .github/workflows/ci.yml
+# Job: vitest-routing-guard
+# Runs: npx vitest run test/vitest-project-routing.test.ts
+```
+
+This check ensures tests importing `../../dist/lib/` are kept in `post-build-tests`
+and excluded from `source-tests`.
+
+**See guard test:** [`test/vitest-project-routing.test.ts`](test/vitest-project-routing.test.ts)
+
 ### Skills Integration
 
 **New skill:** `.github/skills/tdd-workflow/SKILL.md`
