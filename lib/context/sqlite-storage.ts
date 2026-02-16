@@ -20,8 +20,15 @@ import type {
   SessionFilters,
   SearchScope
 } from './types.js';
-import type { KnowledgeEvent, EventFilters } from '../events/types.js';
+import type { 
+  KnowledgeEvent, 
+  EventFilters, 
+  SemanticSearchOptions, 
+  SemanticSearchResult 
+} from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
+import { EmbeddingGenerator } from '../embeddings/generator.js';
+import { cosineSimilarity } from '../embeddings/similarity.js';
 
 /**
  * Database row interfaces for type-safe query results
@@ -1477,6 +1484,73 @@ export class SqliteStorage extends StorageAdapter {
     const rows = stmt.all(query) as KnowledgeEventRow[];
 
     return rows.map(row => this.mapRowToEvent(row));
+  }
+
+  /**
+   * Semantic search using cosine similarity (Phase 2.5)
+   * Computes similarity between query and all events with embeddings
+   * 
+   * @param query - Natural language search query
+   * @param options - Search options (limit, threshold, projectId)
+   * @returns Array of events ranked by semantic similarity
+   */
+  async semanticSearch(
+    query: string,
+    options?: SemanticSearchOptions
+  ): Promise<SemanticSearchResult[]> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized',
+        'Call init(targetDir) before semantic search'
+      );
+    }
+
+    // Apply default options
+    const limit = options?.limit ?? 10;
+    const threshold = options?.threshold ?? 0.3;
+
+    // Generate query embedding
+    const generator = new EmbeddingGenerator();
+    const queryEmbedding = await generator.generateEmbedding(query);
+
+    // Load all events with embeddings (with optional project filter)
+    const whereClauses: string[] = ['embedding IS NOT NULL'];
+    const params: any[] = [];
+
+    if (options?.projectId) {
+      whereClauses.push('project_id = ?');
+      params.push(options.projectId);
+    }
+
+    const sql = `
+      SELECT * FROM knowledge_events
+      WHERE ${whereClauses.join(' AND ')}
+    `;
+
+    const stmt = this.db.prepare(sql);
+    const rows = stmt.all(...params) as KnowledgeEventRow[];
+
+    // Compute similarity scores
+    const results: SemanticSearchResult[] = [];
+
+    for (const row of rows) {
+      const event = this.mapRowToEvent(row);
+      
+      // Skip if embedding missing (shouldn't happen due to WHERE clause, but defensive)
+      if (!event.embedding) continue;
+
+      // Compute cosine similarity
+      const similarity = cosineSimilarity(queryEmbedding, event.embedding);
+
+      // Filter by threshold
+      if (similarity >= threshold) {
+        results.push({ event, similarity });
+      }
+    }
+
+    // Sort by similarity (descending) and apply limit
+    results.sort((a, b) => b.similarity - a.similarity);
+    return results.slice(0, limit);
   }
 
   // ===== Phase 2.1: Hybrid Storage Methods =====

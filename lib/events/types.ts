@@ -218,3 +218,28 @@ export interface EventQueryResult {
   /** Matched events */
   events: KnowledgeEvent[];
 }
+
+/**
+ * Semantic search options (Phase 2.5)
+ */
+export interface SemanticSearchOptions {
+  /** Maximum number of results to return (default: 10) */
+  limit?: number;
+  
+  /** Minimum similarity threshold 0.0-1.0 (default: 0.3) */
+  threshold?: number;
+  
+  /** Filter by project ID (optional) */
+  projectId?: string;
+}
+
+/**
+ * Semantic search result (Phase 2.5)
+ */
+export interface SemanticSearchResult {
+  /** Matched event */
+  event: KnowledgeEvent;
+  
+  /** Cosine similarity score (0.0-1.0, higher is more similar) */
+  similarity: number;
+}
