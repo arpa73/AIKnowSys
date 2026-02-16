@@ -90,6 +90,13 @@ interface SearchRow {
  * SQLite storage adapter for cross-repository knowledge management
  */
 export class SqliteStorage extends StorageAdapter {
+  /**
+   * Maximum search results to return per query
+   * Prevents excessive memory usage and token consumption
+   * Can be made configurable in future versions
+   */
+  private static readonly MAX_SEARCH_RESULTS = 50;
+  
   private db: Database.Database | null = null;
 
   /**
@@ -344,6 +351,45 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Build FTS query with optional project filtering
+   * @param ftsTableName - FTS table name (plans_fts, sessions_fts)
+   * @param sourceTable - Source table name (plans, sessions)
+   * @param tableAlias - Table alias for source table (p, s)
+   * @param selectColumns - Column names with aliases (id as plan_id, title, content)
+   * @param ftsQuery - FTS5 query string
+   * @param filterByProject - Whether to filter by project
+   * @param projectId - Project ID to filter by
+   * @returns Object with { sql, params }
+   */
+  private buildFtsQuery(
+    ftsTableName: string,
+    sourceTable: string,
+    tableAlias: string,
+    selectColumns: string,
+    ftsQuery: string,
+    filterByProject: boolean,
+    projectId?: string
+  ): { sql: string; params: string[] } {
+    let sql = `
+      SELECT ${selectColumns}
+      FROM ${ftsTableName}
+      JOIN ${sourceTable} ${tableAlias} ON ${tableAlias}.rowid = ${ftsTableName}.rowid
+      WHERE ${ftsTableName} MATCH ?
+    `;
+    
+    const params = [ftsQuery];
+    
+    if (filterByProject && projectId) {
+      sql += ` AND ${tableAlias}.project_id = ?`;
+      params.push(projectId);
+    }
+    
+    sql += ` LIMIT ${SqliteStorage.MAX_SEARCH_RESULTS}`;
+    
+    return { sql, params };
+  }
+
+  /**
    * Full-text search across plans and sessions using SQLite FTS5
    * @param query - Search query (will be wrapped in quotes for phrase search)
    * @param scope - Search scope: 'all', 'plans', 'sessions', 'learned', 'essentials'
@@ -373,26 +419,18 @@ export class SqliteStorage extends StorageAdapter {
     
     // Search in plans if scope includes them
     if (scope === 'all' || scope === 'plans') {
-      let planQuery = `
-        SELECT 
-          p.id as plan_id,
-          p.title,
-          p.content
-        FROM plans_fts
-        JOIN plans p ON p.rowid = plans_fts.rowid
-        WHERE plans_fts MATCH ?
-      `;
-      
-      // Add project filter if needed
-      if (filterByProject && projectId) {
-        planQuery += ` AND p.project_id = ?`;
-      }
-      
-      planQuery += ` LIMIT 50`;
+      const { sql: planQuery, params: planParams } = this.buildFtsQuery(
+        'plans_fts',
+        'plans',
+        'p',
+        'p.id as plan_id, p.title, p.content',
+        ftsQuery,
+        filterByProject,
+        projectId
+      );
       
       const stmt = this.db.prepare(planQuery);
-      const params = filterByProject && projectId ? [ftsQuery, projectId] : [ftsQuery];
-      const rows = stmt.all(...params) as SearchRow[];
+      const rows = stmt.all(...planParams) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
@@ -412,26 +450,18 @@ export class SqliteStorage extends StorageAdapter {
     
     // Search in sessions if scope includes them
     if (scope === 'all' || scope === 'sessions') {
-      let sessionQuery = `
-        SELECT 
-          s.id as session_id,
-          s.topic,
-          s.content
-        FROM sessions_fts
-        JOIN sessions s ON s.rowid = sessions_fts.rowid
-        WHERE sessions_fts MATCH ?
-      `;
-      
-      // Add project filter if needed
-      if (filterByProject && projectId) {
-        sessionQuery += ` AND s.project_id = ?`;
-      }
-      
-      sessionQuery += ` LIMIT 50`;
+      const { sql: sessionQuery, params: sessionParams } = this.buildFtsQuery(
+        'sessions_fts',
+        'sessions',
+        's',
+        's.id as session_id, s.topic, s.content',
+        ftsQuery,
+        filterByProject,
+        projectId
+      );
       
       const stmt = this.db.prepare(sessionQuery);
-      const params = filterByProject && projectId ? [ftsQuery, projectId] : [ftsQuery];
-      const rows = stmt.all(...params) as SearchRow[];
+      const rows = stmt.all(...sessionParams) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)

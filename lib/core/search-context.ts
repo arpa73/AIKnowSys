@@ -81,14 +81,18 @@ export async function searchContextCore(
 ): Promise<SearchContextResult> {
   // Validate query (not empty)
   if (!query || query.trim().length === 0) {
-    throw new Error('Search query cannot be empty');
+    throw new Error(
+      'Search query cannot be empty.\n' +
+      'Examples: search-context "feature" or search-context "TDD workflow"'
+    );
   }
 
   // Validate scope if provided
   const scope = options.scope || 'all';
   if (!VALID_SCOPES.includes(scope)) {
     throw new Error(
-      `Invalid scope: ${scope}. Must be one of: ${VALID_SCOPES.join(', ')}`
+      `Invalid scope: '${scope}'. Must be one of: ${VALID_SCOPES.join(', ')}.\n` +
+      'Examples: --scope plans, --scope sessions, --scope all'
     );
   }
 
@@ -98,22 +102,48 @@ export async function searchContextCore(
     ? path.resolve(targetDir)
     : (options.dir ? path.resolve(options.dir) : process.cwd());
 
-  // If no explicit projectId provided and not searching all projects, get projectId from DatabaseLocator
-  const { DatabaseLocator } = await import('../context/database-locator.js');
-  const locator = new DatabaseLocator();
-  const dbConfig = await locator.getDatabaseConfig(workingDir);
-  const projectId = options.projectId || dbConfig.projectId;
+  // Only call DatabaseLocator if projectId not explicitly provided
+  // (Performance optimization: avoids filesystem I/O when projectId is known)
+  let projectId: string;
+  let dbPath: string;
+  
+  if (options.projectId) {
+    // ProjectId explicitly provided - use it directly
+    projectId = options.projectId;
+    // Still need dbPath for storage adapter
+    const { DatabaseLocator } = await import('../context/database-locator.js');
+    const locator = new DatabaseLocator();
+    const dbConfig = await locator.getDatabaseConfig(workingDir);
+    dbPath = dbConfig.dbPath;
+  } else {
+    // No explicit projectId - get from DatabaseLocator
+    const { DatabaseLocator } = await import('../context/database-locator.js');
+    const locator = new DatabaseLocator();
+    const dbConfig = await locator.getDatabaseConfig(workingDir);
+    projectId = dbConfig.projectId;
+    dbPath = dbConfig.dbPath;
+  }
 
   // Check if SQLite database exists - if so, use SQLite storage
   // Otherwise fall back to JSON (file-based) storage
   const { promises: fs } = await import('fs');
   let storageAdapter: 'sqlite' | 'json' = 'json';
+  
   try {
-    await fs.access(dbConfig.dbPath);
-    storageAdapter = 'sqlite';
-  } catch {
-    // SQLite database doesn't exist, use JSON
-    storageAdapter = 'json';
+    const stats = await fs.stat(dbPath);
+    if (stats.isFile()) {
+      storageAdapter = 'sqlite';
+    }
+  } catch (error: any) {
+    // Only fall back to JSON for "file not found"
+    // Re-throw other errors (permissions, I/O issues)
+    if (error.code !== 'ENOENT') {
+      throw new Error(
+        `Failed to check SQLite database at ${dbPath}: ${error.message}.\n` +
+        'Check file permissions or disk health.'
+      );
+    }
+    // Database doesn't exist yet, use JSON storage
   }
 
   // Create storage adapter
