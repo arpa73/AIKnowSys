@@ -1127,6 +1127,126 @@ npx aiknowsys query-plans --project-id my-fastapi-project
 
 ---
 
+## Markdown Exports (Phase 3)
+
+**New in v0.11.0:** Export sessions and plans as human-readable markdown from event-sourced storage.
+
+### Why Markdown Exports?
+
+AIKnowSys stores knowledge as structured events in a SQLite database for AI-native querying. Markdown exports provide human-readable views of this data for:
+
+- 📖 Reading session summaries
+- 📧 Sharing work updates via email/Slack
+- 📋 Generating reports for stakeholders
+- 📦 Archival and backup
+
+**Architecture:**
+- **Database = Source of Truth** (structured events)
+- **Markdown = Generated View** (on-demand, not stored)
+- **Git = Code Only** (knowledge stays in database)
+
+### Export Single Session
+
+Export a session as markdown to stdout or file:
+
+```bash
+# Export by session ID to stdout
+npx aiknowsys export-session sess-2026-02-15-001
+
+# Export by date
+npx aiknowsys export-session --date 2026-02-15
+
+# Export to file
+npx aiknowsys export-session sess-2026-02-15-001 --output /tmp/session.md
+
+# Pipe to pager for reading
+npx aiknowsys export-session --date 2026-02-15 | less
+
+# Verbose mode (shows event details)
+npx aiknowsys export-session sess-2026-02-15-001 -v
+```
+
+**Options:**
+- `--date <YYYY-MM-DD>` - Export session by date (alternative to ID)
+- `--output <path>` - Write to file (defaults to stdout)
+- `--db-path <path>` - Custom database location
+- `-v, --verbose` - Show detailed event information
+
+### Export Multiple Sessions (Bulk Export)
+
+Export sessions in bulk with filtering:
+
+```bash
+# Export all sessions to directory
+npx aiknowsys export-sessions --output-dir /tmp/sessions/
+
+# Export date range
+npx aiknowsys export-sessions \
+  --output-dir ./archive/february/ \
+  --from 2026-02-01 \
+  --to 2026-02-28
+
+# Export specific project
+npx aiknowsys export-sessions \
+  --output-dir ./backup/ \
+  --project-id my-project
+
+# Dry run (preview files without writing)
+npx aiknowsys export-sessions \
+  --output-dir /tmp/sessions/ \
+  --from 2026-02-01 \
+  --dry-run \
+  -v
+```
+
+**Options:**
+- `--output-dir <path>` - Output directory (required)
+- `--from <YYYY-MM-DD>` - Filter: sessions from date (inclusive)
+- `--to <YYYY-MM-DD>` - Filter: sessions to date (inclusive)
+- `--project-id <id>` - Filter: sessions for specific project
+- `--dry-run` - Preview export without writing files
+- `--db-path <path>` - Custom database location
+- `-v, --verbose` - Show detailed progress for each session
+
+### Generated Markdown Format
+
+Exported markdown follows the standard session template structure:
+
+```markdown
+## Session: Feature Implementation (Feb 15, 2026)
+
+**Goal:** Implement user authentication with JWT
+
+## Decisions
+
+**Decision:** Use JWT for session management
+**Rationale:** Stateless auth enables horizontal scaling
+
+## Changes
+
+- [lib/auth.ts](lib/auth.ts): created
+  - Files: lib/auth.ts, test/auth.test.ts
+- [middleware/auth.ts](middleware/auth.ts): created
+
+## Validation
+
+- ✅ Tests: 42/42 passing
+- ✅ Type check: No errors
+
+## Key Learning
+
+**Pattern:** Always validate tokens server-side
+**Evidence:** Prevented security vulnerability in testing
+```
+
+**Use Cases:**
+- 📊 **Annual review:** Export year's sessions for reflection
+- 📦 **Backup:** Human-readable backup alongside database dumps
+- 📧 **Communication:** Share session summaries with team
+- 🔄 **Migration:** Export from old system, import to new
+
+---
+
 ## Testing
 
 AIKnowSys uses Vitest with a projects-based configuration to separate tests by their import requirements.
