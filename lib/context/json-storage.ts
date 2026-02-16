@@ -25,7 +25,23 @@ interface ContextIndex {
   updated: string;
   plans: PlanMetadata[];
   sessions: SessionMetadata[];
-  learned: any[]; // TODO: Define LearnedMetadata interface when implementing learned patterns (Phase 2)
+  learned: Array<Record<string, string>>;
+}
+
+function parsePlanStatus(status: string | undefined): PlanMetadata['status'] {
+  const normalized = status?.toUpperCase();
+
+  if (
+    normalized === 'ACTIVE' ||
+    normalized === 'PAUSED' ||
+    normalized === 'PLANNED' ||
+    normalized === 'COMPLETE' ||
+    normalized === 'CANCELLED'
+  ) {
+    return normalized;
+  }
+
+  return 'PLANNED';
 }
 
 export class JsonStorage extends StorageAdapter {
@@ -52,7 +68,7 @@ export class JsonStorage extends StorageAdapter {
     try {
       const indexContent = await fs.readFile(indexPath, 'utf-8');
       this.index = JSON.parse(indexContent);
-    } catch (error) {
+    } catch {
       // Index doesn't exist, create empty one
       await this.saveIndex();
     }
@@ -76,18 +92,21 @@ export class JsonStorage extends StorageAdapter {
       }
       
       if (filters.topic) {
+        const topicQuery = filters.topic.toLowerCase();
         plans = plans.filter(p =>
-          p.title.toLowerCase().includes(filters.topic!.toLowerCase()) ||
-          p.topics?.some(t => t.toLowerCase().includes(filters.topic!.toLowerCase()))
+          p.title.toLowerCase().includes(topicQuery) ||
+          p.topics?.some(t => t.toLowerCase().includes(topicQuery))
         );
       }
       
       if (filters.updatedAfter) {
-        plans = plans.filter(p => p.updated > filters.updatedAfter!);
+        const updatedAfter = filters.updatedAfter;
+        plans = plans.filter((p) => p.updated > updatedAfter);
       }
       
       if (filters.updatedBefore) {
-        plans = plans.filter(p => p.updated < filters.updatedBefore!);
+        const updatedBefore = filters.updatedBefore;
+        plans = plans.filter((p) => p.updated < updatedBefore);
       }
     }
 
@@ -111,16 +130,19 @@ export class JsonStorage extends StorageAdapter {
       }
       
       if (filters.dateAfter) {
-        sessions = sessions.filter(s => s.date > filters.dateAfter!);
+        const dateAfter = filters.dateAfter;
+        sessions = sessions.filter((s) => s.date > dateAfter);
       }
       
       if (filters.dateBefore) {
-        sessions = sessions.filter(s => s.date < filters.dateBefore!);
+        const dateBefore = filters.dateBefore;
+        sessions = sessions.filter((s) => s.date < dateBefore);
       }
       
       if (filters.topic) {
+        const topicQuery = filters.topic.toLowerCase();
         sessions = sessions.filter(s =>
-          s.topic.toLowerCase().includes(filters.topic!.toLowerCase())
+          s.topic.toLowerCase().includes(topicQuery)
         );
       }
       
@@ -200,7 +222,7 @@ export class JsonStorage extends StorageAdapter {
             }
           });
         }
-      } catch (error) {
+      } catch {
         // Directory doesn't exist or can't be read, skip it
         continue;
       }
@@ -239,7 +261,7 @@ export class JsonStorage extends StorageAdapter {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Plans directory doesn't exist yet
     }
 
@@ -261,7 +283,7 @@ export class JsonStorage extends StorageAdapter {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // .aiknowsys directory doesn't exist yet
     }
 
@@ -279,7 +301,7 @@ export class JsonStorage extends StorageAdapter {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Sessions directory doesn't exist yet
     }
 
@@ -295,7 +317,7 @@ export class JsonStorage extends StorageAdapter {
           const frontmatterMatch = content.match(/^---\n([\s\S]+?)\n---/);
           if (frontmatterMatch) {
             const lines = frontmatterMatch[1].split('\n');
-            const metadata: any = { file: `learned/${file}` };
+            const metadata: Record<string, string> = { file: `learned/${file}` };
             
             lines.forEach(line => {
               const [key, ...valueParts] = line.split(':');
@@ -311,7 +333,7 @@ export class JsonStorage extends StorageAdapter {
           }
         }
       }
-    } catch (error) {
+    } catch {
       // Learned directory doesn't exist yet
     }
 
@@ -362,7 +384,7 @@ export class JsonStorage extends StorageAdapter {
     return {
       id: planId,
       title: planMatch[1],
-      status: (statusMatch ? statusMatch[1] as any : 'ACTIVE'),
+      status: parsePlanStatus(statusMatch ? statusMatch[1] : 'ACTIVE'),
       author,
       created: new Date().toISOString(),
       updated: new Date().toISOString(),
@@ -436,7 +458,7 @@ export class JsonStorage extends StorageAdapter {
     return {
       id: filename.replace('.md', ''),
       title: titleMatch[1],
-      status: (status as any) || 'PLANNED',
+      status: parsePlanStatus(status),
       author: author || 'unknown',
       created,
       updated,

@@ -67,7 +67,7 @@ export class StorageAdapter {
     id: string;
     name: string;
     path?: string;
-    tech_stack?: any;
+    tech_stack?: unknown;
     created_at: string;
     updated_at: string;
   }): Promise<void> {

@@ -376,6 +376,28 @@ describe('JsonStorage', () => {
       expect(index).toHaveProperty('plans');
       expect(index).toHaveProperty('sessions');
     });
+
+    it('normalizes lowercase frontmatter status values to canonical plan status', async () => {
+      await fs.writeFile(
+        path.join(tmpDir, '.aiknowsys', 'PLAN_status_normalization.md'),
+        [
+          '---',
+          'status: active',
+          'author: test-user',
+          'created: 2026-02-17',
+          'updated: 2026-02-17',
+          '---',
+          '',
+          '# Status Normalization Plan'
+        ].join('\n')
+      );
+
+      await storage.init(tmpDir);
+      await storage.rebuildIndex();
+
+      const result = await storage.queryPlans({ status: 'ACTIVE' });
+      expect(result.plans.some((plan) => plan.id === 'PLAN_status_normalization')).toBe(true);
+    });
   });
 
   describe('close', () => {
