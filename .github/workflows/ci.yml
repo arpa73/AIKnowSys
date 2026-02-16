@@ -7,6 +7,25 @@ on:
     branches: [main, develop]
 
 jobs:
+  vitest-routing-guard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Vitest dist-import routing guard
+        run: npx vitest run test/vitest-project-routing.test.ts
+
   test:
     runs-on: ${{ matrix.os }}
     
