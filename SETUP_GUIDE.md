@@ -591,6 +591,12 @@ GitHub Copilot coding agent supports hooks that run automatically during session
 - Performance tracking (test regressions >20% slower)
 - Intelligence (version mismatches, stale documentation)
 
+**CI reinforcement (GitHub Actions):**
+- `.github/workflows/tdd-compliance.yml` enforces TDD compliance by failing when `lib/` logic changes are introduced without corresponding `test/` changes (on PRs and pushes)
+- `.github/workflows/ci.yml` includes `vitest-routing-guard`, which runs:
+   - `npx vitest run test/vitest-project-routing.test.ts`
+- This prevents regressions where tests importing `../../dist/lib/` drift out of `post-build-tests` or back into `source-tests`
+
 **Example hook output:**
 
 *Validation Reminder:*
