@@ -106,3 +106,4 @@ workdocs/
 test/
 test-fixtures/
 dist/
+test-db-*.sqlite*
