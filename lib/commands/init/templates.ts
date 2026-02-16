@@ -471,7 +471,7 @@ export async function setupHooks(targetDir: string, silent: boolean = false): Pr
     const filename = path.basename(hookPath);
     try {
       await fs.promises.chmod(path.join(hooksDir, filename), 0o755);
-    } catch (err) {
+    } catch {
       // chmod may fail on Windows or restricted filesystems
       // Files are still copied, hooks may still work if shell executes them
       if (!silent && hooksSpinner) {

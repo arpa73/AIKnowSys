@@ -550,7 +550,7 @@ async function logMetrics(
     // Ensure directory exists
     await fs.mkdir(path.dirname(historyFile), { recursive: true });
     await fs.writeFile(historyFile, JSON.stringify(history, null, 2), 'utf-8');
-  } catch (error: any) {
+  } catch {
     // Don't fail validation if metrics logging fails
     // CLI wrapper can log this warning
   }

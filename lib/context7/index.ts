@@ -64,7 +64,7 @@ export async function isContext7Available(): Promise<Context7Availability> {
           };
         }
       }
-    } catch (_error) {
+    } catch {
       // Ignore parse errors, try next location
       continue;
     }

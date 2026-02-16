@@ -53,20 +53,37 @@ export interface SearchContextResult {
 
 const VALID_SCOPES = ['all', 'plans', 'sessions', 'learned'] as const;
 
+function getErrorCode(error: unknown): string | undefined {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === 'string' ? code : undefined;
+  }
+
+  return undefined;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
 function validateWorkingDirectory(workingDir: string): void {
   let stats: ReturnType<typeof statSync>;
 
   try {
     stats = statSync(workingDir);
-  } catch (error: any) {
-    if (error?.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (getErrorCode(error) === 'ENOENT') {
       throw new Error(
         `Directory not found: ${workingDir}.\n` +
         'Provide a valid project directory with --dir.'
       );
     }
 
-    if (error?.code === 'EACCES') {
+    if (getErrorCode(error) === 'EACCES') {
       throw new Error(
         `Permission denied accessing: ${workingDir}.\n` +
         'Check directory permissions or use --dir to specify a different path.'
@@ -74,7 +91,7 @@ function validateWorkingDirectory(workingDir: string): void {
     }
 
     throw new Error(
-      `Failed to access directory ${workingDir}: ${error?.message || String(error)}`
+      `Failed to access directory ${workingDir}: ${getErrorMessage(error)}`
     );
   }
 
@@ -176,10 +193,10 @@ export async function searchContextCore(
       if (stats.isFile()) {
         storageAdapter = 'sqlite';
       }
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
+    } catch (error: unknown) {
+      if (getErrorCode(error) !== 'ENOENT') {
         throw new Error(
-          `Failed to check SQLite database at ${dbConfig.dbPath}: ${error.message}.\n` +
+          `Failed to check SQLite database at ${dbConfig.dbPath}: ${getErrorMessage(error)}.\n` +
           'Check file permissions or disk health.'
         );
       }

@@ -158,7 +158,7 @@ export async function querySessionsSqlite(
         topics: stats.uniqueTopics,
         status_counts: stats.statusCounts,
         sessions: stats.sessions,
-      }
+      };
     }
     
     if (mode === 'full') {
@@ -197,6 +197,7 @@ export async function querySessionsSqlite(
     
     if (mode === 'section' && options.section) {
       // Section extraction mode - get full content, extract section
+      const section = options.section;
       const fullResult = await storage.queryFullSessions({
         dateAfter: options.dateAfter,
         dateBefore: options.dateBefore,
@@ -206,7 +207,7 @@ export async function querySessionsSqlite(
       
       const sessions = fullResult.sessions.map((row) => {
         // Extract requested section using utility function
-        const extraction = extractMarkdownSection(row.content, options.section!);
+        const extraction = extractMarkdownSection(row.content, section);
         
         return {
           date: row.date,
@@ -214,7 +215,7 @@ export async function querySessionsSqlite(
           goal: row.topic,
           status: row.status as 'active' | 'paused' | 'complete',
           topics: parseTopics(row.topics),
-          section: options.section!,
+          section,
           section_content: extraction.content,
           section_found: extraction.found,
           created_at: row.created_at,
@@ -371,6 +372,7 @@ export async function queryPlansSqlite(
     
     if (mode === 'section' && options.section) {
       // Section extraction mode - get full content, extract section
+      const section = options.section;
       const fullResult = await storage.queryFullPlans({
         status: options.status,
         author: options.author,
@@ -382,13 +384,13 @@ export async function queryPlansSqlite(
         .filter((row) => !row.id.startsWith('learned_'))
         .map((row) => {
           // Extract requested section using utility function
-          const extraction = extractMarkdownSection(row.content, options.section!);
+          const extraction = extractMarkdownSection(row.content, section);
           
           return {
             id: row.id,
             title: row.title,
             status: row.status as 'ACTIVE' | 'PAUSED' | 'PLANNED' | 'COMPLETE' | 'CANCELLED',
-            section: options.section!,
+            section,
             section_content: extraction.content,
             section_found: extraction.found,
             created_at: row.created_at,
@@ -466,8 +468,9 @@ export async function queryLearnedPatternsSqlite(
       }
       
       if (options.keywords && options.keywords.length > 0) {
+        const keywords = options.keywords;
         patterns = patterns.filter((p) =>
-          options.keywords!.some((keyword) => p.keywords.includes(keyword))
+          keywords.some((keyword) => p.keywords.includes(keyword))
         );
       }
       

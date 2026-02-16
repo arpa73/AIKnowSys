@@ -171,7 +171,7 @@ export async function mcpTest(
       log.log(chalk.bold('Args:'), prettyPrint(args));
       log.dim('─'.repeat(60));
     }
-  } catch (parseError) {
+  } catch {
     const error = AIFriendlyErrorBuilder.validationFailed(
       'arguments',
       'Invalid JSON format',

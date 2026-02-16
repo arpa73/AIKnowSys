@@ -27,7 +27,7 @@ export function detectUsername(): string {
     if (gitUser) {
       return gitUser.toLowerCase().replace(/\s+/g, '-');
     }
-  } catch (err) {
+  } catch {
     // Git not available or not configured
   }
 

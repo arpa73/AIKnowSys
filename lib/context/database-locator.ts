@@ -128,7 +128,7 @@ export class DatabaseLocator {
       const configPath = path.join(targetDir, '.aiknowsys.config');
       const configContent = await fs.readFile(configPath, 'utf-8');
       return JSON.parse(configContent) as AiknowsysConfig;
-    } catch (error) {
+    } catch {
       // Config doesn't exist or is invalid - this is fine
       return null;
     }
@@ -156,7 +156,7 @@ export class DatabaseLocator {
       }
       
       return null;
-    } catch (error) {
+    } catch {
       // No git directory - this is fine
       return null;
     }

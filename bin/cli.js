@@ -260,7 +260,7 @@ program
       console.log(chalk.yellow('🔍 DRY RUN MODE'));
     }
     
-    console.log(chalk.green('✓'), `Export complete`);
+    console.log(chalk.green('✓'), 'Export complete');
     console.log(chalk.dim(`  Exported: ${result.exported}`));
     if (result.failed > 0) {
       console.log(chalk.yellow(`  Failed: ${result.failed}`));

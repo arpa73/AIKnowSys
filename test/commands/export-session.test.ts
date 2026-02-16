@@ -62,7 +62,7 @@ describe('export-session command', () => {
       // Insert events
       await storage.insertEvent({
         eventId: 'evt-001',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date('2026-02-15T10:00:00Z').toISOString(),
@@ -71,7 +71,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-002',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'goal_defined',
         timestamp: new Date('2026-02-15T10:01:00Z').toISOString(),
@@ -80,7 +80,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-003',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'file_changed',
         timestamp: new Date('2026-02-15T10:05:00Z').toISOString(),
@@ -92,7 +92,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-004',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'validation_passed',
         timestamp: new Date('2026-02-15T10:10:00Z').toISOString(),
@@ -139,7 +139,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-005',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date('2026-02-15T11:00:00Z').toISOString(),
@@ -148,7 +148,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-006',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'goal_defined',
         timestamp: new Date('2026-02-15T11:01:00Z').toISOString(),
@@ -235,7 +235,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-007',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date().toISOString(),
@@ -244,7 +244,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-008',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'goal_defined',
         timestamp: new Date().toISOString(),
@@ -253,7 +253,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-009',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'validation_passed',
         timestamp: new Date().toISOString(),
@@ -291,7 +291,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-010',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date('2026-02-20T10:00:00Z').toISOString(),
@@ -353,7 +353,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-011',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId1,
         eventType: 'session_started',
         timestamp: new Date().toISOString(),
@@ -362,7 +362,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-012',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId2,
         eventType: 'session_started',
         timestamp: new Date().toISOString(),
@@ -418,7 +418,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-013',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date().toISOString(),
@@ -483,7 +483,7 @@ describe('export-session command', () => {
       // All event types
       await storage.insertEvent({
         eventId: 'evt-014',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date('2026-02-15T10:00:00Z').toISOString(),
@@ -492,7 +492,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-015',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'goal_defined',
         timestamp: new Date('2026-02-15T10:01:00Z').toISOString(),
@@ -501,7 +501,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-016',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'task_completed',
         timestamp: new Date('2026-02-15T10:05:00Z').toISOString(),
@@ -510,7 +510,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-017',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'file_changed',
         timestamp: new Date('2026-02-15T10:06:00Z').toISOString(),
@@ -522,7 +522,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-018',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'validation_passed',
         timestamp: new Date('2026-02-15T10:10:00Z').toISOString(),
@@ -534,7 +534,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-019',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'learning_captured',
         timestamp: new Date('2026-02-15T10:15:00Z').toISOString(),
@@ -547,7 +547,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-020',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'decision_made',
         timestamp: new Date('2026-02-15T10:20:00Z').toISOString(),
@@ -567,9 +567,10 @@ describe('export-session command', () => {
 
       expect(result.success).toBe(true);
       expect(result.eventCount).toBe(7);
+      expect(result.markdown).toBeDefined();
 
       // Verify all sections present
-      const markdown = result.markdown!;
+      const markdown = result.markdown as string;
       expect(markdown).toContain('## Session: Comprehensive Export Test');
       expect(markdown).toContain('**Goal:** Test all event types in export');
       expect(markdown).toContain('## Changes');
@@ -598,7 +599,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-021',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'session_started',
         timestamp: new Date().toISOString(),
@@ -607,7 +608,7 @@ describe('export-session command', () => {
 
       await storage.insertEvent({
         eventId: 'evt-022',
-        projectId: "test-project",
+        projectId: 'test-project',
         sessionId: sessionId,
         eventType: 'file_changed',
         timestamp: new Date().toISOString(),
