@@ -39,6 +39,45 @@ import type {
   LearnedPatternRecord,
 } from '../types/index.js';
 
+function parseTopics(topics: unknown): string[] {
+  if (!topics) {
+    return [];
+  }
+
+  if (Array.isArray(topics)) {
+    return topics
+      .map((topic) => String(topic).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof topics !== 'string') {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(topics);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((topic) => String(topic).trim())
+        .filter(Boolean);
+    }
+
+    if (typeof parsed === 'string') {
+      return parsed
+        .split(',')
+        .map((topic) => topic.trim())
+        .filter(Boolean);
+    }
+
+    return [];
+  } catch {
+    return topics
+      .split(',')
+      .map((topic) => topic.trim())
+      .filter(Boolean);
+  }
+}
+
 // Function overloads for type-safe query modes
 
 /**
@@ -132,7 +171,7 @@ export async function querySessionsSqlite(
         title: row.topic,
         goal: row.topic,
         status: row.status as 'active' | 'paused' | 'complete',
-        topics: row.topics ? JSON.parse(row.topics) : [],
+        topics: parseTopics(row.topics),
         content: row.content,
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -170,7 +209,7 @@ export async function querySessionsSqlite(
           title: row.topic,
           goal: row.topic,
           status: row.status as 'active' | 'paused' | 'complete',
-          topics: row.topics ? JSON.parse(row.topics) : [],
+          topics: parseTopics(row.topics),
           section: options.section!,
           section_content: extraction.content,
           section_found: extraction.found,
@@ -192,7 +231,7 @@ export async function querySessionsSqlite(
       topic: row.topic, // Include for consistency
       goal: row.topic,
       status: row.status as 'active' | 'paused' | 'complete',
-      topics: row.topics ? JSON.parse(row.topics) : [],
+      topics: parseTopics(row.topics),
       created_at: row.created_at,
       updated_at: row.updated_at,
       // No content field - token efficient!
@@ -413,7 +452,7 @@ export async function queryLearnedPatternsSqlite(
           category: row.type || 'general',
           title: row.title,
           content: row.content,
-          keywords: row.topics ? JSON.parse(row.topics) : [],
+          keywords: parseTopics(row.topics),
           created_at: row.created_at,
         }));
       
@@ -443,7 +482,7 @@ export async function queryLearnedPatternsSqlite(
         id: row.id,
         category: row.type || 'general',
         title: row.title,
-        keywords: row.topics ? JSON.parse(row.topics) : [],
+        keywords: parseTopics(row.topics),
         created_at: row.created_at,
         // No content field - token efficient!
       }));

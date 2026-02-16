@@ -19,6 +19,7 @@
  */
 
 import path from 'path';
+import { statSync } from 'node:fs';
 import { createStorage, type SearchScope } from '../context/index.js';
 import type { SearchResult } from '../context/types.js';
 
@@ -91,7 +92,7 @@ export async function searchContextCore(
   const scope = options.scope || 'all';
   if (!VALID_SCOPES.includes(scope)) {
     throw new Error(
-      `Invalid scope: '${scope}'. Must be one of: ${VALID_SCOPES.join(', ')}.\n` +
+      `Invalid scope: ${scope}. Must be one of: ${VALID_SCOPES.join(', ')}\n` +
       'Examples: --scope plans, --scope sessions, --scope all'
     );
   }
@@ -102,48 +103,49 @@ export async function searchContextCore(
     ? path.resolve(targetDir)
     : (options.dir ? path.resolve(options.dir) : process.cwd());
 
-  // Only call DatabaseLocator if projectId not explicitly provided
-  // (Performance optimization: avoids filesystem I/O when projectId is known)
-  let projectId: string;
-  let dbPath: string;
-  
-  if (options.projectId) {
-    // ProjectId explicitly provided - use it directly
-    projectId = options.projectId;
-    // Still need dbPath for storage adapter
-    const { DatabaseLocator } = await import('../context/database-locator.js');
-    const locator = new DatabaseLocator();
-    const dbConfig = await locator.getDatabaseConfig(workingDir);
-    dbPath = dbConfig.dbPath;
-  } else {
-    // No explicit projectId - get from DatabaseLocator
-    const { DatabaseLocator } = await import('../context/database-locator.js');
-    const locator = new DatabaseLocator();
-    const dbConfig = await locator.getDatabaseConfig(workingDir);
-    projectId = dbConfig.projectId;
-    dbPath = dbConfig.dbPath;
+  try {
+    const stats = statSync(workingDir);
+    if (!stats.isDirectory()) {
+      throw new Error();
+    }
+  } catch {
+    throw new Error(
+      `Directory not found: ${workingDir}.\n` +
+      'Provide a valid project directory with --dir.'
+    );
   }
 
-  // Check if SQLite database exists - if so, use SQLite storage
-  // Otherwise fall back to JSON (file-based) storage
-  const { promises: fs } = await import('fs');
+  // If a targetDir is explicitly provided (common in tests and isolated scans),
+  // prefer local JSON storage unless cross-project SQLite behavior is requested.
+  const useLocalJsonSearch =
+    Boolean(targetDir || options.dir) &&
+    !options.projectId &&
+    !options.allProjects &&
+    !process.env.AIKNOWSYS_DB_PATH;
+
+  let projectId = options.projectId;
   let storageAdapter: 'sqlite' | 'json' = 'json';
-  
-  try {
-    const stats = await fs.stat(dbPath);
-    if (stats.isFile()) {
-      storageAdapter = 'sqlite';
+
+  if (!useLocalJsonSearch) {
+    const { DatabaseLocator } = await import('../context/database-locator.js');
+    const locator = new DatabaseLocator();
+    const dbConfig = await locator.getDatabaseConfig(workingDir);
+    projectId = projectId || dbConfig.projectId;
+
+    const { promises: fs } = await import('fs');
+    try {
+      const stats = await fs.stat(dbConfig.dbPath);
+      if (stats.isFile()) {
+        storageAdapter = 'sqlite';
+      }
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') {
+        throw new Error(
+          `Failed to check SQLite database at ${dbConfig.dbPath}: ${error.message}.\n` +
+          'Check file permissions or disk health.'
+        );
+      }
     }
-  } catch (error: any) {
-    // Only fall back to JSON for "file not found"
-    // Re-throw other errors (permissions, I/O issues)
-    if (error.code !== 'ENOENT') {
-      throw new Error(
-        `Failed to check SQLite database at ${dbPath}: ${error.message}.\n` +
-        'Check file permissions or disk health.'
-      );
-    }
-    // Database doesn't exist yet, use JSON storage
   }
 
   // Create storage adapter
@@ -158,7 +160,7 @@ export async function searchContextCore(
     
     // Pass project filtering options to storage
     const searchOptions = {
-      projectId: options.projectId || projectId, // Use explicit projectId or derived from DatabaseLocator
+      projectId: options.projectId || projectId,
       allProjects: options.allProjects || false
     };
     
