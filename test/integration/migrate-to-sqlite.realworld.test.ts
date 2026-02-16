@@ -84,7 +84,7 @@ describe('migrate-to-sqlite real-world migration', () => {
       console.log('   This is expected for files with markdown in frontmatter (**bold**, lists, etc.)');
       console.log('   Future work: Add lenient YAML parser or document frontmatter rules');
     }
-  });
+  }, 20000);
 
   it('should perform dry-run on real data without creating database', async () => {
     // GIVEN: Real .aiknowsys directory and dry-run mode

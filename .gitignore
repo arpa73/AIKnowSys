@@ -26,6 +26,14 @@ wheels/
 # TypeScript build output
 dist/
 
+# TypeScript compiled files in source directories (should only be in dist/)
+lib/**/*.js
+lib/**/*.d.ts
+lib/**/*.js.map
+lib/**/*.d.ts.map
+bin/**/*.d.ts
+bin/**/*.d.ts.map
+
 # Virtual environments
 venv/
 ENV/

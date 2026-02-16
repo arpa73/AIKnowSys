@@ -45,7 +45,7 @@ export default [
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: './tsconfig.json'
+        project: './tsconfig.eslint.json'  // Includes test files
       }
     },
     plugins: {
@@ -59,6 +59,8 @@ export default [
         varsIgnorePattern: '^_'
       }],
       'no-undef': 'off',  // TypeScript compiler checks undefined variables
+      'no-redeclare': 'off',  // TypeScript allows function overloads
+      '@typescript-eslint/no-redeclare': 'error',  // Use TypeScript's version
       
       // TypeScript-specific rules
       '@typescript-eslint/no-explicit-any': 'warn',
@@ -68,7 +70,22 @@ export default [
   },
   {
     // Test files - more relaxed rules
-    files: ['test/**/*.js', 'test/**/*.ts'],
+    files: ['test/**/*.js', 'test/**/*.ts', 'test/**/*.cjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        // Vitest globals
+        expect: 'readonly',
+        it: 'readonly',
+        describe: 'readonly',
+        test: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly'
+      }
+    },
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': 'off'  // Tests often have unused variables for readability
@@ -79,6 +96,10 @@ export default [
     ignores: [
       'node_modules/**',
       'dist/**',  // TypeScript build output
+      '**/*.d.ts',  // TypeScript declaration files
+      '**/*.d.ts.map',  // TypeScript declaration source maps
+      'lib/**/*.js',  // Compiled JS in source dir (should only be in dist/)
+      'lib/**/*.js.map',  // Source maps in source dir
       'test/tmp/**',
       'test/fixtures/**',
       'templates/**',

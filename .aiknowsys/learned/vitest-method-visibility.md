@@ -33,16 +33,17 @@ TypeError: storage.insertEvent is not a function
 
 ## Root Cause
 
-**Unknown** - suspected Vitest transpiler issue with ES modules
+`lib/` contains checked-in JavaScript artifacts that can drift from `*.ts` sources.
 
-**Observations:**
-1. Methods exist in source file (TypeScript compiles successfully)
-2. Methods visible when importing from compiled JavaScript (dist/)
-3. Only affects certain methods (not all - inconsistent)
-4. Occurs in integration tests (not unit tests)
-5. Recurring across multiple test files (hybrid-storage.test.ts, semantic-search.test.ts)
+For `SqliteStorage`, `lib/context/sqlite-storage.ts` includes newer methods (`insertEvent`, `semanticSearch`), but `lib/context/sqlite-storage.js` can lag. Tests importing `../../lib/context/sqlite-storage.js` execute stale JS and fail.
 
-**Investigation Status:** ⏸️ DEFERRED (workaround effective, low impact)
+**Validated reproduction (2026-02-16):**
+- Copy `test/embeddings/semantic-search.test.ts`
+- Replace imports from `../../dist/lib/` to `../../lib/`
+- Run with Vitest
+- Result: `TypeError: storage.insertEvent is not a function`
+
+**Investigation Status:** ✅ Root cause confirmed
 
 ## Workaround
 
@@ -57,8 +58,16 @@ import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 ```
 
 **Files using this workaround:**
-- [test/integration/hybrid-storage.test.ts](../../test/integration/hybrid-storage.test.ts)
+- [test/commands/export-session.test.ts](../../test/commands/export-session.test.ts)
+- [test/commands/export-sessions.test.ts](../../test/commands/export-sessions.test.ts)
+- [test/commands/migrate-to-events.test.ts](../../test/commands/migrate-to-events.test.ts)
+- [test/events/event-embedding-storage.test.ts](../../test/events/event-embedding-storage.test.ts)
+- [test/events/event-storage.test.ts](../../test/events/event-storage.test.ts)
+- [test/events/hybrid-storage.test.ts](../../test/events/hybrid-storage.test.ts)
 - [test/embeddings/semantic-search.test.ts](../../test/embeddings/semantic-search.test.ts)
+- [test/integration/cross-project-queries.test.ts](../../test/integration/cross-project-queries.test.ts)
+- [test/integration/hybrid-storage.test.ts](../../test/integration/hybrid-storage.test.ts)
+- [test/migration/event-migrator.test.ts](../../test/migration/event-migrator.test.ts)
 
 ## Trade-offs
 
@@ -72,7 +81,7 @@ import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 - ⚠️ Tests import compiled output (not source)
 - ⚠️ Requires `npm run build` before running tests
 - ⚠️ Source maps might be less accurate
-- ⚠️ Root cause not addressed
+- ⚠️ Root cause addressed via test-runner mitigation, underlying JS/TS artifact drift still possible
 
 **Impact:** LOW - Workaround is effective and doesn't affect users
 
@@ -89,25 +98,16 @@ import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 - Error is something else (null reference, wrong type)
 - Unit tests (usually don't have this issue)
 
-## Future Investigation
+## Mitigation Applied
 
-**If time permits, investigate:**
-1. Vitest configuration (vitest.config.ts)
-2. TypeScript compilation settings (tsconfig.json)
-3. ES module resolution (package.json type: "module")
-4. Vitest transpiler behavior with ESM
-5. Comparison with other test frameworks (Jest, Mocha)
+Updated [vitest.config.ts](../../vitest.config.ts) project split:
 
-**Potential Root Causes:**
-- Vitest's ESM transpiler doesn't handle method exports consistently
-- TypeScript ES module output incompatible with Vitest's expectations
-- Method visibility issue with `better-sqlite3` native module interaction
-- Class method hoisting/binding issue in transpiled code
+- `source-tests`: excludes all tests importing `../../dist/lib/`
+- `post-build-tests`: includes all dist-dependent tests
 
-**Success Criteria for Fix:**
-- Tests pass with imports from `lib/` (source) instead of `dist/` (compiled)
-- No behavioral changes (same test results)
-- No "method is not a function" errors
+Validation:
+- `npm run test:source` ✅
+- `npm run test:post-build` ✅
 
 ## References
 
@@ -123,6 +123,6 @@ import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 
 ---
 
-**Status:** ⏸️ DEFERRED - Workaround effective, low priority for root cause investigation  
+**Status:** ✅ RESOLVED (root cause identified, mitigation applied)  
 **Impact:** LOW - Tests work reliably, no user-facing impact  
 **Last Updated:** Feb 16, 2026

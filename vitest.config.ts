@@ -25,8 +25,16 @@ export default defineConfig({
             '**/dist/**',
             'test/types/**',
             // Tests that require built artifacts (dist/)
+            'test/commands/export-session.test.ts',
+            'test/commands/export-sessions.test.ts',
+            'test/commands/migrate-to-events.test.ts',
             'test/events/event-embedding-storage.test.ts',
-            'test/embeddings/semantic-search.test.ts'
+            'test/events/event-storage.test.ts',
+            'test/events/hybrid-storage.test.ts',
+            'test/embeddings/semantic-search.test.ts',
+            'test/integration/cross-project-queries.test.ts',
+            'test/integration/hybrid-storage.test.ts',
+            'test/migration/event-migrator.test.ts'
           ],
           setupFiles: ['./vitest.setup.ts'],
           cache: false
@@ -39,8 +47,16 @@ export default defineConfig({
           environment: 'node',
           include: [
             // Tests that import from dist/ (require build first)
+            'test/commands/export-session.test.ts',
+            'test/commands/export-sessions.test.ts',
+            'test/commands/migrate-to-events.test.ts',
             'test/events/event-embedding-storage.test.ts',
-            'test/embeddings/semantic-search.test.ts'
+            'test/events/event-storage.test.ts',
+            'test/events/hybrid-storage.test.ts',
+            'test/embeddings/semantic-search.test.ts',
+            'test/integration/cross-project-queries.test.ts',
+            'test/integration/hybrid-storage.test.ts',
+            'test/migration/event-migrator.test.ts'
           ],
           setupFiles: ['./vitest.setup.ts'],
           cache: false

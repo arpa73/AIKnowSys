@@ -73,7 +73,7 @@ export class MarkdownParser {
 
     // File changed events from Changes section
     parsed.changes.forEach((change, index) => {
-      const fileMatch = change.match(/\[([\w\/\.\-]+)\]/);
+      const fileMatch = change.match(/\[([\w/.-]+)\]/);
       if (fileMatch) {
         const filePath = fileMatch[1];
 

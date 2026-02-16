@@ -1,4 +1,4 @@
-# TODO: Create GitHub Issue
+# RESOLVED: Vitest dist/lib Import Investigation
 
 **Title:** Investigate Vitest dist/ import requirement
 
@@ -8,61 +8,63 @@
 
 ## Description
 
-Some tests require importing from `dist/` (compiled JavaScript) instead of `lib/` (TypeScript source) to pass. This is not idiomatic and creates a build dependency for tests.
+Some tests require importing from `dist/` (compiled JavaScript) instead of `lib/` (TypeScript source) to pass.
 
-## Symptoms
+## Root Cause
 
-- Tests that import from `lib/` fail with: `TypeError: storage.method is not a function`
-- Same tests pass when importing from `dist/`
-- Methods exist in both source and compiled code
+`lib/` contains checked-in JavaScript artifacts that can drift from `*.ts` sources.
 
-## Affected Tests
+For `SqliteStorage`, `lib/context/sqlite-storage.ts` includes newer methods (`insertEvent`, `semanticSearch`), but `lib/context/sqlite-storage.js` can lag. Tests importing `../../lib/context/sqlite-storage.js` execute stale JS and fail with:
 
-- `test/events/event-embedding-storage.test.ts`
-- `test/embeddings/semantic-search.test.ts`
+- `TypeError: storage.insertEvent is not a function`
 
-## Current Workaround
+`dist/` imports work because `dist/` is generated fresh by `npm run build`.
 
-**Vitest projects configuration** separates tests:
-- **source-tests**: Import from `lib/` (majority of tests)
-- **post-build-tests**: Import from `dist/` (Phase 2 embedding tests only)
+## Reproduction
 
-**Scripts:**
 ```bash
-npm run test:source      # No build required
-npm run test:post-build  # Builds first, then runs
-npm run test:all         # Both sequentially
+cp test/embeddings/semantic-search.test.ts test/embeddings/semantic-search-lib.test.ts
+sed -i 's#../../dist/lib/#../../lib/#g' test/embeddings/semantic-search-lib.test.ts
+npx vitest run test/embeddings/semantic-search-lib.test.ts
+# → Fails with: TypeError: storage.insertEvent is not a function
+rm -f test/embeddings/semantic-search-lib.test.ts
 ```
 
-## Investigation Needed
+## Resolution Applied
 
-1. Check Vitest transpilation configuration ([vitest.config.ts](vitest.config.ts))
-2. Test if issue is specific to certain modules (embeddings, events)
-3. Review ES module resolution settings
-4. Check if other TypeScript projects have similar issues
-5. Investigate if related to circular dependencies or export patterns
+1. Updated `vitest.config.ts` project split so all tests importing `../../dist/lib/` run in `post-build-tests`.
+2. Excluded these dist-dependent tests from `source-tests`.
+3. Verified both suites:
+   - `npm run test:source` ✅
+   - `npm run test:post-build` ✅
 
-## References
+## Affected Tests (post-build)
 
-- Workaround documented: `.aiknowsys/learned/vitest-method-visibility.md`
-- Vitest config: [vitest.config.ts](vitest.config.ts)
-- Architect review: `.aiknowsys/reviews/PENDING_arno-paffen.md` (lines 75-110)
-- Commit with workaround: 7c9a000
+- `test/commands/export-session.test.ts`
+- `test/commands/export-sessions.test.ts`
+- `test/commands/migrate-to-events.test.ts`
+- `test/events/event-embedding-storage.test.ts`
+- `test/events/event-storage.test.ts`
+- `test/events/hybrid-storage.test.ts`
+- `test/embeddings/semantic-search.test.ts`
+- `test/integration/cross-project-queries.test.ts`
+- `test/integration/hybrid-storage.test.ts`
+- `test/migration/event-migrator.test.ts`
+
+## Follow-up (Optional)
+
+1. Decide whether generated JS under `lib/` should remain committed.
+2. Add CI check preventing `source-tests` from importing `../../dist/lib/`.
+3. Add CI check detecting stale `lib/*.js` vs `lib/*.ts` drift.
 
 ## Success Criteria
 
-- [ ] Tests import from `lib/` (source) and pass
-- [ ] No dist/ dependency for tests
-- [ ] Root cause identified and documented
-
-## Non-Goals
-
-- This is not urgent - workaround is effective
-- Defer if Vitest configuration is complex
-- Projects split provides clean separation regardless
+- [x] Root cause identified and documented
+- [x] Dist-dependent tests isolated to post-build project
+- [x] `test:source` and `test:post-build` both pass
 
 ---
 
 *Created: 2026-02-16*  
-*Requested by: Senior Architect review*  
-*Status: TODO - user to create GitHub issue*
+*Updated: 2026-02-16*  
+*Status: RESOLVED*

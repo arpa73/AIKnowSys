@@ -415,7 +415,7 @@ export class JsonStorage extends StorageAdapter {
     
     // Fallback to markdown-formatted fields if frontmatter not present
     if (!status) {
-      const statusMatch = content.match(/\*\*Status:\*\*\s+[🎯📋✅❌🔄]\s+(\w+)/m);
+      const statusMatch = content.match(/\*\*Status:\*\*\s+[🎯📋✅❌🔄]\s+(\w+)/mu);
       status = statusMatch ? statusMatch[1] : 'PLANNED';
     }
     

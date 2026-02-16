@@ -40,7 +40,7 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
       }
       break;
 
-    case EventType.PATTERN_DISCOVERED:
+    case EventType.PATTERN_DISCOVERED: {
       if (!data.pattern || data.pattern.trim() === '') {
         errors.push('pattern is required');
       }
@@ -55,6 +55,7 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
         errors.push('reusable must be a boolean');
       }
       break;
+    }
 
     case EventType.VALIDATION_PASSED:
       if (!data.result || data.result.trim() === '') {
@@ -83,7 +84,7 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
       }
       break;
 
-    case EventType.LEARNING_CAPTURED:
+    case EventType.LEARNING_CAPTURED: {
       if (!data.learning || data.learning.trim() === '') {
         errors.push('learning is required');
       }
@@ -96,6 +97,7 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
         errors.push('Invalid confidence');
       }
       break;
+    }
 
     case EventType.SESSION_STARTED:
       if (!data.title || data.title.trim() === '') {
