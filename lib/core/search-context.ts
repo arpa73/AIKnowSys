@@ -30,6 +30,10 @@ export interface SearchContextOptions {
   scope?: 'all' | 'plans' | 'sessions' | 'learned';
   /** Target directory (overridden by targetDir parameter) */
   dir?: string;
+  /** Query across all projects (default: false - search current project only) */
+  allProjects?: boolean;
+  /** Specific project ID to search (overrides allProjects) */
+  projectId?: string;
 }
 
 /**
@@ -94,13 +98,41 @@ export async function searchContextCore(
     ? path.resolve(targetDir)
     : (options.dir ? path.resolve(options.dir) : process.cwd());
 
+  // If no explicit projectId provided and not searching all projects, get projectId from DatabaseLocator
+  const { DatabaseLocator } = await import('../context/database-locator.js');
+  const locator = new DatabaseLocator();
+  const dbConfig = await locator.getDatabaseConfig(workingDir);
+  const projectId = options.projectId || dbConfig.projectId;
+
+  // Check if SQLite database exists - if so, use SQLite storage
+  // Otherwise fall back to JSON (file-based) storage
+  const { promises: fs } = await import('fs');
+  let storageAdapter: 'sqlite' | 'json' = 'json';
+  try {
+    await fs.access(dbConfig.dbPath);
+    storageAdapter = 'sqlite';
+  } catch {
+    // SQLite database doesn't exist, use JSON
+    storageAdapter = 'json';
+  }
+
   // Create storage adapter
-  const storage = await createStorage(workingDir, { autoRebuild: true });
+  const storage = await createStorage(workingDir, { 
+    adapter: storageAdapter,
+    autoRebuild: true 
+  });
 
   try {
     // Execute search (storage layer expects scope as SearchScope type)
     const scopeParam: SearchScope = scope === 'all' ? 'all' : scope;
-    const result = await storage.search(query, scopeParam);
+    
+    // Pass project filtering options to storage
+    const searchOptions = {
+      projectId: options.projectId || projectId, // Use explicit projectId or derived from DatabaseLocator
+      allProjects: options.allProjects || false
+    };
+    
+    const result = await storage.search(query, scopeParam, searchOptions);
 
     // Return structured data with matches sorted by relevance
     // Storage layer already sorts by relevance (highest first)

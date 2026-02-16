@@ -5,6 +5,7 @@ import os from 'node:os';
 import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 import { queryPlans } from '../../dist/lib/commands/query-plans.js';
 import { querySessions } from '../../dist/lib/commands/query-sessions.js';
+import { searchContextCore } from '../../dist/lib/core/search-context.js';
 import type { QueryPlansOptions, QuerySessionsOptions } from '../../dist/lib/types/index.js';
 
 /**
@@ -39,6 +40,9 @@ describe('Cross-Project Queries', () => {
     // Set up global database in tempDir
     globalDbPath = path.join(tempDir, '.aiknowsys', 'knowledge.db');
     await fs.promises.mkdir(path.dirname(globalDbPath), { recursive: true });
+    
+    // Set environment variable for DatabaseLocator to find this test database
+    process.env.AIKNOWSYS_DB_PATH = globalDbPath;
     
     // Create project directories
     project1Dir = path.join(tempDir, 'project-alpha');
@@ -126,6 +130,9 @@ describe('Cross-Project Queries', () => {
   });
 
   afterEach(async () => {
+    // Clean up environment variable
+    delete process.env.AIKNOWSYS_DB_PATH;
+    
     if (storage) {
       await storage.close();
     }
@@ -298,6 +305,79 @@ describe('Cross-Project Queries', () => {
       result.plans.forEach(plan => {
         expect(plan.projectId).toBe('project-alpha');
       });
+    });
+  });
+
+  describe('Cross-project search (search-context)', () => {
+    it('should search only current project by default', async () => {
+      // 🔴 RED: Test project-scoped search
+      const result = await searchContextCore(
+        'feature',
+        { scope: 'all' },
+        project1Dir
+      );
+      
+      // Should only find alpha project content
+      expect(result.count).toBeGreaterThan(0);
+      result.matches.forEach(match => {
+        expect(match.file).toContain('alpha');
+      });
+    });
+
+    it('should search across all projects with allProjects flag', async () => {
+      // 🔴 RED: Test cross-project search
+      const result = await searchContextCore(
+        'project',
+        { scope: 'all', allProjects: true },
+        project1Dir
+      );
+      
+      // Should find content from both projects
+      expect(result.count).toBeGreaterThanOrEqual(2);
+      
+      // Should have matches from both projects
+      const hasAlpha = result.matches.some(m => m.file.includes('alpha'));
+      const hasBeta = result.matches.some(m => m.file.includes('beta'));
+      
+      expect(hasAlpha).toBe(true);
+      expect(hasBeta).toBe(true);
+    });
+
+    it('should respect scope parameter in cross-project search', async () => {
+      // 🔴 RED: Test scoped cross-project search
+      const result = await searchContextCore(
+        'feature',
+        { scope: 'plans', allProjects: true },
+        project1Dir
+      );
+      
+      // Should only search plans across all projects
+      result.matches.forEach(match => {
+        expect(match.type).toBe('plan');
+      });
+    });
+
+    it('should maintain project isolation when allProjects is false', async () => {
+      // Search from project-alpha directory
+      const alphaResult = await searchContextCore(
+        'work',
+        { scope: 'all', allProjects: false },
+        project1Dir
+      );
+      
+      // Search from project-beta directory
+      const betaResult = await searchContextCore(
+        'work',
+        { scope: 'all', allProjects: false },
+        project2Dir
+      );
+      
+      // Results should be completely disjoint
+      const alphaFiles = alphaResult.matches.map(m => m.file);
+      const betaFiles = betaResult.matches.map(m => m.file);
+      
+      const intersection = alphaFiles.filter(f => betaFiles.includes(f));
+      expect(intersection).toHaveLength(0);
     });
   });
 });

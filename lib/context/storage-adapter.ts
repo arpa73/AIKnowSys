@@ -41,8 +41,13 @@ export class StorageAdapter {
    * Full-text search across context.
    * @param _query - Search query
    * @param _scope - Search scope (all, plans, sessions, learned, essentials)
+   * @param _options - Search options (projectId, allProjects)
    */
-  async search(_query: string, _scope: SearchScope): Promise<{ query: string; count: number; results: SearchResult[] }> {
+  async search(
+    _query: string, 
+    _scope: SearchScope, 
+    _options?: { projectId?: string; allProjects?: boolean }
+  ): Promise<{ query: string; count: number; results: SearchResult[] }> {
     throw new Error('StorageAdapter.search() must be implemented by subclass');
   }
 

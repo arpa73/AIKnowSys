@@ -1064,6 +1064,153 @@ See [scripts/README.md](scripts/README.md) for full details.
 
 ---
 
+## Cross-Project Queries (Phase 1)
+
+**New in v0.11.0:** Query knowledge across all your projects from a single global database.
+
+### Global Database Setup
+
+By default, AIKnowSys uses a global database at `~/.aiknowsys/knowledge.db` that stores knowledge from all projects. This enables cross-project search and contextlearning without manual configuration.
+
+**How it works:**
+- Each project gets a unique `project_id` (from git remote or directory name)
+- All data stored in one database with project isolation
+- Queries default to current project only
+- Use `--all-projects` flag to search everywhere
+
+**Custom database location** (optional):
+```bash
+# Environment variable
+export AIKNOWSYS_DB_PATH="/path/to/custom/knowledge.db"
+
+# Or create .aiknowsys.config in project root:
+{
+  "databasePath": "/path/to/custom/knowledge.db",
+  "projectId": "my-custom-id"
+}
+```
+
+### Cross-Project Query Examples
+
+**Search across all projects:**
+```bash
+# Find where you handled authentication across all projects
+npx aiknowsys search-context "authentication" --all-projects
+
+# Search only in plans across all projects
+npx aiknowsys search-context "Docker" --all-projects --scope plans
+```
+
+**Query plans and sessions:**
+```bash
+# Find all ACTIVE plans across all projects
+npx aiknowsys query-plans --all-projects --status ACTIVE
+
+# Find sessions from last week across all projects
+npx aiknowsys query-sessions --all-projects --after 2026-02-10
+
+# Query specific project
+npx aiknowsys query-plans --project-id my-fastapi-project
+```
+
+**Benefits:**
+- 🔍 Find solutions from previous projects instantly
+- 🧠 Build knowledge base across your entire portfolio
+- 🚀 No context switching between project directories
+- 🔒 Project isolation by default (explicit opt-in for cross-project)
+
+**Use Cases:**
+- "How did I handle rate limiting in my API projects?"
+- "Show all patterns related to Docker configuration"
+- "What testing strategies have I used successfully?"
+- "Find all sessions where I debugged authentication issues"
+
+---
+
+## Testing
+
+AIKnowSys uses Vitest with a projects-based configuration to separate tests by their import requirements.
+
+### Test Projects
+
+The test suite is split into two projects:
+
+1. **Source Tests** (`source-tests`) - Regular tests importing from `lib/` (TypeScript source)
+   - Majority of tests (495+ tests)
+   - No build required
+   - Fastest execution
+
+2. **Post-Build Tests** (` post-build-tests`) - Tests importing from `dist/` (compiled JavaScript)
+   - Phase 2 embedding tests (semantic search, embedding storage)
+   - Requires build artifacts
+   - Runs after `npm run build`
+
+### Running Tests
+
+**Run all tests (default):**
+```bash
+npm test
+# Equivalent to: npm run build && vitest run
+```
+
+**Run source tests only** (no build required):
+```bash
+npm run test:source
+# Runs tests importing from lib/ directly
+# Fastest option for TDD workflow
+```
+
+**Run post-build tests only** (builds first):
+```bash
+npm run test:post-build
+# Runs: npm run build && vitest run --project=post-build-tests
+# For Phase 2 embedding functionality validation
+```
+
+**Run both sequentially:**
+```bash
+npm run test:all
+# Runs source tests, then post-build tests
+```
+
+**Run specific test file:**
+```bash
+npx vitest run test/core/create-session.test.ts
+npx vitest run test/events/event-embedding-storage.test.ts
+```
+
+**Watch mode (TDD workflow):**
+```bash
+npm run test:watch
+# Re-runs tests on file changes
+```
+
+### Why Two Test Projects?
+
+Some tests require importing from compiled `dist/` instead of source `lib/` due to a Vitest method visibility issue (see `.aiknowsys/learned/vitest-method-visibility.md` for details). 
+
+This split configuration:
+- ✅ Prevents dist/ pollution in regular tests
+- ✅ Enables TDD workflow (source tests run without build)
+- ✅ Isolates post-build validation (embedding tests)
+- ✅ Maintains clean separation of concerns
+
+### Test Coverage
+
+```bash
+npm run test:coverage
+# Generates coverage report with v8 provider
+```
+
+**Current Status:**
+- ✅ 495+ source tests passing (98.6%)
+- ✅ 26 post-build tests passing (100%)
+- ✅ Phase 2 embedding tests: 26/26 ✅
+
+See [test/README.md](test/README.md) for detailed test organization and patterns.
+
+---
+
 ## Examples
 
 ### Example Projects

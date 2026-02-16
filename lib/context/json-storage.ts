@@ -135,7 +135,11 @@ export class JsonStorage extends StorageAdapter {
     };
   }
 
-  async search(query: string, scope: SearchScope): Promise<{ query: string; count: number; results: SearchResult[] }> {
+  async search(
+    query: string, 
+    scope: SearchScope,
+    _options?: { projectId?: string; allProjects?: boolean }
+  ): Promise<{ query: string; count: number; results: SearchResult[] }> {
     // Auto-rebuild if index is stale
     if (this.autoIndexer) {
       await this.autoIndexer.ensureFreshIndex(this, { verbose: false });

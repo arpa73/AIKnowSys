@@ -474,6 +474,8 @@ program
   .description('Full-text search across plans, sessions, and learned patterns')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-s, --scope <scope>', 'Search scope: all, plans, sessions, learned (default: all)')
+  .option('--all-projects', 'Query across all projects in global database (default: current project only)')
+  .option('--project-id <id>', 'Filter by specific project ID')
   .option('--json', 'Output JSON (for AI agents)')
   .action(async (query, options) => {
     await searchContext(query, options);

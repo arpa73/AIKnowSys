@@ -350,7 +350,11 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to query string, result count, and search results
    * @throws Error if database not initialized
    */
-  async search(query: string, scope: SearchScope): Promise<{ query: string; count: number; results: SearchResult[] }> {
+  async search(
+    query: string, 
+    scope: SearchScope,
+    options?: { projectId?: string; allProjects?: boolean }
+  ): Promise<{ query: string; count: number; results: SearchResult[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before searching. ' +
@@ -363,9 +367,13 @@ export class SqliteStorage extends StorageAdapter {
     // Prepare query for FTS5 - wrap in quotes for phrase search to avoid syntax errors
     const ftsQuery = `"${query.replace(/"/g, '""')}"`;
     
+    // Determine if we need project filtering
+    const filterByProject = !options?.allProjects;
+    const projectId = options?.projectId; // Use projectId from options (passed by caller)
+    
     // Search in plans if scope includes them
     if (scope === 'all' || scope === 'plans') {
-      const planQuery = `
+      let planQuery = `
         SELECT 
           p.id as plan_id,
           p.title,
@@ -373,11 +381,18 @@ export class SqliteStorage extends StorageAdapter {
         FROM plans_fts
         JOIN plans p ON p.rowid = plans_fts.rowid
         WHERE plans_fts MATCH ?
-        LIMIT 50
       `;
       
+      // Add project filter if needed
+      if (filterByProject && projectId) {
+        planQuery += ` AND p.project_id = ?`;
+      }
+      
+      planQuery += ` LIMIT 50`;
+      
       const stmt = this.db.prepare(planQuery);
-      const rows = stmt.all(ftsQuery) as SearchRow[];
+      const params = filterByProject && projectId ? [ftsQuery, projectId] : [ftsQuery];
+      const rows = stmt.all(...params) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
@@ -397,7 +412,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Search in sessions if scope includes them
     if (scope === 'all' || scope === 'sessions') {
-      const sessionQuery = `
+      let sessionQuery = `
         SELECT 
           s.id as session_id,
           s.topic,
@@ -405,11 +420,18 @@ export class SqliteStorage extends StorageAdapter {
         FROM sessions_fts
         JOIN sessions s ON s.rowid = sessions_fts.rowid
         WHERE sessions_fts MATCH ?
-        LIMIT 50
       `;
       
+      // Add project filter if needed
+      if (filterByProject && projectId) {
+        sessionQuery += ` AND s.project_id = ?`;
+      }
+      
+      sessionQuery += ` LIMIT 50`;
+      
       const stmt = this.db.prepare(sessionQuery);
-      const rows = stmt.all(ftsQuery) as SearchRow[];
+      const params = filterByProject && projectId ? [ftsQuery, projectId] : [ftsQuery];
+      const rows = stmt.all(...params) as SearchRow[];
       
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
