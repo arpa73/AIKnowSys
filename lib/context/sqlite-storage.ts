@@ -28,7 +28,7 @@ import type {
 } from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
 import { EmbeddingGenerator } from '../embeddings/generator.js';
-import { cosineSimilarity, batchCosineSimilarity } from '../embeddings/similarity.js';
+import { batchCosineSimilarity } from '../embeddings/similarity.js';
 
 /**
  * Database row interfaces for type-safe query results
