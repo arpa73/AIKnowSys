@@ -905,3 +905,21 @@ npx aiknowsys export-sessions --from 2026-02-01 --to 2026-02-15 --output /tmp/te
 ---
 
 *Part of AIKnowSys strategic evolution. Combines cross-repository foundation with AI-native event-sourced storage for ultimate knowledge management system.*
+
+---
+
+## 📝 Notes for Planner
+
+**2026-02-16:** VSCode hooks now executing! Update documentation:
+- [ ] **CRITICAL:** VSCode Copilot now executes hooks (previously "runtime blocked")
+- [ ] Update [docs/autonomous-context-loading.md](docs/autonomous-context-loading.md#L65) - Remove "infrastructure ready but runtime blocked" status
+- [ ] Update release notes/changelog - VSCode hooks are now LIVE (skill detection working)
+- [ ] Document MCP tools as primary method (fastest, most reliable)
+- [ ] Update comparison table - VSCode hooks now "✅ Active" (not "❌ Future")
+- [ ] Consider: When did VSCode enable this? Check Copilot extension release notes
+- [ ] Test all 14 hooks to verify functionality
+- [ ] Update SETUP_GUIDE.md if hook setup instructions need changes
+
+**Context:** User saw `on_user_prompt_submit.cjs` skill detection hook fire in VSCode - first time ever observed working. Infrastructure was ready (all hooks written), but VSCode Copilot didn't execute them until now.
+
+**Impact:** Autonomous context loading (Solution 2) is now viable alternative to MCP tools!

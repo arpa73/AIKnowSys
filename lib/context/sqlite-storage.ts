@@ -1280,17 +1280,13 @@ export class SqliteStorage extends StorageAdapter {
     let embeddingBuffer: Buffer | null = null;
     if (embedding !== undefined) {
       if (!(embedding instanceof Float32Array)) {
-        throw AIFriendlyErrorBuilder.validationFailed(
-          'embedding',
-          'Embedding must be Float32Array',
-          'Use: const embedding = await embeddingGenerator.embedEvent(event)'
+        throw new Error(
+          'Embedding must be Float32Array. Use: const embedding = await embeddingGenerator.embedEvent(event)'
         );
       }
       if (embedding.length !== 384) {
-        throw AIFriendlyErrorBuilder.validationFailed(
-          'embedding',
-          `Embedding must have exactly 384 dimensions (got ${embedding.length})`,
-          'Expected dimensions from all-MiniLM-L6-v2 model'
+        throw new Error(
+          `Embedding must have exactly 384 dimensions (got ${embedding.length}). Expected dimensions from all-MiniLM-L6-v2 model.`
         );
       }
       embeddingBuffer = Buffer.from(embedding.buffer);

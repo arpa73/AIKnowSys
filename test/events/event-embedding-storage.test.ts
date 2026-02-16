@@ -26,6 +26,14 @@ describe('Event Embedding Storage', () => {
     storage = new SqliteStorage();
     await storage.init(testDir);
     
+    // Create project record (required for foreign key constraints)
+    await storage.insertProject({
+      id: projectId,
+      name: 'Test Project',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    
     // Initialize embedding generator
     embeddingGenerator = new EmbeddingGenerator();
   });
