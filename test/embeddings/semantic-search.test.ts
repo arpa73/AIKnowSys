@@ -124,7 +124,7 @@ describe('Semantic Search (Integration Tests)', () => {
         'Added user login with password hashing'
       ])
     );
-  });
+  }, 15000); // Extended timeout for embedding generation
 
   it('should respect similarity threshold', async () => {
     const event = EventFactory.taskCompleted({
@@ -290,5 +290,5 @@ describe('Semantic Search (Integration Tests)', () => {
     results.forEach(result => {
       expect(result.similarity).toBeGreaterThanOrEqual(0.3);
     });
-  });
+  }, 20000); // Extended timeout for generating 15 embeddings
 });
