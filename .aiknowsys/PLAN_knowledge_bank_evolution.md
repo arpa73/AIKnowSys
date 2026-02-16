@@ -128,6 +128,59 @@ started: "2026-02-15"
 
 **Next:** Phase 1 (Cross-Repository Foundation) or Phase 3 (Markdown Exports)
 
+**2026-02-16 (20:40):** ## Phase 1: Cross-Repository Foundation - COMPLETE ✅
+
+**Status:** ✅ Implementation complete + validated
+
+**Summary:**
+- ✅ **DatabaseLocator:** Global DB path resolution (`~/.aiknowsys/knowledge.db`)
+- ✅ **Project Isolation:** Queries filtered by project_id by default
+- ✅ **Cross-Project Queries:** `--all-projects` flag in all query commands
+- ✅ **CLI Flags:** `--all-projects` and `--project-id` exposed in CLI
+- ✅ **Automatic Storage Detection:** Auto-detect SQLite vs JSON storage
+
+**Test Results:**
+- ✅ Cross-project tests: 15/15 passing (100%)
+- ✅ Post-build tests: 26/26 passing (Phase 2 validation)
+- ✅ TDD compliance: Pre-commit hook passed
+
+**Implementation Highlights:**
+1. **search-context cross-project support**
+   - Added `allProjects` and `projectId` options to SearchContextOptions
+   - Modified storage.search() to filter by project_id when needed
+   - Auto-detect SQLite database existence for smart storage selection
+   - Pass projectId from DatabaseLocator to storage layer
+
+2. **Storage layer updates**
+   - Updated StorageAdapter.search() interface to accept options
+   - Modified SqliteStorage to add `project_id` filters to FTS queries
+   - Updated JsonStorage signature for consistency (no-op for file-based)
+
+3. **CLI enhancements**
+   - Added `--all-projects` flag to search-context command
+   - Added `--project-id` flag for specific project queries
+   - Consistent with existing query-plans/query-sessions flags
+
+4. **Documentation**
+   - Added "Cross-Project Queries" section to README.md
+   - Documented global database workflow
+   - Provided real-world use case examples
+
+**Files Modified:**
+- [lib/core/search-context.ts](lib/core/search-context.ts) - Added cross-project support
+- [lib/context/storage-adapter.ts](lib/context/storage-adapter.ts) - Updated interface
+- [lib/context/sqlite-storage.ts](lib/context/sqlite-storage.ts) - Added project filtering
+- [lib/context/json-storage.ts](lib/context/json-storage.ts) - Updated signature
+- [bin/cli.js](bin/cli.js) - Added CLI flags
+- [test/integration/cross-project-queries.test.ts](test/integration/cross-project-queries.test.ts) - Added 4 search tests
+- [README.md](README.md) - Added cross-project documentation
+
+**Commit:** c0d131a - "feat(phase-1): Add cross-project search support to search-context"
+
+**Phase 1 Status:** ✅ **COMPLETE** - All features implemented, tested, and documented
+
+**Next:** Phase 3 (Markdown Exports) or enhancements
+
 ## Executive Summary
 
 **Vision:** Single `~/.aiknowsys/knowledge.db` storing knowledge across ALL projects, with AI-native event-sourced storage replacing markdown blobs.
