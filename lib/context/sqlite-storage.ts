@@ -28,7 +28,7 @@ import type {
 } from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
 import { EmbeddingGenerator } from '../embeddings/generator.js';
-import { cosineSimilarity } from '../embeddings/similarity.js';
+import { cosineSimilarity, batchCosineSimilarity } from '../embeddings/similarity.js';
 
 /**
  * Database row interfaces for type-safe query results
@@ -1505,6 +1505,23 @@ export class SqliteStorage extends StorageAdapter {
       );
     }
 
+    // Validate input
+    if (!query || query.trim().length === 0) {
+      throw AIFriendlyErrorBuilder.validationFailed(
+        'query',
+        'Query cannot be empty',
+        'Provide a non-empty search query'
+      );
+    }
+
+    if (query.length > 10000) {
+      throw AIFriendlyErrorBuilder.validationFailed(
+        'query',
+        'Query too long (max 10,000 characters)',
+        'Shorten your search query'
+      );
+    }
+
     // Apply default options
     const limit = options?.limit ?? 10;
     const threshold = options?.threshold ?? 0.3;
@@ -1530,21 +1547,24 @@ export class SqliteStorage extends StorageAdapter {
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(...params) as KnowledgeEventRow[];
 
-    // Compute similarity scores
+    // Map rows to events and collect embeddings
+    const events = rows
+      .map(row => this.mapRowToEvent(row))
+      .filter(event => event.embedding !== undefined);
+
+    if (events.length === 0) {
+      return [];
+    }
+
+    // Batch compute similarities (optimized: pre-computes query magnitude once)
+    const embeddings = events.map(event => event.embedding!);
+    const similarities = batchCosineSimilarity(queryEmbedding, embeddings);
+
+    // Zip events with similarities and filter by threshold
     const results: SemanticSearchResult[] = [];
-
-    for (const row of rows) {
-      const event = this.mapRowToEvent(row);
-      
-      // Skip if embedding missing (shouldn't happen due to WHERE clause, but defensive)
-      if (!event.embedding) continue;
-
-      // Compute cosine similarity
-      const similarity = cosineSimilarity(queryEmbedding, event.embedding);
-
-      // Filter by threshold
-      if (similarity >= threshold) {
-        results.push({ event, similarity });
+    for (let i = 0; i < events.length; i++) {
+      if (similarities[i] >= threshold) {
+        results.push({ event: events[i], similarity: similarities[i] });
       }
     }
 
