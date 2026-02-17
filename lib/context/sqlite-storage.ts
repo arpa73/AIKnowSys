@@ -161,7 +161,7 @@ export class SqliteStorage extends StorageAdapter {
       name: string;
       type: string;
       notnull: number;
-      dflt_value: any;
+      dflt_value: unknown;
       pk: number;
     }>;
     
@@ -188,7 +188,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM plans WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       // Phase 1: Cross-Repository support
@@ -270,7 +270,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       // Phase 1: Cross-Repository support
@@ -529,7 +529,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM plans WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.idStartsWith) {
@@ -600,7 +600,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.contentContains) {
@@ -664,7 +664,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to session count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async querySessionsMetadata(filters?: SessionFilters & { status?: string }): Promise<{ count: number; sessions: any[] }> {
+  async querySessionsMetadata(filters?: SessionFilters & { status?: string }): Promise<{ count: number; sessions: unknown[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -674,7 +674,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, date, topic, status, plan_id, duration, topics, phases, created_at, updated_at FROM sessions WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.date) {
@@ -749,7 +749,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to plan count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async queryPlansMetadata(filters?: PlanFilters & { priority?: string; idStartsWith?: string }): Promise<{ count: number; plans: any[] }> {
+  async queryPlansMetadata(filters?: PlanFilters & { priority?: string; idStartsWith?: string }): Promise<{ count: number; plans: unknown[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -759,7 +759,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.idStartsWith) {
@@ -841,7 +841,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Build WHERE clause for filters
     let whereClause = '1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.dateAfter) {
@@ -958,7 +958,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Build WHERE clause for filters
     let whereClause = '1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.status) {
@@ -1071,7 +1071,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to pattern count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async queryLearnedPatternsMetadata(filters?: { category?: string; keywords?: string[] }): Promise<{ count: number; patterns: any[] }> {
+  async queryLearnedPatternsMetadata(filters?: { category?: string; keywords?: string[] }): Promise<{ count: number; patterns: unknown[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -1081,7 +1081,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column, filter to learned patterns only
     let query = "SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE id LIKE 'learned_%'";
-    const params: any[] = [];
+    const params: unknown[] = [];
     
     if (filters) {
       if (filters.category) {
@@ -1248,7 +1248,7 @@ export class SqliteStorage extends StorageAdapter {
     id: string;
     name: string;
     path?: string;
-    tech_stack?: any;
+    tech_stack?: unknown;
     created_at: string;
     updated_at: string;
   }): Promise<void> {
@@ -1370,7 +1370,7 @@ export class SqliteStorage extends StorageAdapter {
    * @private
    */
   private mapRowToEvent(row: KnowledgeEventRow): KnowledgeEvent {
-    let parsedData: any;
+    let parsedData: unknown;
     try {
       parsedData = JSON.parse(row.data);
     } catch (error) {
@@ -1412,7 +1412,7 @@ export class SqliteStorage extends StorageAdapter {
       sessionId: row.session_id || undefined,
       planId: row.plan_id || undefined,
       timestamp: row.timestamp,
-      eventType: row.event_type as any,
+      eventType: row.event_type as string,
       data: parsedData,
       embedding
     };
@@ -1457,7 +1457,7 @@ export class SqliteStorage extends StorageAdapter {
     }
 
     const whereClauses: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (filters.projectId) {
       whereClauses.push('project_id = ?');
@@ -1580,7 +1580,7 @@ export class SqliteStorage extends StorageAdapter {
 
     // Load all events with embeddings (with optional project filter)
     const whereClauses: string[] = ['embedding IS NOT NULL'];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (options?.projectId) {
       whereClauses.push('project_id = ?');
@@ -1595,17 +1595,18 @@ export class SqliteStorage extends StorageAdapter {
     const stmt = this.db.prepare(sql);
     const rows = stmt.all(...params) as KnowledgeEventRow[];
 
-    // Map rows to events and collect embeddings
+    // Map rows to events and collect non-null embeddings
+    type EventWithEmbedding = KnowledgeEvent & { embedding: Float32Array };
     const events = rows
       .map(row => this.mapRowToEvent(row))
-      .filter(event => event.embedding !== undefined);
+      .filter((event): event is EventWithEmbedding => event.embedding !== undefined);
 
     if (events.length === 0) {
       return [];
     }
 
     // Batch compute similarities (optimized: pre-computes query magnitude once)
-    const embeddings = events.map(event => event.embedding!);
+    const embeddings = events.map(event => event.embedding);
     const similarities = batchCosineSimilarity(queryEmbedding, embeddings);
 
     // Zip events with similarities and filter by threshold
@@ -1677,7 +1678,7 @@ export class SqliteStorage extends StorageAdapter {
     }
 
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (filters.from) {
       query += ' AND date >= ?';
@@ -1865,7 +1866,7 @@ export class SqliteStorage extends StorageAdapter {
     name: string;
     type: string;
     notnull: number;
-    dflt_value: any;
+    dflt_value: unknown;
     pk: number;
   }>> {
     if (!this.db) {
@@ -1877,7 +1878,7 @@ export class SqliteStorage extends StorageAdapter {
       name: string;
       type: string;
       notnull: number;
-      dflt_value: any;
+      dflt_value: unknown;
       pk: number;
     }>;
   }
