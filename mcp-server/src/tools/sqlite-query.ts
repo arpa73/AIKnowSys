@@ -111,12 +111,11 @@ export async function getSessionSqlite(params: {
   sessionId: string;
   dbPath?: string;
 }) {
+  const storage = new SqliteStorage();
   try {
-    const storage = new SqliteStorage();
     await storage.init(params.dbPath || findKnowledgeDb());
 
     const result = await storage.getSessionWithRelations(params.sessionId);
-    storage.close();
 
     if (!result) {
       return {
@@ -153,6 +152,8 @@ export async function getSessionSqlite(params: {
         },
       ],
     };
+  } finally {
+    await storage.close();
   }
 }
 

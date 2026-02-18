@@ -10,11 +10,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   querySessionsSqlite,
+  getSessionSqlite,
   queryPlansSqlite,
   queryLearnedPatternsSqlite,
   searchContextSqlite,
   getDbStatsSqlite,
 } from '../../src/tools/sqlite-query.js';
+
+const mockStorageInit = vi.fn();
+const mockGetSessionWithRelations = vi.fn();
+const mockStorageClose = vi.fn();
+
+vi.mock('../../../lib/context/sqlite-storage.js', () => {
+  class MockSqliteStorage {
+    async init(...args: unknown[]) {
+      return mockStorageInit(...args);
+    }
+
+    async getSessionWithRelations(...args: unknown[]) {
+      return mockGetSessionWithRelations(...args);
+    }
+
+    async close(...args: unknown[]) {
+      return mockStorageClose(...args);
+    }
+  }
+
+  return { SqliteStorage: MockSqliteStorage };
+});
 
 // Mock the core SQLite query functions
 vi.mock('../../../lib/core/sqlite-query.js', () => ({
@@ -36,6 +59,11 @@ import {
 describe('querySessionsSqlite (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
   });
 
   it('should query sessions with filters', async () => {
@@ -114,6 +142,11 @@ describe('querySessionsSqlite (MCP Tool)', () => {
 describe('queryPlansSqlite (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
   });
 
   it('should query plans with filters', async () => {
@@ -163,6 +196,11 @@ describe('queryPlansSqlite (MCP Tool)', () => {
 describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
   });
 
   it('should query learned patterns with filters', async () => {
@@ -209,6 +247,11 @@ describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
 describe('searchContextSqlite (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
   });
 
   it('should search across all content types', async () => {
@@ -288,6 +331,11 @@ describe('searchContextSqlite (MCP Tool)', () => {
 describe('getDbStatsSqlite (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
   });
 
   it('should return database statistics', async () => {
@@ -343,5 +391,57 @@ describe('getDbStatsSqlite (MCP Tool)', () => {
 
     const data = JSON.parse(result.content[0].text);
     expect(data.error).toBe(true);
+  });
+});
+
+describe('getSessionSqlite (MCP Tool)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
+  });
+
+  it('should return session with related entities', async () => {
+    mockGetSessionWithRelations.mockResolvedValue({
+      session: { id: 'sess-1', topic: 'Work' },
+      plan: { id: 'PLAN_x', title: 'Plan X' },
+      reviews: [{ id: 'rev-1', status: 'PENDING' }],
+      events: [{ eventId: 'evt-1', eventType: 'SESSION_STARTED' }],
+    });
+
+    const result = await getSessionSqlite({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.session.id).toBe('sess-1');
+    expect(data.plan.id).toBe('PLAN_x');
+    expect(data.reviews).toHaveLength(1);
+    expect(data.events).toHaveLength(1);
+    expect(mockStorageInit).toHaveBeenCalledTimes(1);
+    expect(mockStorageClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return structured not-found response', async () => {
+    mockGetSessionWithRelations.mockResolvedValue(undefined);
+
+    const result = await getSessionSqlite({ sessionId: 'missing', dbPath: '/tmp/test.db' });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('Session not found: missing');
+    expect(mockStorageClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should close storage when initialization fails', async () => {
+    mockStorageInit.mockRejectedValueOnce(new Error('DB init failed'));
+
+    const result = await getSessionSqlite({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('DB init failed');
+    expect(mockStorageClose).toHaveBeenCalledTimes(1);
   });
 });
