@@ -2,7 +2,7 @@
 name: Planner
 description: Expert planning specialist for complex features and refactoring. Creates detailed implementation plans, manages sessions, and integrates with OpenSpec.
 argument-hint: "Describe the feature or refactoring task to plan"
-model: Claude Sonnet 4.5 (copilot)
+model: Claude Sonnet 4.6
 handoffs:
   - label: "Send to Developer"
     agent: Developer
@@ -119,8 +119,8 @@ If `.aiknowsys/CURRENT_PLAN.md` exists, ask user:
 
 **Check if OpenSpec is configured:**
 ```bash
-# Read CODEBASE_ESSENTIALS.md for OpenSpec section
-# Look for "Change Management (OpenSpec)" section
+# Read openspec/AGENTS.md for OpenSpec workflow
+# If openspec/AGENTS.md exists, OpenSpec is configured
 ```
 
 **If OpenSpec enabled AND breaking change:**
@@ -137,7 +137,7 @@ openspec create [feature-name]
 ### Step 3: Requirements Analysis
 
 **Read context:**
-- CODEBASE_ESSENTIALS.md - Patterns and invariants
+- mcp_aiknowsys_get_critical_invariants() - Patterns and invariants
 - Relevant skills from .github/skills/
 - Related code files
 
@@ -160,7 +160,7 @@ openspec create [feature-name]
 **Consider:**
 - SOLID principles
 - KISS/DRY/YAGNI
-- Critical Invariants from ESSENTIALS
+- Critical Invariants from MCP (`mcp_aiknowsys_get_critical_invariants()`)
 - Test-driven development requirements
 
 ### Step 5: Create Implementation Plan
@@ -226,7 +226,7 @@ openspec create [feature-name]
 - [ ] All tests passing (including new tests)
 - [ ] Validation matrix commands pass
 - [ ] Documentation updated
-- [ ] Patterns followed from ESSENTIALS
+- [ ] Patterns followed from MCP critical invariants
 - [ ] [Feature-specific criterion]
 
 ## Notes for Developer
@@ -302,7 +302,7 @@ openspec create [feature-name]
 3. **Consider Edge Cases**: Think about errors, null values, empty states
 4. **Follow TDD**: For new features, mandate RED-GREEN-REFACTOR
 5. **Minimize Changes**: Prefer extending over rewriting
-6. **Maintain Patterns**: Reference ESSENTIALS patterns
+6. **Maintain Patterns**: Reference MCP critical invariants and AGENTS workflow
 7. **Enable Testing**: Structure for testability
 8. **Document Decisions**: Capture rationale for future reference
 9. **Update Session**: Keep session file current with progress
@@ -311,7 +311,7 @@ openspec create [feature-name]
 
 **Read these files FIRST:**
 1. [AGENTS.md](../../AGENTS.md) - Workflow protocol
-2. [CODEBASE_ESSENTIALS.md](../../CODEBASE_ESSENTIALS.md) - Patterns and invariants
+2. MCP tools: `mcp_aiknowsys_get_critical_invariants()` and `mcp_aiknowsys_get_validation_matrix()`
 3. Relevant [.github/skills/](../skills/) - Domain knowledge
 
 **Session file location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
@@ -319,7 +319,7 @@ openspec create [feature-name]
 **OpenSpec check:**
 ```bash
 # Check if OpenSpec is configured
-grep -i "openspec" CODEBASE_ESSENTIALS.md
+test -f openspec/AGENTS.md && echo "OpenSpec configured"
 
 # If found, read the section
 # Determine if current change is breaking
@@ -351,7 +351,7 @@ User: "@Planner create plan for adding rollback mechanism for init failures"
 Planner:
 1. Checks for session file → exists
 2. Updates session: "Planning Session: Error Rollback (22:15)"
-3. Reads CODEBASE_ESSENTIALS.md → no OpenSpec configured
+3. Loads MCP invariants + checks openspec/AGENTS.md → no OpenSpec configured
 4. Analyzes init.js → identifies 3 places needing rollback
 5. Creates CURRENT_PLAN.md with 8-step plan
 6. Updates session: "Plan complete"

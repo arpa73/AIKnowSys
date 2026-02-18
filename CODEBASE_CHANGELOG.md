@@ -11,6 +11,25 @@
 
 ---
 
+## Migration Note - ESSENTIALS to MCP Workflow (Feb 18, 2026)
+
+**Change:** `init` no longer distributes `CODEBASE_ESSENTIALS.template.md` as a primary workflow artifact for new projects.
+
+**What this means for existing users:**
+- Existing `CODEBASE_ESSENTIALS.md` files remain readable but are no longer the default source of agent runtime rules.
+- MCP tools are now the runtime source of truth for invariants and validation commands:
+  - `mcp_aiknowsys_get_critical_invariants()`
+  - `mcp_aiknowsys_get_validation_matrix()`
+- `AGENTS.md` should reference MCP calls directly for session start and validation.
+
+**Suggested migration path:**
+1. Ensure MCP server is configured for your repo (`mcp-server/SETUP.md`)
+2. Confirm `AGENTS.md` uses MCP-first session start instructions
+3. Optionally archive legacy essentials docs to `docs/legacy-essentials.md`
+4. Run `npx aiknowsys validate-deliverables` after template/workflow updates
+
+---
+
 ## �️ Phase 1 - Cross-Repository Foundation (Feb 15, 2026)
 
 **Completion Date:** 2026-02-15  

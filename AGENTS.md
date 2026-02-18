@@ -325,7 +325,7 @@ get_critical_invariants()      // Faster than search → describe → execute
 query_sessions_sqlite({ ... }) // Skip discovery if tool name known
 
 // ❌ Avoid
-read_file("CODEBASE_ESSENTIALS.md")  // Use get_critical_invariants() instead
+read_file("AGENTS.md")  // Use get_critical_invariants() + get_validation_matrix() instead
 grep_search("pattern", ".aiknowsys/**")  // Use search_context_sqlite() instead
 create_file("PLAN_xyz.md")  // Use create_plan() instead
 ```
@@ -426,13 +426,13 @@ console.log("✅ Context loaded. Ready to proceed.");
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
 **For breaking changes or new features, consider using OpenSpec:**
-- See "Change Management (OpenSpec)" section in CODEBASE_ESSENTIALS.md
+- See `openspec/AGENTS.md` for proposal workflow
 - Create proposal: `openspec create add-feature-name`
 - Get approval before implementing
 
 ### 3️⃣ IMPLEMENT: Write Code + Tests
 
-Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
+Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and the skill you read.
 
 ### 3️⃣½ TDD SELF-AUDIT: Did You Follow RED-GREEN-REFACTOR? (MANDATORY)
 
@@ -480,7 +480,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 ```bash
 # For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
 # For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
-# For PATTERNS: Update CODEBASE_ESSENTIALS.md if invariants changed
+# For PATTERNS: Update AGENTS.md and MCP invariant sources if rules changed
 ```
 
 ⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
@@ -760,16 +760,16 @@ This project uses Developer + Architect agents for automated code review.
 1. User requests feature
 2. Developer implements
 3. Developer auto-hands off to Architect
-4. Architect reviews against CODEBASE_ESSENTIALS.md
-5. Architect writes review to `.aiknowsys/PENDING_REVIEW.md`
-6. Developer reads PENDING_REVIEW.md and addresses issues
-7. Developer updates session with brief status, deletes PENDING_REVIEW.md
+4. Architect reviews against MCP critical invariants and project patterns
+5. Architect writes review to `.aiknowsys/reviews/PENDING_<username>.md`
+6. Developer reads `.aiknowsys/reviews/PENDING_<username>.md` and addresses issues
+7. Developer updates session with brief status, deletes `.aiknowsys/reviews/PENDING_<username>.md`
 
 **Review Workflow:**
 
 **Architect writes review:**
 ```markdown
-# .aiknowsys/PENDING_REVIEW.md (created by Architect)
+# .aiknowsys/reviews/PENDING_<username>.md (created by Architect)
 ⚠️ Full detailed review with issues, recommendations, code examples
 ```
 

@@ -6,7 +6,7 @@ model: GPT-5.3-Codex (copilot)
 handoffs:
   - label: "Send to Architect"
     agent: SeniorArchitect
-    prompt: "Please review the code I just wrote against CODEBASE_ESSENTIALS.md."
+    prompt: "Please review the code I just wrote against MCP critical invariants and project patterns."
     send: true
 ---
 
@@ -15,12 +15,12 @@ You are the primary Developer responsible for implementing features, writing tes
 ## Workflow
 
 1. **Read context FIRST** (before any implementation):
-   - [CODEBASE_ESSENTIALS.md](../../CODEBASE_ESSENTIALS.md) - Project patterns and invariants
+   - `mcp_aiknowsys_get_critical_invariants()` - Project patterns and invariants
    - [AGENTS.md](../../AGENTS.md) - Agent workflow protocol
    - Relevant skills from [.github/skills/](../skills/)
 
 2. **Implement the requested feature:**
-   - Follow patterns from CODEBASE_ESSENTIALS.md
+   - Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()`
    - Write tests first for new features (TDD: RED → GREEN → REFACTOR)
    - Keep code simple (KISS), avoid duplication (DRY)
    - Follow existing code style and conventions
@@ -32,7 +32,7 @@ You are the primary Developer responsible for implementing features, writing tes
 
 4. **IMPORTANT - Request code review:**
    - Once implementation is complete, you MUST call for architectural review
-   - Use: `@SeniorArchitect please review the changes in [file names] against CODEBASE_ESSENTIALS.md`
+   - Use: `@SeniorArchitect please review the changes in [file names] against MCP critical invariants and project patterns`
    - Do NOT ask the user if they want a review - just request it automatically
 
 ## Implementation Guidelines

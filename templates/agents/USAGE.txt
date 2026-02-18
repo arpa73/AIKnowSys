@@ -1,6 +1,6 @@
 # Custom Agents - Developer & Architect Workflow
 
-**Purpose:** Automated quality gate that enforces CODEBASE_ESSENTIALS.md patterns during development.
+**Purpose:** Automated quality gate that enforces MCP critical invariants and project patterns during development.
 
 ---
 
@@ -9,16 +9,16 @@
 ### The Agent Pair
 
 1. **Developer Agent** (`developer.agent.md`)
-   - Primary implementer of features
-   - Writes code following documented patterns
-   - Automatically hands off to Architect for review
-   - Refactors based on feedback
+  - Primary implementer of features
+  - Writes code following documented patterns
+  - Automatically hands off to Architect for review
+  - Refactors based on feedback
 
 2. **Architect Agent** (`architect.agent.md`)
-   - Reviews code against CODEBASE_ESSENTIALS.md
-   - Enforces KISS, DRY, SOLID, YAGNI principles
-   - Approves or requests changes
-   - Provides specific, actionable feedback
+  - Reviews code against MCP critical invariants and project patterns
+  - Enforces KISS, DRY, SOLID, YAGNI principles
+  - Approves or requests changes
+  - Provides specific, actionable feedback
 
 ### Workflow
 
@@ -37,7 +37,7 @@
          │                             v
          │                    ┌────────────────────┐
          │                    │  @SeniorArchitect  │
-         │                    │  Reads ESSENTIALS  │
+         │                    │  Loads MCP rules   │
          │                    │  Reviews code      │
          │                    └────────┬───────────┘
          │                             │
@@ -71,7 +71,7 @@
 **Developer will:**
 1. Implement the code
 2. Write tests
-3. Automatically call: `@SeniorArchitect please review changes in [file] against CODEBASE_ESSENTIALS.md`
+3. Automatically call: `@SeniorArchitect please review changes in [file] against MCP critical invariants and project patterns`
 
 **You don't need to manually call Architect** - the handoff is automatic!
 
@@ -106,7 +106,7 @@ If you've made changes manually and want a review:
 - Features are actually needed now
 - No premature optimization
 
-### ✅ CODEBASE_ESSENTIALS.md Compliance
+### ✅ MCP Critical Invariants Compliance
 - Follows documented patterns
 - Uses approved libraries/tools
 - Respects project constraints
@@ -136,16 +136,16 @@ tools: ['search', 'edit/editFiles', 'edit/createFile']
 - **Current defaults:**
   - **Developer:** `['search', 'edit/editFiles', 'edit/createFile']`
     - Needs edit tools to implement features and write code
-    - Needs search to read ESSENTIALS and existing code
+    - Needs search to read AGENTS workflow and existing code
   - **SeniorArchitect:** `['search', 'edit/editFiles', 'edit/createFile']`
-    - Needs edit tools to write `.aiknowsys/PENDING_REVIEW.md` and update session files
-    - Needs search to read ESSENTIALS and review code changes
+    - Needs edit tools to write `.aiknowsys/reviews/PENDING_<username>.md` and update session files
+    - Needs search to load MCP invariants and review code changes
   - **Planner:** `['search', 'edit/editFiles', 'edit/createFile', 'todo', 'agent', 'web']`
     - Broader set for planning automation, research, and session management
 
 **Tradeoffs:**
 - If you remove `edit` tools from Architect, it can't write the review artifact or update sessions
-- If you remove `search`, agents can't read ESSENTIALS or scan existing code
+- If you remove `search`, agents can't load context or scan existing code
 - More tools = more capability, but also more potential for unexpected actions
 
 **Where to edit:**
@@ -259,7 +259,7 @@ handoffs:
     send: true  # ← Must be true for auto-handoff
 ```
 
-### Architect can't read CODEBASE_ESSENTIALS.md
+### Architect cannot load MCP invariants
 
 **Check:** Does Architect have `search` tool enabled?
 ```yaml
@@ -275,8 +275,8 @@ tools: [search, search/changes]  # ← Required
 ## Best Practices
 
 1. **Let the workflow happen** - Don't interrupt the auto-handoff
-2. **Read Architect feedback carefully** - It references specific sections of ESSENTIALS
-3. **Update ESSENTIALS when patterns change** - Architect enforces what's documented
+2. **Read Architect feedback carefully** - It references specific invariants and workflow rules
+3. **Update AGENTS/MCP sources when patterns change** - Architect enforces what's documented
 4. **Use Developer for implementation** - Use direct chat for questions/exploration
 5. **Iterate with feedback** - Refactor and resubmit until approved
 
@@ -287,7 +287,7 @@ tools: [search, search/changes]  # ← Required
 The agents are part of the broader knowledge system:
 
 ```
-CODEBASE_ESSENTIALS.md  ←─┐
+MCP Critical Invariants  ←─┐
                           │
 AGENTS.md (workflow)      │
                           │ Architect reads
@@ -297,7 +297,7 @@ Custom Agents  ───────────┘
 ```
 
 **Flow:**
-1. Patterns documented in ESSENTIALS
+1. Patterns defined in MCP invariants + AGENTS workflow
 2. Workflow enforced by AGENTS.md
 3. Detailed steps in Skills
 4. **Automated enforcement by Custom Agents**

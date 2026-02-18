@@ -8,9 +8,9 @@
 
 **Step 1: Acknowledge & Read Context**
 ```
-"Reading required context files..."
-[Actually call read_file on @CODEBASE_ESSENTIALS.md]
-"Context review complete. Ready to proceed."
+"Loading project context..."
+[Call mcp_aiknowsys_get_critical_invariants()]
+"✅ Context loaded. Ready to proceed."
 ```
 
 **Step 2: Create Work Plan** (even for "quick fixes")
@@ -39,11 +39,11 @@ If fixing bug:
 **"Emergency" does NOT mean "skip the process"!**
 
 Even for production-critical bugs:
-1. ✅ **STILL read CODEBASE_ESSENTIALS.md** (30 seconds - prevents making it worse)
+1. ✅ **STILL load critical invariants** (`mcp_aiknowsys_get_critical_invariants()` - 2 seconds, prevents violations)
 2. ✅ **STILL create todo list** (1 minute - prevents forgetting steps)
 3. ✅ **STILL follow TDD** (test first = confidence the fix works)
 4. ✅ **STILL request architectural review** (catches side effects)
-5. ✅ **STILL update CODEBASE_CHANGELOG.md** (documents the incident)
+5. ✅ **STILL document in session file** (documents the incident)
 
 **Shortcuts create more emergencies.**
 
@@ -61,19 +61,19 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 ## ⚡ QUICK REFERENCE CHECKLIST
 
 **Before ANY change (even small fixes):**
-- [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
+- [ ] Load MCP critical invariants (patterns, conventions)
 - [ ] Read relevant skill if applicable
 - [ ] **FOR NEW FEATURES:** Write test FIRST (RED), then implement (GREEN), then refactor (REFACTOR)
 - [ ] **FOR BUG FIXES:** Write test reproducing bug, then fix
 - [ ] Make changes + write/update tests
-- [ ] **VALIDATE** (see validation matrix in ESSENTIALS)
+- [ ] **VALIDATE** (use MCP validation matrix)
 - [ ] Update docs if patterns changed
 
 **Validation Matrix:**
 
-👉 **See [CODEBASE_ESSENTIALS.md - Validation Matrix](CODEBASE_ESSENTIALS.md#validation-matrix)**
+👉 **Call `mcp_aiknowsys_get_validation_matrix()`**
 
-The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of truth. Always run all commands from that matrix after making changes.
+The validation matrix is served live via MCP as the single source of truth. Always run all commands from that matrix after making changes.
 
 **🚨 RULE: Never claim work is complete without running validation!**
 
@@ -83,7 +83,7 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
 
 ### 0️⃣ SESSION START: Check Context Continuity (FIRST!)
 
-**Before reading ESSENTIALS, check for active plan and session continuity:**
+**Before coding, check for active plan and session continuity:**
 
 ```
 1. **Check your active plan** (per-developer tracking)
@@ -101,7 +101,7 @@ The validation matrix lives in CODEBASE_ESSENTIALS.md as the single source of tr
      - Continue from where previous session ended
 
 3. If no active plan and no recent session:
-   - Read CODEBASE_ESSENTIALS.md for context
+   - Load MCP critical invariants for context
    - Wait for user direction
 ```
 
@@ -125,7 +125,7 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 ### 1️⃣ START: Read Context (REQUIRED)
 
 **ALWAYS read these files at the start of every conversation:**
-1. **@CODEBASE_ESSENTIALS.md** - Current architecture, patterns, and guardrails (MANDATORY)
+1. **MCP invariants** - Call `mcp_aiknowsys_get_critical_invariants()` (MANDATORY)
 2. **@AGENTS.md** - This file for workflow reminders
 
 **When you need history:**
@@ -144,13 +144,13 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 **⚠️ DON'T start coding until you've read the relevant skill!**
 
 **For breaking changes or new features, consider using OpenSpec:**
-- See "Change Management (OpenSpec)" section in CODEBASE_ESSENTIALS.md
+- See `openspec/AGENTS.md` for proposal workflow
 - Create proposal: `openspec create add-feature-name`
 - Get approval before implementing
 
 ### 3️⃣ IMPLEMENT: Write Code + Tests
 
-Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
+Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and the skill you read.
 
 ### 3️⃣½ TDD SELF-AUDIT: Did You Follow RED-GREEN-REFACTOR? (MANDATORY)
 
@@ -163,7 +163,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 **If NO to any:**
 - You violated Critical Invariant #7 (TDD requirement)
-- Document violation in CODEBASE_CHANGELOG.md under "Key Learning"
+- Document violation in session file under "Key Learning"
 - Explain why TDD wasn't followed (time pressure, uncertainty, etc.)
 - Note what was lost (design benefits, confidence, etc.)
 
@@ -198,7 +198,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 ```bash
 # For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
 # For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
-# For PATTERNS: Update CODEBASE_ESSENTIALS.md if invariants changed
+# For PATTERNS: Update AGENTS.md and MCP invariant sources if rules changed
 ```
 
 **Why this approach?** (v0.11.0+)
@@ -429,7 +429,7 @@ Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
 
 ## 🎯 General Best Practices
 
-1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md for existing patterns
+1. **Read first, code second** - Always load MCP critical invariants before coding
 2. **Update proactively** - Don't wait for user to ask
 3. **Be concise** - Keep summaries short and factual
 4. **Link files** - Include line numbers when referencing code
@@ -447,7 +447,7 @@ This project uses Developer + Architect agents for automated code review.
 1. User requests feature
 2. Developer implements
 3. Developer auto-hands off to Architect
-4. Architect reviews against CODEBASE_ESSENTIALS.md
+4. Architect reviews against MCP critical invariants and project patterns
 5. Architect approves or requests changes
 
 **See:** `.github/agents/USAGE.txt` for details

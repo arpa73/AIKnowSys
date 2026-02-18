@@ -7,10 +7,10 @@
 
 ## Quick Start
 
-After running `npx aiknowsys init`, you'll have three template files:
-- `CODEBASE_ESSENTIALS.md` - Architecture and patterns (needs customization)
-- `AGENTS.md` - AI workflow (mostly ready to use)
+After running `npx aiknowsys init`, you'll have workflow files including:
+- `AGENTS.md` - AI workflow and MCP-first instructions
 - `CODEBASE_CHANGELOG.md` - Session history (will grow over time)
+- `.aiknowsys/` context files - plans, sessions, learned patterns
 
 **Two approaches to fill templates:**
 
@@ -91,67 +91,36 @@ All templates use `{{PLACEHOLDER}}` syntax for values you need to fill in.
 
 ## Template Customization Steps
 
-### CODEBASE_ESSENTIALS.md
+### MCP + AGENTS.md Workflow Setup
 
-**Step 1: Technology Snapshot**
-```markdown
-Before:
-| Runtime | {{LANGUAGE}} {{VERSION}} |
+Use this quick sequence after `npx aiknowsys init`:
 
-After:
-| Runtime | Node.js 20.11.0 |
+**Step 1: Configure MCP Server**
+- Follow [mcp-server/SETUP.md](mcp-server/SETUP.md)
+- Point MCP at your project root
+- Verify `mcp_aiknowsys_get_critical_invariants()` responds
+
+**Step 2: Verify Runtime Guidance**
+- Open `AGENTS.md`
+- Confirm session start protocol references MCP tools, not legacy ESSENTIALS workflow
+- Ensure team-specific trigger words and skills are up to date
+
+**Step 3: Validate Deliverables**
+Run:
+```bash
+npx aiknowsys validate-deliverables
 ```
 
-**Step 2: Validation Matrix** (Most Important!)
-```markdown
-Before:
-| {{FILE_TYPE}} | {{VALIDATION_CMD}} | {{WHEN}} |
+This checks templates and non-template equivalents are in sync.
 
-After:
-| Any file | npm test | ✅ Before commit |
-| TypeScript | npm run type-check | ✅ Before commit |
-| Backend | npm run test:api | ✅ Before deploy |
+**Step 4: Validate Development Commands**
+Use MCP validation matrix as source of truth:
+
+```typescript
+mcp_aiknowsys_get_validation_matrix()
 ```
 
-**Step 3: Project Structure**
-- Replace with YOUR actual directory structure
-- Include key files and their purpose
-- Use `tree` command or manually document
-
-**Step 4: Core Patterns**
-- Document YOUR actual coding patterns
-- Include real code examples with file paths
-- Show how you structure components/modules
-
-**Step 5: Critical Invariants**
-- Rules that MUST NEVER be violated
-- Example: "All database queries must use parameterized queries"
-- Example: "Never commit .env files"
-
-**Step 6: Common Gotchas**
-- Things that trip up developers
-- Example: "PostgreSQL returns UTC timestamps, convert to local"
-- Project-specific quirks and workarounds
-
-**Step 7: Testing Patterns**
-- How you organize tests
-- Naming conventions
-- What gets tested (unit/integration/e2e)
-
-**Step 8: Architecture Decisions**
-- Why you chose certain technologies
-- Trade-offs you made
-- When to use pattern A vs pattern B
-
-**Step 9: Change Management**
-- How you handle breaking changes
-- If using OpenSpec: mention it here
-- PR review process
-
-**Step 10: Development Workflow**
-- Local development setup
-- How to run the project
-- Build and deployment process
+Then run the required commands for your stack (typically `npm test` and `npm run lint`).
 
 ---
 
@@ -159,7 +128,8 @@ After:
 
 **Step 1: Review Validation Matrix**
 
-The validation matrix in AGENTS.md should reference the one in CODEBASE_ESSENTIALS.md. No duplication needed - agents read ESSENTIALS for the actual commands.
+Use MCP as the source of truth for validation commands: `mcp_aiknowsys_get_validation_matrix()`.
+Keep AGENTS concise and reference MCP calls instead of duplicating long command lists.
 
 **Step 2: Remove Template Sections** (if present)
 
@@ -168,7 +138,7 @@ If you initialized from template, remove these sections:
 - 🔍 Troubleshooting Validation Failures (with `{{SINGLE_TEST_CMD}}` placeholders)
 - 📝 Customization Instructions section
 
-These are setup instructions, not runtime agent guidance. Once you've customized ESSENTIALS.md with real commands, AGENTS.md doesn't need placeholder-filled checklists.
+These are setup instructions, not runtime agent guidance. Once AGENTS.md points to MCP tools, it doesn't need placeholder-filled checklists.
 
 **Step 3: Add Custom Skills to Trigger Words Table** (optional)
 
@@ -198,7 +168,7 @@ Add your custom skills:
 
 Ensure the "General Best Practices" section matches your project culture:
 ```markdown
-1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md
+1. **Read first, code second** - Always load MCP critical invariants first
 2. **Update proactively** - Don't wait for user to ask
 3. **Be concise** - Keep summaries short
 ```
@@ -297,13 +267,12 @@ The AI will:
 If you prefer more control:
 
 ```
-"I have a CODEBASE_ESSENTIALS.md template. Please:
+"I have an AGENTS.md workflow file. Please:
 1. Read the file
-2. For the Technology Snapshot section, scan my package.json and fill in:
+2. Scan my package.json and tooling files and update workflow references for:
    - Runtime version
    - Framework and version
-   - Build tool
-   - Test framework
+   - Build/test commands
 3. Keep all section headings unchanged
 4. Replace {{PLACEHOLDERS}} with actual values from my code"
 ```
@@ -316,7 +285,7 @@ After customizing, verify:
 
 1. **No placeholders remain** (search for `{{`)
    ```bash
-   grep -n "{{" CODEBASE_ESSENTIALS.md
+   grep -n "{{" AGENTS.md
    # Should return nothing or only intentional examples
    ```
 
@@ -501,19 +470,19 @@ Now you're ready to build real features:
 
 1. **Check AGENTS.md** - Review the workflow for each session
 2. **Read relevant skills** - Before implementing features, check `.github/skills/`
-3. **Follow the process** - Read ESSENTIALS → Plan → Code → Test → Validate → Document
+3. **Follow the process** - Load MCP invariants → Plan → Code → Test → Validate → Document
 4. **Keep iterating** - Each session makes the knowledge system more valuable
 
-### Keeping ESSENTIALS Lean
+### Keeping AGENTS Lean
 
-**⚠️ Important:** CODEBASE_ESSENTIALS.md should stay focused (600-800 lines recommended).
+**⚠️ Important:** Keep AGENTS concise and MCP-first.
 
 **After customization:**
 ```bash
-# Check if ESSENTIALS is bloated
+# Check project guidance quality
 npx aiknowsys check
 
-# If >800 lines, analyze what can be extracted
+# If guidance is too verbose, analyze what can be extracted
 npx aiknowsys compress-essentials --analyze
 
 # Extract verbose sections to docs/patterns/
@@ -523,7 +492,7 @@ npx aiknowsys compress-essentials --auto
 **Prevention tips:**
 - Keep code examples under 15 lines
 - Extract detailed guides to `docs/patterns/*.md`
-- Link from ESSENTIALS instead of embedding
+- Link from AGENTS/docs instead of embedding large blocks
 - Run `npx aiknowsys check` monthly to catch bloat early
 
 **Why this matters:**
@@ -607,7 +576,7 @@ Please run validation before claiming work is complete:
   npm test
   npm run test
   node --test test/your-test.test.js
-See validation matrix in CODEBASE_ESSENTIALS.md for required checks.
+Use mcp_aiknowsys_get_validation_matrix() for required checks.
 ```
 
 *TDD Reminder:*
@@ -867,18 +836,18 @@ npx aiknowsys init --yes  # (includes hooks by default)
 **After setup:**
 ```bash
 # Verify no placeholders remain
-grep -n "{{" CODEBASE_ESSENTIALS.md
+grep -n "{{" AGENTS.md
 
 # Test validation commands
 npm test                    # (or your test command)
 
 # Commit your customized templates
-git add CODEBASE_ESSENTIALS.md AGENTS.md CODEBASE_CHANGELOG.md
+git add AGENTS.md CODEBASE_CHANGELOG.md
 git commit -m "docs: Initialize knowledge system"
 ```
 
 **During development:**
-- Read CODEBASE_ESSENTIALS.md at session start
+- Load MCP critical invariants at session start
 - Update patterns when they change
 - Add entries to CODEBASE_CHANGELOG.md after sessions
 - Let AI agents guide you via AGENTS.md workflow
