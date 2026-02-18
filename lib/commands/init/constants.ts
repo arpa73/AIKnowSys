@@ -6,7 +6,8 @@
  * Template file paths - centralized for easy maintenance
  */
 export const TEMPLATE_PATHS = {
-  ESSENTIALS_FULL: 'templates/CODEBASE_ESSENTIALS.template.md',
+  // Full ESSENTIALS template removed in Phase B; kept as alias for CLI backwards compatibility.
+  ESSENTIALS_FULL: 'templates/CODEBASE_ESSENTIALS.minimal.template.md',
   ESSENTIALS_MINIMAL: 'templates/CODEBASE_ESSENTIALS.minimal.template.md',
   AGENTS: 'templates/AGENTS.template.md',
   CHANGELOG: 'templates/CODEBASE_CHANGELOG.template.md',

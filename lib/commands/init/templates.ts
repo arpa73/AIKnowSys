@@ -31,6 +31,10 @@ export async function createKnowledgeSystemFiles(
   essentialsFile: string = 'CODEBASE_ESSENTIALS.md'
 ): Promise<void> {
   const packageDir = getPackageDir();
+
+  if (templateType === 'full') {
+    console.warn('⚠ --template full is deprecated and now maps to the minimal ESSENTIALS template.');
+  }
   
   // Ensure target directory exists
   if (!fs.existsSync(targetDir)) {

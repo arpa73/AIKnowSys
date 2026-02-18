@@ -29,4 +29,14 @@ describe('export command group', () => {
     expect(output).toContain('--format <type>');
     expect(output).toContain('narrative|timeline|grouped|custom');
   });
+
+  it('should expose format option for export plan subcommand', () => {
+    const output: string = execSync('node bin/cli.js export plan --help', {
+      cwd: projectRoot,
+      encoding: 'utf-8'
+    });
+
+    expect(output).toContain('--format <type>');
+    expect(output).toContain('narrative|timeline|grouped|custom');
+  });
 });

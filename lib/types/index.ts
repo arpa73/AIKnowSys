@@ -228,10 +228,14 @@ export interface ExportSessionResult {
   verbose?: boolean;
 }
 
+export const VALID_EXPORT_FORMATS = ['narrative', 'timeline', 'grouped', 'custom'] as const;
+export type ExportPlanFormat = typeof VALID_EXPORT_FORMATS[number];
+
 export interface ExportPlanOptions {
   planId: string;
   dbPath: string;
   output?: string;
+  format?: ExportPlanFormat;
   verbose?: boolean;
 }
 

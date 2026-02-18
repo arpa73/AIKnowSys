@@ -148,6 +148,55 @@ describe('update-session command', () => {
     ).rejects.toThrow(/No session file found/);
   });
 
+  it('updates the session for an explicit date', async () => {
+    const explicitDate = '2026-02-17';
+    const explicitSessionPath = path.join(testDir, '.aiknowsys', 'sessions', `${explicitDate}-session.md`);
+
+    await fs.writeFile(
+      explicitSessionPath,
+      `---
+date: ${explicitDate}
+topics: ["legacy"]
+files: []
+status: in-progress
+---
+
+# Session: Explicit Date
+
+## Goal
+Verify date targeting
+`,
+      'utf-8'
+    );
+
+    const result = await updateSession({
+      date: explicitDate,
+      addTopic: 'date-targeted',
+      targetDir: testDir,
+      _silent: true
+    });
+
+    expect(result.updated).toBe(true);
+    expect(result.filePath).toBe(explicitSessionPath);
+
+    const explicitContent = await fs.readFile(explicitSessionPath, 'utf-8');
+    expect(explicitContent).toContain('topics: ["legacy", "date-targeted"]');
+
+    const todayContent = await fs.readFile(sessionPath, 'utf-8');
+    expect(todayContent).not.toContain('date-targeted');
+  });
+
+  it('validates explicit date format', async () => {
+    await expect(
+      updateSession({
+        date: '2026/02/17',
+        addTopic: 'date-targeted',
+        targetDir: testDir,
+        _silent: true
+      })
+    ).rejects.toThrow(/Invalid date format/);
+  });
+
   it('validates status values', async () => {
     await expect(
       updateSession({

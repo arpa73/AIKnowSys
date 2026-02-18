@@ -11,6 +11,7 @@ import { createLogger } from '../logger.js';
 import { checkFileExists } from '../utils/file-utils.js';
 
 export interface UpdateSessionOptions {
+  date?: string;
   addTopic?: string;
   addFile?: string;
   setStatus?: 'in-progress' | 'complete' | 'abandoned';
@@ -39,6 +40,7 @@ export interface UpdateSessionResult {
 }
 
 const VALID_STATUSES = ['in-progress', 'complete', 'abandoned'] as const;
+const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 type FrontmatterValue = string | number | boolean | string[] | null | undefined;
 
 export async function updateSession(options: UpdateSessionOptions = {}): Promise<UpdateSessionResult> {
@@ -79,6 +81,7 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
 
   // === Original destructuring (now using expanded options) ===
   const {
+    date,
     addTopic,
     addFile,
     setStatus,
@@ -110,16 +113,20 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
     );
   }
 
-  // Find today's session
-  const date = new Date().toISOString().split('T')[0];
-  const filename = `${date}-session.md`;
+  if (date && !DATE_FORMAT_REGEX.test(date)) {
+    throw new Error(`Invalid date format: "${date}". Expected YYYY-MM-DD, e.g. 2026-02-18`);
+  }
+
+  // Find target session (defaults to today)
+  const sessionDate = date || new Date().toISOString().split('T')[0];
+  const filename = `${sessionDate}-session.md`;
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', 'sessions', filename);
 
   // Check if session exists
   const exists = await checkFileExists(filepath);
   if (!exists) {
     const error = new Error(
-      `No session file found for today (${date}). Create one first with: create-session`
+      `No session file found for date (${sessionDate}). Create one first with: create-session`
     );
     if (!json && !_silent) {
       log.error(error.message);

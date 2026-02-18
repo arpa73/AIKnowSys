@@ -7,7 +7,18 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { SqliteStorage } from '../context/sqlite-storage.js';
 import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
+import { VALID_EXPORT_FORMATS } from '../types/index.js';
 import type { ExportPlanOptions, ExportPlanResult } from '../types/index.js';
+type PlanSessions = Awaited<ReturnType<SqliteStorage['queryFullSessions']>>['sessions'];
+type PlanReviews = Awaited<ReturnType<SqliteStorage['queryReviews']>>['reviews'];
+
+type PlanExportData = {
+  plan: NonNullable<Awaited<ReturnType<SqliteStorage['getPlanById']>>>;
+  sessions: PlanSessions;
+  reviews: PlanReviews;
+  topics: string[];
+  description: string;
+};
 
 /**
  * Build a user-facing error message from AI-friendly structured errors.
@@ -54,6 +65,149 @@ function formatDate(dateIso?: string | null): string {
   return d.toISOString().split('T')[0];
 }
 
+function formatSessionLines(sessions: PlanSessions): string[] {
+  return sessions.length > 0
+    ? sessions.map((session) => `- ${session.id} (${session.date}) - ${session.topic} [${session.status}]`)
+    : ['- No linked sessions'];
+}
+
+function formatReviewLines(reviews: PlanReviews): string[] {
+  return reviews.length > 0
+    ? reviews.map((review) => `- ${review.id} - ${review.status} by ${review.author} (${formatDate(review.createdAt)})`)
+    : ['- No reviews'];
+}
+
+/** Render plan as a narrative markdown document with metadata and full content. */
+function generateNarrativeMarkdown(data: PlanExportData): string {
+  const { plan, sessions, reviews, topics, description } = data;
+
+  const sessionLines = formatSessionLines(sessions);
+  const reviewLines = formatReviewLines(reviews);
+
+  return [
+    `# Plan: ${plan.title}`,
+    '',
+    `- **Plan ID:** ${plan.id}`,
+    `- **Status:** ${plan.status}`,
+    `- **Author:** ${plan.author || 'unknown'}`,
+    `- **Priority:** ${plan.priority || 'unspecified'}`,
+    `- **Type:** ${plan.type || 'unspecified'}`,
+    `- **Created:** ${formatDate(plan.created_at)}`,
+    `- **Updated:** ${formatDate(plan.updated_at)}`,
+    topics.length > 0 ? `- **Topics:** ${topics.join(', ')}` : '- **Topics:** none',
+    '',
+    '## Goal',
+    description,
+    '',
+    '## Linked Sessions',
+    ...sessionLines,
+    '',
+    '## Reviews',
+    ...reviewLines,
+    '',
+    '## Content',
+    plan.content || '_No plan content found._',
+    ''
+  ].join('\n');
+}
+
+/** Render plan as a chronological timeline of creation, sessions, and reviews. */
+function generateTimelineMarkdown(data: PlanExportData): string {
+  const { plan, sessions, reviews } = data;
+
+  const timelineItems: Array<{ timestamp: string; label: string }> = [
+    {
+      timestamp: plan.created_at || '',
+      label: `Plan created — ${plan.id} (${plan.status})`
+    }
+  ];
+
+  for (const session of sessions) {
+    timelineItems.push({
+      timestamp: session.created_at,
+      label: `Session linked — ${session.id} (${session.topic})`
+    });
+  }
+
+  for (const review of reviews) {
+    timelineItems.push({
+      timestamp: review.createdAt,
+      label: `Review added — ${review.id} (${review.status}) by ${review.author}`
+    });
+  }
+
+  const sorted = timelineItems.sort((a, b) =>
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  const lines = sorted.map((entry) => `- ${entry.timestamp || 'unknown'} — ${entry.label}`);
+
+  return [
+    `# Plan: ${plan.title}`,
+    '',
+    `- **Plan ID:** ${plan.id}`,
+    `- **Status:** ${plan.status}`,
+    '',
+    '## Timeline',
+    ...lines,
+    ''
+  ].join('\n');
+}
+
+/** Render plan with metadata, sessions, and reviews in distinct labelled groups. */
+function generateGroupedMarkdown(data: PlanExportData): string {
+  const { plan, sessions, reviews, topics, description } = data;
+
+  const sessionLines = formatSessionLines(sessions);
+  const reviewLines = formatReviewLines(reviews);
+
+  return [
+    `# Plan: ${plan.title}`,
+    '',
+    '## Grouped View',
+    '',
+    '### Plan Metadata',
+    `- ID: ${plan.id}`,
+    `- Status: ${plan.status}`,
+    `- Author: ${plan.author || 'unknown'}`,
+    `- Priority: ${plan.priority || 'unspecified'}`,
+    `- Type: ${plan.type || 'unspecified'}`,
+    `- Topics: ${topics.length > 0 ? topics.join(', ') : 'none'}`,
+    '',
+    '### Goal',
+    description,
+    '',
+    '### Sessions',
+    ...sessionLines,
+    '',
+    '### Reviews',
+    ...reviewLines,
+    '',
+    '### Content',
+    plan.content || '_No plan content found._',
+    ''
+  ].join('\n');
+}
+
+/**
+ * Custom format scaffold for near-term extensibility.
+ *
+ * This currently wraps narrative output with a clear custom-format header,
+ * so callers can adopt `--format custom` now while distinct rendering evolves.
+ */
+function generateCustomMarkdown(data: PlanExportData): string {
+  const narrative = generateNarrativeMarkdown(data);
+  const [titleLine, ...narrativeBody] = narrative.split('\n');
+
+  return [
+    titleLine,
+    '',
+    '> **Format:** custom (scaffold — equivalent to narrative until custom rendering is implemented).',
+    '',
+    ...narrativeBody
+  ].join('\n');
+}
+
 /**
  * Export a single plan as markdown with linked sessions and reviews.
  *
@@ -63,7 +217,13 @@ function formatDate(dateIso?: string | null): string {
 export async function exportPlan(
   options: ExportPlanOptions
 ): Promise<ExportPlanResult> {
-  const { planId, dbPath, output, verbose } = options;
+  const {
+    planId,
+    dbPath,
+    output,
+    verbose,
+    format = 'narrative'
+  } = options;
   const resolvedDbPath = path.resolve(dbPath);
 
   try {
@@ -75,6 +235,13 @@ export async function exportPlan(
       return {
         success: false,
         error: formatStructuredError(error)
+      };
+    }
+
+    if (!(VALID_EXPORT_FORMATS as readonly string[]).includes(format)) {
+      return {
+        success: false,
+        error: `Invalid format '${format}'. Use one of: ${VALID_EXPORT_FORMATS.join(', ')}`
       };
     }
 
@@ -118,43 +285,30 @@ export async function exportPlan(
       const topics = parseTopics(plan.topics);
       const description = plan.description || 'No description provided';
 
-      const sessionLines = sessions.length > 0
-        ? sessions
-            .map((session) => `- ${session.id} (${session.date}) - ${session.topic} [${session.status}]`)
-            .join('\n')
-        : '- No linked sessions';
+      const planExportData: PlanExportData = {
+        plan,
+        sessions,
+        reviews,
+        topics,
+        description
+      };
 
-      const reviewLines = reviews.length > 0
-        ? reviews
-            .map((review) => `- ${review.id} - ${review.status} by ${review.author} (${formatDate(review.createdAt)})`)
-            .join('\n')
-        : '- No reviews';
-
-      const markdown = [
-        `# Plan: ${plan.title}`,
-        '',
-        `- **Plan ID:** ${plan.id}`,
-        `- **Status:** ${plan.status}`,
-        `- **Author:** ${plan.author || 'unknown'}`,
-        `- **Priority:** ${plan.priority || 'unspecified'}`,
-        `- **Type:** ${plan.type || 'unspecified'}`,
-        `- **Created:** ${formatDate(plan.created_at)}`,
-        `- **Updated:** ${formatDate(plan.updated_at)}`,
-        topics.length > 0 ? `- **Topics:** ${topics.join(', ')}` : '- **Topics:** none',
-        '',
-        '## Goal',
-        description,
-        '',
-        '## Linked Sessions',
-        sessionLines,
-        '',
-        '## Reviews',
-        reviewLines,
-        '',
-        '## Content',
-        plan.content || '_No plan content found._',
-        ''
-      ].join('\n');
+      let markdown: string;
+      switch (format) {
+        case 'timeline':
+          markdown = generateTimelineMarkdown(planExportData);
+          break;
+        case 'grouped':
+          markdown = generateGroupedMarkdown(planExportData);
+          break;
+        case 'custom':
+          markdown = generateCustomMarkdown(planExportData);
+          break;
+        case 'narrative':
+        default:
+          markdown = generateNarrativeMarkdown(planExportData);
+          break;
+      }
 
       if (output) {
         try {

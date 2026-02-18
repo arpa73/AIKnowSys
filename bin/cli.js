@@ -214,6 +214,7 @@ async function runExportPlan(id, options) {
     planId: id,
     dbPath: options.dbPath || './knowledge.db',
     output: options.output,
+    format: options.format,
     verbose: options.verbose
   });
 
@@ -313,6 +314,7 @@ exportCommand
   .argument('<id>', 'Plan ID to export')
   .option('--db-path <path>', 'Database file path', './knowledge.db')
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('--format <type>', 'Export format: narrative|timeline|grouped|custom (custom=scaffold)', 'narrative')
   .option('-v, --verbose', 'Show detailed export statistics')
   .action(async (id, options) => {
     await runExportPlan(id, options);
@@ -396,6 +398,7 @@ program
   .argument('<id>', 'Plan ID to export')
   .option('--db-path <path>', 'Database file path', './knowledge.db')
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('--format <type>', 'Export format: narrative|timeline|grouped|custom (custom=scaffold)', 'narrative')
   .option('-v, --verbose', 'Show detailed export statistics')
   .action(async (id, options) => {
     await runExportPlan(id, options);
@@ -634,6 +637,7 @@ program
   .command('update-session')
   .description('Modify today\'s session metadata and content')
   .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--date <YYYY-MM-DD>', 'Target session by date (defaults to today)')
   .option('--add-topic <topic>', 'Add topic to session')
   .option('--add-file <file>', 'Add file to session')
   .option('--set-status <status>', 'Set status: in-progress, complete, abandoned')

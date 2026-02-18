@@ -30,7 +30,7 @@ const TEMPLATE_SCHEMA: TemplateSchemaMap = {
     mappedTo: ['.github/agents/developer.agent.md']
   },
   'templates/agents/planner.agent.template.md': {
-    requiredPlaceholders: ['{{ESSENTIALS_FILE}}'],
+    requiredPlaceholders: [],
     forbiddenPatterns: ['PENDING_REVIEW.md'],
     mappedTo: ['.github/agents/planner.agent.md']
   }
@@ -257,6 +257,26 @@ async function validateTemplateSchema(
     }
   }
 
+  // Validate indentation consistency in templates/agents/USAGE.txt (if present)
+  const usagePath = path.join(projectRoot, 'templates', 'agents', 'USAGE.txt');
+  try {
+    const usageContent = await fs.readFile(usagePath, 'utf-8');
+    const developerIndent = usageContent.match(/^(\s+)- Primary implementer of features$/m)?.[1];
+    const architectIndent = usageContent.match(/^(\s+)- Reviews code against MCP critical invariants and project patterns$/m)?.[1];
+
+    if (developerIndent && architectIndent) {
+      patternsValidated++;
+
+      if (developerIndent !== architectIndent) {
+        issues.push('templates/agents/USAGE.txt: Architect bullet indent must match Developer bullet indent to avoid drift');
+      }
+    }
+  } catch (error: unknown) {
+    if (!isErrnoException(error) || error.code !== 'ENOENT') {
+      issues.push(`templates/agents/USAGE.txt: Error reading file - ${getErrorMessage(error)}`);
+    }
+  }
+
   return {
     name: 'Template Schema',
     passed: issues.length === 0,
@@ -364,6 +384,15 @@ async function detectLegacyPatterns(
   // Search templates directory
   const templatesDir = path.join(projectRoot, 'templates');
   const templateFiles = await getAllMarkdownFiles(templatesDir, projectRoot);
+
+  const usageTxtRelativePath = path.join('templates', 'agents', 'USAGE.txt');
+  const usageTxtFullPath = path.join(projectRoot, usageTxtRelativePath);
+  try {
+    await fs.access(usageTxtFullPath);
+    templateFiles.push(usageTxtRelativePath);
+  } catch {
+    // USAGE.txt is optional in some minimal test setups
+  }
 
   for (const file of templateFiles) {
     // Skip learned directory (examples may reference old patterns intentionally)

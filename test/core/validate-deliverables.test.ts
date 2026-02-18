@@ -158,6 +158,35 @@ describe('validateDeliverablesCore', () => {
     )).toBe(true);
   });
 
+  it('should detect USAGE bullet indent drift pattern', async () => {
+    const templatesDir = path.join(testDir, 'templates/agents');
+    await fs.mkdir(templatesDir, { recursive: true });
+
+    await fs.writeFile(
+      path.join(templatesDir, 'USAGE.txt'),
+      [
+        '# Usage',
+        '',
+        '1. **Developer Agent** (`developer.agent.md`)',
+        '   - Primary implementer of features',
+        '',
+        '2. **Architect Agent** (`architect.agent.md`)',
+        '  - Reviews code against MCP critical invariants and project patterns',
+        ''
+      ].join('\n')
+    );
+
+    const result = await validateDeliverablesCore({ projectRoot: testDir });
+
+    expect(result.passed).toBe(false);
+
+    const schemaCheck = result.checks.find(c => c.name === 'Template Schema');
+    expect(schemaCheck?.passed).toBe(false);
+    expect(schemaCheck?.issues.some(issue =>
+      issue.includes('Architect bullet indent must match Developer bullet indent')
+    )).toBe(true);
+  });
+
   it('should auto-fix legacy patterns when fix=true', async () => {
     // Setup: Create template with fixable legacy pattern
     const templatesDir = path.join(testDir, 'templates/docs');
