@@ -193,10 +193,10 @@ describe('updatePlanCore (Pure Business Logic)', () => {
       });
       expect(resumed.updated).toBe(true);
 
-      // ACTIVE → COMPLETE
+      // ACTIVE → PAUSED
       const completed = await updatePlanCore({
         planId: created.planId,
-        setStatus: 'COMPLETE',
+        setStatus: 'PAUSED',
         targetDir: TEST_DIR
       });
       expect(completed.updated).toBe(true);
@@ -210,7 +210,7 @@ describe('updatePlanCore (Pure Business Logic)', () => {
 
       const result = await updatePlanCore({
         planId: created.planId,
-        setStatus: 'COMPLETE',
+        setStatus: 'ACTIVE',
         append: 'All features implemented and tested',
         targetDir: TEST_DIR
       });

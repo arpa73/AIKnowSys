@@ -127,7 +127,7 @@ describe('Hybrid Storage (Events + Markdown)', () => {
       const result = await createSessionCore({
         title: goalText,
         topics: ['phase-2.1'],
-        plan: 'PLAN_knowledge_bank_evolution',
+        plan: null,
         targetDir: tmpDir,
         storage
       });
