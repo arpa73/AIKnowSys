@@ -213,6 +213,7 @@ export interface ExportSessionOptions {
   date?: string;
   dbPath: string;
   output?: string;
+  format?: 'narrative' | 'timeline' | 'grouped' | 'custom';
   verbose?: boolean;
 }
 

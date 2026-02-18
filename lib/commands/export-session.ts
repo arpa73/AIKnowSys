@@ -7,7 +7,63 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { SqliteStorage, type SessionRow } from '../context/sqlite-storage.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
+import type { KnowledgeEvent } from '../events/types.js';
 import type { ExportSessionOptions, ExportSessionResult } from '../types/index.js';
+
+function formatEventLabel(eventType: string): string {
+  return eventType.replace(/_/g, ' ');
+}
+
+function generateTimelineMarkdown(events: KnowledgeEvent[], title: string): string {
+  const lines = events.length > 0
+    ? events.map((event) => `- ${event.timestamp} — ${formatEventLabel(event.eventType)}`)
+    : ['- No events recorded'];
+
+  return [
+    `## Session: ${title}`,
+    '',
+    '## Timeline',
+    ...lines,
+    ''
+  ].join('\n');
+}
+
+function generateGroupedMarkdown(events: KnowledgeEvent[], title: string): string {
+  const grouped = new Map<string, KnowledgeEvent[]>();
+  for (const event of events) {
+    const existing = grouped.get(event.eventType) || [];
+    existing.push(event);
+    grouped.set(event.eventType, existing);
+  }
+
+  const sections: string[] = [`## Session: ${title}`, ''];
+  if (grouped.size === 0) {
+    sections.push('## Event Groups', '- No events recorded', '');
+    return sections.join('\n');
+  }
+
+  sections.push('## Event Groups');
+  for (const [eventType, list] of grouped.entries()) {
+    sections.push(`### ${formatEventLabel(eventType)}`);
+    for (const event of list) {
+      sections.push(`- ${event.timestamp}`);
+    }
+    sections.push('');
+  }
+
+  return sections.join('\n');
+}
+
+function generateCustomMarkdown(events: KnowledgeEvent[], title: string): string {
+  const narrative = new MarkdownGenerator().generateSessionMarkdown(events, title);
+  return [
+    '## Custom Export',
+    '',
+    '> Custom format scaffold currently defaults to narrative output.',
+    '',
+    narrative,
+  ].join('\n');
+}
 
 /**
  * Export a single session as markdown
@@ -44,6 +100,7 @@ export async function exportSession(
   options: ExportSessionOptions
 ): Promise<ExportSessionResult> {
   const { sessionId, date, dbPath, output, verbose } = options;
+  const format = options.format || 'narrative';
 
   try {
     // Validate options
@@ -58,6 +115,13 @@ export async function exportSession(
       return {
         success: false,
         error: 'Cannot specify both sessionId and date'
+      };
+    }
+
+    if (!['narrative', 'timeline', 'grouped', 'custom'].includes(format)) {
+      return {
+        success: false,
+        error: `Invalid format '${format}'. Use one of: narrative, timeline, grouped, custom`
       };
     }
 
@@ -123,11 +187,13 @@ export async function exportSession(
       );
 
       // Generate markdown
-      const generator = new MarkdownGenerator();
-      const markdown = generator.generateSessionMarkdown(
-        sortedEvents,
-        session.topic
-      );
+      const markdown = format === 'timeline'
+        ? generateTimelineMarkdown(sortedEvents, session.topic)
+        : format === 'grouped'
+          ? generateGroupedMarkdown(sortedEvents, session.topic)
+          : format === 'custom'
+            ? generateCustomMarkdown(sortedEvents, session.topic)
+            : new MarkdownGenerator().generateSessionMarkdown(sortedEvents, session.topic);
 
       // Write to file if output path provided
       if (output) {

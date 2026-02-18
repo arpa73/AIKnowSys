@@ -177,6 +177,147 @@ program
     });
   });
 
+async function runExportSession(id, options) {
+  const result = await exportSession({
+    dir: options.dir || '.',
+    dbPath: options.dbPath || './knowledge.db',
+    sessionId: id,
+    date: options.date,
+    output: options.output,
+    format: options.format || 'narrative',
+    verbose: options.verbose
+  });
+
+  if (!result.success) {
+    console.error(chalk.red('✗'), result.error);
+    process.exit(1);
+  }
+
+  if (!options.output && result.markdown) {
+    console.log(result.markdown);
+  }
+
+  if (result.outputPath) {
+    console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
+    if (options.verbose && result.eventCount) {
+      console.log(chalk.dim(`  ${result.eventCount} events processed`));
+    }
+  }
+
+  if (result.warning) {
+    console.warn(chalk.yellow('⚠'), result.warning);
+  }
+}
+
+async function runExportPlan(id, options) {
+  const result = await exportPlan({
+    planId: id,
+    dbPath: options.dbPath || './knowledge.db',
+    output: options.output,
+    verbose: options.verbose
+  });
+
+  if (!result.success) {
+    console.error(chalk.red('✗'), result.error);
+    process.exit(1);
+  }
+
+  if (!options.output && result.markdown) {
+    console.log(result.markdown);
+  }
+
+  if (result.outputPath) {
+    console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
+    if (options.verbose) {
+      console.log(chalk.dim(`  ${result.sessionCount || 0} sessions, ${result.reviewCount || 0} reviews`));
+    }
+  }
+}
+
+const exportCommand = program
+  .command('export')
+  .description('Export markdown views from database-backed knowledge');
+
+exportCommand
+  .command('session')
+  .description('Export single session from event storage as markdown')
+  .argument('[id]', 'Session ID to export (optional if --date provided)')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('--date <YYYY-MM-DD>', 'Export session by date (alternative to ID)')
+  .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('--format <type>', 'Export format: narrative|timeline|grouped|custom', 'narrative')
+  .option('-v, --verbose', 'Show detailed event information')
+  .action(async (id, options) => {
+    await runExportSession(id, options);
+  });
+
+exportCommand
+  .command('sessions')
+  .description('Export multiple sessions as markdown with filtering')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('--output-dir <path>', 'Output directory for exported markdown files (required)')
+  .option('--from <YYYY-MM-DD>', 'Filter: sessions from date (inclusive)')
+  .option('--to <YYYY-MM-DD>', 'Filter: sessions to date (inclusive)')
+  .option('--project-id <id>', 'Filter: sessions for specific project')
+  .option('--dry-run', 'Preview export without writing files')
+  .option('-v, --verbose', 'Show detailed progress for each session')
+  .action(async (options) => {
+    const result = await exportSessions({
+      dir: options.dir || '.',
+      dbPath: options.dbPath || './knowledge.db',
+      outputDir: options.outputDir,
+      from: options.from,
+      to: options.to,
+      projectId: options.projectId,
+      dryRun: options.dryRun,
+      verbose: options.verbose
+    });
+
+    if (!result.success) {
+      console.error(chalk.red('✗'), result.error);
+      if (result.errors && result.errors.length > 0) {
+        console.error(chalk.dim('\nErrors:'));
+        result.errors.forEach(err => {
+          console.error(chalk.dim(`  ${err.sessionId}: ${err.error}`));
+        });
+      }
+      process.exit(1);
+    }
+
+    if (options.dryRun) {
+      console.log(chalk.yellow('🔍 DRY RUN MODE'));
+    }
+
+    console.log(chalk.green('✓'), 'Export complete');
+    console.log(chalk.dim(`  Exported: ${result.exported}`));
+    if (result.failed > 0) {
+      console.log(chalk.yellow(`  Failed: ${result.failed}`));
+    }
+    if (result.skipped > 0) {
+      console.log(chalk.dim(`  Skipped: ${result.skipped}`));
+    }
+    if (result.outputDir) {
+      console.log(chalk.dim(`  Output: ${result.outputDir}`));
+    }
+
+    if (result.errors && result.errors.length > 0 && !options.verbose) {
+      console.log(chalk.yellow('\n⚠ Some exports failed. Use --verbose for details.'));
+    }
+  });
+
+exportCommand
+  .command('plan')
+  .description('Export single plan with linked sessions/reviews as markdown')
+  .argument('<id>', 'Plan ID to export')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('-v, --verbose', 'Show detailed export statistics')
+  .action(async (id, options) => {
+    await runExportPlan(id, options);
+  });
+
 program
   .command('export-session')
   .description('Export single session from event storage as markdown (Phase 3: Markdown Exports)')
@@ -185,40 +326,10 @@ program
   .option('--db-path <path>', 'Database file path', './knowledge.db')
   .option('--date <YYYY-MM-DD>', 'Export session by date (alternative to ID)')
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('--format <type>', 'Export format: narrative|timeline|grouped|custom', 'narrative')
   .option('-v, --verbose', 'Show detailed event information')
   .action(async (id, options) => {
-    const result = await exportSession({
-      dir: options.dir || '.',
-      dbPath: options.dbPath || './knowledge.db',
-      sessionId: id,
-      date: options.date,
-      output: options.output,
-      verbose: options.verbose
-    });
-
-    // Handle result
-    if (!result.success) {
-      console.error(chalk.red('✗'), result.error);
-      process.exit(1);
-    }
-
-    // Output markdown to stdout if no file specified
-    if (!options.output && result.markdown) {
-      console.log(result.markdown);
-    }
-
-    // Show success message if file written
-    if (result.outputPath) {
-      console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
-      if (options.verbose && result.eventCount) {
-        console.log(chalk.dim(`  ${result.eventCount} events processed`));
-      }
-    }
-
-    // Show warning if present
-    if (result.warning) {
-      console.warn(chalk.yellow('⚠'), result.warning);
-    }
+    await runExportSession(id, options);
   });
 
 program
@@ -287,28 +398,7 @@ program
   .option('-o, --output <path>', 'Output file path (defaults to stdout)')
   .option('-v, --verbose', 'Show detailed export statistics')
   .action(async (id, options) => {
-    const result = await exportPlan({
-      planId: id,
-      dbPath: options.dbPath || './knowledge.db',
-      output: options.output,
-      verbose: options.verbose
-    });
-
-    if (!result.success) {
-      console.error(chalk.red('✗'), result.error);
-      process.exit(1);
-    }
-
-    if (!options.output && result.markdown) {
-      console.log(result.markdown);
-    }
-
-    if (result.outputPath) {
-      console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
-      if (options.verbose) {
-        console.log(chalk.dim(`  ${result.sessionCount || 0} sessions, ${result.reviewCount || 0} reviews`));
-      }
-    }
+    await runExportPlan(id, options);
   });
 
 program

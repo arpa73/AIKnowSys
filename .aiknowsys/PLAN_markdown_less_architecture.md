@@ -146,6 +146,17 @@ get_session({ sessionId: "2026-02-17" })
 - Updated `mcp-server/src/tools/mutations.ts` `withStorage()` wrapper to rethrow with operation-specific context (`createSession/createReview/createLink storage operation`).
 - Added regression assertions in `mcp-server/test/tools/mutations.test.ts` to verify contextual error messages on failure paths while maintaining storage cleanup guarantees.
 - Validation: `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (19 passed, 8 skipped).
+
+**2026-02-18:** **2026-02-18:** ### 2026-02-18 Continuation: export command scaffolding + format support
+- Added unified CLI command group in `bin/cli.js`: `aiknowsys export session|sessions|plan` while preserving existing `export-session`, `export-sessions`, `export-plan` commands for backward compatibility.
+- Added session export format option in `lib/types/index.ts` and `lib/commands/export-session.ts` (`narrative`, `timeline`, `grouped`, `custom`) with lightweight `custom` scaffold output.
+- Added RED→GREEN tests:
+  - `test/export-group.test.ts` validates grouped export CLI help + `--format` option.
+  - `test/commands/export-session-formats.test.ts` validates `timeline/grouped/custom` output and invalid format handling.
+- Validation:
+  - `npx vitest run test/export-group.test.ts test/commands/export-session-formats.test.ts` ✅ (6 passed)
+  - `node bin/cli.js --help` ✅
+  - `npm run lint` ✅ (existing repository warnings only).
 ## Overview
 
 **The Core Insight: AI Agents Don't Need Markdown Files**
