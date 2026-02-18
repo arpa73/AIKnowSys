@@ -10,7 +10,7 @@ import os from 'os';
 import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 import { EventFactory } from '../../dist/lib/events/event-factory.js';
 import { EmbeddingGenerator } from '../../dist/lib/embeddings/generator.js';
-import type { KnowledgeEvent } from '../../lib/events/types.js';
+import { EventType, type KnowledgeEvent } from '../../lib/events/types.js';
 
 describe('Event Embedding Storage', () => {
   let storage: SqliteStorage;
@@ -92,8 +92,9 @@ describe('Event Embedding Storage', () => {
       const stored = await storage.getEventById(event.eventId);
       expect(stored).toBeDefined();
       expect(stored?.embedding).toBeDefined();
-      expect(stored!.embedding).toBeInstanceOf(Float32Array);
-      expect(stored!.embedding!.length).toBe(384); // all-MiniLM-L6-v2 dimensions
+      const storedEmbedding = requireDefined(stored?.embedding, 'Embedding should exist');
+      expect(storedEmbedding).toBeInstanceOf(Float32Array);
+      expect(storedEmbedding.length).toBe(384); // all-MiniLM-L6-v2 dimensions
     });
 
     it('should store multiple events with embeddings', async () => {
@@ -129,7 +130,8 @@ describe('Event Embedding Storage', () => {
       for (const event of events) {
         const stored = await storage.getEventById(event.eventId);
         expect(stored?.embedding).toBeDefined();
-        expect(stored!.embedding!.length).toBe(384);
+        const storedEmbedding = requireDefined(stored?.embedding, 'Embedding should exist');
+        expect(storedEmbedding.length).toBe(384);
       }
     });
 
@@ -164,7 +166,8 @@ describe('Event Embedding Storage', () => {
       const stored = await storage.getEventById(event.eventId);
       
       // Verify exact match (using cosine similarity = 1.0)
-      const similarity = cosineSimilarity(originalEmbedding, stored!.embedding!);
+      const storedEmbedding = requireDefined(stored?.embedding, 'Embedding should exist for integrity check');
+      const similarity = cosineSimilarity(originalEmbedding, storedEmbedding);
       expect(similarity).toBeCloseTo(1.0, 6); // Should be identical
     });
   });
@@ -186,7 +189,8 @@ describe('Event Embedding Storage', () => {
       
       expect(results).toHaveLength(1);
       expect(results[0].embedding).toBeDefined();
-      expect(results[0].embedding!.length).toBe(384);
+      const embeddingResult = requireDefined(results[0].embedding, 'Embedding should exist in query result');
+      expect(embeddingResult.length).toBe(384);
     });
 
     it('should retrieve embeddings filtered by event type', async () => {
@@ -212,11 +216,11 @@ describe('Event Embedding Storage', () => {
       // Query only task_completed events
       const results = await storage.queryEvents({ 
         projectId,
-        eventType: 'task_completed'
+        eventType: EventType.TASK_COMPLETED
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].eventType).toBe('task_completed');
+      expect(results[0].eventType).toBe(EventType.TASK_COMPLETED);
       expect(results[0].embedding).toBeDefined();
     });
 
@@ -274,9 +278,9 @@ describe('Event Embedding Storage', () => {
         outcome: 'success'
       });
 
-      // @ts-expect-error Testing runtime validation
+      const invalidEmbedding = [1, 2, 3] as unknown as Float32Array;
       await expect(
-        storage.insertEvent(event, [1, 2, 3])
+        storage.insertEvent(event, invalidEmbedding)
       ).rejects.toThrow(/Float32Array/i);
     });
 
@@ -292,7 +296,7 @@ describe('Event Embedding Storage', () => {
       await storage.insertEvent(event, embedding);
 
       // Manually corrupt embedding in database (simulate data corruption)
-      const db = (storage as any).db;
+      const db = getStorageDb(storage);
       db.prepare('UPDATE knowledge_events SET embedding = ? WHERE event_id = ?')
         .run(Buffer.from([0, 0, 0]), event.eventId); // Invalid BLOB
 
@@ -320,4 +324,24 @@ function cosineSimilarity(a: Float32Array, b: Float32Array): number {
   }
 
   return dotProduct;
+}
+
+function requireDefined<T>(value: T | null | undefined, message: string): T {
+  expect(value, message).toBeDefined();
+  if (value === null || value === undefined) {
+    throw new Error(message);
+  }
+  return value;
+}
+
+interface StorageWithDb {
+  db: {
+    prepare: (sql: string) => {
+      run: (...args: unknown[]) => unknown;
+    };
+  };
+}
+
+function getStorageDb(storageInstance: SqliteStorage): StorageWithDb['db'] {
+  return (storageInstance as unknown as StorageWithDb).db;
 }

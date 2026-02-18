@@ -9,6 +9,12 @@ import { qualityCheck } from '../lib/commands/quality-check.js';
 
 const TEST_DIR: string = path.join(import.meta.dirname, '../test-temp-quality');
 
+type EssentialsBloatResult = Awaited<ReturnType<typeof checkEssentialsBloat>>;
+type TemplateValidationResult = Awaited<ReturnType<typeof validateTemplates>>;
+type LinkValidationResult = Awaited<ReturnType<typeof validateLinks>>;
+type PatternScanResult = Awaited<ReturnType<typeof scanPatterns>>;
+type QualityCheckResult = Awaited<ReturnType<typeof qualityCheck>>;
+
 describe('quality-check command', () => {
   beforeEach(async () => {
     await fs.mkdir(TEST_DIR, { recursive: true });
@@ -27,16 +33,18 @@ describe('quality-check command', () => {
         bloatedContent
       );
 
-      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
+      const result: EssentialsBloatResult = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
       expect(result.passed).toBe(false);
       expect(result.severity).toBe('warning');
       expect(result.message.includes('900 lines')).toBeTruthy();
       expect(result.message.includes('800')).toBeTruthy();
-      expect(result.fix.includes('compress-essentials')).toBeTruthy();
-      expect(result.details.current).toBe(900);
-      expect(result.details.threshold).toBe(800);
-      expect(result.details.excess).toBe(100);
+      expect(result.fix).toBeDefined();
+      expect(result.details).toBeDefined();
+      expect(result.fix?.includes('compress-essentials')).toBeTruthy();
+      expect(result.details?.current).toBe(900);
+      expect(result.details?.threshold).toBe(800);
+      expect(result.details?.excess).toBe(100);
     });
 
     it('should pass when ESSENTIALS under threshold', async () => {
@@ -47,7 +55,7 @@ describe('quality-check command', () => {
         smallContent
       );
 
-      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
+      const result: EssentialsBloatResult = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 800 });
 
       expect(result.passed).toBe(true);
       expect(result.message.includes('650 lines')).toBeTruthy();
@@ -62,7 +70,7 @@ describe('quality-check command', () => {
         content
       );
 
-      const result: any = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 1000 });
+      const result: EssentialsBloatResult = await checkEssentialsBloat(TEST_DIR, { essentialsMaxLines: 1000 });
 
       expect(result.passed).toBe(true);
     });
@@ -74,14 +82,15 @@ describe('quality-check command', () => {
         bloatedContent
       );
 
-      const result: any = await checkEssentialsBloat(TEST_DIR);
+      const result: EssentialsBloatResult = await checkEssentialsBloat(TEST_DIR);
 
-      expect(result.fix.includes('compress-essentials')).toBeTruthy();
-      expect(result.fix.includes('--analyze')).toBeTruthy();
+      expect(result.fix).toBeDefined();
+      expect(result.fix?.includes('compress-essentials')).toBeTruthy();
+      expect(result.fix?.includes('--analyze')).toBeTruthy();
     });
 
     it('should handle missing ESSENTIALS.md gracefully', async () => {
-      const result: any = await checkEssentialsBloat(TEST_DIR);
+      const result: EssentialsBloatResult = await checkEssentialsBloat(TEST_DIR);
 
       expect(result.passed).toBe(true);
       expect(result.message.includes('not found')).toBeTruthy();
@@ -95,16 +104,17 @@ describe('quality-check command', () => {
         '# {{PROJECT_NAME}}\n\nWelcome to {{APP_NAME}}!'
       );
 
-      const result: any = await validateTemplates(TEST_DIR);
+      const result: TemplateValidationResult = await validateTemplates(TEST_DIR);
+      const violations = result.violations ?? [];
 
       expect(result.passed).toBe(false);
       expect(result.severity).toBe('error');
       expect(result.message.includes('2 unresolved')).toBeTruthy();
-      expect(result.violations.length).toBe(2);
-      expect(result.violations[0].variable).toBe('PROJECT_NAME');
-      expect(result.violations[0].line).toBe(1);
-      expect(result.violations[1].variable).toBe('APP_NAME');
-      expect(result.violations[1].line).toBe(3);
+      expect(violations.length).toBe(2);
+      expect(violations[0]?.variable).toBe('PROJECT_NAME');
+      expect(violations[0]?.line).toBe(1);
+      expect(violations[1]?.variable).toBe('APP_NAME');
+      expect(violations[1]?.line).toBe(3);
     });
 
     it('should ignore variables in templates directory', async () => {
@@ -114,7 +124,7 @@ describe('quality-check command', () => {
         '# {{PROJECT_NAME}}'
       );
 
-      const result: any = await validateTemplates(TEST_DIR);
+      const result: TemplateValidationResult = await validateTemplates(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -125,12 +135,13 @@ describe('quality-check command', () => {
         'Line 1\n# {{VAR}} here\nLine 3'
       );
 
-      const result: any = await validateTemplates(TEST_DIR);
+      const result: TemplateValidationResult = await validateTemplates(TEST_DIR);
+      const violations = result.violations ?? [];
 
       expect(result.passed).toBe(false);
-      expect(result.violations[0].file.includes('docs.md')).toBeTruthy();
-      expect(result.violations[0].line).toBe(2);
-      expect(result.violations[0].context.includes('{{VAR}}')).toBeTruthy();
+      expect(violations[0]?.file.includes('docs.md')).toBeTruthy();
+      expect(violations[0]?.line).toBe(2);
+      expect(violations[0]?.context.includes('{{VAR}}')).toBeTruthy();
     });
 
     it('should handle multiple variables on same line', async () => {
@@ -139,10 +150,11 @@ describe('quality-check command', () => {
         '{{VAR1}} and {{VAR2}} here'
       );
 
-      const result: any = await validateTemplates(TEST_DIR);
+      const result: TemplateValidationResult = await validateTemplates(TEST_DIR);
+      const violations = result.violations ?? [];
 
       expect(result.passed).toBe(false);
-      expect(result.violations.length).toBe(2);
+      expect(violations.length).toBe(2);
     });
 
     it('should pass when no unresolved variables found', async () => {
@@ -151,7 +163,7 @@ describe('quality-check command', () => {
         '# My Project\n\nNo variables here!'
       );
 
-      const result: any = await validateTemplates(TEST_DIR);
+      const result: TemplateValidationResult = await validateTemplates(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -164,13 +176,14 @@ describe('quality-check command', () => {
         '[Link to missing](missing-file.md)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
+      const violations = result.violations ?? [];
 
       expect(result.passed).toBe(false);
       expect(result.severity).toBe('warning');
-      expect(result.violations.length).toBe(1);
-      expect(result.violations[0].link).toBe('missing-file.md');
-      expect(result.violations[0].reason).toBe('Target file not found');
+      expect(violations.length).toBe(1);
+      expect(violations[0]?.link).toBe('missing-file.md');
+      expect(violations[0]?.reason).toBe('Target file not found');
     });
 
     it('should validate anchor links', async () => {
@@ -183,11 +196,12 @@ describe('quality-check command', () => {
         '[Link](target.md#section-two)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
+      const violations = result.violations ?? [];
 
       expect(result.passed).toBe(false);
-      expect(result.violations[0].reason.includes('Anchor')).toBeTruthy();
-      expect(result.violations[0].reason.includes('section-two')).toBeTruthy();
+      expect(violations[0]?.reason.includes('Anchor')).toBeTruthy();
+      expect(violations[0]?.reason.includes('section-two')).toBeTruthy();
     });
 
     it('should skip external URLs', async () => {
@@ -196,7 +210,7 @@ describe('quality-check command', () => {
         '[External](https://example.com)\n[Secure](https://secure.org)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -212,7 +226,7 @@ describe('quality-check command', () => {
         '[Guide](docs/guide.md)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -224,7 +238,7 @@ describe('quality-check command', () => {
         '[Valid link](target.md)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -235,7 +249,7 @@ describe('quality-check command', () => {
         '[Email](mailto:test@example.com)'
       );
 
-      const result: any = await validateLinks(TEST_DIR);
+      const result: LinkValidationResult = await validateLinks(TEST_DIR);
 
       expect(result.passed).toBe(true);
     });
@@ -248,10 +262,10 @@ describe('quality-check command', () => {
         'const path = "/Users/john/project/file.txt";'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v: any) => v.rule === 'no-hardcoded-paths')).toBeTruthy();
+      expect(result.violations.some((v) => v.rule === 'no-hardcoded-paths')).toBeTruthy();
     });
 
     it('should detect require() in ES module project', async () => {
@@ -264,12 +278,12 @@ describe('quality-check command', () => {
         'const fs = require("fs");'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
       expect(result.passed).toBe(false);
-      const violation: any = result.violations.find((v: any) => v.rule === 'no-require-in-esm');
+      const violation = result.violations.find((v) => v.rule === 'no-require-in-esm');
       expect(violation).toBeTruthy();
-      expect(violation.fix.includes('import')).toBeTruthy();
+      expect(violation?.fix.includes('import')).toBeTruthy();
     });
 
     it('should allow require() in .cjs files', async () => {
@@ -282,9 +296,9 @@ describe('quality-check command', () => {
         'const fs = require("fs");'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
-      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
+      const hasRequireViolation: boolean = result.violations?.some((v) => 
         v.rule === 'no-require-in-esm' && v.file.includes('hook.cjs')
       );
       expect(hasRequireViolation).toBe(false);
@@ -310,7 +324,7 @@ describe('quality-check command', () => {
         'import path from "path";\nconst dir = process.cwd();'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
       const hasViolations: boolean = result.violations && result.violations.length > 0;
       expect(hasViolations).toBe(false);
@@ -327,10 +341,10 @@ describe('quality-check command', () => {
         'const errorMsg = "Use import instead of require() in ES module project";'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
       // Should not flag require() when it's in a string
-      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
+      const hasRequireViolation: boolean = result.violations?.some((v) => 
         v.rule === 'no-require-in-esm' && v.file.includes('checker.js')
       );
       expect(hasRequireViolation).toBe(false);
@@ -348,10 +362,10 @@ describe('quality-check command', () => {
         'const mock = require("./fixtures/mock.json");'
       );
 
-      const result: any = await scanPatterns(TEST_DIR);
+      const result: PatternScanResult = await scanPatterns(TEST_DIR);
 
       // Should not flag require() in test files
-      const hasRequireViolation: boolean = result.violations?.some((v: any) => 
+      const hasRequireViolation: boolean = result.violations?.some((v) => 
         v.rule === 'no-require-in-esm' && v.file.includes('test')
       );
       expect(hasRequireViolation).toBe(false);
@@ -370,7 +384,7 @@ describe('quality-check command', () => {
         '# {{PROJECT}}'
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       expect(result.checks).toBeTruthy();
       expect(result.checks.essentials).toBeTruthy();
@@ -380,7 +394,7 @@ describe('quality-check command', () => {
     });
 
     it('should support dry-run mode', async () => {
-      const result: any = await qualityCheck({ 
+      const result: QualityCheckResult = await qualityCheck({ 
         dir: TEST_DIR, 
         dryRun: true,
         _silent: true 
@@ -401,7 +415,7 @@ describe('quality-check command', () => {
         '# My Project'
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       expect(result.passed).toBe(true);
       expect(result.totalIssues).toBe(0);
@@ -422,7 +436,7 @@ describe('quality-check command', () => {
         Array(950).fill('# Line').join('\n')
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Should pass because threshold is 1000, not default 800
       expect(result.checks.essentials.passed).toBeTruthy();
@@ -436,7 +450,7 @@ describe('quality-check command', () => {
         '# Test Template'
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       expect(result.checks.deliverables).toBeTruthy();
       expect('passed' in result.checks.deliverables).toBeTruthy();
@@ -451,7 +465,7 @@ describe('quality-check command', () => {
         'See PENDING_REVIEW.md for review'
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
 
       // Deliverables check should detect legacy pattern
       expect(result.checks.deliverables).toBeTruthy();
@@ -467,18 +481,20 @@ describe('quality-check command', () => {
         '# Test Template\n\nThis is a test template.'
       );
 
-      const result: any = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const result: QualityCheckResult = await qualityCheck({ dir: TEST_DIR, _silent: true });
+      const deliverablesChecks = result.checks.deliverables.checks ?? [];
+      const deliverablesMetrics = result.checks.deliverables.metrics;
 
       // Verify full mode ran (should have all 6 checks, not just 4)
-      expect(result.checks.deliverables.checks).toBeTruthy();
-      const checkNames: string[] = result.checks.deliverables.checks.map((c: any) => c.name);
+      expect(deliverablesChecks).toBeTruthy();
+      const checkNames: string[] = deliverablesChecks.map((c: { name: string }) => c.name);
       expect(checkNames.includes('Template Execution')).toBeTruthy();
       expect(checkNames.includes('Fresh Init')).toBeTruthy();
       
       // Verify metrics exist
-      expect(result.checks.deliverables.metrics).toBeTruthy();
-      expect('templatesChecked' in result.checks.deliverables.metrics).toBeTruthy();
-      expect('duration' in result.checks.deliverables.metrics).toBeTruthy();
+      expect(deliverablesMetrics).toBeTruthy();
+      expect('templatesChecked' in (deliverablesMetrics ?? {})).toBeTruthy();
+      expect('duration' in (deliverablesMetrics ?? {})).toBeTruthy();
     });
   });
 });

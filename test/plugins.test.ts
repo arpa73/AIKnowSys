@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Command } from 'commander';
 import { loadPlugins, listInstalledPlugins, getPluginInfo } from '../lib/plugins/loader.js';
+import type { Plugin, PluginInfo } from '../lib/plugins/loader.js';
 
 describe('Plugin System', () => {
 	let testDir: string;
@@ -49,7 +50,7 @@ describe('Plugin System', () => {
 		program.command('test-command').action(() => {});
 
 		// Load plugins (should return empty array, not crash)
-		const plugins: any[] = await loadPlugins(program, testDir);
+		const plugins: Plugin[] = await loadPlugins(program, testDir);
 
 		expect(plugins.length).toBe(0);
 		expect(program.commands.length).toBe(1);
@@ -79,7 +80,7 @@ describe('Plugin System', () => {
 	});
 
 	test('Plugin exports metadata correctly', () => {
-		const mockPlugin: any = {
+		const mockPlugin: Plugin = {
 			name: 'test-plugin',
 			version: '1.0.0',
 			description: 'Test plugin',
@@ -92,7 +93,7 @@ describe('Plugin System', () => {
 			]
 		};
 
-		const info: any[] = getPluginInfo([mockPlugin]);
+		const info: PluginInfo[] = getPluginInfo([mockPlugin]);
 
 		expect(info.length).toBe(1);
 		expect(info[0].name).toBe('test-plugin');
@@ -101,7 +102,7 @@ describe('Plugin System', () => {
 	});
 
 	test('Multiple commands in plugin metadata', () => {
-		const mockPlugin: any = {
+		const mockPlugin: Plugin = {
 			name: 'multi-cmd-plugin',
 			version: '2.0.0',
 			commands: [
@@ -111,7 +112,7 @@ describe('Plugin System', () => {
 			]
 		};
 
-		const info: any[] = getPluginInfo([mockPlugin]);
+		const info: PluginInfo[] = getPluginInfo([mockPlugin]);
 
 		expect(info[0].commands).toBe('cmd1, cmd2, cmd3');
 	});
@@ -126,7 +127,7 @@ describe('Plugin System', () => {
 		const program: Command = new Command();
 
 		// Should not throw, just return empty array
-		const plugins: any[] = await loadPlugins(program, emptyDir);
+		const plugins: Plugin[] = await loadPlugins(program, emptyDir);
 
 		expect(plugins.length).toBe(0);
 
@@ -154,26 +155,26 @@ describe('Plugin System', () => {
 	});
 
 	test('Plugin info handles missing version', () => {
-		const mockPlugin: any = {
+		const mockPlugin: Plugin = {
 			name: 'no-version-plugin',
 			commands: [
 				{ name: 'cmd', action: async () => {} }
 			]
 		};
 
-		const info: any[] = getPluginInfo([mockPlugin]);
+		const info: PluginInfo[] = getPluginInfo([mockPlugin]);
 
 		expect(info[0].version).toBe('unknown');
 	});
 
 	test('Plugin info handles missing description', () => {
-		const mockPlugin: any = {
+		const mockPlugin: Plugin = {
 			name: 'no-desc-plugin',
 			version: '1.0.0',
 			commands: []
 		};
 
-		const info: any[] = getPluginInfo([mockPlugin]);
+		const info: PluginInfo[] = getPluginInfo([mockPlugin]);
 
 		expect(info[0].description).toBe('No description');
 	});
@@ -187,7 +188,7 @@ describe('CLI Integration', () => {
 		program.command('test-command').action(() => {});
 		
 		// Load plugins (should not throw even with no plugins)
-		const plugins: any[] = await loadPlugins(program);
+		const plugins: Plugin[] = await loadPlugins(program);
 		
 		// Verify no errors and plugins array returned
 		expect(Array.isArray(plugins)).toBeTruthy();
@@ -201,7 +202,12 @@ describe('Plugin Validation (Error Cases)', () => {
 		// (since we can't easily mock ES module imports in tests)
 
 		// Test plugin validation logic
-		const validatePlugin = (plugin: any, _name: string): void => {
+		type PluginValidationInput = {
+			name?: unknown;
+			commands?: unknown;
+		};
+
+		const validatePlugin = (plugin: PluginValidationInput | null, _name: string): void => {
 			if (!plugin || typeof plugin !== 'object') {
 				throw new Error('Plugin must export default object');
 			}
@@ -258,7 +264,12 @@ describe('Plugin Validation (Error Cases)', () => {
 	});
 
 	test('Command validation logic', () => {
-		const validateCommand = (cmd: any, pluginName: string): void => {
+		type CommandValidationInput = {
+			name?: unknown;
+			action?: unknown;
+		};
+
+		const validateCommand = (cmd: CommandValidationInput, pluginName: string): void => {
 			if (!cmd.name || typeof cmd.name !== 'string') {
 				throw new Error(`Command missing "name" property in plugin "${pluginName}"`);
 			}

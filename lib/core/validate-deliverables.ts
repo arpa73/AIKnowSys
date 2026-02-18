@@ -54,6 +54,14 @@ const AUTO_FIX_PATTERNS: AutoFixPattern[] = [
   { find: /Delete CURRENT_PLAN\.md/g, replace: 'Delete plans/active-<username>.md' }
 ];
 
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Core validation logic for deliverables
  * Pure function - no side effects, no logger dependency
@@ -189,16 +197,16 @@ async function checkMaintainerSkillBoundary(
             // Good - maintainer skill not in templates
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Skip if SKILL.md doesn't exist
-        if (error.code !== 'ENOENT') {
-          issues.push(`Error reading ${skill}/SKILL.md: ${error.message}`);
+        if (!isErrnoException(error) || error.code !== 'ENOENT') {
+          issues.push(`Error reading ${skill}/SKILL.md: ${getErrorMessage(error)}`);
         }
       }
     }
-  } catch (error: any) {
-    if (error.code !== 'ENOENT') {
-      issues.push(`Error reading .github/skills directory: ${error.message}`);
+  } catch (error: unknown) {
+    if (!isErrnoException(error) || error.code !== 'ENOENT') {
+      issues.push(`Error reading .github/skills directory: ${getErrorMessage(error)}`);
     }
   }
   
@@ -242,9 +250,9 @@ async function validateTemplateSchema(
         }
         patternsValidated++;
       }
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        issues.push(`${templatePath}: Error reading file - ${error.message}`);
+    } catch (error: unknown) {
+      if (!isErrnoException(error) || error.code !== 'ENOENT') {
+        issues.push(`${templatePath}: Error reading file - ${getErrorMessage(error)}`);
       }
     }
   }
@@ -295,15 +303,15 @@ async function validatePatternConsistency(
             }
             patternsValidated++;
           }
-        } catch (error: any) {
-          if (error.code !== 'ENOENT') {
-            issues.push(`${nonTemplatePath}: Error reading file - ${error.message}`);
+        } catch (error: unknown) {
+          if (!isErrnoException(error) || error.code !== 'ENOENT') {
+            issues.push(`${nonTemplatePath}: Error reading file - ${getErrorMessage(error)}`);
           }
         }
       }
-    } catch (error: any) {
-      if (error.code !== 'ENOENT') {
-        issues.push(`${templatePath}: Error reading file - ${error.message}`);
+    } catch (error: unknown) {
+      if (!isErrnoException(error) || error.code !== 'ENOENT') {
+        issues.push(`${templatePath}: Error reading file - ${getErrorMessage(error)}`);
       }
     }
   }
@@ -338,7 +346,7 @@ async function getAllMarkdownFiles(
     }
     
     return files;
-  } catch (_error) {
+  } catch {
     return files; // Return what we have if directory doesn't exist
   }
 }
@@ -501,10 +509,10 @@ async function autoFixPatterns(
         await fs.writeFile(issue.file, content, 'utf-8');
         fixes.push(`Fixed patterns in ${path.relative(projectRoot, issue.file)}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Silently skip files we can't fix
       // CLI wrapper will log this warning
-      fixes.push(`Could not auto-fix ${path.relative(projectRoot, issue.file)}: ${error.message}`);
+      fixes.push(`Could not auto-fix ${path.relative(projectRoot, issue.file)}: ${getErrorMessage(error)}`);
     }
   }
 

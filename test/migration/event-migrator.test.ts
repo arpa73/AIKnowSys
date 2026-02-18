@@ -10,6 +10,22 @@ import { SqliteStorage } from '../../dist/lib/context/sqlite-storage.js';
 import { EventMigrator } from '../../dist/lib/migration/event-migrator.js';
 import { EventType } from '../../dist/lib/events/types.js';
 
+interface TestStatement {
+  run(...args: unknown[]): unknown;
+}
+
+interface TestDb {
+  prepare(sql: string): TestStatement;
+}
+
+interface TestStorageWithDb {
+  db: TestDb;
+}
+
+function getTestDb(storage: SqliteStorage): TestDb {
+  return (storage as unknown as TestStorageWithDb).db;
+}
+
 describe('Event Migrator - Phase 2.1', () => {
   let storage: SqliteStorage;
   let migrator: EventMigrator;
@@ -52,7 +68,7 @@ topics: ["testing", "migration"]
 `;
 
       const sessionId = 'parse-001';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -74,7 +90,7 @@ topics: ["testing", "migration"]
 `;
 
       const sessionId = 'parse-002';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -103,7 +119,7 @@ topics: ["testing", "migration"]
 `;
 
       const sessionId = 'parse-003';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -130,7 +146,7 @@ topics: ["testing", "migration"]
 `;
 
       const sessionId = 'parse-004';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -156,7 +172,7 @@ Used Joi schema validation for all endpoints.
 `;
 
       const sessionId = 'parse-005';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -177,7 +193,7 @@ Used Joi schema validation for all endpoints.
       const originalMarkdown = '## Session: Test\n\n**Goal:** Test preservation';
       const sessionId = 'preserve-001';
 
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -194,7 +210,7 @@ Used Joi schema validation for all endpoints.
       const markdown = '## Session: Test\n\n**Goal:** Test idempotency';
       const sessionId = 'idempotent-001';
 
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -216,7 +232,7 @@ No standard sections
 Just random text`;
 
       const sessionId = 'malformed-001';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -247,7 +263,7 @@ Just random text`;
 `;
 
       const sessionId = 'stats-001';
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       db.prepare(`
         INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
         VALUES (?, ?, ?, ?, 'complete', ?, '[]', datetime('now'), datetime('now'))
@@ -265,7 +281,7 @@ Just random text`;
   describe('Batch Migration', () => {
     it('should migrate multiple sessions', async () => {
       // Create 3 sessions
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       for (let i = 1; i <= 3; i++) {
         db.prepare(`
           INSERT INTO sessions (id, project_id, date, topic, status, content, topics, created_at, updated_at)
@@ -281,7 +297,7 @@ Just random text`;
     });
 
     it('should continue migration even if one session fails', async () => {
-      const db = (storage as any).db;
+      const db = getTestDb(storage);
       
       // Session 1: Valid
       db.prepare(`

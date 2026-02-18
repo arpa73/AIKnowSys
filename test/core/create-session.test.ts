@@ -164,5 +164,64 @@ describe('createSessionCore (Pure Business Logic)', () => {
       const session = index.sessions.find((s: any) => s.topic?.includes('Index Test'));
       expect(session).toBeDefined();
     });
+
+    it('should persist explicit plan in hybrid storage session record', async () => {
+      const insertProject = vi.fn().mockResolvedValue(undefined);
+      const insertSession = vi.fn().mockResolvedValue(undefined);
+      const insertEvent = vi.fn().mockResolvedValue(undefined);
+      const getActivePlanId = vi.fn().mockResolvedValue(null);
+
+      const options: CreateSessionCoreOptions = {
+        title: 'Hybrid Explicit Plan',
+        topics: ['hybrid'],
+        plan: 'PLAN_explicit_test',
+        targetDir: testDir,
+        storage: {
+          insertProject,
+          insertSession,
+          insertEvent,
+          getActivePlanId,
+        } as any,
+      };
+
+      const result = await createSessionCore(options);
+
+      expect(result.created).toBe(true);
+      expect(insertSession).toHaveBeenCalledTimes(1);
+      expect(insertSession.mock.calls[0][0]).toMatchObject({
+        plan: 'PLAN_explicit_test',
+      });
+      expect(getActivePlanId).not.toHaveBeenCalled();
+    });
+
+    it('should auto-link to active plan when no plan is provided in hybrid storage', async () => {
+      const insertProject = vi.fn().mockResolvedValue(undefined);
+      const insertSession = vi.fn().mockResolvedValue(undefined);
+      const insertEvent = vi.fn().mockResolvedValue(undefined);
+      const getActivePlanId = vi.fn().mockResolvedValue('PLAN_auto_linked');
+
+      const options: CreateSessionCoreOptions = {
+        title: 'Hybrid Auto Link',
+        topics: ['hybrid', 'auto-link'],
+        plan: null,
+        targetDir: testDir,
+        storage: {
+          insertProject,
+          insertSession,
+          insertEvent,
+          getActivePlanId,
+        } as any,
+      };
+
+      const result = await createSessionCore(options);
+
+      expect(result.created).toBe(true);
+      expect(getActivePlanId).toHaveBeenCalledTimes(1);
+      expect(insertSession).toHaveBeenCalledTimes(1);
+      expect(insertSession.mock.calls[0][0]).toMatchObject({
+        plan: 'PLAN_auto_linked',
+      });
+      expect(result.metadata?.plan).toBe('PLAN_auto_linked');
+    });
   });
 });

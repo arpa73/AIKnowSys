@@ -3,12 +3,15 @@
  * Phase B Mini - Context Query Completion
  */
 
+type FrontmatterValue = string | number | boolean | string[] | null | undefined;
+type FrontmatterRecord = Record<string, FrontmatterValue>;
+
 /**
  * Parse YAML frontmatter from markdown file
  * @returns Frontmatter object and remaining content
  */
 export function parseFrontmatter(fileContent: string): {
-  frontmatter: Record<string, any>;
+  frontmatter: FrontmatterRecord;
   content: string;
 } {
   const match = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -30,7 +33,7 @@ export function parseFrontmatter(fileContent: string): {
  */
 export function updateFrontmatter(
   fileContent: string,
-  updates: Record<string, any>
+  updates: FrontmatterRecord
 ): string {
   const { frontmatter, content } = parseFrontmatter(fileContent);
 
@@ -70,8 +73,8 @@ export function updateFrontmatter(
  * @param yamlStr - YAML string (without --- delimiters)
  * @returns Parsed object
  */
-function parseSimpleYaml(yamlStr: string): Record<string, any> {
-  const result: Record<string, any> = {};
+function parseSimpleYaml(yamlStr: string): FrontmatterRecord {
+  const result: FrontmatterRecord = {};
   const lines = yamlStr.split('\n');
 
   for (const line of lines) {
@@ -125,7 +128,7 @@ function parseSimpleYaml(yamlStr: string): Record<string, any> {
  * @param obj - Object to stringify
  * @returns YAML string (without --- delimiters)
  */
-function stringifySimpleYaml(obj: Record<string, any>): string {
+function stringifySimpleYaml(obj: FrontmatterRecord): string {
   const lines: string[] = [];
 
   for (const [key, value] of Object.entries(obj)) {

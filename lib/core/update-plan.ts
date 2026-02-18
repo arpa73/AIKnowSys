@@ -13,6 +13,8 @@ import { JsonStorage } from '../context/json-storage.js';
 import { syncPlansCore } from './sync-plans.js';
 import { detectUsername } from '../utils/git-utils.js';
 import { existsSync } from 'fs';
+import { enforceConstraints } from './constraints.js';
+import { DatabaseLocator } from '../context/database-locator.js';
 
 // Define valid plan statuses (single source of truth)
 const VALID_STATUSES = ['PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'] as const;
@@ -106,6 +108,20 @@ export async function updatePlanCore(
     } else {
       throw new Error(`No active plan found for ${author}.`);
     }
+  }
+
+  // Phase 2: Enforce constraints for Plan Completion
+  // Must pass validation checks and have no pending reviews
+  if (setStatus === 'COMPLETE') {
+    const locator = new DatabaseLocator();
+    // Resolve project config to get ID
+    const config = await locator.getDatabaseConfig(resolvedTargetDir);
+    
+    await enforceConstraints('COMPLETE_PLAN', {
+      userId: author, // Using author as user ID
+      projectId: config.projectId,
+      targetId: planId
+    });
   }
 
   // Find plan file

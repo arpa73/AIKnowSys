@@ -1,8 +1,8 @@
 # Active Plan: arno-paffen
 
-**Currently Working On:** [Knowledge Bank Evolution - Cross-Repo AI-Native Storage](../PLAN_knowledge_bank_evolution.md)  
+**Currently Working On:** [JSON-Only AI Workflow (No Markdown for AI Agents)](../PLAN_markdown_less_architecture.md)  
 **Status:** 🎯 ACTIVE  
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-17
 
 ---
 

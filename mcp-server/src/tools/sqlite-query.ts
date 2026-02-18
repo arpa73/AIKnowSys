@@ -25,6 +25,7 @@ import type {
 
 import { parseQueryParams } from '../utils/query-parser.js';
 import { findKnowledgeDb } from '../../../lib/utils/find-knowledge-db.js';
+import { SqliteStorage } from '../../../lib/context/sqlite-storage.js';
 
 /**
  * Query sessions from SQLite database
@@ -95,6 +96,59 @@ export async function querySessionsSqlite(params: {
             message: `Failed to query sessions from SQLite: ${message}`,
             count: 0,
             sessions: [],
+          }, null, 2),
+        },
+      ],
+    };
+  }
+}
+
+/**
+ * Get a single session with related entities in one call
+ * Returns session + linked plan + reviews + events
+ */
+export async function getSessionSqlite(params: {
+  sessionId: string;
+  dbPath?: string;
+}) {
+  try {
+    const storage = new SqliteStorage();
+    await storage.init(params.dbPath || findKnowledgeDb());
+
+    const result = await storage.getSessionWithRelations(params.sessionId);
+    storage.close();
+
+    if (!result) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: true,
+              message: `Session not found: ${params.sessionId}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: true,
+            message: `Failed to load session with relations: ${message}`,
           }, null, 2),
         },
       ],

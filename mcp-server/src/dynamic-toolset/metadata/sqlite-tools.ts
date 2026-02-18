@@ -2,6 +2,7 @@ import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
 import {
   querySessionsSqlite,
+  getSessionSqlite,
   queryPlansSqlite,
   queryLearnedPatternsSqlite,
   searchContextSqlite,
@@ -37,6 +38,18 @@ export const SQLITE_TOOLS: ToolMetadata[] = [
       includeContent: z.boolean().optional().default(false),
     }),
     handler: querySessionsSqlite,
+  },
+  {
+    name: 'get_session',
+    description:
+      'Get a single session with related entities (plan, reviews, events) in one response.',
+    category: 'sqlite',
+    tags: ['sessions', 'database', 'related', 'single-record'],
+    inputSchema: z.object({
+      sessionId: z.string().min(1),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+    }),
+    handler: getSessionSqlite,
   },
   {
     name: 'query_plans_sqlite',

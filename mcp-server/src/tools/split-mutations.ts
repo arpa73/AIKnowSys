@@ -1,8 +1,10 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { z } from 'zod';
+import path from 'path';
 import { getProjectRoot } from './utils/project-root.js';
 import { handleZodError, handleCLIError, MCPErrorResponse } from './utils/error-helpers.js';
+import { checkConstraints } from '../../../lib/core/constraints.js';
 
 const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
@@ -252,6 +254,29 @@ const setPlanStatusSchema = z.object({
 export async function setPlanStatus(params: unknown) {
   try {
     const validated = setPlanStatusSchema.parse(params);
+
+    if (validated.status === 'COMPLETE' || validated.status === 'CANCELLED') {
+      const action = validated.status === 'COMPLETE' ? 'COMPLETE_PLAN' : 'CANCEL_PLAN';
+      const constraintResult = await checkConstraints(action, {
+        userId: 'mcp-server',
+        projectId: path.basename(PROJECT_ROOT),
+        targetId: validated.planId,
+      });
+
+      if (!constraintResult.allowed) {
+        const blockers = constraintResult.blockers?.length
+          ? `\n\nBlockers:\n- ${constraintResult.blockers.join('\n- ')}`
+          : '';
+
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Plan completion blocked by constraints.${blockers}`
+          }],
+          isError: true
+        };
+      }
+    }
     
     const args = [
       'aiknowsys',

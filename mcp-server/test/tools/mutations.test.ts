@@ -13,10 +13,57 @@ vi.mock('util', () => ({
   promisify: vi.fn(() => mockExecFileAsync),
 }));
 
+const mockInsertReview = vi.fn();
+const mockInsertLink = vi.fn();
+const mockStorageClose = vi.fn();
+const mockStorageInit = vi.fn();
+const mockCheckConstraints = vi.fn();
+
+vi.mock('../../../lib/context/sqlite-storage.js', () => {
+  class MockSqliteStorage {
+    async init(...args: unknown[]) {
+      return mockStorageInit(...args);
+    }
+
+    async insertReview(...args: unknown[]) {
+      return mockInsertReview(...args);
+    }
+
+    async insertLink(...args: unknown[]) {
+      return mockInsertLink(...args);
+    }
+
+    close(...args: unknown[]) {
+      return mockStorageClose(...args);
+    }
+  }
+
+  return { SqliteStorage: MockSqliteStorage };
+});
+
+vi.mock('../../../lib/utils/find-knowledge-db.js', () => ({
+  findKnowledgeDb: vi.fn(() => '.aiknowsys/knowledge.db'),
+}));
+
+vi.mock('../../../lib/core/constraints.js', () => ({
+  async checkConstraints(...args: unknown[]) {
+    return mockCheckConstraints(...args);
+  },
+}));
+
 describe('Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExecFileAsync.mockReset();
+    mockInsertReview.mockReset();
+    mockInsertLink.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockReset();
+    mockCheckConstraints.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockInsertReview.mockResolvedValue(undefined);
+    mockInsertLink.mockResolvedValue(undefined);
+    mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
   });
 
   describe('create_session', () => {
@@ -246,6 +293,54 @@ describe('Mutation Tools', () => {
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter');
       expect(result.content[0].text).toContain('status');
+    });
+  });
+
+  describe('create_review', () => {
+    it('should create a review entry', async () => {
+      const { createReview } = await import('../../src/tools/mutations.js');
+      const result = await createReview({
+        targetId: 'PLAN_test',
+        content: 'Looks good',
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Review created');
+      expect(mockInsertReview).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('create_link', () => {
+    it('should create a link entry', async () => {
+      const { createLink } = await import('../../src/tools/mutations.js');
+      const result = await createLink({
+        sourceId: 'PLAN_a',
+        targetId: 'PLAN_b',
+        type: 'depends_on',
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Link created');
+      expect(mockInsertLink).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('check_constraints', () => {
+    it('should return constraint check result', async () => {
+      mockCheckConstraints.mockResolvedValue({
+        allowed: false,
+        blockers: ['Missing validation event'],
+      });
+
+      const { checkConstraintsTool } = await import('../../src/tools/mutations.js');
+      const result = await checkConstraintsTool({
+        action: 'COMPLETE_PLAN',
+        targetId: 'PLAN_test',
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('"allowed": false');
+      expect(mockCheckConstraints).toHaveBeenCalledTimes(1);
     });
   });
 });

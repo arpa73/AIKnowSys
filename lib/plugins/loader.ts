@@ -22,16 +22,16 @@ const __dirname: string = dirname(__filename);
 export interface PluginCommand {
   name: string;
   description?: string;
-  action?: (...args: any[]) => Promise<void> | void;
+	action?: (...args: unknown[]) => Promise<void> | void;
   options?: Array<{
     flags: string;
     description: string;
-    defaultValue?: any;
+		defaultValue?: unknown;
   }>;
   arguments?: Array<{
     name: string;
     description: string;
-    defaultValue?: any;
+		defaultValue?: unknown;
   }>;
 }
 
@@ -47,6 +47,16 @@ interface PackageJson {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function isCommanderDefaultValue(value: unknown): value is string | boolean | string[] {
+	return typeof value === 'string'
+		|| typeof value === 'boolean'
+		|| (Array.isArray(value) && value.every((item) => typeof item === 'string'));
 }
 
 export interface PluginInfo {
@@ -175,16 +185,16 @@ async function loadPlugin(pluginName: string, program: Command): Promise<Plugin 
  * @param pluginName - Plugin package name (for error messages)
  * @throws Error if plugin structure is invalid
  */
-function validatePluginStructure(plugin: any, pluginName: string): asserts plugin is Plugin {
-	if (!plugin || typeof plugin !== 'object') {
+function validatePluginStructure(plugin: unknown, pluginName: string): asserts plugin is Plugin {
+	if (!isRecord(plugin)) {
 		throw new Error('Plugin must export default object');
 	}
 
-	if (!plugin.name || typeof plugin.name !== 'string') {
+	if (typeof plugin.name !== 'string') {
 		throw new Error('Plugin must have "name" property (string)');
 	}
 
-	if (!plugin.commands || !Array.isArray(plugin.commands)) {
+	if (!Array.isArray(plugin.commands)) {
 		throw new Error('Plugin must have "commands" property (array)');
 	}
 
@@ -217,20 +227,28 @@ function registerPluginCommand(program: Command, cmd: PluginCommand, _pluginName
 	// Add options
 	if (cmd.options && Array.isArray(cmd.options)) {
 		for (const opt of cmd.options) {
-			command.option(opt.flags, opt.description, opt.defaultValue);
+			if (opt.defaultValue !== undefined && isCommanderDefaultValue(opt.defaultValue)) {
+				command.option(opt.flags, opt.description, opt.defaultValue);
+			} else {
+				command.option(opt.flags, opt.description);
+			}
 		}
 	}
 
 	// Add arguments
 	if (cmd.arguments && Array.isArray(cmd.arguments)) {
 		for (const arg of cmd.arguments) {
-			command.argument(arg.name, arg.description, arg.defaultValue);
+			if (arg.defaultValue !== undefined && typeof arg.defaultValue === 'string') {
+				command.argument(arg.name, arg.description, arg.defaultValue);
+			} else {
+				command.argument(arg.name, arg.description);
+			}
 		}
 	}
 
 	// Set action handler
 	if (typeof cmd.action === 'function') {
-		command.action(async (...args: any[]) => {
+		command.action(async (...args: unknown[]) => {
 			try {
 				await cmd.action?.(...args);
 			} catch (error) {

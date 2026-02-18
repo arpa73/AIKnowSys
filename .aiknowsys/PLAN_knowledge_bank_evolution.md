@@ -256,6 +256,99 @@ Export multiple sessions as markdown with filtering
 - ✅ Total: 71+ tests passing across all phases
 
 **Next:** Ready for v0.11.0 release (all phases validated, documented, and committed)
+
+**2026-02-17:** ## Planning Session: Markdown-less Architecture (19:20) 🎯
+**Status:** PLANNING
+**Goal:** Design plan to eliminate Markdown files as source of truth, moving to DB-first workflow.
+
+**User Request:** "Get totally rid off the markdown files... reviews in database... links between sessions/plans/reviews... project CRUD tooling"
+
+**Next:** Analyze gaps in current DB schema and MCP tools.
+
+**2026-02-17:** ## Analysis: Schema Gaps & Core Logic (19:25) 🔍
+**Findings:**
+- **Schema:** Missing `reviews`, `links`, and `user_state` tables.
+- **Core Logic:** `mutations.ts` relies on `lib/core/*.js` which likely writes to files. This needs to be inverted (DB-first, File-export).
+- **Tooling:** Need new tools for Review/Link management and Project/User state.
+
+**Next:** Draft detailed architecture migration plan.
+
+**2026-02-17:** ## Planning Session: Markdown-less Architecture (19:30) ✅
+**Status:** COMPLETE
+**Plan:** .aiknowsys/CURRENT_PLAN.md
+**Next:** Ready for implementation.
+
+**Summary:**
+- Created detailed plan to eliminate Markdown files as source of truth.
+- Designed missing schemas: Reviews, Links, User State.
+- Outlined migration of Core Logic to DB-first.
+- Defined new MCP tools for full workflow coverage.
+
+**2026-02-17:** ## Planning Complete: Markdown-less Workflow (19:30) ✅
+**Status:** COMPLETE
+**Plan:** .aiknowsys/CURRENT_PLAN.md
+**Next:** Ready for implementation (Phase 1: Database Foundation).
+
+**Summary:**
+- Created detailed plan to replace file-based workflow with DB-first workflow.
+- Designed schemas for Reviews, Links, and User State.
+- Defined migration steps for Core Logic and MCP Tools.
+- Added Export command for on-demand human review.
+
+**2026-02-17:** ## Planning Session: Markdown-less Architecture (19:35) ✅
+**Status:** COMPLETE
+**Plan:** .aiknowsys/CURRENT_PLAN.md
+**Next:** Send to Developer for implementation.
+
+**Summary:**
+- Created detailed plan to replace file-based workflow with DB-first workflow.
+- Designed schemas for Reviews, Links, and User State.
+- Defined migration steps for Core Logic and MCP Tools.
+- Added Export command for on-demand human review.
+
+**2026-02-17:** ## Planning Session: Markdown-less Architecture (19:40) ✅
+**Status:** COMPLETE
+**Plan:** .aiknowsys/PLAN_markdown_less_architecture.md
+**Next:** Handoff to Developer for implementation.
+
+**Summary:**
+- Created comprehensive plan to migrate to Database-First workflow.
+- Eliminated need for markdown files as source of truth.
+- Designed schemas for Reviews, Links, and User State.
+- Defined migration path for Core Logic and MCP Tools.
+
+**2026-02-17:** ## Analysis: AI Workflow Flaws & Gaps (20:00) 🔍
+**Goal:** Identify architectural constraints to enforce "Superb AI UX" and prevent trial-and-error.
+
+**Identified Gaps:**
+1.  **Ambiguous Context Context:** AI often searches randomly. *Constraint:* Enforce `context_scope` in user state (e.g., "focus: auth") to auto-filter tool results.
+2.  **Unstructured Session Data:** Markdown blogs are hard to query. *Constraint:* Move to "Event Sourcing" for session content (Decision, Error, Success events).
+3.  **Missing "Definition of Done":** AI claims task complete without standard validation. *Constraint:* `complete_task` tool requires passing validation check IDs.
+4.  **Loose Tooling:** "Read file" is too broad. *Constraint:* Specific data accessors (`get_config`, `get_tests_for_file`) to reduce hallucination.
+
+**Action:** Updating plan to include "Strict Constraints" phase.
+
+**2026-02-17:** ## Planning Refinement: Superb AI UX (20:05) ✅
+**Status:** COMPLETE
+**Plan:** .aiknowsys/PLAN_markdown_less_architecture.md
+**Next:** Phase 1 (Database Foundation) - Implement new schema tables.
+
+**Constraints Added:**
+- **Strict Context Constraints:** `context_scope` in user_state automatically filters tool output.
+- **Event Sourcing:** `knowledge_events` table replaces unstructured text logs.
+- **Validation Gates:** Cannot set status=COMPLETE if validation events missing.
+
+**2026-02-17:** ## Linked Plan Found: AI-Native Onboarding (20:10) 🔗
+**Found:** `.aiknowsys/PLAN_ai_native_onboarding.md`
+**Status:** PLANNED
+**Relevance:** High. Removing Markdown files (Architecture Plan) directly enables the "Zero Scanning/Conversational Setup" goal of the Onboarding Plan.
+
+**Gaps Identified for "Superb UX" (as requested):**
+1.  **Strict Context Scope:** AI must respect `focus: "auth"` to stop hallucinating irrelevant files.
+2.  **Event Sourcing:** Text logs are ambiguous. We need structured events (`TEST_PASSED`, `DECISION_MADE`) to verifying work programmatically.
+3.  **Constraint Engine:** The system must BLOCK invalid actions (e.g. "Can't complete plan with pending review") to prevent trial-and-error.
+
+**Action:** Integrating these constraints into `PLAN_markdown_less_architecture.md`.
 ## Executive Summary
 
 **Vision:** Single `~/.aiknowsys/knowledge.db` storing knowledge across ALL projects, with AI-native event-sourced storage replacing markdown blobs.

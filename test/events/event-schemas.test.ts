@@ -16,6 +16,14 @@ import { EventType } from '../../lib/events/types.js';
 import { EventFactory } from '../../lib/events/event-factory.js';
 import { validateEventData } from '../../lib/events/event-validators.js';
 
+type TaskCompletedInput = Parameters<typeof EventFactory.taskCompleted>[0];
+type DecisionMadeInput = Parameters<typeof EventFactory.decisionMade>[0];
+type PatternDiscoveredInput = Parameters<typeof EventFactory.patternDiscovered>[0];
+type ValidationPassedInput = Parameters<typeof EventFactory.validationPassed>[0];
+type BugEncounteredInput = Parameters<typeof EventFactory.bugEncountered>[0];
+type BugResolvedInput = Parameters<typeof EventFactory.bugResolved>[0];
+type LearningCapturedInput = Parameters<typeof EventFactory.learningCaptured>[0];
+
 describe('Event Factory - Task Completed Events', () => {
   it('should create valid task_completed event with all fields', () => {
     const event = EventFactory.taskCompleted({
@@ -34,9 +42,9 @@ describe('Event Factory - Task Completed Events', () => {
     expect(event.sessionId).toBe('session-123');
     expect(event.eventId).toMatch(/^evt-[a-f0-9-]{36}$/);
     expect(event.timestamp).toBeDefined();
-    expect(event.data.description).toBe('Implement user authentication');
-    expect(event.data.outcome).toBe('success');
-    expect(event.data.filesChanged).toHaveLength(2);
+    expect((event.data as TaskCompletedInput).description).toBe('Implement user authentication');
+    expect((event.data as TaskCompletedInput).outcome).toBe('success');
+    expect((event.data as BugResolvedInput).filesChanged).toHaveLength(2);
   });
 
   it('should create minimal task_completed event', () => {
@@ -46,9 +54,9 @@ describe('Event Factory - Task Completed Events', () => {
       outcome: 'success'
     });
 
-    expect(event.data.description).toBe('Fix bug');
-    expect(event.data.filesChanged).toBeUndefined();
-    expect(event.data.testsPassing).toBeUndefined();
+    expect((event.data as TaskCompletedInput).description).toBe('Fix bug');
+    expect((event.data as TaskCompletedInput).filesChanged).toBeUndefined();
+    expect((event.data as TaskCompletedInput).testsPassing).toBeUndefined();
   });
 
   it('should reject invalid outcome values', () => {
@@ -56,7 +64,7 @@ describe('Event Factory - Task Completed Events', () => {
       EventFactory.taskCompleted({
         projectId: 'test-project',
         description: 'Task',
-        outcome: 'invalid' as any
+        outcome: 'invalid' as unknown as TaskCompletedInput['outcome']
       });
     }).toThrow(/Invalid outcome/);
   });
@@ -66,7 +74,7 @@ describe('Event Factory - Task Completed Events', () => {
       EventFactory.taskCompleted({
         projectId: 'test-project',
         outcome: 'success'
-      } as any);
+      } as unknown as TaskCompletedInput);
     }).toThrow(/description is required/);
   });
 });
@@ -85,9 +93,9 @@ describe('Event Factory - Decision Made Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.DECISION_MADE);
-    expect(event.data.decision).toBe('Use JWT for authentication');
-    expect(event.data.tradeOffs?.pros).toHaveLength(3);
-    expect(event.data.tradeOffs?.cons).toHaveLength(2);
+    expect((event.data as DecisionMadeInput).decision).toBe('Use JWT for authentication');
+    expect((event.data as DecisionMadeInput).tradeOffs?.pros).toHaveLength(3);
+    expect((event.data as DecisionMadeInput).tradeOffs?.cons).toHaveLength(2);
   });
 
   it('should create minimal decision_made event', () => {
@@ -97,9 +105,9 @@ describe('Event Factory - Decision Made Events', () => {
       rationale: 'Type safety reduces bugs'
     });
 
-    expect(event.data.decision).toBe('Use TypeScript');
-    expect(event.data.alternativesConsidered).toBeUndefined();
-    expect(event.data.tradeOffs).toBeUndefined();
+    expect((event.data as DecisionMadeInput).decision).toBe('Use TypeScript');
+    expect((event.data as DecisionMadeInput).alternativesConsidered).toBeUndefined();
+    expect((event.data as DecisionMadeInput).tradeOffs).toBeUndefined();
   });
 
   it('should reject empty decision', () => {
@@ -127,8 +135,8 @@ describe('Event Factory - Pattern Discovered Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.PATTERN_DISCOVERED);
-    expect(event.data.category).toBe('best_practice');
-    expect(event.data.reusable).toBe(true);
+    expect((event.data as PatternDiscoveredInput).category).toBe('best_practice');
+    expect((event.data as PatternDiscoveredInput).reusable).toBe(true);
   });
 
   it('should validate pattern category', () => {
@@ -136,7 +144,7 @@ describe('Event Factory - Pattern Discovered Events', () => {
       EventFactory.patternDiscovered({
         projectId: 'test-project',
         pattern: 'Test pattern',
-        category: 'invalid_category' as any,
+        category: 'invalid_category' as unknown as PatternDiscoveredInput['category'],
         solution: 'Test solution',
         reusable: true
       });
@@ -150,7 +158,7 @@ describe('Event Factory - Pattern Discovered Events', () => {
         pattern: 'Test pattern',
         category: 'best_practice',
         reusable: true
-      } as any);
+      } as unknown as PatternDiscoveredInput);
     }).toThrow(/solution is required/);
   });
 });
@@ -169,8 +177,8 @@ describe('Event Factory - Validation Passed Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.VALIDATION_PASSED);
-    expect(event.data.command).toBe('npm test');
-    expect(event.data.coverage?.lines).toBe(95);
+    expect((event.data as ValidationPassedInput).command).toBe('npm test');
+    expect((event.data as ValidationPassedInput).coverage?.lines).toBe(95);
   });
 
   it('should create minimal validation_passed event', () => {
@@ -179,8 +187,8 @@ describe('Event Factory - Validation Passed Events', () => {
       result: 'Build successful'
     });
 
-    expect(event.data.result).toBe('Build successful');
-    expect(event.data.command).toBeUndefined();
+    expect((event.data as ValidationPassedInput).result).toBe('Build successful');
+    expect((event.data as ValidationPassedInput).command).toBeUndefined();
   });
 });
 
@@ -195,8 +203,8 @@ describe('Event Factory - Bug Encountered Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.BUG_ENCOUNTERED);
-    expect(event.data.severity).toBe('high');
-    expect(event.data.affectedFiles).toHaveLength(1);
+    expect((event.data as BugEncounteredInput).severity).toBe('high');
+    expect((event.data as BugEncounteredInput).affectedFiles).toHaveLength(1);
   });
 
   it('should validate severity levels', () => {
@@ -204,7 +212,7 @@ describe('Event Factory - Bug Encountered Events', () => {
       EventFactory.bugEncountered({
         projectId: 'test-project',
         description: 'Bug',
-        severity: 'super-critical' as any
+        severity: 'super-critical' as unknown as BugEncounteredInput['severity']
       });
     }).toThrow(/Invalid severity/);
   });
@@ -214,7 +222,7 @@ describe('Event Factory - Bug Encountered Events', () => {
       EventFactory.bugEncountered({
         projectId: 'test-project',
         severity: 'low'
-      } as any);
+      } as unknown as BugEncounteredInput);
     }).toThrow(/description is required/);
   });
 });
@@ -231,8 +239,8 @@ describe('Event Factory - Bug Resolved Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.BUG_RESOLVED);
-    expect(event.data.rootCause).toBe('Missing await in promise chain');
-    expect(event.data.filesChanged).toHaveLength(2);
+    expect((event.data as BugResolvedInput).rootCause).toBe('Missing await in promise chain');
+    expect((event.data as BugResolvedInput).filesChanged).toHaveLength(2);
   });
 
   it('should require all mandatory fields', () => {
@@ -241,7 +249,7 @@ describe('Event Factory - Bug Resolved Events', () => {
         projectId: 'test-project',
         bugDescription: 'Bug',
         rootCause: 'Cause'
-      } as any);
+      } as unknown as BugResolvedInput);
     }).toThrow(/fixDescription is required/);
   });
 });
@@ -257,8 +265,8 @@ describe('Event Factory - Learning Captured Events', () => {
     });
 
     expect(event.eventType).toBe(EventType.LEARNING_CAPTURED);
-    expect(event.data.applicability).toBe('universal');
-    expect(event.data.confidence).toBe('high');
+    expect((event.data as LearningCapturedInput).applicability).toBe('universal');
+    expect((event.data as LearningCapturedInput).confidence).toBe('high');
   });
 
   it('should validate applicability values', () => {
@@ -266,7 +274,7 @@ describe('Event Factory - Learning Captured Events', () => {
       EventFactory.learningCaptured({
         projectId: 'test-project',
         learning: 'Test learning',
-        applicability: 'sometimes' as any,
+        applicability: 'sometimes' as unknown as LearningCapturedInput['applicability'],
         confidence: 'high'
       });
     }).toThrow(/Invalid applicability/);
@@ -278,7 +286,7 @@ describe('Event Factory - Learning Captured Events', () => {
         projectId: 'test-project',
         learning: 'Test learning',
         applicability: 'universal',
-        confidence: 'maybe' as any
+        confidence: 'maybe' as unknown as LearningCapturedInput['confidence']
       });
     }).toThrow(/Invalid confidence/);
   });

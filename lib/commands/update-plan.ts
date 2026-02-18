@@ -233,7 +233,10 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
 
   // Update active pointer if status changed
   if (setStatus) {
-    await updateActivePointer(resolvedTargetDir, planId, setStatus, author, frontmatter.title || planId);
+    const planTitle = typeof frontmatter.title === 'string'
+      ? frontmatter.title
+      : planId;
+    await updateActivePointer(resolvedTargetDir, planId, setStatus, author, planTitle);
   }
 
   // Rebuild context index

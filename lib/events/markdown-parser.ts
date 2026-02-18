@@ -5,13 +5,16 @@
 
 import type { KnowledgeEvent, EventType, SessionStartedData, TaskCompletedData, ValidationPassedData, LearningCapturedData, FileChangedData, GoalDefinedData } from './types.js';
 
+type FrontmatterValue = string | string[];
+type FrontmatterRecord = Record<string, FrontmatterValue>;
+
 export interface ParsedMarkdown {
   title?: string;
   goal?: string;
   changes: string[];
   validation: string[];
   learning: string[];
-  frontmatter?: Record<string, any>;
+  frontmatter?: FrontmatterRecord;
 }
 
 export class MarkdownParser {
@@ -212,8 +215,8 @@ export class MarkdownParser {
   /**
    * Parse YAML frontmatter
    */
-  private parseFrontmatter(yaml: string): Record<string, any> {
-    const result: Record<string, any> = {};
+  private parseFrontmatter(yaml: string): FrontmatterRecord {
+    const result: FrontmatterRecord = {};
     
     const lines = yaml.split('\n');
     for (const line of lines) {
@@ -226,7 +229,7 @@ export class MarkdownParser {
           result[key] = value
             .slice(1, -1)
             .split(',')
-            .map(v => v.trim().replace(/^["']|["']$/g, ''));
+            .map((v: string) => v.trim().replace(/^["']|["']$/g, ''));
         }
         // Handle quoted strings
         else if ((value.startsWith('"') && value.endsWith('"')) || 

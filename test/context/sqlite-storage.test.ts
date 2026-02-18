@@ -4,9 +4,102 @@ import path from 'path';
 import { SqliteStorage } from '../../lib/context/sqlite-storage.js';
 import type { PlanMetadata, SessionMetadata } from '../../lib/context/types.js';
 
+type TestStorageInternals = SqliteStorage & {
+  insertProject(project: {
+    id: string;
+    name: string;
+    path?: string;
+    tech_stack?: unknown;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void>;
+  insertPlan(plan: {
+    id: string;
+    project_id: string;
+    title: string;
+    status: string;
+    author: string;
+    created: string;
+    updated: string;
+    content: string;
+    topics?: string[];
+    description?: string;
+    priority?: string;
+    type?: string;
+  }): Promise<void>;
+  insertSession(session: {
+    id: string;
+    project_id: string;
+    date: string;
+    topic: string;
+    status: string;
+    created: string;
+    updated: string;
+    content: string;
+    topics?: string[];
+    plan?: string;
+    duration?: string;
+    phases?: string[];
+  }): Promise<void>;
+  insertReview(review: {
+    id: string;
+    project_id?: string;
+    target_id: string;
+    author: string;
+    status: 'PENDING' | 'ACTIVE' | 'ADDRESSED';
+    content: string;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void>;
+  queryReviews(filters?: {
+    projectId?: string;
+    targetId?: string;
+    status?: 'PENDING' | 'ACTIVE' | 'ADDRESSED';
+    author?: string;
+  }): Promise<{
+    count: number;
+    items: Array<{ id: string; status: 'PENDING' | 'ACTIVE' | 'ADDRESSED' }>;
+    reviews: Array<{ id: string; status: 'PENDING' | 'ACTIVE' | 'ADDRESSED' }>;
+  }>;
+  updateReviewStatus(id: string, status: 'PENDING' | 'ACTIVE' | 'ADDRESSED', updatedAt: string): Promise<void>;
+  insertLink(link: {
+    source_id: string;
+    target_id: string;
+    type: string;
+    metadata?: Record<string, unknown>;
+    created_at: string;
+  }): Promise<void>;
+  queryLinks(filters?: {
+    sourceId?: string;
+    targetId?: string;
+    type?: string;
+  }): Promise<{
+    count: number;
+    items: Array<{ sourceId: string; targetId: string; type: string }>;
+    links: Array<{ sourceId: string; targetId: string; type: string; metadata: Record<string, unknown> | null }>;
+  }>;
+  upsertUserState(state: {
+    user_id: string;
+    project_id?: string | null;
+    active_plan_id?: string | null;
+    last_session_id?: string | null;
+    focus_context?: Record<string, unknown> | null;
+    updated_at: string;
+  }): Promise<void>;
+  getUserState(userId: string): Promise<{
+    userId: string;
+    projectId: string | null;
+    activePlanId: string | null;
+    lastSessionId: string | null;
+    focusContext: Record<string, unknown> | null;
+    updatedAt: string;
+  } | undefined>;
+};
+
 describe('SqliteStorage', () => {
   let tmpDir: string;
   let storage: SqliteStorage;
+  let storageInternal: TestStorageInternals;
   let testProjectId: string;
 
   beforeEach(async () => {
@@ -17,6 +110,7 @@ describe('SqliteStorage', () => {
 
     testProjectId = 'test-project-' + Date.now();
     storage = new SqliteStorage();
+    storageInternal = storage as unknown as TestStorageInternals;
   });
 
   afterEach(async () => {
@@ -76,7 +170,7 @@ describe('SqliteStorage', () => {
       await storage.init(tmpDir);
       
       // Create test project first (required for foreign key)
-      await (storage as any).insertProject({
+      await storageInternal.insertProject({
         id: testProjectId,
         name: 'Test Project',
         created_at: '2026-02-01T00:00:00Z',
@@ -122,7 +216,7 @@ describe('SqliteStorage', () => {
 
       // Insert via internal method (will be implemented)
       for (const plan of testPlans) {
-        await (storage as any).insertPlan(plan);
+        await storageInternal.insertPlan(plan);
       }
     });
 
@@ -178,7 +272,7 @@ describe('SqliteStorage', () => {
       await storage.init(tmpDir);
       
       // Create test project first (required for foreign key)
-      await (storage as any).insertProject({
+      await storageInternal.insertProject({
         id: testProjectId,
         name: 'Test Project',
         created_at: '2026-02-01T00:00:00Z',
@@ -186,7 +280,7 @@ describe('SqliteStorage', () => {
       });
       
       // Create test plan (required for foreign key on sessions.plan_id)
-      await (storage as any).insertPlan({
+      await storageInternal.insertPlan({
         id: 'PLAN_phase2',
         project_id: testProjectId,
         title: 'Phase 2 Plan',
@@ -246,7 +340,7 @@ describe('SqliteStorage', () => {
       ];
 
       for (const session of testSessions) {
-        await (storage as any).insertSession(session);
+        await storageInternal.insertSession(session);
       }
     });
 
@@ -304,12 +398,214 @@ describe('SqliteStorage', () => {
     });
   });
 
+  describe('metadata queries', () => {
+    beforeEach(async () => {
+      await storage.init(tmpDir);
+
+      await storageInternal.insertProject({
+        id: testProjectId,
+        name: 'Test Project',
+        created_at: '2026-02-01T00:00:00Z',
+        updated_at: '2026-02-01T00:00:00Z'
+      });
+
+      await storageInternal.insertPlan({
+        id: 'PLAN_meta',
+        project_id: testProjectId,
+        title: 'Metadata Plan',
+        status: 'ACTIVE',
+        author: 'meta-author',
+        description: 'metadata test plan',
+        content: '# Metadata Plan\n\nPlan content',
+        topics: ['meta', 'testing'],
+        created: '2026-02-01T00:00:00Z',
+        updated: '2026-02-02T00:00:00Z'
+      });
+
+      await storageInternal.insertPlan({
+        id: 'learned_pattern_meta',
+        project_id: testProjectId,
+        title: 'Learned Pattern',
+        status: 'COMPLETE',
+        author: 'meta-author',
+        description: 'learned pattern test',
+        content: '# Learned Pattern\n\nPattern content',
+        topics: ['sqlite', 'types'],
+        type: 'project_specific',
+        created: '2026-02-03T00:00:00Z',
+        updated: '2026-02-04T00:00:00Z'
+      });
+
+      await storageInternal.insertSession({
+        id: 'session-meta',
+        project_id: testProjectId,
+        date: '2026-02-03',
+        topic: 'Metadata Session',
+        status: 'complete',
+        plan: 'PLAN_meta',
+        created: '2026-02-03T00:00:00Z',
+        updated: '2026-02-04T00:00:00Z',
+        content: '# Metadata Session\n\nSession content',
+        topics: ['meta', 'session']
+      });
+    });
+
+    it('should return session metadata without content and with typed fields', async () => {
+      const result = await storage.querySessionsMetadata({ status: 'complete' });
+
+      expect(result.count).toBe(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0].id).toBe('session-meta');
+      expect(result.sessions[0].projectId).toBe(testProjectId);
+      expect(result.sessions[0].planId).toBe('PLAN_meta');
+      expect(result.sessions[0].createdAt).toBe('2026-02-03T00:00:00Z');
+      expect((result.sessions[0] as Record<string, unknown>).content).toBeUndefined();
+    });
+
+    it('should return plan metadata without content and with typed fields', async () => {
+      const result = await storage.queryPlansMetadata({ author: 'meta-author' });
+
+      expect(result.count).toBe(2);
+      expect(result.items).toHaveLength(2);
+      expect(result.plans[0].projectId).toBe(testProjectId);
+      expect(result.plans[0].createdAt).toBeDefined();
+      expect((result.plans[0] as Record<string, unknown>).content).toBeUndefined();
+    });
+
+    it('should return learned pattern metadata with typed fields', async () => {
+      const result = await storage.queryLearnedPatternsMetadata({ category: 'project_specific' });
+
+      expect(result.count).toBe(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.patterns[0].id).toBe('learned_pattern_meta');
+      expect(result.patterns[0].type).toBe('project_specific');
+      expect(Array.isArray(result.patterns[0].topics)).toBe(true);
+      expect(result.patterns[0].createdAt).toBe('2026-02-03T00:00:00Z');
+    });
+  });
+
+  describe('phase 1 schema entities', () => {
+    beforeEach(async () => {
+      await storage.init(tmpDir);
+
+      await storageInternal.insertProject({
+        id: testProjectId,
+        name: 'Test Project',
+        created_at: '2026-02-01T00:00:00Z',
+        updated_at: '2026-02-01T00:00:00Z'
+      });
+
+      await storageInternal.insertPlan({
+        id: 'PLAN_phase1_schema',
+        project_id: testProjectId,
+        title: 'Phase 1 Schema Plan',
+        status: 'ACTIVE',
+        author: 'architect',
+        description: 'schema phase 1 work',
+        content: '# Phase 1',
+        topics: ['schema'],
+        created: '2026-02-01T00:00:00Z',
+        updated: '2026-02-01T00:00:00Z'
+      });
+
+      await storageInternal.insertSession({
+        id: 'session-phase1-schema',
+        project_id: testProjectId,
+        date: '2026-02-01',
+        topic: 'Schema work',
+        status: 'active',
+        plan: 'PLAN_phase1_schema',
+        created: '2026-02-01T00:00:00Z',
+        updated: '2026-02-01T00:00:00Z',
+        content: '# Session content',
+        topics: ['schema']
+      });
+    });
+
+    it('should insert, query, and update reviews', async () => {
+      await storageInternal.insertReview({
+        id: 'REVIEW_001',
+        project_id: testProjectId,
+        target_id: 'PLAN_phase1_schema',
+        author: 'architect',
+        status: 'PENDING',
+        content: 'Please add CRUD support for new schema tables.',
+        created_at: '2026-02-17T20:10:00Z',
+        updated_at: '2026-02-17T20:10:00Z'
+      });
+
+      const pending = await storageInternal.queryReviews({
+        projectId: testProjectId,
+        status: 'PENDING'
+      });
+
+      expect(pending.count).toBe(1);
+      expect(pending.reviews[0].id).toBe('REVIEW_001');
+
+      await storageInternal.updateReviewStatus('REVIEW_001', 'ADDRESSED', '2026-02-17T20:20:00Z');
+
+      const addressed = await storageInternal.queryReviews({ status: 'ADDRESSED' });
+      expect(addressed.count).toBe(1);
+      expect(addressed.reviews[0].status).toBe('ADDRESSED');
+    });
+
+    it('should insert and query links with metadata', async () => {
+      await storageInternal.insertLink({
+        source_id: 'PLAN_phase1_schema',
+        target_id: 'session-phase1-schema',
+        type: 'relates_to',
+        metadata: { createdBy: 'test', weight: 1 },
+        created_at: '2026-02-17T20:12:00Z'
+      });
+
+      const links = await storageInternal.queryLinks({
+        sourceId: 'PLAN_phase1_schema',
+        type: 'relates_to'
+      });
+
+      expect(links.count).toBe(1);
+      expect(links.links[0].targetId).toBe('session-phase1-schema');
+      expect(links.links[0].metadata).toEqual({ createdBy: 'test', weight: 1 });
+    });
+
+    it('should upsert and retrieve user state', async () => {
+      await storageInternal.upsertUserState({
+        user_id: 'arno-paffen',
+        project_id: testProjectId,
+        active_plan_id: 'PLAN_phase1_schema',
+        last_session_id: 'session-phase1-schema',
+        focus_context: { files: ['lib/context/*'], topic: 'schema' },
+        updated_at: '2026-02-17T20:15:00Z'
+      });
+
+      await storageInternal.upsertUserState({
+        user_id: 'arno-paffen',
+        project_id: testProjectId,
+        active_plan_id: 'PLAN_phase1_schema',
+        last_session_id: 'session-phase1-schema',
+        focus_context: { files: ['lib/context/sqlite-storage.ts'], topic: 'reviews' },
+        updated_at: '2026-02-17T20:18:00Z'
+      });
+
+      const userState = await storageInternal.getUserState('arno-paffen');
+      expect(userState).toBeDefined();
+      expect(userState?.projectId).toBe(testProjectId);
+      expect(userState?.activePlanId).toBe('PLAN_phase1_schema');
+      expect(userState?.focusContext).toEqual({
+        files: ['lib/context/sqlite-storage.ts'],
+        topic: 'reviews'
+      });
+      expect(userState?.updatedAt).toBe('2026-02-17T20:18:00Z');
+    });
+  });
+
   describe('search', () => {
     beforeEach(async () => {
       await storage.init(tmpDir);
       
       // Create test project first (required for foreign key)
-      await (storage as any).insertProject({
+      await storageInternal.insertProject({
         id: testProjectId,
         name: 'Test Project',
         created_at: '2026-02-01T00:00:00Z',
@@ -317,7 +613,7 @@ describe('SqliteStorage', () => {
       });
       
       // Insert test data with searchable content
-      await (storage as any).insertPlan({
+      await storageInternal.insertPlan({
         id: 'auth-plan',
         project_id: testProjectId,
         title: 'JWT Authentication',
@@ -329,7 +625,7 @@ describe('SqliteStorage', () => {
         topics: []
       });
 
-      await (storage as any).insertSession({
+      await storageInternal.insertSession({
         id: 'session-auth',
         project_id: testProjectId,
         date: '2026-02-01',

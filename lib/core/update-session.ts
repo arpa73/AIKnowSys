@@ -114,7 +114,7 @@ interface SessionFrontmatter {
   topics: string[];
   files?: string[];
   status: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; body: string } {
@@ -128,7 +128,8 @@ function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; b
   const body = match[2];
   
   // Simple YAML parsing for our specific structure
-  const frontmatter: any = {
+  const frontmatter: SessionFrontmatter = {
+    date: '',
     topics: [],
     files: [],
     status: 'in-progress'
@@ -148,9 +149,16 @@ function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; b
     } else if (line.startsWith('files:')) {
       currentKey = 'files';
       frontmatter.files = [];
-    } else if (line.trim().startsWith('- ') && currentKey) {
+    } else if (line.trim().startsWith('- ') && (currentKey === 'topics' || currentKey === 'files')) {
       const value = line.trim().substring(2);
-      frontmatter[currentKey].push(value);
+      if (currentKey === 'topics') {
+        frontmatter.topics.push(value);
+      } else {
+        if (!frontmatter.files) {
+          frontmatter.files = [];
+        }
+        frontmatter.files.push(value);
+      }
     } else if (line.trim() === '' || line.trim().startsWith('#')) {
       // Skip empty lines and comments
       continue;

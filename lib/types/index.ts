@@ -227,6 +227,24 @@ export interface ExportSessionResult {
   verbose?: boolean;
 }
 
+export interface ExportPlanOptions {
+  planId: string;
+  dbPath: string;
+  output?: string;
+  verbose?: boolean;
+}
+
+export interface ExportPlanResult {
+  success: boolean;
+  markdown?: string;
+  planId?: string;
+  sessionCount?: number;
+  reviewCount?: number;
+  outputPath?: string;
+  error?: string;
+  verbose?: boolean;
+}
+
 export interface ExportSessionsOptions {
   dbPath: string;
   outputDir: string;

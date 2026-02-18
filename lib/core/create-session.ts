@@ -110,14 +110,18 @@ export async function createSessionCore(
 
   // Generate session content (hybrid storage or legacy)
   let content: string;
+  let linkedPlan: string | null = plan;
   
   if (sqliteStorage) {
-    // Phase 2.1: Hybrid storage - create events and generate markdown from events
+    // Hybrid storage mode: generate events, render markdown, then persist both
     const projectId = path.basename(resolvedTargetDir);
     const sessionId = path.basename(filename, '.md');
     const timestamp = new Date().toISOString();
+    linkedPlan = plan || (await sqliteStorage.getActivePlanId(projectId));
     
-    // Ensure project context exists (idempotent - ignore if already exists)
+    // Idempotent project creation: always attempt insert, then ignore only
+    // constraint/duplicate errors. Non-constraint failures (permissions,
+    // schema, etc.) are surfaced as database errors for visibility.
     try {
       await sqliteStorage.insertProject({
         id: projectId,
@@ -125,11 +129,14 @@ export async function createSessionCore(
         created_at: timestamp,
         updated_at: timestamp
       });
-    } catch (error: any) {
-      // If it's not a duplicate key error (expected for existing projects), re-throw with context
-      if (!error.message?.includes('UNIQUE constraint')) {
+    } catch (error: unknown) {
+      const sqliteError = error as { code?: string; message?: string };
+      const isConstraintError = sqliteError.code?.startsWith('SQLITE_CONSTRAINT')
+        || sqliteError.message?.includes('UNIQUE constraint');
+
+      if (!isConstraintError) {
         throw AIFriendlyErrorBuilder.databaseError(
-          `Failed to create project record for '${projectId}': ${error.message}`,
+          `Failed to create project record for '${projectId}': ${sqliteError.message || String(error)}`,
           'Check database permissions and ensure SQLite storage is initialized'
         );
       }
@@ -167,6 +174,7 @@ export async function createSessionCore(
       date,
       topic: title,
       status: 'active',
+      plan: linkedPlan !== null ? linkedPlan : undefined,
       content,
       created: timestamp,
       updated: timestamp
@@ -203,7 +211,7 @@ export async function createSessionCore(
     metadata: {
       date,
       topics,
-      plan,
+      plan: linkedPlan,
       title
     }
   };

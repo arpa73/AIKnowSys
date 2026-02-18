@@ -1091,6 +1091,16 @@ By default, AIKnowSys uses a global database at `~/.aiknowsys/knowledge.db` that
 - Queries default to current project only
 - Use `--all-projects` flag to search everywhere
 
+### Database Migrations
+
+After pulling schema updates, apply the latest schema to your local/global database:
+
+```bash
+npm run migrate:schema
+```
+
+This command rebuilds the project and runs `dist/scripts/update-schema.js`, which is idempotent (`CREATE TABLE IF NOT EXISTS`), so it is safe to re-run.
+
 **Custom database location** (optional):
 ```bash
 # Environment variable

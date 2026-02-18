@@ -6,6 +6,10 @@ import { execSync } from 'node:child_process';
 // Use PROJECT_ROOT to resolve templates (works from compiled dist/ and source)
 const projectRoot = process.env.PROJECT_ROOT || path.join(import.meta.dirname, '..');
 
+interface HookConversationEntry {
+  content: string;
+}
+
 /**
  * Test suite for VSCode Hooks Phase 2: Skill Detection
  * 
@@ -38,7 +42,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   it('should detect code-refactoring from "refactor" keyword', async () => {
     const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
     const tmpFile: string = path.join(projectRoot, 'test-input.json');
-    const input: {userMessage: string; conversation: any[]} = {
+    const input: {userMessage: string; conversation: HookConversationEntry[]} = {
       userMessage: 'Let\'s refactor this module to improve readability',
       conversation: []
     };
@@ -64,7 +68,7 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
   it('should detect multiple skills from complex prompt', async () => {
     const hookPath: string = path.join(projectRoot, 'templates', 'hooks', 'skill-detector.cjs');
     const tmpFile: string = path.join(projectRoot, 'test-input.json');
-    const input: {userMessage: string; conversation: any[]} = {
+    const input: {userMessage: string; conversation: HookConversationEntry[]} = {
       userMessage: 'I want to add a new command and write tests first using TDD',
       conversation: []
     };
@@ -102,9 +106,10 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       if (result.includes('dependency-updates')) {
         expect(result).toMatch(/Requires confirmation.*dependency-updates/s);
       }
-    } catch (err: any) {
-      if (err.stderr && err.stderr.includes('dependency-updates')) {
-        expect(err.stderr).toMatch(/Requires confirmation.*dependency-updates/s);
+    } catch (err: unknown) {
+      const stderr = getErrorStderr(err);
+      if (stderr.includes('dependency-updates')) {
+        expect(stderr).toMatch(/Requires confirmation.*dependency-updates/s);
       }
       // If hook doesn't output anything, that's also valid (no exact match)
     }
@@ -136,9 +141,10 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       if (result) {
         expect(result).toMatch(/code-refactoring/);
       }
-    } catch (err: any) {
-      if (err.stderr) {
-        expect(err.stderr).toMatch(/code-refactoring/);
+    } catch (err: unknown) {
+      const stderr = getErrorStderr(err);
+      if (stderr) {
+        expect(stderr).toMatch(/code-refactoring/);
       }
       // No error means hook exited cleanly with no output (also valid)
     }
@@ -159,9 +165,9 @@ describe('Skill Auto-Detection (userPromptSubmitted)', () => {
       
       // Should either have no output or show recommendations
       expect(true).toBeTruthy();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Hook should exit 0 even with no matches
-      expect(err.status).toBe(0);
+      expect(getErrorStatus(err)).toBe(0);
     }
   });
 });
@@ -184,9 +190,10 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       if (result) {
         expect(result).toMatch(/dependency-updates|package\.json/);
       }
-    } catch (err: any) {
-      if (err.stderr) {
-        expect(err.stderr).toMatch(/dependency-updates|package\.json/);
+    } catch (err: unknown) {
+      const stderr = getErrorStderr(err);
+      if (stderr) {
+        expect(stderr).toMatch(/dependency-updates|package\.json/);
       }
       // Hook exits with 0 even when warning, so no error expected
     }
@@ -211,9 +218,9 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       // Should NOT warn if skill was already loaded
       // Empty or minimal output is expected
       expect(true).toBeTruthy();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Hook should always exit 0
-      expect(err.status).toBe(0);
+      expect(getErrorStatus(err)).toBe(0);
     }
   });
   
@@ -239,8 +246,8 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
       
       // Hook might suggest TDD skill for test files
       expect(true).toBeTruthy();
-    } catch (err: any) {
-      expect(err.status).toBe(0);
+    } catch (err: unknown) {
+      expect(getErrorStatus(err)).toBe(0);
     }
   });
   
@@ -258,9 +265,9 @@ describe('Skill Prerequisite Check (preToolUse)', () => {
         stdio: ['pipe', 'pipe', 'pipe']
       });
       expect(true).toBeTruthy();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Exit code 0 is success
-      expect(err.status).toBe(0);
+      expect(getErrorStatus(err)).toBe(0);
     }
   });
 });
@@ -288,3 +295,22 @@ describe('Smart Recommendations', () => {
     expect(true).toBeTruthy();
   });
 });
+
+interface ExecSyncErrorLike {
+  stderr?: string | Buffer;
+  status?: number;
+}
+
+function getErrorStderr(error: unknown): string {
+  const execError = error as ExecSyncErrorLike;
+  if (!execError?.stderr) {
+    return '';
+  }
+  return typeof execError.stderr === 'string'
+    ? execError.stderr
+    : execError.stderr.toString('utf-8');
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  return (error as ExecSyncErrorLike)?.status;
+}

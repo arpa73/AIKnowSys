@@ -11,6 +11,10 @@ import path from 'path';
 import { glob } from 'glob';
 import type { JsonStorage } from './json-storage.js';
 
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error;
+}
+
 /**
  * Auto-indexing options
  */
@@ -95,9 +99,9 @@ export class AutoIndexer {
       try {
         const indexStat = await fs.stat(indexPath);
         indexMtime = indexStat.mtime;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Index doesn't exist = definitely stale
-        if (err.code === 'ENOENT') {
+        if (isErrnoException(err) && err.code === 'ENOENT') {
           return true;
         }
         throw err;
@@ -126,16 +130,16 @@ export class AutoIndexer {
               if (fileStat.mtime > indexMtime) {
                 return true;
               }
-            } catch (err: any) {
+            } catch (err: unknown) {
               // File might have been deleted, skip it
-              if (err.code !== 'ENOENT') {
+              if (!isErrnoException(err) || err.code !== 'ENOENT') {
                 throw err;
               }
             }
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           // Directory doesn't exist, skip it
-          if (err.code !== 'ENOENT') {
+          if (!isErrnoException(err) || err.code !== 'ENOENT') {
             throw err;
           }
         }

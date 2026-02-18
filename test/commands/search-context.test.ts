@@ -3,6 +3,14 @@ import { searchContext } from '../../lib/commands/search-context.js';
 import fs from 'fs/promises';
 import path from 'path';
 
+type SearchMatch = {
+  type: 'plan' | 'session' | 'learned' | 'essentials';
+  context: string;
+  relevance: number;
+};
+
+type SearchScope = 'all' | 'plans' | 'sessions' | 'learned';
+
 describe('search-context command', () => {
   let tmpDir: string;
 
@@ -105,8 +113,8 @@ Write tests first, then implement minimal code.
       expect(result).toHaveProperty('count');
       expect(result).toHaveProperty('matches');
       expect(result.count).toBeGreaterThan(0);
-      expect(result.matches.some((m: any) => m.type === 'plan')).toBe(true);
-      expect(result.matches.some((m: any) => m.type === 'session')).toBe(true);
+      expect(result.matches.some((m: SearchMatch) => m.type === 'plan')).toBe(true);
+      expect(result.matches.some((m: SearchMatch) => m.type === 'session')).toBe(true);
     });
 
     it('should filter results by scope=plans', async () => {
@@ -118,7 +126,7 @@ Write tests first, then implement minimal code.
       });
 
       expect(result.scope).toBe('plans');
-      expect(result.matches.every((m: any) => m.type === 'plan')).toBe(true);
+      expect(result.matches.every((m: SearchMatch) => m.type === 'plan')).toBe(true);
     });
 
     it('should filter results by scope=sessions', async () => {
@@ -130,7 +138,7 @@ Write tests first, then implement minimal code.
       });
 
       expect(result.scope).toBe('sessions');
-      expect(result.matches.every((m: any) => m.type === 'session')).toBe(true);
+      expect(result.matches.every((m: SearchMatch) => m.type === 'session')).toBe(true);
     });
 
     it('should filter results by scope=learned', async () => {
@@ -142,7 +150,7 @@ Write tests first, then implement minimal code.
       });
 
       expect(result.scope).toBe('learned');
-      expect(result.matches.every((m: any) => m.type === 'learned')).toBe(true);
+      expect(result.matches.every((m: SearchMatch) => m.type === 'learned')).toBe(true);
     });
 
     it('should perform case-insensitive search', async () => {
@@ -153,7 +161,7 @@ Write tests first, then implement minimal code.
       });
 
       expect(result.count).toBeGreaterThan(0);
-      expect(result.matches.some((m: any) => 
+      expect(result.matches.some((m: SearchMatch) => 
         m.context.toLowerCase().includes('oauth2')
       )).toBe(true);
     });
@@ -195,7 +203,7 @@ Write tests first, then implement minimal code.
 
       expect(result.count).toBeGreaterThan(0);
       // Exact word match should have higher relevance
-      const exactMatch = result.matches.find((m: any) => 
+      const exactMatch = result.matches.find((m: SearchMatch) => 
         m.context.toLowerCase().split(/\W+/).includes('authentication')
       );
       if (exactMatch && result.matches.length > 1) {
@@ -274,7 +282,7 @@ Write tests first, then implement minimal code.
       await expect(
         searchContext('test', { 
           dir: tmpDir, 
-          scope: 'invalid' as any, 
+          scope: 'invalid' as unknown as SearchScope,
           json: true, 
           _silent: true 
         })

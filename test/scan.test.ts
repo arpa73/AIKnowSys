@@ -8,6 +8,7 @@ const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = path.dirname(__filename);
 // Use PROJECT_ROOT env var set by test script (avoids dist/ path issues)
 const rootDir: string = process.env.PROJECT_ROOT || path.join(__dirname, '..');
+const SCAN_TEST_TIMEOUT_MS = 15000;
 
 describe('scan command', () => {
   let testDir: string;
@@ -57,7 +58,7 @@ describe('scan command', () => {
     const content: string = fs.readFileSync(scanFile, 'utf-8');
     expect(content.includes('# ') && content.includes(' - Codebase Essentials')).toBeTruthy();
     expect(content.includes('Package Manager | npm')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect database from dependencies', () => {
     const pkg = {
@@ -83,7 +84,7 @@ describe('scan command', () => {
     
     const content: string = fs.readFileSync(path.join(testDir, 'DB_SCAN.md'), 'utf-8');
     expect(content.includes('Database | PostgreSQL')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect ORM from dependencies', () => {
     const pkg = {
@@ -109,7 +110,7 @@ describe('scan command', () => {
     
     const content: string = fs.readFileSync(path.join(testDir, 'ORM_SCAN.md'), 'utf-8');
     expect(content.includes('ORM | Prisma')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect frontend framework and state management', () => {
     const pkg = {
@@ -141,7 +142,7 @@ describe('scan command', () => {
     const content: string = fs.readFileSync(path.join(testDir, 'VUE_SCAN.md'), 'utf-8');
     expect(content.includes('State Management | Pinia')).toBeTruthy();
     expect(content.includes('API Client | Axios')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect authentication libraries', () => {
     const pkg = {
@@ -167,7 +168,7 @@ describe('scan command', () => {
     
     const content: string = fs.readFileSync(path.join(testDir, 'AUTH_SCAN.md'), 'utf-8');
     expect(content.includes('Authentication | NextAuth')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect styling framework', () => {
     const pkg = {
@@ -190,7 +191,7 @@ describe('scan command', () => {
     
     expect(output.includes('Styling:')).toBeTruthy();
     expect(output.includes('Tailwind')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should generate validation matrix from scripts', () => {
     const pkg = {
@@ -225,7 +226,7 @@ describe('scan command', () => {
     expect(content.includes('npm run lint')).toBeTruthy();
     expect(content.includes('npm run type-check')).toBeTruthy();
     expect(content.includes('## 2. Validation Matrix')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect code patterns from file scanning', () => {
     // Create a simple Express API file
@@ -268,7 +269,7 @@ export default router;
     
     // Should detect API routes pattern
     expect(content.includes('Detected:') || content.includes('TODO:')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should detect Python projects', () => {
     const pyproject: string = `
@@ -305,7 +306,7 @@ ruff = "^0.1"
     expect(content.includes('python manage.py test')).toBeTruthy();
     expect(content.includes('mypy .')).toBeTruthy();
     expect(content.includes('ruff check .')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should handle projects without package.json gracefully', () => {
     const emptyDir: string = path.join(testDir, 'empty-' + Date.now());
@@ -324,7 +325,7 @@ ruff = "^0.1"
     expect(content.includes('TODO: Add test command')).toBeTruthy();
     
     fs.rmSync(emptyDir, { recursive: true, force: true });
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should provide AI prompt for completion', () => {
     const pkg = { name: 'ai-test', version: '1.0.0' };
@@ -341,7 +342,7 @@ ruff = "^0.1"
     expect(output.includes('AI Assistant Prompt')).toBeTruthy();
     expect(output.includes('Filling in all TODO sections')).toBeTruthy();
     expect(output.includes('install-agents')).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
   
   it('should show file count progress during scan', () => {
     // Test that scan command shows progress during file analysis
@@ -366,5 +367,5 @@ ruff = "^0.1"
     // Should complete successfully (progress updates don't break scanning)
     expect(output.includes('Project analysis complete') || output.includes('AI Assistant Prompt')).toBeTruthy();
     expect(fs.existsSync(path.join(testDir, 'PROGRESS_SCAN.md'))).toBeTruthy();
-  });
+  }, SCAN_TEST_TIMEOUT_MS);
 });

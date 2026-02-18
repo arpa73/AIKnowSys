@@ -1,10 +1,15 @@
 import { z } from 'zod';
 import { promisify } from 'util';
 import { execFile } from 'child_process';
+import { randomUUID } from 'crypto';
+import path from 'path';
 import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { handleZodError } from './utils/error-helpers.js';
 import type { FieldErrorMap } from './utils/error-helpers.js';
 import { getProjectRoot } from './utils/project-root.js';
+import { findKnowledgeDb } from '../../../lib/utils/find-knowledge-db.js';
+import { SqliteStorage } from '../../../lib/context/sqlite-storage.js';
+import { checkConstraints } from '../../../lib/core/constraints.js';
 
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
@@ -51,6 +56,27 @@ const updatePlanSchema = z.discriminatedUnion('operation', [
   // Note: 'prepend' operation removed - not implemented in core yet
   // TODO Phase 2 Batch 2: Add prepend support to lib/core/update-plan.ts
 ]);
+
+const createReviewSchema = z.object({
+  targetId: z.string().min(1),
+  content: z.string().min(1),
+  author: z.string().optional(),
+  status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional().default('PENDING'),
+});
+
+const createLinkSchema = z.object({
+  sourceId: z.string().min(1),
+  targetId: z.string().min(1),
+  type: z.enum(['depends_on', 'relates_to', 'blocks', 'implements']),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+const checkConstraintsSchema = z.object({
+  action: z.enum(['COMPLETE_PLAN', 'MERGE_PLAN', 'START_SESSION', 'EDIT_CORE_FILE']),
+  targetId: z.string().optional(),
+  userId: z.string().optional(),
+  projectId: z.string().optional(),
+});
 
 /**
  * Create a new session file
@@ -316,6 +342,151 @@ export async function updatePlan(params: unknown) {
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
       isError: true
+    };
+  }
+}
+
+export async function createReview(params: unknown) {
+  try {
+    const validated = createReviewSchema.parse(params);
+    const storage = new SqliteStorage();
+    const dbPath = findKnowledgeDb();
+    await storage.init(dbPath);
+
+    const now = new Date().toISOString();
+    const projectId = path.basename(PROJECT_ROOT);
+    const reviewId = `review_${randomUUID()}`;
+
+    await storage.insertReview({
+      id: reviewId,
+      project_id: projectId,
+      target_id: validated.targetId,
+      author: validated.author || 'mcp-agent',
+      status: validated.status,
+      content: validated.content,
+      created_at: now,
+      updated_at: now,
+    });
+
+    storage.close();
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Review created\nID: ${reviewId}\nTarget: ${validated.targetId}\nStatus: ${validated.status}`
+      }]
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'review creation', {
+        targetId: {
+          suggestion: 'Provide a valid plan or session ID',
+          examples: ['{ "targetId": "PLAN_feature_x", "content": "Looks good" }', '{ "targetId": "2026-02-17-session", "content": "Please add tests" }']
+        },
+        content: {
+          suggestion: 'Review content must be a non-empty string',
+          examples: ['{ "targetId": "PLAN_feature_x", "content": "LGTM" }']
+        }
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'review creation',
+      error instanceof Error ? error.message : String(error),
+      'Ensure database exists and target ID is valid'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function createLink(params: unknown) {
+  try {
+    const validated = createLinkSchema.parse(params);
+    const storage = new SqliteStorage();
+    const dbPath = findKnowledgeDb();
+    await storage.init(dbPath);
+
+    await storage.insertLink({
+      source_id: validated.sourceId,
+      target_id: validated.targetId,
+      type: validated.type,
+      metadata: validated.metadata,
+      created_at: new Date().toISOString(),
+    });
+
+    storage.close();
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Link created\n${validated.sourceId} -[${validated.type}]-> ${validated.targetId}`
+      }]
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'link creation', {
+        sourceId: {
+          suggestion: 'Source ID is required',
+          examples: ['{ "sourceId": "PLAN_a", "targetId": "PLAN_b", "type": "depends_on" }']
+        },
+        type: {
+          suggestion: 'Use one of: depends_on, relates_to, blocks, implements',
+          examples: ['{ "sourceId": "PLAN_a", "targetId": "PLAN_b", "type": "depends_on" }']
+        }
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'link creation',
+      error instanceof Error ? error.message : String(error),
+      'Ensure source/target IDs exist and link type is valid'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function checkConstraintsTool(params: unknown) {
+  try {
+    const validated = checkConstraintsSchema.parse(params);
+    const result = await checkConstraints(validated.action, {
+      userId: validated.userId || 'mcp-agent',
+      projectId: validated.projectId || path.basename(PROJECT_ROOT),
+      targetId: validated.targetId,
+    });
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify(result, null, 2)
+      }]
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'constraint checking', {
+        action: {
+          suggestion: 'Use a supported action type',
+          examples: ['{ "action": "COMPLETE_PLAN", "targetId": "PLAN_feature_x" }']
+        }
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'constraint checking',
+      error instanceof Error ? error.message : String(error),
+      'Check action and context payload'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
     };
   }
 }

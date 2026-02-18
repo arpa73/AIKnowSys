@@ -180,3 +180,49 @@ END;
 CREATE TRIGGER IF NOT EXISTS patterns_au AFTER UPDATE ON patterns BEGIN
   UPDATE patterns_fts SET title = new.title, content = new.content WHERE pattern_id = old.id;
 END;
+
+-- Reviews (Code/Plan reviews)
+CREATE TABLE IF NOT EXISTS reviews (
+  id TEXT PRIMARY KEY,
+  project_id TEXT,
+  target_id TEXT NOT NULL,       -- plan_id or session_id
+  author TEXT NOT NULL,
+  status TEXT NOT NULL,          -- PENDING, ACTIVE, ADDRESSED
+  content TEXT NOT NULL,         -- Review comments/markdown
+  created_at TEXT NOT NULL,      -- ISO 8601 timestamp
+  updated_at TEXT NOT NULL,      -- ISO 8601 timestamp
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_target ON reviews(target_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status);
+CREATE INDEX IF NOT EXISTS idx_reviews_project ON reviews(project_id);
+
+-- Links (Relationships between entities)
+CREATE TABLE IF NOT EXISTS links (
+  source_id TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  type TEXT NOT NULL,            -- depends_on, relates_to, blocks, etc.
+  metadata JSON,                 -- Optional metadata
+  created_at TEXT NOT NULL,      -- ISO 8601 timestamp
+  PRIMARY KEY (source_id, target_id, type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_id);
+CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_id);
+
+-- User State (Context constraints & focus)
+CREATE TABLE IF NOT EXISTS user_state (
+  user_id TEXT PRIMARY KEY,      -- Unique user identifier (e.g., git config user.email)
+  project_id TEXT,               -- Current active project
+  active_plan_id TEXT,           -- Current active plan
+  last_session_id TEXT,          -- Last active session
+  focus_context JSON,            -- Current focus structure { files: [], topic: "" }
+  updated_at TEXT NOT NULL,      -- Last update timestamp
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+  FOREIGN KEY (active_plan_id) REFERENCES plans(id) ON DELETE SET NULL,
+  FOREIGN KEY (last_session_id) REFERENCES sessions(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_state_project ON user_state(project_id);
+

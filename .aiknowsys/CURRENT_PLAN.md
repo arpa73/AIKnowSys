@@ -1,6 +1,6 @@
 # Current Team Plans
 
-**Last Synced:** Feb 16, 2026, 09:32 PM  
+**Last Synced:** Feb 17, 2026, 11:13 PM  
 **Developer Count:** 2
 
 > ⚠️ **AUTO-GENERATED FILE**  
@@ -14,7 +14,7 @@
 
 | Developer | Plan | Status | Last Updated |
 |-----------|------|--------|--------------|
-| arno-paffen | [Knowledge Bank Evolution - Cross-Repo AI-Native Storage](PLAN_knowledge_bank_evolution.md) | 🎯 ACTIVE | 2026-02-15 |
+| arno-paffen | [JSON-Only AI Workflow (No Markdown for AI Agents)](PLAN_markdown_less_architecture.md) | 🎯 ACTIVE | 2026-02-17 |
 | arno | *No active plan* | 🎯 ACTIVE | Unknown |
 
 ---

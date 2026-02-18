@@ -17,16 +17,67 @@ const mockConversationData = {
   timestamp: new Date().toISOString(),
 };
 
+type SessionSummarizerModule = {
+  extractFileChanges: (conversation: unknown) => string[];
+  extractCommands: (conversation: unknown) => string[];
+  inferNextSteps: (conversation: unknown) => string[];
+  generateSessionSummary: (conversation: unknown) => Promise<{
+    filesModified: string[];
+    commandsRun: string[];
+  }>;
+};
+
+type PatternSummary = { error: string; frequency: number; documented?: boolean };
+
+type PatternDetectorModule = {
+  loadRecentSessions: (dir: string, days: number) => Promise<string[]>;
+  extractErrorPatterns: (sessions: string[]) => Array<{ error: string }>;
+  detectPatterns: (dir: string, options?: { threshold?: number }) => Promise<Array<{ error: string }>>;
+};
+
+type SkillCreatorModule = {
+  createLearnedSkill: (pattern: {
+    error: string;
+    frequency: number;
+    keywords: string[];
+    resolution: string;
+    examples?: Array<{ before: string; after: string }>;
+  }, dir: string) => Promise<{ path: string; existed: boolean }>;
+  generateSkillTemplate: (input: {
+    name: string;
+    description: string;
+    triggerWords: string[];
+    resolution: string;
+    examples?: Array<{ before: string; after: string }>;
+  }) => string;
+};
+
+type LearnCommandModule = {
+  listPatterns: (options: { dir: string; threshold?: number; _silent?: boolean }) => Promise<{ success: boolean; patterns: unknown[] }>;
+  extractPattern: (options: { dir: string; pattern: string; _silent?: boolean }) => Promise<{ success: boolean; skillPath?: string; existed?: boolean; created?: boolean }>;
+  autoCreateSkills: (options: { dir: string; threshold?: number; _silent?: boolean }) => Promise<{ success: boolean; created: unknown[] }>;
+};
+
+type PatternTrackerModule = {
+  initPatternTracking: (dir: string) => Promise<void>;
+  trackPattern: (dir: string, pattern: { error: string; resolution: string }) => Promise<void>;
+  markPatternDocumented: (dir: string, error: string) => Promise<void>;
+};
+
+type PatternHistoryData = {
+  patterns: PatternSummary[];
+};
+
 describe('Context Learning - Session Summarizer', () => {
   let tmpDir: string;
-  let sessionSummarizer: any;
+  let sessionSummarizer: SessionSummarizerModule;
 
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     
     // Dynamic import to test module
     const module = await import('../lib/context/session-summarizer.js');
-    sessionSummarizer = module as any;
+    sessionSummarizer = module as unknown as SessionSummarizerModule;
   });
 
   afterAll(async () => {
@@ -70,7 +121,7 @@ describe('Context Learning - Session Summarizer', () => {
 
 describe('Context Learning - Pattern Detector', () => {
   let tmpDir: string;
-  let patternDetector: any;
+  let patternDetector: PatternDetectorModule;
 
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
@@ -98,7 +149,7 @@ describe('Context Learning - Pattern Detector', () => {
     );
     
     const module = await import('../lib/context/pattern-detector.js');
-    patternDetector = module as any;
+    patternDetector = module as unknown as PatternDetectorModule;
   });
 
   afterAll(async () => {
@@ -143,21 +194,21 @@ describe('Context Learning - Pattern Detector', () => {
     const patterns = await detectPatterns(tmpDir, { threshold: 3 });
     
     // Should NOT include the unique error
-    const uniquePattern = patterns.find((p: any) => p.error.includes('Very rare'));
+    const uniquePattern = patterns.find((p) => p.error.includes('Very rare'));
     expect(uniquePattern).toEqual(undefined);
   });
 });
 
 describe('Context Learning - Skill Creator', () => {
   let tmpDir: string;
-  let skillCreator: any;
+  let skillCreator: SkillCreatorModule;
 
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
     await fs.mkdir(path.join(tmpDir, '.aiknowsys', 'learned'), { recursive: true });
     
     const module = await import('../lib/context/skill-creator.js');
-    skillCreator = module as any;
+    skillCreator = module as unknown as SkillCreatorModule;
   });
 
   afterAll(async () => {
@@ -231,7 +282,7 @@ describe('Context Learning - Skill Creator', () => {
 
 describe('Context Learning - Learn Command', () => {
   let tmpDir: string;
-  let learnCommand: any;
+  let learnCommand: LearnCommandModule;
 
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aiknowsys-test-'));
@@ -254,7 +305,7 @@ describe('Context Learning - Learn Command', () => {
     );
     
     const module = await import('../lib/commands/learn.js');
-    learnCommand = module as any;
+    learnCommand = module as unknown as LearnCommandModule;
   });
 
   afterAll(async () => {
@@ -334,7 +385,7 @@ describe('Context Learning - Pattern Tracking', () => {
 
   it('should create pattern-history.json if not exists', async () => {
     const module = await import('../lib/context/pattern-tracker.js');
-    const { initPatternTracking } = module as any;
+    const { initPatternTracking } = module as unknown as PatternTrackerModule;
     
     await initPatternTracking(tmpDir);
     
@@ -345,7 +396,7 @@ describe('Context Learning - Pattern Tracking', () => {
 
   it('should track pattern occurrences', async () => {
     const module = await import('../lib/context/pattern-tracker.js');
-    const { trackPattern } = module as any;
+    const { trackPattern } = module as unknown as PatternTrackerModule;
     
     await trackPattern(tmpDir, {
       error: 'chalk import error',
@@ -354,19 +405,19 @@ describe('Context Learning - Pattern Tracking', () => {
     
     const historyPath = path.join(tmpDir, '.aiknowsys', 'pattern-history.json');
     const content = await fs.readFile(historyPath, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as PatternHistoryData;
     
     expect(data.patterns).toBeTruthy();
     expect(data.patterns.length >= 1).toBeTruthy();
     
-    const chalkPattern = data.patterns.find((p: any) => p.error === 'chalk import error');
+    const chalkPattern = data.patterns.find((p) => p.error === 'chalk import error');
     expect(chalkPattern).toBeTruthy();
     expect(chalkPattern.frequency).toEqual(1);
   });
 
   it('should increment frequency for repeated patterns', async () => {
     const module = await import('../lib/context/pattern-tracker.js');
-    const { trackPattern } = module as any;
+    const { trackPattern } = module as unknown as PatternTrackerModule;
     
     // Track same pattern twice
     await trackPattern(tmpDir, { error: 'repeated error', resolution: 'fix' });
@@ -374,24 +425,24 @@ describe('Context Learning - Pattern Tracking', () => {
     
     const historyPath = path.join(tmpDir, '.aiknowsys', 'pattern-history.json');
     const content = await fs.readFile(historyPath, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as PatternHistoryData;
     
-    const pattern = data.patterns.find((p: any) => p.error === 'repeated error');
+    const pattern = data.patterns.find((p) => p.error === 'repeated error');
     expect(pattern).toBeTruthy();
     expect(pattern.frequency).toEqual(2);
   });
 
   it('should mark pattern as documented when skill created', async () => {
     const module = await import('../lib/context/pattern-tracker.js');
-    const { markPatternDocumented } = module as any;
+    const { markPatternDocumented } = module as unknown as PatternTrackerModule;
     
     await markPatternDocumented(tmpDir, 'chalk import error');
     
     const historyPath = path.join(tmpDir, '.aiknowsys', 'pattern-history.json');
     const content = await fs.readFile(historyPath, 'utf-8');
-    const data = JSON.parse(content);
+    const data = JSON.parse(content) as PatternHistoryData;
     
-    const pattern = data.patterns.find((p: any) => p.error === 'chalk import error');
+    const pattern = data.patterns.find((p) => p.error === 'chalk import error');
     expect(pattern).toBeTruthy();
     expect(pattern.documented).toEqual(true);
   });

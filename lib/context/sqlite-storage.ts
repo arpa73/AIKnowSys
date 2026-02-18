@@ -23,9 +23,11 @@ import type {
 import type { 
   KnowledgeEvent, 
   EventFilters, 
+  EventData,
   SemanticSearchOptions, 
   SemanticSearchResult 
 } from '../events/types.js';
+import { EventType } from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
 import { EmbeddingGenerator } from '../embeddings/generator.js';
 import { batchCosineSimilarity } from '../embeddings/similarity.js';
@@ -84,6 +86,71 @@ interface SearchRow {
   title?: string;  // Present for plan searches
   topic?: string;  // Present for session searches
   content: string;
+}
+
+type SqliteValue = string | number | null | Buffer | bigint;
+
+interface QueryResult<T> {
+  count: number;
+  items: T[];
+}
+
+interface SessionMetadataRecord {
+  id: string;
+  projectId: string;
+  date: string;
+  topic: string;
+  status: string;
+  planId: string | null;
+  duration: string | null;
+  topics: string[];
+  phases: string[] | undefined;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PlanMetadataRecord {
+  id: string;
+  projectId: string;
+  title: string;
+  status: string;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+  topics: string[];
+  description: string | null;
+  priority: string | null;
+  type: string | null;
+}
+
+type ReviewStatus = 'PENDING' | 'ACTIVE' | 'ADDRESSED';
+
+interface ReviewRecord {
+  id: string;
+  projectId: string | null;
+  targetId: string;
+  author: string;
+  status: ReviewStatus;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface LinkRecord {
+  sourceId: string;
+  targetId: string;
+  type: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+interface UserStateRecord {
+  userId: string;
+  projectId: string | null;
+  activePlanId: string | null;
+  lastSessionId: string | null;
+  focusContext: Record<string, unknown> | null;
+  updatedAt: string;
 }
 
 /**
@@ -188,7 +255,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM plans WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       // Phase 1: Cross-Repository support
@@ -270,7 +337,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       // Phase 1: Cross-Repository support
@@ -529,7 +596,7 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM plans WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.idStartsWith) {
@@ -591,7 +658,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to session count and array of full session rows
    * @throws Error if database not initialized
    */
-  async queryFullSessions(filters?: SessionFilters & { status?: string; contentContains?: string }): Promise<{ count: number; sessions: SessionRow[] }> {
+  async queryFullSessions(filters?: SessionFilters & { id?: string; status?: string; contentContains?: string }): Promise<{ count: number; sessions: SessionRow[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -600,9 +667,14 @@ export class SqliteStorage extends StorageAdapter {
     }
     
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
+      if (filters.id) {
+        query += ' AND id = ?';
+        params.push(filters.id);
+      }
+
       if (filters.contentContains) {
         query += ' AND (content LIKE ? OR topic LIKE ?)';
         params.push(`%${filters.contentContains}%`, `%${filters.contentContains}%`);
@@ -658,13 +730,55 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Get a single session with related entities in one call.
+   * Returns session + linked plan + reviews + events.
+   */
+  async getSessionWithRelations(sessionId: string): Promise<{
+    session: SessionRow;
+    plan: PlanRow | null;
+    reviews: ReviewRecord[];
+    events: KnowledgeEvent[];
+  } | undefined> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const sessionResult = await this.queryFullSessions({ id: sessionId });
+    if (sessionResult.sessions.length === 0) {
+      return undefined;
+    }
+
+    const session = sessionResult.sessions[0];
+
+    let plan: PlanRow | null = null;
+    if (session.plan_id) {
+      plan = this.db
+        .prepare('SELECT * FROM plans WHERE id = ? LIMIT 1')
+        .get(session.plan_id) as PlanRow | null;
+    }
+
+    const reviewsResult = await this.queryReviews({ targetId: session.id });
+    const events = await this.queryEvents({ sessionId: session.id, limit: 200 });
+
+    return {
+      session,
+      plan,
+      reviews: reviewsResult.reviews,
+      events,
+    };
+  }
+
+  /**
    * Query sessions metadata WITHOUT content (token-efficient)
    * Returns only metadata fields, excludes heavy content field
    * @param filters - Optional filters for date, date range, topic, plan, status
    * @returns Promise resolving to session count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async querySessionsMetadata(filters?: SessionFilters & { status?: string }): Promise<{ count: number; sessions: unknown[] }> {
+  async querySessionsMetadata(filters?: SessionFilters & { status?: string }): Promise<QueryResult<SessionMetadataRecord> & { sessions: SessionMetadataRecord[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -674,7 +788,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, date, topic, status, plan_id, duration, topics, phases, created_at, updated_at FROM sessions WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.date) {
@@ -722,7 +836,7 @@ export class SqliteStorage extends StorageAdapter {
     const rows = stmt.all(...params) as SessionRow[];
     
     // Map to camelCase for consistency with querySessions()
-    const sessions = rows.map(row => ({
+    const sessions: SessionMetadataRecord[] = rows.map(row => ({
       id: row.id,
       projectId: row.project_id,
       date: row.date,
@@ -738,6 +852,7 @@ export class SqliteStorage extends StorageAdapter {
     
     return {
       count: sessions.length,
+      items: sessions,
       sessions
     };
   }
@@ -749,7 +864,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to plan count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async queryPlansMetadata(filters?: PlanFilters & { priority?: string; idStartsWith?: string }): Promise<{ count: number; plans: unknown[] }> {
+  async queryPlansMetadata(filters?: PlanFilters & { priority?: string; idStartsWith?: string }): Promise<QueryResult<PlanMetadataRecord> & { plans: PlanMetadataRecord[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -759,7 +874,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.idStartsWith) {
@@ -804,7 +919,7 @@ export class SqliteStorage extends StorageAdapter {
     const rows = stmt.all(...params) as PlanRow[];
     
     // Map to camelCase for consistency with queryPlans()
-    const plans = rows.map(row => ({
+    const plans: PlanMetadataRecord[] = rows.map(row => ({
       id: row.id,
       projectId: row.project_id,
       title: row.title,
@@ -820,6 +935,7 @@ export class SqliteStorage extends StorageAdapter {
     
     return {
       count: plans.length,
+      items: plans,
       plans
     };
   }
@@ -841,7 +957,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Build WHERE clause for filters
     let whereClause = '1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.dateAfter) {
@@ -958,7 +1074,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Build WHERE clause for filters
     let whereClause = '1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.status) {
@@ -1071,7 +1187,7 @@ export class SqliteStorage extends StorageAdapter {
    * @returns Promise resolving to pattern count and array of metadata-only rows
    * @throws Error if database not initialized
    */
-  async queryLearnedPatternsMetadata(filters?: { category?: string; keywords?: string[] }): Promise<{ count: number; patterns: unknown[] }> {
+  async queryLearnedPatternsMetadata(filters?: { category?: string; keywords?: string[] }): Promise<QueryResult<PlanMetadataRecord> & { patterns: PlanMetadataRecord[] }> {
     if (!this.db) {
       throw new Error(
         'Database not initialized. Call init(targetDir) before querying. ' +
@@ -1081,7 +1197,7 @@ export class SqliteStorage extends StorageAdapter {
     
     // Select everything EXCEPT content column, filter to learned patterns only
     let query = "SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE id LIKE 'learned_%'";
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
     
     if (filters) {
       if (filters.category) {
@@ -1100,11 +1216,26 @@ export class SqliteStorage extends StorageAdapter {
     query += ' ORDER BY created_at DESC';
     
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...params) as PlanRow[];
+
+    const patterns: PlanMetadataRecord[] = rows.map(row => ({
+      id: row.id,
+      projectId: row.project_id,
+      title: row.title,
+      status: row.status,
+      author: row.author,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      topics: row.topics ? JSON.parse(row.topics) : [],
+      description: row.description,
+      priority: row.priority,
+      type: row.type
+    }));
     
     return {
-      count: rows.length,
-      patterns: rows
+      count: patterns.length,
+      items: patterns,
+      patterns
     };
   }
 
@@ -1275,6 +1406,317 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Insert a review into the database (for new review workflow support)
+   */
+  async insertReview(review: {
+    id: string;
+    project_id?: string;
+    target_id: string;
+    author: string;
+    status: ReviewStatus;
+    content: string;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before inserting data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO reviews (id, project_id, target_id, author, status, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    stmt.run(
+      review.id,
+      review.project_id || null,
+      review.target_id,
+      review.author,
+      review.status,
+      review.content,
+      review.created_at,
+      review.updated_at
+    );
+  }
+
+  /**
+   * Query reviews with optional filters
+   */
+  async queryReviews(filters?: {
+    projectId?: string;
+    targetId?: string;
+    status?: ReviewStatus;
+    author?: string;
+  }): Promise<QueryResult<ReviewRecord> & { reviews: ReviewRecord[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    let query = 'SELECT * FROM reviews WHERE 1=1';
+    const params: SqliteValue[] = [];
+
+    if (filters?.projectId) {
+      query += ' AND project_id = ?';
+      params.push(filters.projectId);
+    }
+    if (filters?.targetId) {
+      query += ' AND target_id = ?';
+      params.push(filters.targetId);
+    }
+    if (filters?.status) {
+      query += ' AND status = ?';
+      params.push(filters.status);
+    }
+    if (filters?.author) {
+      query += ' AND author = ?';
+      params.push(filters.author);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as Array<{
+      id: string;
+      project_id: string | null;
+      target_id: string;
+      author: string;
+      status: ReviewStatus;
+      content: string;
+      created_at: string;
+      updated_at: string;
+    }>;
+
+    const reviews: ReviewRecord[] = rows.map((row) => ({
+      id: row.id,
+      projectId: row.project_id,
+      targetId: row.target_id,
+      author: row.author,
+      status: row.status,
+      content: row.content,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
+
+    return {
+      count: reviews.length,
+      items: reviews,
+      reviews
+    };
+  }
+
+  /**
+   * Update review status
+   */
+  async updateReviewStatus(id: string, status: ReviewStatus, updatedAt: string): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before updating data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    this.db
+      .prepare('UPDATE reviews SET status = ?, updated_at = ? WHERE id = ?')
+      .run(status, updatedAt, id);
+  }
+
+  /**
+   * Insert a relationship link
+   */
+  async insertLink(link: {
+    source_id: string;
+    target_id: string;
+    type: string;
+    metadata?: Record<string, unknown>;
+    created_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before inserting data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    this.db
+      .prepare(`
+        INSERT INTO links (source_id, target_id, type, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      .run(
+        link.source_id,
+        link.target_id,
+        link.type,
+        link.metadata ? JSON.stringify(link.metadata) : null,
+        link.created_at
+      );
+  }
+
+  /**
+   * Query links with optional filters
+   */
+  async queryLinks(filters?: {
+    sourceId?: string;
+    targetId?: string;
+    type?: string;
+  }): Promise<QueryResult<LinkRecord> & { links: LinkRecord[] }> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    let query = 'SELECT * FROM links WHERE 1=1';
+    const params: SqliteValue[] = [];
+
+    if (filters?.sourceId) {
+      query += ' AND source_id = ?';
+      params.push(filters.sourceId);
+    }
+    if (filters?.targetId) {
+      query += ' AND target_id = ?';
+      params.push(filters.targetId);
+    }
+    if (filters?.type) {
+      query += ' AND type = ?';
+      params.push(filters.type);
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const rows = this.db.prepare(query).all(...params) as Array<{
+      source_id: string;
+      target_id: string;
+      type: string;
+      metadata: string | null;
+      created_at: string;
+    }>;
+
+    const links: LinkRecord[] = rows.map((row) => ({
+      sourceId: row.source_id,
+      targetId: row.target_id,
+      type: row.type,
+      metadata: row.metadata ? (JSON.parse(row.metadata) as Record<string, unknown>) : null,
+      createdAt: row.created_at
+    }));
+
+    return {
+      count: links.length,
+      items: links,
+      links
+    };
+  }
+
+  /**
+   * Upsert user state (context and focus)
+   */
+  async upsertUserState(state: {
+    user_id: string;
+    project_id?: string | null;
+    active_plan_id?: string | null;
+    last_session_id?: string | null;
+    focus_context?: Record<string, unknown> | null;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before upserting data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    this.db
+      .prepare(`
+        INSERT INTO user_state (user_id, project_id, active_plan_id, last_session_id, focus_context, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+          project_id = excluded.project_id,
+          active_plan_id = excluded.active_plan_id,
+          last_session_id = excluded.last_session_id,
+          focus_context = excluded.focus_context,
+          updated_at = excluded.updated_at
+      `)
+      .run(
+        state.user_id,
+        state.project_id || null,
+        state.active_plan_id || null,
+        state.last_session_id || null,
+        state.focus_context ? JSON.stringify(state.focus_context) : null,
+        state.updated_at
+      );
+  }
+
+  /**
+   * Get user state by user ID
+   */
+  async getUserState(userId: string): Promise<UserStateRecord | undefined> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const row = this.db
+      .prepare('SELECT * FROM user_state WHERE user_id = ?')
+      .get(userId) as {
+      user_id: string;
+      project_id: string | null;
+      active_plan_id: string | null;
+      last_session_id: string | null;
+      focus_context: string | null;
+      updated_at: string;
+    } | undefined;
+
+    if (!row) {
+      return undefined;
+    }
+
+    return {
+      userId: row.user_id,
+      projectId: row.project_id,
+      activePlanId: row.active_plan_id,
+      lastSessionId: row.last_session_id,
+      focusContext: row.focus_context ? (JSON.parse(row.focus_context) as Record<string, unknown>) : null,
+      updatedAt: row.updated_at
+    };
+  }
+
+  /**
+   * Get the most recently updated active plan ID for a project.
+   * Used by create-session auto-linking when plan is not explicitly provided.
+   */
+  async getActivePlanId(projectId: string): Promise<string | null> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const row = this.db
+      .prepare(`
+        SELECT us.active_plan_id
+        FROM user_state us
+        INNER JOIN plans p ON p.id = us.active_plan_id
+        WHERE us.project_id = ?
+          AND us.active_plan_id IS NOT NULL
+          AND p.status = 'ACTIVE'
+        ORDER BY us.updated_at DESC
+        LIMIT 1
+      `)
+      .get(projectId) as { active_plan_id: string | null } | undefined;
+
+    return row?.active_plan_id || null;
+  }
+
+  /**
    * Insert a knowledge event into storage
    * Phase 2: Event-Sourced Storage
    * @param event - Knowledge event to insert
@@ -1380,6 +1822,20 @@ export class SqliteStorage extends StorageAdapter {
       );
     }
 
+    if (!Object.values(EventType).includes(row.event_type as EventType)) {
+      throw new Error(
+        `Invalid event_type '${row.event_type}' for event_id=${row.event_id}. ` +
+        `Expected one of: ${Object.values(EventType).join(', ')}`
+      );
+    }
+
+    if (typeof parsedData !== 'object' || parsedData === null) {
+      throw new Error(
+        `Invalid event data shape for event_id=${row.event_id}. ` +
+        'Expected JSON object payload matching EventData schema.'
+      );
+    }
+
     // Deserialize embedding from BLOB (if present)
     let embedding: Float32Array | null = null;
     if (row.embedding) {
@@ -1412,8 +1868,8 @@ export class SqliteStorage extends StorageAdapter {
       sessionId: row.session_id || undefined,
       planId: row.plan_id || undefined,
       timestamp: row.timestamp,
-      eventType: row.event_type as string,
-      data: parsedData,
+      eventType: row.event_type as EventType,
+      data: parsedData as EventData,
       embedding
     };
   }
@@ -1457,7 +1913,7 @@ export class SqliteStorage extends StorageAdapter {
     }
 
     const whereClauses: string[] = [];
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
 
     if (filters.projectId) {
       whereClauses.push('project_id = ?');
@@ -1475,8 +1931,16 @@ export class SqliteStorage extends StorageAdapter {
     }
 
     if (filters.eventType) {
-      whereClauses.push('event_type = ?');
-      params.push(filters.eventType);
+      if (Array.isArray(filters.eventType)) {
+        if (filters.eventType.length > 0) {
+          const placeholders = filters.eventType.map(() => '?').join(', ');
+          whereClauses.push(`event_type IN (${placeholders})`);
+          params.push(...filters.eventType);
+        }
+      } else {
+        whereClauses.push('event_type = ?');
+        params.push(filters.eventType);
+      }
     }
 
     if (filters.startDate) {
@@ -1580,7 +2044,7 @@ export class SqliteStorage extends StorageAdapter {
 
     // Load all events with embeddings (with optional project filter)
     const whereClauses: string[] = ['embedding IS NOT NULL'];
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
 
     if (options?.projectId) {
       whereClauses.push('project_id = ?');
@@ -1678,7 +2142,7 @@ export class SqliteStorage extends StorageAdapter {
     }
 
     let query = 'SELECT * FROM sessions WHERE 1=1';
-    const params: unknown[] = [];
+    const params: SqliteValue[] = [];
 
     if (filters.from) {
       query += ' AND date >= ?';

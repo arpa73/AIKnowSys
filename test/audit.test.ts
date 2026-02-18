@@ -54,9 +54,9 @@ describe('audit command', () => {
     
     expect(result.clean).toBe(false);
     expect(result.warnings > 0).toBe(true);
-    const dupIssue = result.issues.find(i => i.category.includes('DRY'))!;
+    const dupIssue = result.issues.find(i => i.category.includes('DRY'));
     expect(dupIssue).toBeTruthy();
-    expect(dupIssue.fix.includes('sync')).toBeTruthy();
+    expect(dupIssue?.fix.includes('sync')).toBeTruthy();
   });
 
   it('should pass when validation matrix only in ESSENTIALS', async () => {
@@ -89,9 +89,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const tbdIssue = result.issues.find(i => i.message.includes('TBD'))!;
+    const tbdIssue = result.issues.find(i => i.message.includes('TBD'));
     expect(tbdIssue).toBeTruthy();
-    expect(tbdIssue.type).toBe('info');
+    expect(tbdIssue?.type).toBe('info');
   });
 
   it('should detect excessive TODO comments', async () => {
@@ -105,9 +105,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const todoIssue = result.issues.find(i => i.message.includes('TODO'))!;
+    const todoIssue = result.issues.find(i => i.message.includes('TODO'));
     expect(todoIssue).toBeTruthy();
-    expect(todoIssue.type).toBe('info');
+    expect(todoIssue?.type).toBe('info');
   });
 
   it('should detect [FILL] instruction markers', async () => {
@@ -121,9 +121,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const fillIssue = result.issues.find(i => i.message.includes('FILL'))!;
+    const fillIssue = result.issues.find(i => i.message.includes('FILL'));
     expect(fillIssue).toBeTruthy();
-    expect(fillIssue.type).toBe('warning');
+    expect(fillIssue?.type).toBe('warning');
   });
 
   // Note: "generic placeholder text" detection removed due to too many false positives
@@ -157,9 +157,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'))!;
+    const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'));
     expect(placeholderIssue).toBeTruthy();
-    expect(placeholderIssue.type).toBe('warning');
+    expect(placeholderIssue?.type).toBe('warning');
   });
 
   it('should list unique placeholders without duplicates', async () => {
@@ -174,10 +174,10 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'))!;
+    const placeholderIssue = result.issues.find(i => i.message.includes('placeholder'));
     expect(placeholderIssue).toBeTruthy();
     // Message should mention "1 unfilled placeholder" or similar, not count duplicates
-    expect(placeholderIssue.message.includes('1') || placeholderIssue.message.includes('PROJECT_NAME')).toBeTruthy();
+    expect(placeholderIssue?.message.includes('1') || placeholderIssue?.message.includes('PROJECT_NAME')).toBeTruthy();
   });
 
   it('should pass when all placeholders filled', async () => {
@@ -202,9 +202,9 @@ describe('audit command', () => {
     
     const result = await audit({ dir: testDir, _silent: true });
     
-    const sizeIssue = result.issues.find(i => i.category === 'File Size' || i.message.includes('lines (consider splitting)'))!;
+    const sizeIssue = result.issues.find(i => i.category === 'File Size' || i.message.includes('lines (consider splitting)'));
     expect(sizeIssue).toBeTruthy();
-    expect(sizeIssue.fix.includes('archive') || sizeIssue.fix.includes('minimal')).toBeTruthy();
+    expect(sizeIssue?.fix.includes('archive') || sizeIssue?.fix.includes('minimal')).toBeTruthy();
   });
 
   it('should not warn when ESSENTIALS < 350 lines', async () => {
@@ -364,9 +364,9 @@ describe('audit command', () => {
     const gitignoreIssue = result.issues.find(i => 
       i.category === 'Gitignore Configuration' && 
       i.message.includes('Session files')
-    )!;
+    );
     expect(gitignoreIssue).toBeTruthy();
-    expect(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
+    expect(gitignoreIssue?.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
   });
 
   it('should warn about missing .gitignore when .aiknowsys/ exists', async () => {
@@ -382,9 +382,9 @@ describe('audit command', () => {
     const gitignoreIssue = result.issues.find(i => 
       i.category === 'Missing Configuration' && 
       i.message.includes('.gitignore')
-    )!;
+    );
     expect(gitignoreIssue).toBeTruthy();
-    expect(gitignoreIssue.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
+    expect(gitignoreIssue?.fix.includes('.aiknowsys/sessions/*.md')).toBeTruthy();
   });
 
   it('should not warn when .aiknowsys/ directory does not exist', async () => {

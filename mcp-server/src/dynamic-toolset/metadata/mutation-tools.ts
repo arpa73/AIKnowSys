@@ -1,6 +1,6 @@
 import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
-import { createSession, createPlan } from '../../tools/mutations.js';
+import { createSession, createPlan, createReview, createLink, checkConstraintsTool } from '../../tools/mutations.js';
 import {
   setPlanStatus,
   appendToPlan,
@@ -35,6 +35,48 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
         .default('active'),
     }),
     handler: createSession,
+  },
+  {
+    name: 'create_review',
+    description:
+      'Create a review entry linked to a plan or session. Use for review workflows and constraint checks.',
+    category: 'mutation',
+    tags: ['reviews', 'create', 'workflow', 'constraints'],
+    inputSchema: z.object({
+      targetId: z.string().min(1),
+      content: z.string().min(1),
+      author: z.string().optional(),
+      status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional().default('PENDING'),
+    }),
+    handler: createReview,
+  },
+  {
+    name: 'create_link',
+    description:
+      'Create an explicit relationship link between entities (plan/session/review).',
+    category: 'mutation',
+    tags: ['links', 'relationships', 'graph', 'create'],
+    inputSchema: z.object({
+      sourceId: z.string().min(1),
+      targetId: z.string().min(1),
+      type: z.enum(['depends_on', 'relates_to', 'blocks', 'implements']),
+      metadata: z.record(z.unknown()).optional(),
+    }),
+    handler: createLink,
+  },
+  {
+    name: 'check_constraints',
+    description:
+      'Check whether an action is currently allowed by workflow constraints and return blockers if any.',
+    category: 'mutation',
+    tags: ['constraints', 'validation', 'workflow', 'guardrails'],
+    inputSchema: z.object({
+      action: z.enum(['COMPLETE_PLAN', 'MERGE_PLAN', 'START_SESSION', 'EDIT_CORE_FILE']),
+      targetId: z.string().optional(),
+      userId: z.string().optional(),
+      projectId: z.string().optional(),
+    }),
+    handler: checkConstraintsTool,
   },
   {
     name: 'append_to_session',

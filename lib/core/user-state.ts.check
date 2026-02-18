@@ -1,0 +1,11 @@
+// Mock for lib/context/db.js since it might rely on environment or file system
+// We will replace this with real import if available, or create a mock for TDD.
+// Creating a simple mock db getter for now in the test file context.
+export function getKnowledgeDb() {
+  const Database = require('better-sqlite3');
+  // For implementation, we assume knowledge.db exists or we fall back
+  // In real app, this should locate the DB correctly.
+  // Using a simplified version for this file content generation.
+  // ...Wait, I should look at existing db.ts or sqlite-storage.ts
+  throw new Error("Direct import of db.js failed via tool simulation. Need to check existing implementation.");
+}

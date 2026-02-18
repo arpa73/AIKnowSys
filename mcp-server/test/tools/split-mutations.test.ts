@@ -13,10 +13,17 @@ vi.mock('util', () => ({
   promisify: vi.fn(() => mockExecFileAsync),
 }));
 
+const mockCheckConstraints = vi.fn();
+
+vi.mock('../../../lib/core/constraints.js', () => ({
+  checkConstraints: (...args: unknown[]) => mockCheckConstraints(...args),
+}));
+
 describe('Split Plan Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExecFileAsync.mockReset();
+    mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
   });
 
   describe('set_plan_status', () => {
@@ -35,6 +42,60 @@ describe('Split Plan Mutation Tools', () => {
       expect(result.content[0].type).toBe('text');
       expect(result.content[0].text).toContain('Plan Updated');
       expect(result.content[0].text).toContain('COMPLETE');
+      expect(mockCheckConstraints).toHaveBeenCalledWith('COMPLETE_PLAN', expect.objectContaining({
+        targetId: 'PLAN_feature_x'
+      }));
+    });
+
+    it('should block COMPLETE when constraints fail', async () => {
+      mockCheckConstraints.mockResolvedValue({
+        allowed: false,
+        blockers: ['Plan has 1 pending review(s). Address them first.']
+      });
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      const result = await setPlanStatus({
+        planId: 'PLAN_feature_x',
+        status: 'COMPLETE'
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Plan completion blocked by constraints');
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
+    });
+
+    it('should check CANCEL_PLAN constraints when setting status to CANCELLED', async () => {
+      mockExecFileAsync.mockResolvedValue({
+        stdout: '✅ Plan Updated\n📝 Changes: • Status: ACTIVE → CANCELLED'
+      });
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      const result = await setPlanStatus({
+        planId: 'PLAN_feature_x',
+        status: 'CANCELLED'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(mockCheckConstraints).toHaveBeenCalledWith('CANCEL_PLAN', expect.objectContaining({
+        targetId: 'PLAN_feature_x'
+      }));
+    });
+
+    it('should block CANCELLED when constraints fail', async () => {
+      mockCheckConstraints.mockResolvedValue({
+        allowed: false,
+        blockers: ['No \'VALIDATION_PASSED\' event recorded for this plan.']
+      });
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      const result = await setPlanStatus({
+        planId: 'PLAN_feature_x',
+        status: 'CANCELLED'
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Plan completion blocked by constraints');
+      expect(mockExecFileAsync).not.toHaveBeenCalled();
     });
 
     it('should use correct CLI arguments', async () => {

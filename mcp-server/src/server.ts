@@ -25,7 +25,7 @@ import {
   syncPlans
 } from './tools/query.js';
 import { findSkillForTask } from './tools/skills.js';
-import { createSession, createPlan } from './tools/mutations.js';
+import { createSession, createPlan, createReview, createLink, checkConstraintsTool } from './tools/mutations.js';
 import { 
   setPlanStatus, 
   appendToPlan, 
@@ -43,6 +43,7 @@ import { validateDeliverables, checkTddCompliance, validateSkill } from './tools
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
 import {
   querySessionsSqlite,
+  getSessionSqlite,
   queryPlansSqlite,
   queryLearnedPatternsSqlite,
   searchContextSqlite,
@@ -358,6 +359,18 @@ Natural language also supported:
     );
 
     this.server.registerTool(
+      'get_session',
+      {
+        description: 'Get a single session with related entities (plan, reviews, events) in one response.',
+        inputSchema: z.object({
+          sessionId: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+        }),
+      },
+      async (args) => getSessionSqlite(args)
+    );
+
+    this.server.registerTool(
       'query_plans_sqlite',
       {
         description: `Query plans with 4 levels of detail for token efficiency:
@@ -464,6 +477,51 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         }),
       },
       async (args) => createSession(args)
+    );
+
+    this.server.registerTool(
+      'create_review',
+      {
+        description:
+          'Create a review entry linked to a plan or session. Use for review workflows and blocking checks.',
+        inputSchema: z.object({
+          targetId: z.string().min(1),
+          content: z.string().min(1),
+          author: z.string().optional(),
+          status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional().default('PENDING'),
+        }),
+      },
+      async (args) => createReview(args)
+    );
+
+    this.server.registerTool(
+      'create_link',
+      {
+        description:
+          'Create an explicit relationship link between entities (plan/session/review).',
+        inputSchema: z.object({
+          sourceId: z.string().min(1),
+          targetId: z.string().min(1),
+          type: z.enum(['depends_on', 'relates_to', 'blocks', 'implements']),
+          metadata: z.record(z.unknown()).optional(),
+        }),
+      },
+      async (args) => createLink(args)
+    );
+
+    this.server.registerTool(
+      'check_constraints',
+      {
+        description:
+          'Check whether an action is currently allowed by workflow constraints and return blockers if any.',
+        inputSchema: z.object({
+          action: z.enum(['COMPLETE_PLAN', 'MERGE_PLAN', 'START_SESSION', 'EDIT_CORE_FILE']),
+          targetId: z.string().optional(),
+          userId: z.string().optional(),
+          projectId: z.string().optional(),
+        }),
+      },
+      async (args) => checkConstraintsTool(args)
     );
 
     // Session Mutation Tools (Split from update_session for clarity)

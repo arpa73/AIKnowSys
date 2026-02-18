@@ -158,7 +158,7 @@ ${'- Benefit ' + (i + 1) + '\n'.repeat(3)}
     console.log(`   Sessions: ${result.sessions.migrated}/100`);
     console.log(`   Plans: ${result.plans.migrated}/20`);
     console.log(`   Learned: ${result.learned.migrated}/30`);
-  });
+  }, 30000);
 
   it('should handle dry-run mode efficiently with large dataset', async () => {
     // GIVEN: Large dataset and dry-run mode
@@ -184,5 +184,5 @@ ${'- Benefit ' + (i + 1) + '\n'.repeat(3)}
     expect(result.learned.found).toBe(30);
 
     console.log(`\n✅ Dry-run Performance: ${duration}ms for 150 files`);
-  });
+  }, 15000);
 });

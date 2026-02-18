@@ -7,6 +7,25 @@
 
 import { EventType } from './types.js';
 
+type EventDataRecord = Record<string, unknown>;
+
+interface EventLike {
+  eventId?: unknown;
+  projectId?: unknown;
+  timestamp?: unknown;
+  eventType?: unknown;
+  data?: unknown;
+}
+
+function readString(data: EventDataRecord, key: string): string | undefined {
+  const value = data[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== '';
+}
+
 /**
  * Validation result
  */
@@ -18,37 +37,37 @@ export interface ValidationResult {
 /**
  * Validate event data against its schema
  */
-export function validateEventData(eventType: EventType, data: any): ValidationResult {
+export function validateEventData(eventType: EventType, data: EventDataRecord): ValidationResult {
   const errors: string[] = [];
 
   switch (eventType) {
     case EventType.TASK_COMPLETED:
-      if (!data.description || data.description.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'description'))) {
         errors.push('description is required');
       }
-      if (!['success', 'partial', 'failed'].includes(data.outcome)) {
+      if (!['success', 'partial', 'failed'].includes(String(data.outcome))) {
         errors.push('Invalid outcome');
       }
       break;
 
     case EventType.DECISION_MADE:
-      if (!data.decision || data.decision.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'decision'))) {
         errors.push('decision is required');
       }
-      if (!data.rationale || data.rationale.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'rationale'))) {
         errors.push('rationale is required');
       }
       break;
 
     case EventType.PATTERN_DISCOVERED: {
-      if (!data.pattern || data.pattern.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'pattern'))) {
         errors.push('pattern is required');
       }
-      if (!data.solution || data.solution.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'solution'))) {
         errors.push('solution is required');
       }
       const validCategories = ['error_resolution', 'best_practice', 'workaround', 'optimization', 'project_specific'];
-      if (!validCategories.includes(data.category)) {
+      if (!validCategories.includes(String(data.category))) {
         errors.push('Invalid category');
       }
       if (typeof data.reusable !== 'boolean') {
@@ -58,49 +77,49 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
     }
 
     case EventType.VALIDATION_PASSED:
-      if (!data.result || data.result.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'result'))) {
         errors.push('result is required');
       }
       break;
 
     case EventType.BUG_ENCOUNTERED:
-      if (!data.description || data.description.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'description'))) {
         errors.push('description is required');
       }
-      if (!['critical', 'high', 'medium', 'low'].includes(data.severity)) {
+      if (!['critical', 'high', 'medium', 'low'].includes(String(data.severity))) {
         errors.push('Invalid severity');
       }
       break;
 
     case EventType.BUG_RESOLVED:
-      if (!data.bugDescription || data.bugDescription.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'bugDescription'))) {
         errors.push('bugDescription is required');
       }
-      if (!data.rootCause || data.rootCause.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'rootCause'))) {
         errors.push('rootCause is required');
       }
-      if (!data.fixDescription || data.fixDescription.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'fixDescription'))) {
         errors.push('fixDescription is required');
       }
       break;
 
     case EventType.LEARNING_CAPTURED: {
-      if (!data.learning || data.learning.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'learning'))) {
         errors.push('learning is required');
       }
       const validApplicability = ['project_specific', 'language_specific', 'universal'];
-      if (!validApplicability.includes(data.applicability)) {
+      if (!validApplicability.includes(String(data.applicability))) {
         errors.push('Invalid applicability');
       }
       const validConfidence = ['low', 'medium', 'high'];
-      if (!validConfidence.includes(data.confidence)) {
+      if (!validConfidence.includes(String(data.confidence))) {
         errors.push('Invalid confidence');
       }
       break;
     }
 
     case EventType.SESSION_STARTED:
-      if (!data.title || data.title.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'title'))) {
         errors.push('title is required');
       }
       if (!Array.isArray(data.topics)) {
@@ -109,7 +128,7 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
       break;
 
     case EventType.GOAL_DEFINED:
-      if (!data.goal || data.goal.trim() === '') {
+      if (!isNonEmptyString(readString(data, 'goal'))) {
         errors.push('goal is required');
       }
       break;
@@ -127,26 +146,26 @@ export function validateEventData(eventType: EventType, data: any): ValidationRe
 /**
  * Validate complete event object
  */
-export function validateEvent(event: any): ValidationResult {
+export function validateEvent(event: EventLike): ValidationResult {
   const errors: string[] = [];
 
   // Validate base fields
-  if (!event.eventId || !event.eventId.match(/^evt-[a-f0-9-]{36}$/)) {
+  if (!isNonEmptyString(event.eventId) || !event.eventId.match(/^evt-[a-f0-9-]{36}$/)) {
     errors.push('Invalid eventId format (expected evt-<uuid>)');
   }
-  if (!event.projectId || event.projectId.trim() === '') {
+  if (!isNonEmptyString(event.projectId)) {
     errors.push('projectId is required');
   }
-  if (!event.timestamp || !isValidISO8601(event.timestamp)) {
+  if (!isNonEmptyString(event.timestamp) || !isValidISO8601(event.timestamp)) {
     errors.push('Invalid timestamp format (expected ISO 8601)');
   }
-  if (!event.eventType || !Object.values(EventType).includes(event.eventType)) {
+  if (!isNonEmptyString(event.eventType) || !Object.values(EventType).includes(event.eventType as EventType)) {
     errors.push('Invalid eventType');
   }
 
   // Validate event data
-  if (event.eventType && event.data) {
-    const dataValidation = validateEventData(event.eventType, event.data);
+  if (isNonEmptyString(event.eventType) && event.data && typeof event.data === 'object') {
+    const dataValidation = validateEventData(event.eventType as EventType, event.data as EventDataRecord);
     if (!dataValidation.valid) {
       errors.push(...(dataValidation.errors || []));
     }

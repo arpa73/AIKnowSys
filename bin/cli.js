@@ -33,6 +33,7 @@ import { migrateToSqlite } from '../dist/lib/commands/migrate-to-sqlite.js';
 import { migrateToEvents } from '../dist/lib/commands/migrate-to-events.js';
 import { exportSession } from '../dist/lib/commands/export-session.js';
 import { exportSessions } from '../dist/lib/commands/export-sessions.js';
+import { exportPlan } from '../dist/lib/commands/export-plan.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
@@ -275,6 +276,38 @@ program
     // Show individual errors if any
     if (result.errors && result.errors.length > 0 && !options.verbose) {
       console.log(chalk.yellow('\n⚠ Some exports failed. Use --verbose for details.'));
+    }
+  });
+
+program
+  .command('export-plan')
+  .description('Export single plan with linked sessions/reviews as markdown')
+  .argument('<id>', 'Plan ID to export')
+  .option('--db-path <path>', 'Database file path', './knowledge.db')
+  .option('-o, --output <path>', 'Output file path (defaults to stdout)')
+  .option('-v, --verbose', 'Show detailed export statistics')
+  .action(async (id, options) => {
+    const result = await exportPlan({
+      planId: id,
+      dbPath: options.dbPath || './knowledge.db',
+      output: options.output,
+      verbose: options.verbose
+    });
+
+    if (!result.success) {
+      console.error(chalk.red('✗'), result.error);
+      process.exit(1);
+    }
+
+    if (!options.output && result.markdown) {
+      console.log(result.markdown);
+    }
+
+    if (result.outputPath) {
+      console.log(chalk.green('✓'), `Exported to ${result.outputPath}`);
+      if (options.verbose) {
+        console.log(chalk.dim(`  ${result.sessionCount || 0} sessions, ${result.reviewCount || 0} reviews`));
+      }
     }
   });
 

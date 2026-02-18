@@ -237,8 +237,8 @@ export async function querySessionsSqlite(
       goal: row.topic,
       status: row.status as 'active' | 'paused' | 'complete',
       topics: parseTopics(row.topics),
-      created_at: row.created_at,
-      updated_at: row.updated_at,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt,
       // No content field - token efficient!
     }));
     
@@ -414,8 +414,8 @@ export async function queryPlansSqlite(
         author: row.author,
         priority: row.priority || 'medium',
         type: row.type || 'feature',
-        created_at: row.created_at,
-        updated_at: row.updated_at,
+        created_at: row.createdAt,
+        updated_at: row.updatedAt,
         // No content field - token efficient!
       }));
     
@@ -490,7 +490,7 @@ export async function queryLearnedPatternsSqlite(
         category: row.type || 'general',
         title: row.title,
         keywords: parseTopics(row.topics),
-        created_at: row.created_at,
+        created_at: row.createdAt,
         // No content field - token efficient!
       }));
       

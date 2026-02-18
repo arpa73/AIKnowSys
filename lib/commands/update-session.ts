@@ -39,6 +39,7 @@ export interface UpdateSessionResult {
 }
 
 const VALID_STATUSES = ['in-progress', 'complete', 'abandoned'] as const;
+type FrontmatterValue = string | number | boolean | string[] | null | undefined;
 
 export async function updateSession(options: UpdateSessionOptions = {}): Promise<UpdateSessionResult> {
   // === Phase 4.2: Expand shortcuts ===
@@ -143,7 +144,7 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
 
   // Track changes
   const changes: string[] = [];
-  const updates: Record<string, any> = {};
+  const updates: Record<string, FrontmatterValue> = {};
 
   // Add topic
   if (addTopic) {

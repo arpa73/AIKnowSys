@@ -2,7 +2,7 @@
 name: Developer
 description: Primary implementer of features following documented patterns and best practices.
 argument-hint: "Describe the feature to implement or bug to fix"
-model: Claude Sonnet 4.5
+model: GPT-5.3-Codex (copilot)
 handoffs:
   - label: "Send to Architect"
     agent: SeniorArchitect

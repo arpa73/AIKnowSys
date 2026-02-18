@@ -97,4 +97,5 @@ export { StorageAdapter } from './storage-adapter.js';
 export { JsonStorage } from './json-storage.js';
 export { SqliteStorage } from './sqlite-storage.js';
 export { DatabaseLocator } from './database-locator.js';
+export { getKnowledgeDb, closeKnowledgeDb, closeAllKnowledgeDbs, KnowledgeDatabaseFactory } from './db.js';
 export type { DatabaseConfig, AiknowsysConfig } from './database-locator.js';

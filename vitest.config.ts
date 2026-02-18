@@ -25,6 +25,7 @@ export default defineConfig({
             '**/dist/**',
             'test/types/**',
             // Tests that require built artifacts (dist/)
+            'test/commands/export-plan.test.ts',
             'test/commands/export-session.test.ts',
             'test/commands/export-sessions.test.ts',
             'test/commands/migrate-to-events.test.ts',
@@ -47,6 +48,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             // Tests that import from dist/ (require build first)
+            'test/commands/export-plan.test.ts',
             'test/commands/export-session.test.ts',
             'test/commands/export-sessions.test.ts',
             'test/commands/migrate-to-events.test.ts',

@@ -21,6 +21,16 @@
 import path from 'path';
 import { createStorage, type SessionFilters } from '../context/index.js';
 
+interface SessionResultItem {
+  date: string;
+}
+
+interface SessionQueryStorage {
+  init(targetDir?: string): Promise<void>;
+  querySessions(filters?: SessionFilters): Promise<QuerySessionsResult>;
+  close(): Promise<void>;
+}
+
 /**
  * Query session filters (Phase 1: Cross-Repository support)
  */
@@ -109,7 +119,7 @@ export async function querySessionsCore(
   }
   
   // Phase 1: Support explicit dbPath for cross-repository queries
-  let storage: any;
+  let storage: SessionQueryStorage;
   
   if (options.dbPath) {
     // Direct database path provided - create SqliteStorage directly
@@ -151,7 +161,7 @@ export async function querySessionsCore(
     const result = await storage.querySessions(filters);
     
     // Sort sessions by date descending (newest first)
-    result.sessions.sort((a: any, b: any) => b.date.localeCompare(a.date));
+    result.sessions.sort((a: SessionResultItem, b: SessionResultItem) => b.date.localeCompare(a.date));
     
     // Return structured data
     return result;
