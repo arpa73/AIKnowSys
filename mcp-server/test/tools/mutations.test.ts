@@ -1,20 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Create a mock for the promisified execFile
-const mockExecFileAsync = vi.fn();
-
-// Mock child_process
-vi.mock('child_process', () => ({
-  execFile: vi.fn(),
-}));
-
-// Mock util.promisify to return our mock
-vi.mock('util', () => ({
-  promisify: vi.fn(() => mockExecFileAsync),
-}));
-
 const mockInsertReview = vi.fn();
 const mockInsertLink = vi.fn();
+const mockInsertProject = vi.fn();
+const mockInsertSession = vi.fn();
+const mockInsertEvent = vi.fn();
+const mockGetActivePlanId = vi.fn();
 const mockStorageClose = vi.fn();
 const mockStorageInit = vi.fn();
 const mockCheckConstraints = vi.fn();
@@ -31,6 +22,22 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
 
     async insertLink(...args: unknown[]) {
       return mockInsertLink(...args);
+    }
+
+    async insertProject(...args: unknown[]) {
+      return mockInsertProject(...args);
+    }
+
+    async insertSession(...args: unknown[]) {
+      return mockInsertSession(...args);
+    }
+
+    async insertEvent(...args: unknown[]) {
+      return mockInsertEvent(...args);
+    }
+
+    async getActivePlanId(...args: unknown[]) {
+      return mockGetActivePlanId(...args);
     }
 
     close(...args: unknown[]) {
@@ -54,15 +61,22 @@ vi.mock('../../../lib/core/constraints.js', () => ({
 describe('Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExecFileAsync.mockReset();
     mockInsertReview.mockReset();
     mockInsertLink.mockReset();
+    mockInsertProject.mockReset();
+    mockInsertSession.mockReset();
+    mockInsertEvent.mockReset();
+    mockGetActivePlanId.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockReset();
     mockCheckConstraints.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockInsertReview.mockResolvedValue(undefined);
     mockInsertLink.mockResolvedValue(undefined);
+    mockInsertProject.mockResolvedValue(undefined);
+    mockInsertSession.mockResolvedValue(undefined);
+    mockInsertEvent.mockResolvedValue(undefined);
+    mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
     mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
   });
 
@@ -81,6 +95,23 @@ describe('Mutation Tools', () => {
       // New format: "✅ Created session: YYYY-MM-DD-session.md" or "ℹ️ Session already exists: ..."
       expect(result.content[0].text).toMatch(/Created session:|Session already exists:/);
       expect(result.content[0].text).toMatch(/session\.md/);
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should close storage when session creation fails', async () => {
+      mockStorageInit.mockRejectedValueOnce(new Error('DB init failed'));
+
+      const { createSession } = await import('../../src/tools/mutations.js');
+      const result = await createSession({
+        title: 'Test MCP Integration',
+        topics: ['MCP', 'tools']
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed during createSession storage operation: DB init failed');
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
     });
 
     // NOTE: These tests are SKIPPED because createSession() now uses direct lib/core import
@@ -307,6 +338,23 @@ describe('Mutation Tools', () => {
       expect(result.isError).not.toBe(true);
       expect(result.content[0].text).toContain('Review created');
       expect(mockInsertReview).toHaveBeenCalledTimes(1);
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should close storage when review creation fails', async () => {
+      mockInsertReview.mockRejectedValueOnce(new Error('DB locked'));
+
+      const { createReview } = await import('../../src/tools/mutations.js');
+      const result = await createReview({
+        targetId: 'PLAN_test',
+        content: 'Looks good',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed during createReview storage operation: DB locked');
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -322,6 +370,24 @@ describe('Mutation Tools', () => {
       expect(result.isError).not.toBe(true);
       expect(result.content[0].text).toContain('Link created');
       expect(mockInsertLink).toHaveBeenCalledTimes(1);
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should close storage when link creation fails', async () => {
+      mockInsertLink.mockRejectedValueOnce(new Error('DB locked'));
+
+      const { createLink } = await import('../../src/tools/mutations.js');
+      const result = await createLink({
+        sourceId: 'PLAN_a',
+        targetId: 'PLAN_b',
+        type: 'depends_on',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed during createLink storage operation: DB locked');
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
     });
   });
 

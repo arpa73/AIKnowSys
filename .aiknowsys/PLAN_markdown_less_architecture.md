@@ -114,6 +114,38 @@ get_session({ sessionId: "2026-02-17" })
 
 **Next:** Phase 3 - Make linking invisible/trivial for AI agents
 
+**2026-02-18:** ### 2026-02-18 Continuation Checkpoint (MCP create_session hybrid wiring)
+- Added RED test in `mcp-server/test/tools/mutations.test.ts` asserting `create_session` initializes and closes SQLite storage.
+- Updated `mcp-server/src/tools/mutations.ts#createSession()` to initialize `SqliteStorage` via `findKnowledgeDb()`, pass storage to `createSessionCore`, and close in `finally`.
+- Expanded test mocks to include hybrid storage methods (`insertProject`, `insertSession`, `insertEvent`, `getActivePlanId`) to support core hybrid path safely.
+- Targeted validation passed:
+  - `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts`
+  - `npx vitest run test/core/create-session.test.ts`
+- Workspace-level validation note:
+  - `npm run lint` passes with existing repository warnings.
+  - `npm test` reports 3 existing unrelated failures in `test/core/update-plan.test.ts` (constraint enforcement expectations) and `test/integration/hybrid-storage.test.ts` (FK expectation mismatch).
+
+**2026-02-18:** ### 2026-02-18 Architect Feedback Addressed (MCP mutation hardening)
+- Refactored `mcp-server/src/tools/mutations.ts` to use shared `withStorage()` helper, removing duplicated storage lifecycle logic across `createSession`, `createReview`, and `createLink`.
+- Fixed resource leak risk by enforcing guaranteed `storage?.close()` in `finally` via helper wrapper.
+- Added regression tests in `mcp-server/test/tools/mutations.test.ts` for error paths:
+  - `createReview` closes storage when `insertReview` throws.
+  - `createLink` closes storage when `insertLink` throws.
+- Validation:
+  - `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (18 passed, 8 skipped)
+  - `get_errors` on changed files ✅ (no errors)
+
+**2026-02-18:** ### 2026-02-18 Continuation: additional cleanup hardening
+- Added `createSession` regression test in `mcp-server/test/tools/mutations.test.ts` to assert storage cleanup on failure path (`mockStorageInit` rejection).
+- Removed obsolete subprocess scaffolding from `mcp-server/src/tools/mutations.ts` (`promisify`/`execFile` imports and `execFileAsync` dead code).
+- Removed obsolete subprocess mocks from mutation tests (`child_process` and `util.promisify` test scaffolding).
+- Validation:
+  - `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (19 passed, 8 skipped)
+
+**2026-02-18:** ### 2026-02-18 Architect Suggestion Applied (error context hardening)
+- Updated `mcp-server/src/tools/mutations.ts` `withStorage()` wrapper to rethrow with operation-specific context (`createSession/createReview/createLink storage operation`).
+- Added regression assertions in `mcp-server/test/tools/mutations.test.ts` to verify contextual error messages on failure paths while maintaining storage cleanup guarantees.
+- Validation: `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (19 passed, 8 skipped).
 ## Overview
 
 **The Core Insight: AI Agents Don't Need Markdown Files**

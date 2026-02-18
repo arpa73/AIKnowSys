@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import { promisify } from 'util';
-import { execFile } from 'child_process';
 import { randomUUID } from 'crypto';
 import path from 'path';
 import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
@@ -18,8 +16,6 @@ import { createPlanCore } from '../../../lib/core/create-plan.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
 import { updateSessionCore } from '../../../lib/core/update-session.js';
 
-// Temporary: Keep execFileAsync for functions not yet refactored
-const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
 
 // Zod schemas for validation
@@ -78,6 +74,26 @@ const checkConstraintsSchema = z.object({
   projectId: z.string().optional(),
 });
 
+async function withStorage<T>(
+  operation: (storage: SqliteStorage) => Promise<T>,
+  operationName = 'storage operation'
+): Promise<T> {
+  let storage: SqliteStorage | null = null;
+
+  try {
+    storage = new SqliteStorage();
+    await storage.init(findKnowledgeDb());
+    return await operation(storage);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const contextualError = new Error(`Failed during ${operationName}: ${message}`);
+    (contextualError as Error & { cause?: unknown }).cause = error;
+    throw contextualError;
+  } finally {
+    storage?.close();
+  }
+}
+
 /**
  * Create a new session file
  * 
@@ -86,14 +102,15 @@ const checkConstraintsSchema = z.object({
 export async function createSession(params: unknown) {
   try {
     const validated = createSessionSchema.parse(params);
-    
+
     // Direct function call (NO subprocess!)
-    const result = await createSessionCore({
+    const result = await withStorage(async (storage) => createSessionCore({
       title: validated.title,
       topics: validated.topics,
       plan: validated.plan || null,
-      targetDir: PROJECT_ROOT
-    });
+      targetDir: PROJECT_ROOT,
+      storage,
+    }), 'createSession storage operation');
 
     // Format MCP response
     if (result.created) {
@@ -349,26 +366,22 @@ export async function updatePlan(params: unknown) {
 export async function createReview(params: unknown) {
   try {
     const validated = createReviewSchema.parse(params);
-    const storage = new SqliteStorage();
-    const dbPath = findKnowledgeDb();
-    await storage.init(dbPath);
-
     const now = new Date().toISOString();
     const projectId = path.basename(PROJECT_ROOT);
     const reviewId = `review_${randomUUID()}`;
 
-    await storage.insertReview({
-      id: reviewId,
-      project_id: projectId,
-      target_id: validated.targetId,
-      author: validated.author || 'mcp-agent',
-      status: validated.status,
-      content: validated.content,
-      created_at: now,
-      updated_at: now,
-    });
-
-    storage.close();
+    await withStorage(async (storage) => {
+      await storage.insertReview({
+        id: reviewId,
+        project_id: projectId,
+        target_id: validated.targetId,
+        author: validated.author || 'mcp-agent',
+        status: validated.status,
+        content: validated.content,
+        created_at: now,
+        updated_at: now,
+      });
+    }, 'createReview storage operation');
 
     return {
       content: [{
@@ -406,19 +419,16 @@ export async function createReview(params: unknown) {
 export async function createLink(params: unknown) {
   try {
     const validated = createLinkSchema.parse(params);
-    const storage = new SqliteStorage();
-    const dbPath = findKnowledgeDb();
-    await storage.init(dbPath);
 
-    await storage.insertLink({
-      source_id: validated.sourceId,
-      target_id: validated.targetId,
-      type: validated.type,
-      metadata: validated.metadata,
-      created_at: new Date().toISOString(),
-    });
-
-    storage.close();
+    await withStorage(async (storage) => {
+      await storage.insertLink({
+        source_id: validated.sourceId,
+        target_id: validated.targetId,
+        type: validated.type,
+        metadata: validated.metadata,
+        created_at: new Date().toISOString(),
+      });
+    }, 'createLink storage operation');
 
     return {
       content: [{
