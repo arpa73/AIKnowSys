@@ -150,6 +150,7 @@ get_session({ sessionId: "2026-02-17" })
 **2026-02-18:** **2026-02-18:** ### 2026-02-18 Continuation: export command scaffolding + format support
 - Added unified CLI command group in `bin/cli.js`: `aiknowsys export session|sessions|plan` while preserving existing `export-session`, `export-sessions`, `export-plan` commands for backward compatibility.
 - Added session export format option in `lib/types/index.ts` and `lib/commands/export-session.ts` (`narrative`, `timeline`, `grouped`, `custom`) with lightweight `custom` scaffold output.
+- Follow-up noted: implement distinct `custom` behavior (AI/query-focused output) rather than narrative wrapper in a later Phase 3 slice.
 - Added RED→GREEN tests:
   - `test/export-group.test.ts` validates grouped export CLI help + `--format` option.
   - `test/commands/export-session-formats.test.ts` validates `timeline/grouped/custom` output and invalid format handling.

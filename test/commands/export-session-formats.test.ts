@@ -75,6 +75,16 @@ describe('export-session formats', () => {
     expect(result.markdown).toContain('session started');
   });
 
+  it('should default to narrative format when format is omitted', async () => {
+    const result = await exportSession({
+      sessionId: 'sess-format-001',
+      dbPath
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.markdown).toContain('# Session: Format Session');
+  });
+
   it('should export grouped format', async () => {
     const result = await exportSession({
       sessionId: 'sess-format-001',

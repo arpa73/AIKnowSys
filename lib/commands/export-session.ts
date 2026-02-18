@@ -99,8 +99,14 @@ function generateCustomMarkdown(events: KnowledgeEvent[], title: string): string
 export async function exportSession(
   options: ExportSessionOptions
 ): Promise<ExportSessionResult> {
-  const { sessionId, date, dbPath, output, verbose } = options;
-  const format = options.format || 'narrative';
+  const {
+    sessionId,
+    date,
+    dbPath,
+    output,
+    verbose,
+    format = 'narrative'
+  } = options;
 
   try {
     // Validate options
@@ -187,13 +193,22 @@ export async function exportSession(
       );
 
       // Generate markdown
-      const markdown = format === 'timeline'
-        ? generateTimelineMarkdown(sortedEvents, session.topic)
-        : format === 'grouped'
-          ? generateGroupedMarkdown(sortedEvents, session.topic)
-          : format === 'custom'
-            ? generateCustomMarkdown(sortedEvents, session.topic)
-            : new MarkdownGenerator().generateSessionMarkdown(sortedEvents, session.topic);
+      let markdown: string;
+      switch (format) {
+        case 'timeline':
+          markdown = generateTimelineMarkdown(sortedEvents, session.topic);
+          break;
+        case 'grouped':
+          markdown = generateGroupedMarkdown(sortedEvents, session.topic);
+          break;
+        case 'custom':
+          markdown = generateCustomMarkdown(sortedEvents, session.topic);
+          break;
+        case 'narrative':
+        default:
+          markdown = new MarkdownGenerator().generateSessionMarkdown(sortedEvents, session.topic);
+          break;
+      }
 
       // Write to file if output path provided
       if (output) {
