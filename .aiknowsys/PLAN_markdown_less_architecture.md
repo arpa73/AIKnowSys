@@ -158,6 +158,55 @@ get_session({ sessionId: "2026-02-17" })
   - `npx vitest run test/export-group.test.ts test/commands/export-session-formats.test.ts` ✅ (6 passed)
   - `node bin/cli.js --help` ✅
   - `npm run lint` ✅ (existing repository warnings only).
+
+**2026-02-18:** 
+**2026-02-18:** ### 2026-02-18 Continuation: export plan format parity + CLI wiring
+- Added plan export format support in `lib/commands/export-plan.ts` for `narrative`, `timeline`, `grouped`, and `custom` (custom remains scaffold output by design).
+- Added format validation for `exportPlan()` with clear error message for invalid values.
+- Added grouped helpers for plan markdown generation and kept narrative output as default when `format` is omitted.
+- Updated CLI wiring in `bin/cli.js`:
+  - `aiknowsys export plan <id> --format <type>`
+  - `aiknowsys export-plan <id> --format <type>`
+- Added RED→GREEN tests:
+  - `test/commands/export-plan-formats.test.ts` validates `timeline/grouped/custom` output and invalid format rejection.
+  - `test/export-group.test.ts` validates `export plan --help` exposes `--format`.
+- Validation:
+  - `npx vitest run test/export-group.test.ts test/commands/export-plan-formats.test.ts test/commands/export-session-formats.test.ts` ✅ (12 passed)
+  - `node bin/cli.js export plan --help` ✅
+  - `npm run lint` ✅ (existing repository warnings only).
+
+**2026-02-18:**
+
+**2026-02-18:** ### End-of-Day Update (2026-02-18, 22:41)
+
+- Phase B/continuation work is in a stable validated state.
+- Architect follow-up issues were implemented and verified.
+- Test stabilization complete for previously failing suites (`hybrid-storage`, `update-plan`, `base-template`).
+- Current full validation status:
+  - `npm test`: ✅ 1530 passed, 4 skipped
+  - `npm run lint`: ✅ 0 errors (warnings are pre-existing)
+  - `npx aiknowsys validate-deliverables`: ✅ 5/5
+
+**Next session priorities:**
+1. Consolidate and group commits by concern.
+2. Draft/submit PR with migration notes and validation evidence.
+3. Continue next plan phase from this clean checkpoint.
+## Architect Handoff Note (Feb 18, 2026)
+
+**Checkpoint 15 — Phase A ready to start.**
+
+Reviewed by Senior Architect. All 4 phases scoped and documented in checkpoint 15.
+Next developer action: implement Phase A (own files, no template risk).
+
+**Files to update in Phase A:**
+- `AGENTS.md` — replace "read/update CODEBASE_ESSENTIALS.md" with MCP calls
+- `.github/agents/architect.agent.md` — replace "Read CODEBASE_ESSENTIALS.md before review" → `get_critical_invariants()`
+- `.github/agents/planner.agent.md` — replace ESSENTIALS grep → MCP query
+- `SETUP_GUIDE.md` — remove ESSENTIALS customisation sections, point to MCP setup
+
+**Validation after Phase A:** `grep -r "CODEBASE_ESSENTIALS" AGENTS.md .github/agents/ SETUP_GUIDE.md` should return zero hits.
+**Then proceed to Phase B** (templates — run `npx aiknowsys validate-deliverables` after).
+
 ## Overview
 
 **The Core Insight: AI Agents Don't Need Markdown Files**
@@ -411,12 +460,27 @@ AI: Use JSON directly → No parsing, no risk, always valid
       → Returns: { id, title, plan: {...}, events: [...], reviews: [...] }
       ```
 
-15. **Document Workflow Shift** (File: `CODEBASE_ESSENTIALS.md`)
-    - **Action:** Add section "Database-First AI Workflow with Auto-Linking"
-    - **Explain:** Why AI agents don't need markdown
-    - **Show:** Auto-linking flow diagram
-    - **Show:** MCP tool JSON examples with auto-linking
-    - **Benefits:** Invisible linking, constraint by architecture, predictable responses
+15. **Remove CODEBASE_ESSENTIALS.md entirely** (Files: multiple)
+    - **Rationale:** File is redundant once MCP serves invariants/validation matrix live. 909 lines
+      of docs that drift, duplicate AGENTS.md, and encourage `read_file` over `get_critical_invariants()`.
+      The endgame is: AGENTS.md instructs agents to use MCP tools — no static file needed.
+    - **Phase A — Update this project's own files** (no template risk):
+      - `AGENTS.md`: Remove all "read/update CODEBASE_ESSENTIALS.md" instructions; replace with MCP calls
+      - `.github/agents/architect.agent.md`: Replace "Read CODEBASE_ESSENTIALS.md before review" → `get_critical_invariants()`
+      - `.github/agents/planner.agent.md`: Replace ESSENTIALS grep → MCP query
+      - `SETUP_GUIDE.md`: Remove ESSENTIALS customisation sections; point to MCP setup instead
+    - **Phase B — Update templates** (Invariant #4 applies — requires validate-deliverables):
+      - `templates/AGENTS.template.md`: Replace all ESSENTIALS references with MCP instructions
+      - `templates/CODEBASE_ESSENTIALS.template.md`: Delete (no longer a deliverable)
+      - `templates/agents/planner.agent.template.md`: Replace ESSENTIALS grep → MCP query
+      - `templates/agents/USAGE.txt`: Update purpose description
+    - **Phase C — Update examples**:
+      - `examples/filled-simple-api/AGENTS.md`: Replace ESSENTIALS references with MCP pattern
+    - **Phase D — Delete the file**:
+      - `git rm CODEBASE_ESSENTIALS.md`
+      - `git rm CODEBASE_ESSENTIALS.md.backup` (if exists)
+    - **TDD:** No new code — validate with `npx aiknowsys validate-deliverables` after Phase B
+    - **Definition of done:** `grep -r "CODEBASE_ESSENTIALS" . --include="*.md" --include="*.ts" --include="*.js"` returns only historical entries in RELEASE_NOTES and CODEBASE_CHANGELOG
 
 16. **Deprecate File Commands** (Files: `lib/commands/create-session.ts`, etc.)
     - **Action:** Mark file-based mutations as "human CLI only"
