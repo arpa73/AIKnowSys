@@ -320,4 +320,4 @@ const precisePlans = await mcp_aiknowsys_query_plans_sqlite({
 
 ---
 
-**Part of aiknowsys. See [README.md](../README.md) and [CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md) for full documentation.**
+**Part of aiknowsys. See [README.md](../README.md), [AGENTS.md](../AGENTS.md), and [mcp-server/SETUP.md](../mcp-server/SETUP.md) for full documentation.**

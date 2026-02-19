@@ -2,7 +2,7 @@
 
 This folder contains all project documentation organized by category.
 
-**🎯 For AI Agents:** Start with [CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md) and [AGENTS.md](../AGENTS.md) at every session. Use [Agent Skills](../.github/skills/) for step-by-step workflows.
+**🎯 For AI Agents:** Start with `mcp_aiknowsys_get_critical_invariants()` (see [mcp-server/SETUP.md](../mcp-server/SETUP.md)) and [AGENTS.md](../AGENTS.md) at every session. Use [Agent Skills](../.github/skills/) for step-by-step workflows.
 
 ---
 
@@ -126,7 +126,7 @@ Historical session logs from [CODEBASE_CHANGELOG.md](../CODEBASE_CHANGELOG.md) (
 
 ### For AI Agents?
 **Start every session with:**
-1. **[CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md)** - Architecture, patterns, critical invariants
+1. **[MCP critical invariants](../mcp-server/SETUP.md)** - Call `mcp_aiknowsys_get_critical_invariants()` for architecture, patterns, and critical rules
 2. **[AGENTS.md](../AGENTS.md)** - Workflow, validation, documentation rules
 3. **[Agent Skills](../.github/skills/)** - Auto-loaded step-by-step workflows
 
@@ -144,13 +144,13 @@ Start here:
 
 ### New Developer?
 Start here:
-1. **[CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md)** - Core patterns and architecture
+1. **[AGENTS.md](../AGENTS.md)** - Core workflow and MCP-first guardrails
 2. **[developer-checklist skill](../.github/skills/developer-checklist/SKILL.md)** - Pre-commit validation
 3. **[TESTING_STRATEGY.md](guides/TESTING_STRATEGY.md)** - How we test
 
 ### Implementing a Feature?
 1. **[feature-implementation skill](../.github/skills/feature-implementation/SKILL.md)** - Step-by-step backend → frontend → OpenAPI workflow
-2. **[CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md)** - Check patterns and invariants
+2. **[MCP critical invariants](../mcp-server/SETUP.md)** - Call `mcp_aiknowsys_get_critical_invariants()` before coding
 3. **[API_TYPE_SAFETY.md](guides/API_TYPE_SAFETY.md)** - Using OpenAPI generated types
 
 ### Refactoring Code?
@@ -174,9 +174,9 @@ Start here:
 
 ## 📋 Key Principles
 
-### 1. Read CODEBASE_ESSENTIALS.md at Session Start
-Single-source reference for architecture, patterns, and critical invariants.  
-See: [CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md)
+### 1. Read MCP Critical Invariants at Session Start
+Use `mcp_aiknowsys_get_critical_invariants()` as the source of architecture patterns and critical rules.  
+See: [mcp-server/SETUP.md](../mcp-server/SETUP.md)
 
 ### 2. Use Agent Skills for Step-by-Step Workflows
 Prefer skills over verbose guides - better for AI consumption.  

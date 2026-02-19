@@ -28,10 +28,7 @@ vi.mock('../../../../lib/context/sqlite-storage.js', () => {
 
 describe('storage-helpers', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockStorageInit.mockReset();
-    mockStorageClose.mockReset();
-    mockStorageGetUserState.mockReset();
+    vi.resetAllMocks();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
     mockStorageGetUserState.mockResolvedValue({ activePlanId: null });
@@ -84,5 +81,6 @@ describe('storage-helpers', () => {
     ).toBe('DB unavailable');
 
     expect(toUserFacingStorageErrorMessage(new Error('Already plain message'))).toBe('Already plain message');
+    expect(toUserFacingStorageErrorMessage('raw string error')).toBe('raw string error');
   });
 });

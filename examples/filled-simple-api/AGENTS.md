@@ -8,9 +8,9 @@
 
 **Step 1: Acknowledge & Read Context**
 ```
-"Reading required context files..."
-[Actually call read_file on @CODEBASE_ESSENTIALS.md]
-"Context review complete. Ready to proceed."
+"Loading project context..."
+[Call mcp_aiknowsys_get_critical_invariants()]
+"✅ Context loaded. Ready to proceed."
 ```
 
 **Step 2: Create Work Plan** (even for "quick fixes")
@@ -31,7 +31,7 @@
 ## ⚡ QUICK REFERENCE CHECKLIST
 
 **Before ANY change (even small fixes):**
-- [ ] Read @CODEBASE_ESSENTIALS.md (patterns, conventions)
+- [ ] Load MCP critical invariants via `mcp_aiknowsys_get_critical_invariants()`
 - [ ] Read relevant skill if applicable
 - [ ] Make changes + write/update tests
 - [ ] **VALIDATE** (see validation matrix below)
@@ -54,8 +54,8 @@
 
 ### 1️⃣ START: Read Context (REQUIRED)
 
-**ALWAYS read these files at the start of every conversation:**
-1. **@CODEBASE_ESSENTIALS.md** - Current architecture, patterns, and guardrails (MANDATORY)
+**ALWAYS load context at the start of every conversation:**
+1. **MCP critical invariants** - `mcp_aiknowsys_get_critical_invariants()` (MANDATORY)
 2. **@AGENTS.md** - This file for workflow reminders
 
 **When you need history:**
@@ -76,7 +76,7 @@
 
 ### 3️⃣ IMPLEMENT: Write Code + Tests
 
-Follow patterns from CODEBASE_ESSENTIALS.md and the skill you read.
+Follow MCP critical invariants and the skill you read.
 
 **For this project:**
 - Write integration test FIRST (TDD approach)
@@ -111,7 +111,7 @@ npm run lint && npm test
 **What to update**:
 ```bash
 # Add session entry to CODEBASE_CHANGELOG.md at the TOP
-# Update CODEBASE_ESSENTIALS.md if patterns/invariants changed
+# Update MCP-backed invariants/pattern docs if rules changed
 ```
 
 **Session entry template**:
@@ -152,7 +152,7 @@ Only end your turn after completing steps 1-5. Tell the user:
 
 ## 🎯 General Best Practices
 
-1. **Read first, code second** - Always check CODEBASE_ESSENTIALS.md for existing patterns
+1. **Read first, code second** - Always load MCP critical invariants first
 2. **Update proactively** - Don't wait for user to ask
 3. **Be concise** - Keep summaries short and factual
 4. **Link files** - Include line numbers when referencing code
@@ -213,4 +213,4 @@ Only end your turn after completing steps 1-5. Tell the user:
 
 *This file helps AI agents follow a consistent workflow: Read → Plan → Implement → Validate → Document → Confirm*
 
-*Part of the Task API knowledge system. See [CODEBASE_ESSENTIALS.md](CODEBASE_ESSENTIALS.md) for technical details.*
+*Part of the Task API knowledge system. See [README.md](README.md) and [CODEBASE_CHANGELOG.md](CODEBASE_CHANGELOG.md) for workflow context.*

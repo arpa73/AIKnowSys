@@ -165,7 +165,7 @@ Before starting ANY implementation:
 1. **Load Context:**
    - Check `.aiknowsys/plans/active-<username>.md` for active plan
    - Read most recent `.aiknowsys/sessions/*.md` file
-   - Review critical invariants from CODEBASE_ESSENTIALS.md
+  - Load critical invariants via `mcp_aiknowsys_get_critical_invariants()`
 
 2. **Acknowledge Context:**
    - "✅ Context loaded: [active plan name]"
@@ -276,7 +276,7 @@ Tabnine doesn't support global custom instructions, but you can:
   "project_context": {
     "files": [
       "AGENTS.md",
-      ".aiknowsys/CODEBASE_ESSENTIALS.md"
+      ".aiknowsys/CURRENT_PLAN.md"
     ]
   }
 }

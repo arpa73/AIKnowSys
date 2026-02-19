@@ -148,7 +148,7 @@ Strengthen the language in AGENTS.md from "should" to "MUST":
 
 1. Create a **Claude Project** for this repository
 2. Add these files to Project Knowledge:
-   - `.aiknowsys/CODEBASE_ESSENTIALS.md`
+   - `AGENTS.md`
    - `.aiknowsys/plans/active-<username>.md`
    - Most recent `.aiknowsys/sessions/*.md` file
 
@@ -157,7 +157,7 @@ Strengthen the language in AGENTS.md from "should" to "MUST":
 This is an AIKnowSys-managed project. Before responding:
 1. Check Project Knowledge for active plan
 2. Review most recent session file
-3. Follow rules in CODEBASE_ESSENTIALS.md
+3. Load MCP critical invariants (`mcp_aiknowsys_get_critical_invariants()`) and follow AGENTS workflow
 ```
 
 4. **Update Project Knowledge** manually after each session

@@ -19,7 +19,10 @@ export async function withStorage<T>(
     throw contextualError;
   } finally {
     if (storage) {
-      await storage.close();
+      try {
+        await storage.close();
+      } catch {
+      }
     }
   }
 }

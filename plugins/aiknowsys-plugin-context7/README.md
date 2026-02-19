@@ -9,7 +9,7 @@
 
 A plugin for [aiknowsys](https://github.com/arpa73/AIKnowSys) that adds Context7 MCP integration for:
 
-- **Automated validation** of skills, CODEBASE_ESSENTIALS.md, and stack templates against current library versions
+- **Automated validation** of skills, CODEBASE_ESSENTIALS.md (in generated projects), and stack templates against current library versions
 - **Ad-hoc documentation queries** using Context7's up-to-date library knowledge
 - **Breaking change detection** when frameworks release new versions
 
@@ -29,7 +29,7 @@ The plugin will be automatically discovered by aiknowsys.
 
 ### Validate Your Project
 
-Check if your skills, CODEBASE_ESSENTIALS.md, and stack templates use current best practices:
+Check if your skills, CODEBASE_ESSENTIALS.md (if present), and stack templates use current best practices:
 
 ```bash
 # Validate skills + CODEBASE_ESSENTIALS.md (default)
@@ -166,7 +166,7 @@ To connect to a real Context7 MCP server:
 
 ### validate
 
-Validate aiknowsys skills, CODEBASE_ESSENTIALS.md, and stack templates against current library documentation.
+Validate aiknowsys skills, CODEBASE_ESSENTIALS.md (if present), and stack templates against current library documentation.
 
 **Options:**
 - `--type <type>` - Filter by deliverable type (skills|essentials|stacks|all) [default: all = skills + essentials]
@@ -178,7 +178,7 @@ Validate aiknowsys skills, CODEBASE_ESSENTIALS.md, and stack templates against c
 1. **Validate User Project** (default - skills + ESSENTIALS):
    ```bash
    npx aiknowsys validate
-   # Checks .github/skills/ and CODEBASE_ESSENTIALS.md
+  # Checks .github/skills/ and CODEBASE_ESSENTIALS.md (if present)
    ```
 
 2. **Validate Only CODEBASE_ESSENTIALS.md**:
@@ -449,10 +449,10 @@ jobs:
 **Problem:** `validate` reports 0 items found
 
 **Solutions:**
-1. Run from project root (where `.github/` or `CODEBASE_ESSENTIALS.md` exists)
+1. Run from project root (where `.github/` exists; `CODEBASE_ESSENTIALS.md` is optional)
 2. Check directory structure: `.github/skills/` for skills, root for ESSENTIALS
 3. Ensure SKILL.md files exist in skill directories
-4. For essentials: Verify `CODEBASE_ESSENTIALS.md` has "## 1. Technology Snapshot" section
+4. For essentials mode: Verify `CODEBASE_ESSENTIALS.md` has "## 1. Technology Snapshot" section
 
 ### Mock Mode vs Real MCP
 

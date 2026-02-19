@@ -362,7 +362,7 @@ Please run validation before claiming work is complete:
   npm test
   npm run test
   node --test test/your-test.test.js
-See validation matrix in CODEBASE_ESSENTIALS.md for required checks.
+See validation matrix via `mcp_aiknowsys_get_validation_matrix()` (or your project validation docs) for required checks.
 ```
 
 **Configuration:** Edit patterns in validation-reminder.cjs to match your project
@@ -568,7 +568,7 @@ Recommendation: Investigate performance bottlenecks
 
 **What it does:**
 - Reads installed aiknowsys version from package.json
-- Reads project initialization version from CODEBASE_ESSENTIALS.md
+- Reads project initialization metadata from project knowledge files (e.g., CODEBASE_ESSENTIALS.md in generated projects)
 - Compares versions (major.minor.patch)
 - Warns on major/minor version differences
 - Suggests migration command
@@ -1150,7 +1150,7 @@ console.error('[DEBUG] Current directory:', process.cwd());
 
 - [SETUP_GUIDE.md](../SETUP_GUIDE.md#vscode-hooks-optional) - Initial setup
 - [AGENTS.md](../AGENTS.md) - Manual workflow (hooks-free)
-- [CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md) - Project patterns
+- [mcp-server/SETUP.md](../mcp-server/SETUP.md) - MCP setup and critical invariants access
 - [.github/skills/README.md](../.github/skills/README.md) - Available skills
 
 ---

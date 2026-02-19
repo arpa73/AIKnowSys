@@ -19,7 +19,7 @@ Use when:
 ## Prerequisites
 
 Before starting:
-- Read [CODEBASE_ESSENTIALS.md](../../../CODEBASE_ESSENTIALS.md) - Current patterns
+- Read [AGENTS.md](../../../AGENTS.md) and load `mcp_aiknowsys_get_critical_invariants()` - Current patterns
 - Check for relevant skills in `.github/skills/`
 - For breaking changes: Read `openspec/AGENTS.md` (if OpenSpec is installed)
 
@@ -107,7 +107,7 @@ High-level technical approach
 - [ ] Run: npm run type-check ✅
 
 ## Documentation
-- [ ] Update CODEBASE_ESSENTIALS.md (if new pattern)
+- [ ] Update project pattern source (MCP invariants/AGENTS.md, or CODEBASE_ESSENTIALS.md in generated project)
 - [ ] Add to CODEBASE_CHANGELOG.md
 ```
 
@@ -135,7 +135,7 @@ Skip proposal, go directly to implementation steps below.
 
 **\u26a0\ufe0f CRITICAL: Follow TDD (Test-Driven Development) for ALL new features**
 
-This is Critical Invariant #7 from CODEBASE_ESSENTIALS.md. Not optional.
+This is Critical Invariant #7 from your project critical invariants. Not optional.
 
 ### Phase 0: TDD Setup (MANDATORY for new features)
 
@@ -207,7 +207,7 @@ npm test  # Still passes after refactor
 #### 2. Check Existing Patterns
 ```bash
 # Read project patterns
-cat CODEBASE_ESSENTIALS.md
+cat AGENTS.md
 
 # Search for similar implementations
 grep -r "similar_feature" src/
@@ -223,7 +223,7 @@ Create a task list in your notes:
 
 ### Phase 2: Implement Backend First
 
-**Follow your project's backend patterns from CODEBASE_ESSENTIALS.md**
+**Follow your project's backend patterns from the active invariant source (MCP critical invariants or project pattern file)**
 
 #### General Backend Checklist:
 1. **Create/modify data models**
@@ -245,7 +245,7 @@ go test ./...
 
 ### Phase 3: Implement Frontend
 
-**Follow your project's frontend patterns from CODEBASE_ESSENTIALS.md**
+**Follow your project's frontend patterns from the active invariant source (MCP critical invariants or project pattern file)**
 
 #### General Frontend Checklist:
 1. **Create/modify components**
@@ -268,7 +268,7 @@ npm run type-check
 #### Run Full Test Suite
 ```bash
 # Follow your project's validation matrix
-# See CODEBASE_ESSENTIALS.md for exact commands
+# See mcp_aiknowsys_get_validation_matrix() (or project validation docs) for exact commands
 ```
 
 #### Manual Testing Checklist
@@ -281,7 +281,7 @@ npm run type-check
 ### Phase 5: Documentation & Commit
 
 #### Update Documentation
-If you created a new pattern, add it to `CODEBASE_ESSENTIALS.md`:
+If you created a new pattern, add it to your project's pattern source (`AGENTS.md`/skills, or `CODEBASE_ESSENTIALS.md` in generated projects):
 ```markdown
 ### Pattern: Feature Name
 - How to use it
@@ -437,6 +437,6 @@ openspec archive add-user-profiles --yes
 
 ## Related Resources
 
-- [CODEBASE_ESSENTIALS.md](../../../CODEBASE_ESSENTIALS.md) - Project patterns
+- [AGENTS.md](../../../AGENTS.md) - Project workflow and MCP-first guardrails
 - [code-refactoring](../code-refactoring/SKILL.md) - Test-driven refactoring
 - `openspec/AGENTS.md` - OpenSpec workflow (if installed)

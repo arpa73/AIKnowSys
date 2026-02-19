@@ -13,7 +13,7 @@ A battle-tested knowledge management system that enables AI-assisted development
 A structured workflow system consisting of:
 
 1. **MCP Server** - 31 Model Context Protocol tools for AI agents (⚡ instant context access, 10-100x faster than subprocess)
-2. **CODEBASE_ESSENTIALS.md** - Single source of truth for patterns, conventions, and invariants
+2. **Project Pattern Source** - MCP critical invariants + `AGENTS.md` (and `CODEBASE_ESSENTIALS.md` in generated projects)
 3. **Custom Agents** (Planner → Developer → Architect) - Three-agent workflow with automated code review enforcing KISS/DRY/SOLID/YAGNI
 4. **Skills System** - Domain-specific how-to guides for common tasks
 5. **Changelog** - Session-by-session validation and learning history
@@ -627,7 +627,7 @@ We violated our own TDD requirement during the automation enhancement session (v
 
 These components work with **all AI assistants** (Claude Desktop, ChatGPT, Cursor, Gemini CLI, etc.):
 
-- **`CODEBASE_ESSENTIALS.md`** - Reference this file manually: `@CODEBASE_ESSENTIALS.md`
+- **MCP critical invariants** - Load via `mcp_aiknowsys_get_critical_invariants()` (or reference `CODEBASE_ESSENTIALS.md` in generated projects)
 - **`AGENTS.md`** - Copy/paste workflow instructions to any AI
 - **`CODEBASE_CHANGELOG.md`** - Historical context for any AI
 - **`.github/skills/`** - Read skills with: `@.github/skills/feature-implementation/SKILL.md`
@@ -1537,10 +1537,10 @@ A: Create separate validation commands per language. Example: `pytest` for Pytho
 A: Yes! The documentation and workflow benefit human developers too. Think of it as "docs that AI can also read."
 
 **Q: Does this only work with GitHub Copilot?**  
-A: No! Core knowledge files (CODEBASE_ESSENTIALS.md, skills) work with any AI tool. The custom agents (`@Developer`, `@SeniorArchitect`) require GitHub Copilot in VS Code, but you can manually follow the same workflow with Claude Desktop, ChatGPT, Cursor, or any AI assistant. See [AI Tool Compatibility](#ai-tool-compatibility) for details.
+A: No! Core knowledge assets (MCP critical invariants, AGENTS.md, skills, changelog) work with any AI tool. In generated projects, `CODEBASE_ESSENTIALS.md` also remains supported. The custom agents (`@Developer`, `@SeniorArchitect`) require GitHub Copilot in VS Code, but you can manually follow the same workflow with Claude Desktop, ChatGPT, Cursor, or any AI assistant. See [AI Tool Compatibility](#ai-tool-compatibility) for details.
 
 **Q: How do I update the system as my project evolves?**  
-A: Update CODEBASE_ESSENTIALS.md when patterns change. Agents automatically enforce the updated patterns. Add changelog entry documenting the evolution.
+A: Update your project pattern source when patterns change (MCP invariants/AGENTS in this repo, or CODEBASE_ESSENTIALS.md in generated projects). Agents automatically enforce updated patterns. Add changelog entry documenting the evolution.
 
 **Q: What if validation fails?**  
 A: Don't merge! Fix the issues, re-run validation, update changelog with what broke and how you fixed it. This prevents regressions.

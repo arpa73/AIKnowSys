@@ -273,8 +273,7 @@ npx aiknowsys learn --extract pattern --shared
 
 ## See Also
 
-- [CODEBASE_ESSENTIALS.md](../CODEBASE_ESSENTIALS.md) - "Learned Patterns Collaboration" section
-- [AGENTS.md](../AGENTS.md) - "Continuous Learning" section
+- [AGENTS.md](../AGENTS.md) - "Continuous Learning", MCP-first workflow, and plan management
 - [.aiknowsys/personal/README.md](../.aiknowsys/personal/README.md) - Personal patterns workflow
 
 ---

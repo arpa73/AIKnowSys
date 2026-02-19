@@ -381,7 +381,7 @@ POST /api/v1/newsletter/subscribe
 After implementation, plan includes validation:
 
 ```markdown
-## Validation (from CODEBASE_ESSENTIALS.md)
+## Validation (from MCP critical invariants)
 
 Before marking complete:
 - [x] pytest backend/tests/ → All 87 tests pass
@@ -477,7 +477,7 @@ Clear blockers help team understand dependencies.
 
 ## See Also
 
-- [Plan Management Pattern](../CODEBASE_ESSENTIALS.md#plan-management-pattern) - Pointer system details
+- [AGENTS.md](../AGENTS.md#plan-management) - Pointer system details
 - [AGENTS.md](../AGENTS.md#plan-management) - Plan creation and switching workflow
 - [OpenSpec Integration](../lib/commands/init/openspec.js) - How OpenSpec is set up during init
 - [Feature Implementation Skill](../.github/skills/feature-implementation/SKILL.md) - When to use plans vs OpenSpec
