@@ -430,24 +430,50 @@ AI: Use JSON directly → No parsing, no risk, always valid
     - **Easy:** `create_link({ sourceId: "PLAN_X", targetId: "PLAN_Y", type: "depends_on" })`
     - **TDD:** Test link creation and querying
 
-11. **Export Session - Multiple Formats** (File: `lib/commands/export-session.ts`)
-    - **Action:** Query session + events + reviews from DB, generate Markdown
-    - **Formats:**
-      - `narrative` - Traditional session format with prose connecting events
-      - `timeline` - Chronological event log with timestamps
-      - `grouped` - Organized by event type (all tasks, patterns, decisions)
-      - `custom` - AI-generated based on query (e.g., "focus on token optimization")
-    - **TDD:** Test all 4 format outputs from mock DB data
+11. ✅ **Export Session - Multiple Formats** (File: `lib/commands/export-session.ts`) — DONE 2026-02-18
+    - All 4 formats implemented: `narrative`, `timeline`, `grouped`, `custom` (scaffold)
+    - Tests: `test/commands/export-session-formats.test.ts` ✅
    
-12. **Export Plan** (File: `lib/commands/export-plan.ts`)
-    - **Action:** Query plan + linked sessions + reviews, generate Markdown
-    - **Output:** Plan Markdown with status and linked sessions
-    - **TDD:** Test plan export with sessions included
+12. ✅ **Export Plan** (File: `lib/commands/export-plan.ts`) — DONE 2026-02-18
+    - All 4 formats with parity to session export
+    - Tests: `test/commands/export-plan-formats.test.ts` ✅
 
-13. **CLI Integration** (File: `bin/commands/export.js`)
-    - **Action:** Wire up `aiknowsys export session|plan <id> [--format <type>]`
-    - **Options:** `--format narrative|timeline|grouped|custom`
-    - **Validation:** Manual test + help text verification
+13. ✅ **CLI Integration** (File: `bin/cli.js`) — DONE 2026-02-18
+    - `aiknowsys export session|plan <id> [--format <type>]` wired and validated
+
+### Phase 6: Learned Patterns Pipeline (NEW — Articulus Prerequisite)
+**Goal:** Wire every `learned/` pattern creation to the DB event store. Make the pattern corpus queryable, embeddable, and retrievable by the system — not just discoverable by humans browsing files.
+
+**Why this blocks Articulus:** The mediator needs the pattern corpus in the DB to build its grammar over. 42 patterns exist as orphan files. Zero `PATTERN_DISCOVERED` events exist. The system is autopoietic in practice but blind to its own production.
+
+18. **New MCP tool: `create_learned_pattern`** (File: `mcp-server/src/tools/mutations.ts`)
+    - **Action:** Single tool that does both: writes `.aiknowsys/learned/<slug>.md` AND inserts `PATTERN_DISCOVERED` event into `knowledge_events`
+    - **Required fields:** `pattern` (title/slug), `solution`, `category`, `trigger`, `reusable`
+    - **Replaces:** The manual AGENTS.md instruction to write a file by hand
+    - **Why:** Agent can't skip the event — tool is the only path. File becomes a DB projection, not the source.
+    - **TDD:** Test that calling the tool produces both a file and a queryable `PATTERN_DISCOVERED` event with matching content
+    - **Risk:** Low — additive, no existing code removed yet
+
+19. **Migrate existing 42 learned files to DB events** (File: `lib/migration/event-migrator.ts` or new `learned-migrator.ts`)
+    - **Action:** One-time migration: scan `.aiknowsys/learned/*.md`, parse frontmatter + body, insert `PATTERN_DISCOVERED` event per file, set `sessionId` from `origin`/`source` frontmatter if parseable
+    - **Idempotent:** Skip if event already exists for that pattern slug
+    - **Why:** Closes the gap retroactively — existing corpus enters the queryable store
+    - **Provenance note:** Most files have partial metadata (`created`, `source`, `origin`). Use what's there; leave `sessionId` null where not determinable.
+    - **TDD:** Test migration with a fixture `learned/` directory; verify event count matches file count
+
+20. **Replace AGENTS.md `learned/` file-write instruction with MCP tool call** (File: `AGENTS.md`, `templates/AGENTS.template.md`)
+    - **Action:** Replace:
+      > "Create learned skill in `.aiknowsys/learned/`"
+      with:
+      > "Call `create_learned_pattern({ pattern, solution, category, trigger, reusable })` MCP tool"
+    - **Effect:** File is still created (backward compat for humans browsing), but event is now mandatory
+    - **TDD:** No code — validate with `npx aiknowsys validate-deliverables` after templates updated
+
+21. **Verify corpus is queryable** (validation step)
+    - Run: `npx aiknowsys query-events --type pattern_discovered --json`
+    - Expected: 42+ events returned
+    - Run: `npx aiknowsys search-context "refactoring"` → should surface `refactoring-best-practices` via event store, not file scan
+    - **Definition of done:** Pattern retrieval goes through DB, not filesystem
 
 ### Phase 4: MCP Tool Integration (AFTER Phase 3)
 **Goal:** Integrate constraints into AI workflow.
@@ -644,3 +670,31 @@ npx aiknowsys export summary --today
   - 🔲 Custom format (AI-generated based on query)
 - 🔲 **Git workflow chosen:** (Option A/B/C documented, team decides)
 - 🔲 **Token metrics validated:** Measure actual savings in production use
+- 🔲 **Learned Patterns Pipeline (Phase 6 — Articulus prerequisite):**
+  - 🔲 `create_learned_pattern` MCP tool exists and fires `PATTERN_DISCOVERED` event
+  - 🔲 Existing 42 learned files migrated to DB events (idempotent migration)
+  - 🔲 AGENTS.md instructs agents to call tool, not write file directly
+  - 🔲 `query-events --type pattern_discovered` returns 42+ events
+  - 🔲 Pattern retrieval goes through DB, not filesystem
+  - 🔲 **This is the prerequisite for Articulus Phase 2 (Mediator Spike)**
+
+**2026-02-19:** ### 2026-02-19 Continuation: stale ESSENTIALS template path cleanup
+- Fixed stale runtime/template references to deleted `templates/CODEBASE_ESSENTIALS.template.md`.
+- Updated update flows to use `templates/CODEBASE_ESSENTIALS.minimal.template.md` in `lib/commands/update.ts` and dist counterparts.
+- Updated `templates/hooks/doc-sync.cjs` mapping to the minimal template path.
+- Added required `{{ESSENTIALS_FILE}}` placeholder to `templates/agents/planner.agent.template.md` to satisfy deliverable schema checks.
+- Validation: `node bin/cli.js --help` ✅ and `npx aiknowsys validate-deliverables` ✅ (5/5).
+
+**2026-02-19:** ### 2026-02-19 Architecture Insight: Learned Patterns Are Invisible to the DB
+
+**Discovery from Articulus planning conversation:**
+
+All 42 files in `.aiknowsys/learned/` were written autonomously by the AI agent (GitHub Copilot) following the AGENTS.md protocol — zero human involvement. Despite the system having a `PATTERN_DISCOVERED` event type, a full event factory, validators, and storage path, **not a single `PATTERN_DISCOVERED` event has ever been fired**. The learned corpus has no DB representation. No provenance. No embedding. Not queryable by the system at inference time.
+
+This is the most important gap in the system before Articulus can do grammar-constrained retrieval. The knowledge exists. The articulation to it is missing.
+
+**Adding Phase 6: Learned Patterns Pipeline (new — not previously scoped)**
+
+This must complete before Articulus Phase 2 (Mediator Spike) can succeed. The mediator needs the pattern corpus in the DB to construct its grammar over.
+
+Also noting: **Phase 3 steps 11/12** (export session/plan commands) are DONE per 2026-02-18 entries but not marked complete in Implementation Steps below — see correction in Phase 3 section.

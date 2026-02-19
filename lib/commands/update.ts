@@ -254,7 +254,7 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       
       // Copy new CODEBASE_ESSENTIALS.md template
       await copyTemplate(
-        path.join(packageDir, 'templates', 'CODEBASE_ESSENTIALS.template.md'),
+        path.join(packageDir, 'templates', 'CODEBASE_ESSENTIALS.minimal.template.md'),
         essentialsMdPath
       );
       

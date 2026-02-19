@@ -168,6 +168,14 @@ describe('update command', () => {
     expect(true).toBeTruthy();
   });
 
+  it('should reference minimal essentials template path for essentials update', () => {
+    const updateSourcePath: string = path.join(process.cwd(), 'lib', 'commands', 'update.ts');
+    const updateSource: string = fs.readFileSync(updateSourcePath, 'utf-8');
+
+    expect(updateSource.includes('CODEBASE_ESSENTIALS.minimal.template.md')).toBeTruthy();
+    expect(updateSource.includes('CODEBASE_ESSENTIALS.template.md')).toBeFalsy();
+  });
+
   it('should update agents when selected', async () => {
     createMockProject(testDir, { hasEssentials: true, version: '0.3.0' });
     
