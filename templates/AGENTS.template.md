@@ -306,14 +306,14 @@ mcp_aiknowsys_append_to_session({
 - Debugging technique that works well
 
 **Do this:**
-1. Create learned skill in `.aiknowsys/personal/<username>/`
-2. Use skill format with clear trigger words
-3. Document the pattern for future reuse
-4. **For team sharing:** User runs `npx aiknowsys share-pattern <pattern-name>`
+1. Use MCP mutation tool `create_learned_pattern` to store pattern in SQLite and emit `PATTERN_DISCOVERED`
+2. Include clear fields: `title`, `pattern`, `solution`, `category`, `keywords`
+3. Document pattern context in session/plan notes for traceability
+4. **For team sharing (fallback/manual workflow):** User can still run `npx aiknowsys share-pattern <pattern-name>`
 
 **See `.github/skills/skill-creator/SKILL.md` for detailed format and examples.**
 
-**Note:** Patterns save to `personal/` by default (prevents merge conflicts). Team sees patterns only after explicit sharing via `share-pattern` command.
+**Note:** DB-first storage is preferred for AI/programmatic workflows. Manual `personal/` file workflow remains available as fallback.
 
 **Pattern Types:**
 - `error_resolution` - How specific errors were fixed

@@ -224,6 +224,21 @@ get_session({ sessionId: "2026-02-17" })
 - `MigrationCoordinator.insertLearned()` now uses `getPlanById` lookups to avoid per-file full table scans.
 - Remaining optimization opportunity: audit other migration paths still using broad `queryPlans({})` patterns and replace with direct ID queries where applicable.
 
+**2026-02-19:** 
+### Phase 6 Event Backfill Validation (2026-02-20)
+- Ran real migration against project DB: `node bin/cli.js migrate-to-sqlite --dir . --db-path .aiknowsys/knowledge.db --verbose`
+- Important runtime note: CLI executes `dist/*`, so source changes in `lib/*.ts` required `npm run build` before migration to activate new logic.
+- Post-build migration/backfill result in `.aiknowsys/knowledge.db`:
+  - `learned` plans: 43
+  - `pattern_discovered` events: 43 ✅
+- This satisfies the Phase 6 success criterion for learned-pattern event backfill (`42+` expected).
+
+**2026-02-19:** 
+### Workflow Alignment Update (2026-02-20)
+- Updated `AGENTS.md` and `templates/AGENTS.template.md` continuous-learning guidance to prefer DB-first pattern storage via `create_learned_pattern` MCP mutation.
+- Added explicit fallback note for manual file-based workflows when MCP is unavailable.
+- Validation: `npx aiknowsys validate-deliverables` passed (`5/5`).
+
 ## Architect Handoff Note (Feb 18, 2026)
 
 **Checkpoint 15 — Phase A ready to start.**

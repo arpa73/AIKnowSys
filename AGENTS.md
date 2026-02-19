@@ -663,9 +663,10 @@ Only manually edit session/plan files when:
 - Debugging technique that works well
 
 **Do this:**
-1. Create learned skill in `.aiknowsys/learned/`
-2. Use skill format with clear trigger words
-3. Document the pattern for future reuse
+1. Use MCP mutation tool `create_learned_pattern` to store pattern in SQLite and emit `PATTERN_DISCOVERED`
+2. Include clear fields: `title`, `pattern`, `solution`, `category`, `keywords`
+3. Document follow-up context in session/plan notes for traceability
+4. Only use manual `.aiknowsys/learned/` file edits as fallback when MCP tools are unavailable
 
 **See `.github/skills/skill-creator/SKILL.md` for detailed format and examples.**
 
