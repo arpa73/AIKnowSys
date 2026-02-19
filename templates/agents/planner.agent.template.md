@@ -139,6 +139,7 @@ openspec create [feature-name]
 
 **Read context:**
 - `mcp_aiknowsys_get_critical_invariants()` - Patterns and invariants
+- Optional context: if `{{ESSENTIALS_FILE}}` exists, read it for project-specific conventions
 - Relevant skills from .github/skills/
 - Related code files
 
