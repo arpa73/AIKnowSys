@@ -30,7 +30,6 @@ describe('Package Files Validation', () => {
       'SETUP_GUIDE.md',
       'templates/AGENTS.template.md',
       'templates/CODEBASE_CHANGELOG.template.md',
-      'templates/CODEBASE_ESSENTIALS.template.md',
       'templates/CODEBASE_ESSENTIALS.minimal.template.md',
       'templates/agents',
       'templates/skills',

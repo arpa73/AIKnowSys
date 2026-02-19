@@ -20,7 +20,7 @@ const CODE_TO_DOC = {
   'lib/commands/compress-essentials.js': ['docs/essentials-compression-guide.md'],
   'lib/commands/install-agents.js': ['README.md', '.github/agents/README.md'],
   'lib/commands/install-skills.js': ['README.md', '.github/skills/README.md'],
-  'templates/CODEBASE_ESSENTIALS.template.md': ['SETUP_GUIDE.md'],
+  'templates/CODEBASE_ESSENTIALS.minimal.template.md': ['SETUP_GUIDE.md'],
   'lib/logger.js': ['.aiknowsys/learned/logger-pattern.md']
 };
 
