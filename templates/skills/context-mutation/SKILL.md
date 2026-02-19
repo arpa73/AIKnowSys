@@ -318,7 +318,7 @@ npx aiknowsys plan-cancel PLAN_xyz      # → update-plan --set-status CANCELLED
 - Updates plan status with automatic timestamp management
 - Adds progress notes to ## Progress section (creates if missing)
 - Updates active pointer (`.aiknowsys/plans/active-{author}.md`)
-- **Automatically runs sync-plans** (updates team plan index)
+- Persists plan/session state in database-backed context and keeps indexes current
 - Rebuilds context index atomically
 
 **Status Transitions:**
@@ -345,10 +345,10 @@ npx aiknowsys plan-cancel PLAN_xyz      # → update-plan --set-status CANCELLED
 - Changing plan status (activate, pause, complete, cancel)
 - Recording progress throughout implementation
 - Completing plan with final summary
-- **INSTEAD OF:** Manual editing + manual sync-plans command
+- **INSTEAD OF:** Manual markdown edits and manual index upkeep
 
 **Key Benefits:**
-- ✅ Auto-sync eliminates manual sync-plans step
+- ✅ No manual sync step required for normal AI workflow
 - ✅ Atomic updates (plan file + pointer + index together)
 - ✅ YAML validation prevents frontmatter corruption
 - ✅ Progress notes auto-timestamped

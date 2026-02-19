@@ -377,21 +377,11 @@ console.log("✅ Context loaded. Ready to proceed.");
 **If MCP tools unavailable (fallback only):**
 
 ```
-1. **Check .aiknowsys/plans/active-<username>.md** (personal plan pointer)
-   - Read to find your active plan
-   - Open the linked PLAN_*.md file
-   - Review current progress and next steps
-   - Acknowledge: "Continuing with [active plan name]..."
-
-2. Check .aiknowsys/sessions/ for recent session files
-   - If recent session exists (< 7 days old):
-     - Read the latest session file
-     - Review "Notes for Next Session"
-     - Continue from where previous session ended
-
-3. If no active plan and no recent session:
-   - Load critical invariants via `mcp_aiknowsys_get_critical_invariants()`
-   - Wait for user direction
+1. Query active plan/session context via CLI JSON commands:
+  - `npx aiknowsys query-plans --status ACTIVE --json`
+  - `npx aiknowsys query-sessions --days 7 --json`
+2. Use exported markdown only for human review (`aiknowsys export ...`) when needed.
+3. Avoid direct markdown editing in `.aiknowsys/` during AI workflow.
 ```
 
 ### 1️⃣ START: Read Context (REQUIRED)
@@ -470,8 +460,8 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 - ✅ **Breaking changes** (API changes, migration required)
 - ✅ **Critical security fixes** (CVEs, vulnerability patches)
 
-**When NOT to update CODEBASE_CHANGELOG.md** (use session files instead):
-- ❌ Daily feature work (goes in `.aiknowsys/sessions/YYYY-MM-DD-session.md`)
+**When NOT to update CODEBASE_CHANGELOG.md** (record in database events/sessions instead):
+- ❌ Daily feature work (record via MCP/CLI context mutation tools)
 - ❌ Bug fixes (unless revealing major design issue)
 - ❌ Refactoring (unless changing fundamental patterns)
 - ❌ Documentation updates (unless changing workflow)
@@ -479,27 +469,18 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 **What to update**:
 ```bash
 # For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
-# For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
+# For DAILY WORK: Record progress via MCP mutation tools (database-first)
 # For PATTERNS: Update AGENTS.md and MCP invariant sources if rules changed
 ```
 
-⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
+⚠️ **ALWAYS: For complex/multi-task work, persist progress in database-backed context (MCP mutation tools)**
 
-**Session entry template**:
-```markdown
-## Session: [Brief Title] (MMM D, YYYY)
-
-**Goal**: [One sentence]
-
-**Changes**:
-- [file/path](file/path#L123): Description with line numbers
-- [another/file](another/file): What changed
-
-**Validation**:
-- ✅ Tests: X passed
-- ✅ Type check: No errors
-
-**Key Learning**: [Optional: pattern or gotcha for future reference]
+**Progress recording pattern**:
+```typescript
+mcp_aiknowsys_append_to_session({
+  section: "## Progress",
+  content: "Implemented X, validated Y"
+})
 ```
 
 ### 5️⃣½ SESSION/PLAN FILE MANAGEMENT: Use Mutation Tools (MANDATORY)
@@ -625,45 +606,31 @@ Only manually edit session/plan files when:
 
 ## � PLAN MANAGEMENT
 
-**Multi-Developer Plan Workflow (Mandatory v0.9.0+)**
+**Database-First Plan Workflow (Mandatory)**
 
-### Plan File Locations
+### Plan Source of Truth
 
-- **`.aiknowsys/plans/active-<username>.md`** - Your personal active plan pointer (committed)
-- **`.aiknowsys/CURRENT_PLAN.md`** - Team index (auto-generated, DO NOT EDIT)
-- **`.aiknowsys/PLAN_*.md`** - Full plan details (committed)
+- **Primary:** `.aiknowsys/knowledge.db` (queried via MCP/CLI)
+- **Operational access:** `mcp_aiknowsys_query_plans_sqlite()`, `mcp_aiknowsys_set_plan_status()`
+- **Human-readable views:** generate on demand with `aiknowsys export plan ...`
 
 ### Creating a New Plan (@Planner)
 
-1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
-2. Update your plan pointer:
-   ```bash
-   # Edit .aiknowsys/plans/active-<username>.md
-   # Point to new plan, set status to ACTIVE (🎯)
-   # Set previous plan to PAUSED (🔄) if switching
-   ```
-3. Regenerate team index:
-   ```bash
-   npx aiknowsys sync-plans
-   ```
-4. Write plan details in the new PLAN_*.md file
+1. Create the plan with MCP/CLI mutation tools
+2. Set status to `ACTIVE` via mutation tools
+3. Append progress as work advances
 
 ### Switching Plans
 
-1. Edit your plan pointer: `.aiknowsys/plans/active-<username>.md`
-   - Change previous ACTIVE → PAUSED
-   - Change target plan PAUSED → ACTIVE
-2. Run `npx aiknowsys sync-plans` to update team index
-3. **Don't delete anything!** Paused plans resume later
+1. Set current plan to `PAUSED`
+2. Set target plan to `ACTIVE`
+3. Verify with `query-plans`/MCP query tools
 
 ### Completing a Plan
 
-1. Edit your plan pointer: `.aiknowsys/plans/active-<username>.md`
-   - Mark status COMPLETE (✅)
-   - Add completion date
-2. Run `npx aiknowsys sync-plans` to update team index
-3. Leave plan file in place (historical record)
-4. Point to next active plan or wait for new direction
+1. Run required validations
+2. Set plan status to `COMPLETE`
+3. Export markdown only if humans need review artifacts
 
 ### Plan Status Values
 

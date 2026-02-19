@@ -25,8 +25,8 @@ Each developer has their own plan pointer file that tracks:
 ## Commands
 
 ```bash
-# Regenerate team index
-npx aiknowsys sync-plans
+# Query active plans (database-first)
+npx aiknowsys query-plans --status ACTIVE
 
 # View team overview
 cat ../.aiknowsys/CURRENT_PLAN.md

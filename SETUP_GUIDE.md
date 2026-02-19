@@ -540,7 +540,6 @@ GitHub Copilot coding agent supports hooks that run automatically during session
 **Git Collaboration Hooks (For Multi-Developer Teams):**
 - `learned-reminder.cjs` (pre-commit) - Remind to share valuable personal patterns
 - `plan-reminder.cjs` (pre-commit) - Show teammates' active plans
-- `sync-plans.cjs` (post-merge) - Auto-update CURRENT_PLAN.md team index
 
 **How they work:**
 1. **Session Start**: Hooks load context, check workspace health, detect version mismatches, stale docs, and concurrent work
@@ -549,7 +548,6 @@ GitHub Copilot coding agent supports hooks that run automatically during session
 4. **Session End**: Performance monitor tracks test metrics, session-end updates timestamp
 5. **Before Completion**: Validation reminder ensures tests ran before claiming "done"
 6. **Git Pre-Commit**: Learned-reminder prompts sharing valuable patterns, plan-reminder shows teammates' work
-7. **Git Post-Merge**: Sync-plans auto-updates CURRENT_PLAN.md team index after pulls
 
 **Benefits:**
 - Automatic session file management and context continuity
@@ -641,7 +639,6 @@ Avoid duplicate work - coordinate before starting similar tasks!
 | Git hooks not running | Run `git config core.hooksPath .github/hooks` |
 | Learned-reminder not showing | Check `.aiknowsys/personal/<username>/` exists |
 | Plan-reminder not showing | Requires Phase 2 (multi-developer plans) |
-| Sync-plans not running | Verify `.aiknowsys/plans/` directory exists |
 
 **For detailed information:**  
 See [VSCode Hooks Guide](docs/vscode-hooks-guide.md) for complete reference, examples, and customization.

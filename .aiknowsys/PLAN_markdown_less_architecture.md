@@ -200,6 +200,13 @@ get_session({ sessionId: "2026-02-17" })
 - Added regression tests for both paths in MCP test suite.
 - Targeted MCP validation passed (46 passed, 8 skipped).
 - Full `npm test` currently shows one unrelated date-sensitive failure in `test/context-learning.test.ts` (session count assertion).
+
+**2026-02-19:** ### 2026-02-19 Strict Markdownless Continuation (Phase 5/15 follow-up)
+- Updated `AGENTS.md` fallback and plan-management guidance to DB-first (`query-plans/query-sessions`, MCP mutation tools) and removed direct `.aiknowsys/sessions/*.md` / `active-*.md` workflow instructions.
+- Updated `templates/AGENTS.template.md` with the same DB-first workflow to preserve deliverable consistency.
+- Updated `SETUP_GUIDE.md` to remove `sync-plans` hook references from collaboration and troubleshooting sections.
+- Removed `sync-plans` command from `bin/cli.js` command surface (import + command registration removed).
+- Validation: `node bin/cli.js --help` ✅ and `npx aiknowsys validate-deliverables` ✅ (5/5).
 ## Architect Handoff Note (Feb 18, 2026)
 
 **Checkpoint 15 — Phase A ready to start.**

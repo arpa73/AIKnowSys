@@ -86,23 +86,13 @@ The validation matrix is served live via MCP as the single source of truth. Alwa
 **Before coding, check for active plan and session continuity:**
 
 ```
-1. **Check your active plan** (per-developer tracking)
-   - Read `.aiknowsys/plans/active-<username>.md` (your personal plan pointer)
-   - Team overview: `.aiknowsys/CURRENT_PLAN.md` (auto-generated index, read-only)
-   - Open the linked PLAN_*.md file from your active plan
-   - Review current progress and next steps
-   - Acknowledge: "Continuing with [active plan name]..."
-   - See: .aiknowsys/learned/plan-management.md for pattern details
-
-2. Check .aiknowsys/sessions/ for recent session files
-   - If recent session exists (< 7 days old):
-     - Read the latest session file
-     - Review "Notes for Next Session"
-     - Continue from where previous session ended
-
-3. If no active plan and no recent session:
-   - Load MCP critical invariants for context
-   - Wait for user direction
+1. Query active plan/session context (database-first)
+   - `mcp_aiknowsys_get_active_plans()`
+   - `mcp_aiknowsys_get_recent_sessions({ days: 7 })`
+2. If MCP unavailable, use CLI JSON query commands
+   - `npx aiknowsys query-plans --status ACTIVE --json`
+   - `npx aiknowsys query-sessions --days 7 --json`
+3. Use markdown exports only for human-readable review artifacts
 ```
 
 **Why This Helps:**
@@ -111,7 +101,7 @@ The validation matrix is served live via MCP as the single source of truth. Alwa
 - Reduces repeated explanations
 - Tracks progress automatically
 
-**Session File Location:** `.aiknowsys/sessions/YYYY-MM-DD-session.md`
+**Session Storage:** Database-first (`.aiknowsys/knowledge.db`)
 
 **VSCode Hooks (Automated):**  
 If VSCode hooks are installed (`.github/hooks/`), session files are automatically created/updated:
@@ -188,8 +178,8 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 - ✅ **Breaking changes** (API changes, migration required)
 - ✅ **Critical security fixes** (CVEs, vulnerability patches)
 
-**When NOT to update CODEBASE_CHANGELOG.md** (use session files instead):
-- ❌ Daily feature work (goes in `.aiknowsys/sessions/YYYY-MM-DD-session.md`)
+**When NOT to update CODEBASE_CHANGELOG.md** (record in DB context instead):
+- ❌ Daily feature work (record via MCP/CLI context mutation tools)
 - ❌ Bug fixes (unless revealing major design issue)
 - ❌ Refactoring (unless changing fundamental patterns)
 - ❌ Documentation updates (unless changing workflow)
@@ -197,7 +187,7 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 **What to update**:
 ```bash
 # For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
-# For DAILY WORK: Update .aiknowsys/sessions/YYYY-MM-DD-session.md
+# For DAILY WORK: Persist progress via MCP/CLI mutation tools
 # For PATTERNS: Update AGENTS.md and MCP invariant sources if rules changed
 ```
 
@@ -207,81 +197,44 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 - Use `query-sessions` / `search-context` to find historical work
 - See: [docs/milestone-changelog-format.md](docs/milestone-changelog-format.md)
 
-⚠️ **ALWAYS: For complex/multi-task work, maintain `.aiknowsys/sessions/YYYY-MM-DD-session.md`**
+⚠️ **ALWAYS: For complex/multi-task work, persist progress in database-backed context**
 
-**Session entry template**:
-```markdown
-## Session: [Brief Title] (MMM D, YYYY)
-
-**Goal**: [One sentence]
-
-**Changes**:
-- [file/path](file/path#L123): Description with line numbers
-- [another/file](another/file): What changed
-
-**Validation**:
-- ✅ Tests: X passed
-- ✅ Type check: No errors
-
-**Key Learning**: [Optional: pattern or gotcha for future reference]
+**Progress recording pattern**:
+```typescript
+mcp_aiknowsys_append_to_session({
+   section: "## Progress",
+   content: "Implemented X, validated Y"
+})
 ```
 
 ### 6️⃣ END: Save Session Context & Confirm Completion
 
 **Before ending your turn:**
 
-1. **Create/Update Session File** (for complex work):
-   ```markdown
-   # Save to .aiknowsys/sessions/YYYY-MM-DD-session.md
-   
-   ## Current State
-   [Brief summary of what was accomplished]
-   
-   ### Completed
-   - [x] Feature X implemented
-   - [x] Tests passing
-   
-   ### In Progress
-   - [ ] Documentation update pending
-   
-   ### Notes for Next Session
-   - Need to add error handling for edge case Y
-   - Consider refactoring Z for clarity
-   
-   ### Context to Load
-   ```
-   src/components/NewFeature.tsx - Main implementation
-   tests/NewFeature.test.ts - Test coverage
-   ```
+1. **Create/Update Session Context** (for complex work):
+   ```typescript
+   mcp_aiknowsys_append_to_session({
+     section: "## Current State",
+     content: "[Brief summary of what was accomplished]"
+   })
    ```
 
-1. **Check for Pending Reviews:**
+2. **Check for Pending Reviews:**
    - Read `.aiknowsys/reviews/PENDING_<username>.md` (your personal review file)
    - Architect reviews are written here, not in session file
    - Address all issues before continuing
 
-2. **Update Session File** (if Architect created one or for complex work):
-   - If Architect created session file with review marker, update it with completion status:
+3. **Update Session Context** (if Architect created one or for complex work):
+    - If Architect created a review marker, append completion status via session mutation:
      ```markdown
      ## Architect Review: [Topic] (HH:MM) ✅
      **Status:** ADDRESSED (HH:MM)  
      **Issues found:** X  
      **Outcome:** All fixed, tests passing
      ```
-   - For complex multi-step work without review, create/update session file:
-     ```markdown
-     ## Current State
-     [Brief summary]
-     
-     ### Completed
-     - [x] Feature X implemented
-     
-     ### Notes for Next Session
-     - [Future work]
-     ```
-   - Delete `.aiknowsys/reviews/PENDING_<username>.md` after addressing all issues
+    - Delete `.aiknowsys/reviews/PENDING_<username>.md` after addressing all issues
 
-3. **Confirm to user:**
+4. **Confirm to user:**
    - What you fixed/built
    - What tests passed
    - That changelog is updated (if applicable)
@@ -291,43 +244,35 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 
 ## � PLAN MANAGEMENT
 
-**Multiple plans can coexist.** Plan pointers track active work.
+**Multiple plans can coexist.** Database-backed status tracks active work.
 
 ### Multi-Developer Plan Workflow
 
 **How it works:**
-- Each developer has their own plan pointer: `.aiknowsys/plans/active-<username>.md`
-- Team overview is auto-generated: `.aiknowsys/CURRENT_PLAN.md` (read-only)
-- Solo developers: Same pattern, just one file (you + AI = multi-dev!)
-- No merge conflicts (separate files per developer)
-- Run `npx aiknowsys sync-plans` to update team index
+- Plan state is stored in `.aiknowsys/knowledge.db`
+- Query status via MCP/CLI (`query-plans`)
+- Use mutation tools to set `ACTIVE` / `PAUSED` / `COMPLETE`
+- Export markdown only when humans need a report
 
 ### Creating a New Plan (@Planner)
 
-1. Create `PLAN_<descriptive-name>.md` in `.aiknowsys/`
-2. Update `plans/active-<username>.md` for the requesting developer:
-   - Update "Currently Working On" with link to new PLAN_*.md
-   - Set new plan status to ACTIVE (🎯)
-   - Set previous active plan to PAUSED (🔄)
-3. Write plan details in the new PLAN_*.md file
-4. Run `npx aiknowsys sync-plans` to update team index
+1. Create plan via mutation tools
+2. Set new plan status to ACTIVE (🎯)
+3. Set previous active plan to PAUSED (🔄)
+4. Append progress via mutation tools
 
 ### Switching Plans
 
-1. Update your plan pointer: `plans/active-<username>.md`
-   - Update "Currently Working On" to point to different PLAN_*.md
-   - Change previous plan status: ACTIVE → PAUSED
-   - Change target plan status: PAUSED → ACTIVE
-2. Run `npx aiknowsys sync-plans` to update team index
+1. Change previous plan status: ACTIVE → PAUSED
+2. Change target plan status: PAUSED → ACTIVE
+3. Verify with query tools
 3. **Don't delete anything!** Paused plans resume later
 
 ### Completing a Plan
 
-1. Update your plan pointer: `plans/active-<username>.md`
-   - Mark current plan status: COMPLETE (✅)
-   - Add completion date
-2. Run `npx aiknowsys sync-plans` to update team index
-3. Leave PLAN_*.md file in place (historical record)
+1. Mark current plan status: COMPLETE (✅)
+2. Add completion summary via mutation tools
+3. Export plan markdown if human review artifact needed
 4. Switch to next active plan or wait for new direction
 
 ### Plan Status Values

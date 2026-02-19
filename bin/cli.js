@@ -26,7 +26,6 @@ import { listPlugins } from '../dist/lib/commands/plugins.js';
 import { listPatterns as learnListPatterns, extractPattern, autoCreateSkills } from '../dist/lib/commands/learn.js';
 import { sharePattern } from '../dist/lib/commands/share-pattern.js';
 import { listPatterns } from '../dist/lib/commands/list-patterns.js';
-import { syncPlans } from '../dist/lib/commands/sync-plans.js';
 import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { migrateEssentials } from '../dist/lib/commands/migrate-essentials.js';
 import { migrateToSqlite } from '../dist/lib/commands/migrate-to-sqlite.js';
@@ -126,12 +125,6 @@ program
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
   .action(sync);
-
-program
-  .command('sync-plans')
-  .description('Sync individual developer plans into team index (CURRENT_PLAN.md)')
-  .option('-d, --dir <directory>', 'Target directory', '.')
-  .action(syncPlans);
 
 program
   .command('migrate-to-multidev')
