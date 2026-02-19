@@ -151,7 +151,7 @@ $ openspec create add-api-auth
 # Pause plan while waiting for review
 # Update PLAN_api_authentication.md: Phase 1 → waiting for review
 # Edit plans/active-<username>.md to switch to different work
-# Run: npx aiknowsys sync-plans (to update team index)
+# Verify: npx aiknowsys query-plans --status ACTIVE
 ```
 
 **Week 2 - Review & Approval:**
@@ -176,7 +176,7 @@ $ openspec create add-api-auth
 # Each task references specific spec sections
 
 # Resume by editing plans/active-<username>.md back to auth plan
-# Run: npx aiknowsys sync-plans
+# Verify: npx aiknowsys query-plans --status ACTIVE
 # Complete Phase 2 (backend)
 # Run validation: pytest backend/tests/test_auth.py
 # Mark Phase 2 complete ✅
@@ -213,7 +213,7 @@ Plans can be **paused and resumed**:
 | Bug Fixes | 🎯 ACTIVE | 80% complete |
 ```
 
-Run `npx aiknowsys sync-plans` after editing to update team index.
+Run `npx aiknowsys query-plans --status ACTIVE` after editing to verify the team view.
 
 Work on bug fixes while waiting for auth review, then resume auth when approval comes.
 

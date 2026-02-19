@@ -2,10 +2,10 @@ import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import * as path from 'node:path';
 
-// Import the command
-import { syncPlans } from '../lib/commands/sync-plans.js';
+// Import core sync function
+import { syncPlansCore } from '../lib/core/sync-plans.js';
 
-describe('sync-plans command', () => {
+describe('sync-plans core', () => {
   let testDir: string;
 
   beforeEach(() => {
@@ -36,7 +36,7 @@ See: PLAN_feature_x.md for details
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-john-doe.md'), planContent);
 
     // Run sync-plans
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     // Verify CURRENT_PLAN.md was created
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
@@ -70,7 +70,7 @@ See: PLAN_feature_x.md for details
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-charlie.md'), plan3);
 
     // Run sync-plans
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     // Verify team index
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
@@ -97,7 +97,7 @@ No active plan currently.
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-john-doe.md'), planContent);
 
     // Run sync-plans
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     // Verify it doesn't crash
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
@@ -118,7 +118,7 @@ No active plan currently.
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-alice.md'), planContent);
 
     // Run sync-plans
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
@@ -141,7 +141,7 @@ No active plan currently.
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-alice.md'), plan1);
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-bob.md'), plan2);
 
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
@@ -153,7 +153,7 @@ No active plan currently.
 
   it('should handle empty plans directory gracefully', async () => {
     // Empty plans directory
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     expect(existsSync(currentPlanPath)).toBeTruthy();
@@ -170,7 +170,7 @@ No active plan currently.
 
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-john-doe-smith.md'), planContent);
 
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
@@ -185,13 +185,13 @@ No active plan currently.
 
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-alice.md'), planContent);
 
-    await syncPlans({ dir: testDir, _silent: true });
+    await syncPlansCore({ targetDir: testDir });
 
     const currentPlanPath: string = path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md');
     const content: string = readFileSync(currentPlanPath, 'utf-8');
 
     expect(content).toMatch(/auto-generated/i);
-    expect(content).toMatch(/sync-plans/i);
+    expect(content).toMatch(/query-plans --status ACTIVE/i);
   });
 
   it('should return success status with plan count', async () => {
@@ -203,7 +203,7 @@ No active plan currently.
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-alice.md'), plan1);
     writeFileSync(path.join(testDir, '.aiknowsys', 'plans', 'active-bob.md'), plan2);
 
-    const result: any = await syncPlans({ dir: testDir, _silent: true });
+    const result: any = await syncPlansCore({ targetDir: testDir });
 
     expect(result.success).toBe(true);
     expect(result.planCount).toBe(2);

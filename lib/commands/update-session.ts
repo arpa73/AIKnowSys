@@ -101,6 +101,10 @@ export async function updateSession(options: UpdateSessionOptions = {}): Promise
 
   const log = createLogger(_silent || json);
 
+  if (!json && !_silent) {
+    log.warn('Human CLI command: for AI/programmatic workflows, prefer MCP mutation tools (mcp_aiknowsys_update_session_metadata / mcp_aiknowsys_append_to_session).');
+  }
+
   // Validation: content requires appendSection or prependSection
   // Optional Enhancement: Better error messages with multi-line formatting
   if (sectionContent && !appendSection && !prependSection && !insertAfter && !insertBefore) {

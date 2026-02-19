@@ -122,11 +122,11 @@ echo "# Feature: Your Feature Name" > .aiknowsys/PLAN_your_feature.md
 echo "**Currently Working On:** PLAN_your_feature.md" > .aiknowsys/plans/active-<your-username>.md
 ```
 
-3. **Sync team index:**
+3. **Verify team index:**
 
 ```bash
-# Regenerate team index from all developer plans
-npx aiknowsys sync-plans
+# Verify active plans
+npx aiknowsys query-plans --status ACTIVE
 ```
 
 4. **Work independently:**

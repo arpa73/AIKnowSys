@@ -11,8 +11,8 @@
 import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { queryPlansCore } from '../../../lib/core/query-plans.js';
 import { querySessionsCore } from '../../../lib/core/query-sessions.js';
+import { syncPlansCore } from '../../../lib/core/sync-plans.js';
 import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
-import { syncPlans as syncPlansCommand } from '../../../lib/commands/sync-plans.js';
 
 /**
  * Get all active implementation plans
@@ -278,13 +278,12 @@ export async function rebuildContextIndex() {
  * Reads all .aiknowsys/plans/active-*.md files and generates
  * .aiknowsys/CURRENT_PLAN.md team index.
  * 
- * Critical for multi-developer workflow.
+ * Convenience tool for human-readable markdown index regeneration.
+ * For AI/programmatic plan state, prefer query_plans_sqlite tools.
  */
 export async function syncPlans() {
   try {
-    await syncPlansCommand({
-      _silent: true,
-    });
+    await syncPlansCore();
 
     return {
       content: [

@@ -103,7 +103,6 @@ function main() {
     console.log(`     → ${plan.currentWork}\n`);
   }
 
-  console.log('Check for overlaps: npx aiknowsys sync-plans');
   console.log('View all plans: cat .aiknowsys/CURRENT_PLAN.md\n');
 
   // Non-blocking - allow commit

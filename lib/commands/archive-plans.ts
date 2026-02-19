@@ -214,7 +214,7 @@ export async function archivePlans(
   log.success(`\n✅ Archived ${archived} plans`);
   log.cyan('📁 Archive location: .aiknowsys/archive/plans/');
   log.info(`✓ Updated ${Object.keys(pointerUpdates).length} plan pointer(s) with archive links`);
-  log.dim('Run: npx aiknowsys sync-plans (to update team index)');
+  log.dim('Run: npx aiknowsys query-plans --status ACTIVE (to verify team index visibility)');
 
   return { archived, kept: toKeep.length, updated: Object.keys(pointerUpdates).length };
 }

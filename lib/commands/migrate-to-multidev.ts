@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import { createLogger } from '../logger.js';
 // @ts-ignore - git-username.js not yet migrated to TypeScript
 import { getGitUsername } from '../utils/git-username.js';
-import { syncPlans } from './sync-plans.js';
+import { syncPlansCore } from '../core/sync-plans.js';
 
 export interface MigrateToMultidevOptions {
   dir?: string;
@@ -100,13 +100,13 @@ export async function migrateToMultidev(options: MigrateToMultidevOptions = {}):
 
     // Regenerate CURRENT_PLAN.md as team index
     log.info('Regenerating CURRENT_PLAN.md as team index...');
-    await syncPlans({ dir: targetDir, _silent: true });
+    await syncPlansCore({ targetDir });
 
     // Success message
     log.success('Migration complete! 🎉');
     log.cyan('\n📖 Next steps:');
     log.info('  1. Review .aiknowsys/plans/active-<username>.md');
-    log.info('  2. Run: npx aiknowsys sync-plans');
+    log.info('  2. Verify .aiknowsys/CURRENT_PLAN.md is up to date');
     log.info('  3. Commit changes to .aiknowsys/');
 
     return {
@@ -169,8 +169,8 @@ Each developer has their own plan pointer file that tracks:
 ## Commands
 
 \`\`\`bash
-# Regenerate team index
-npx aiknowsys sync-plans
+# Query active plans (database-first)
+npx aiknowsys query-plans --status ACTIVE
 
 # View team overview
 cat ../.aiknowsys/CURRENT_PLAN.md
@@ -302,7 +302,7 @@ This file tracks what ${username} is currently working on.
 **To start a plan:**
 1. Create \`PLAN_<feature-name>.md\` in \`.aiknowsys/\`
 2. Update "Currently Working On" above with link to plan
-3. Run: \`npx aiknowsys sync-plans\`
+3. Verify \`.aiknowsys/CURRENT_PLAN.md\` reflects your pointer
 
 ## Example
 

@@ -47,6 +47,10 @@ export async function createPlan(options: CreatePlanOptions): Promise<CreatePlan
 
   const log = createLogger(_silent || json);
 
+  if (!json && !_silent) {
+    log.warn('Human CLI command: for AI/programmatic workflows, prefer MCP mutation tools (mcp_aiknowsys_create_plan / mcp_aiknowsys_set_plan_status).');
+  }
+
   // Generate plan ID and filename
   const planId = generatePlanId(title);
   const filename = `${planId}.md`;

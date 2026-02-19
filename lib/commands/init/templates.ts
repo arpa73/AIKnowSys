@@ -279,8 +279,8 @@ export async function setupSessionPersistence(targetDir: string, silent: boolean
   );
   
   // Generate CURRENT_PLAN.md as team index (auto-generated from plans/)
-  const { syncPlans } = await import('../sync-plans.js');
-  await syncPlans({ dir: targetDir, _silent: true });
+  const { syncPlansCore } = await import('../../core/sync-plans.js');
+  await syncPlansCore({ targetDir });
   
   if (aiknowsysSpinner) aiknowsysSpinner.succeed('Session persistence ready');
 }

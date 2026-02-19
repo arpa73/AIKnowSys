@@ -612,7 +612,7 @@ program
 // Context mutation commands (v0.10.0+)
 program
   .command('create-session')
-  .description('Create new session file with YAML frontmatter')
+  .description('Create new session file with YAML frontmatter (human CLI; MCP preferred for AI/programmatic use)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-t, --topics <topics>', 'Comma-separated topics (e.g., "TDD,validation")')
   .option('-p, --plan <plan>', 'Link to active plan (e.g., PLAN_xyz)')
@@ -628,7 +628,7 @@ program
 
 program
   .command('update-session')
-  .description('Modify today\'s session metadata and content')
+  .description('Modify today\'s session metadata and content (human CLI; MCP preferred for AI/programmatic use)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('--date <YYYY-MM-DD>', 'Target session by date (defaults to today)')
   .option('--add-topic <topic>', 'Add topic to session')
@@ -681,7 +681,7 @@ program
 
 program
   .command('create-plan')
-  .description('Create new implementation plan with active pointer')
+  .description('Create new implementation plan with active pointer (human CLI; MCP preferred for AI/programmatic use)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-t, --title <title>', 'Plan title (REQUIRED)')
   .option('-a, --author <author>', 'Plan author (auto-detected from git)')
@@ -703,7 +703,7 @@ program
 
 program
   .command('update-plan [planId]')
-  .description('Update plan status and progress')
+  .description('Update plan status and progress (human CLI; MCP preferred for AI/programmatic use)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-s, --set-status <status>', 'Set plan status (PLANNED|ACTIVE|PAUSED|COMPLETE|CANCELLED)')
   .option('--append <content>', 'Append progress note')

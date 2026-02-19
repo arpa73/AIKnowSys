@@ -268,7 +268,7 @@ This review process integrates with:
 1. **Session Hooks** - `session-start.js` already detects Context7 availability
 2. **CHANGELOG** - Review findings can be added to CODEBASE_CHANGELOG.md
 3. **Plan Management** - Create pointer to review plan in `plans/active-<username>.md` during review
-   - Run `npx aiknowsys sync-plans` to update team index
+   - Run `npx aiknowsys query-plans --status ACTIVE` to verify team index visibility
 4. **Skills** - Use dependency-updates skill pattern (Context7 reminder)
 
 ---

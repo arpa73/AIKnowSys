@@ -207,6 +207,17 @@ get_session({ sessionId: "2026-02-17" })
 - Updated `SETUP_GUIDE.md` to remove `sync-plans` hook references from collaboration and troubleshooting sections.
 - Removed `sync-plans` command from `bin/cli.js` command surface (import + command registration removed).
 - Validation: `node bin/cli.js --help` ✅ and `npx aiknowsys validate-deliverables` ✅ (5/5).
+
+**2026-02-19:** ### 2026-02-19 Continuation: file-command deprecation + sync-plans command archival
+- Marked file mutation commands as human-CLI-oriented with explicit MCP-first warnings in `create-session`, `update-session`, `create-plan`, and `update-plan`.
+- Removed `lib/commands/sync-plans.ts` wrapper and migrated all callsites to `syncPlansCore` (`update-plan`, `migrate-to-multidev`, `init/templates`, `mcp-server query tool`).
+- Updated active hooks/docs to remove stale `npx aiknowsys sync-plans` guidance.
+- Updated tests to target `syncPlansCore` (`test/sync-plans.test.ts`).
+- Validation: `node bin/cli.js --help` ✅ and `npx vitest run test/sync-plans.test.ts` ✅ (9/9).
+
+**2026-02-19:** Architect follow-up: corrected team-index guidance wording
+
+**2026-02-19:** Architect follow-up: synced dist runtime guidance for CURRENT_PLAN generation
 ## Architect Handoff Note (Feb 18, 2026)
 
 **Checkpoint 15 — Phase A ready to start.**

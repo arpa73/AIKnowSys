@@ -46,6 +46,10 @@ export async function createSession(options: CreateSessionOptions = {}): Promise
 
   const log = createLogger(_silent || json);
 
+  if (!json && !_silent) {
+    log.warn('Human CLI command: for AI/programmatic workflows, prefer MCP mutation tools (mcp_aiknowsys_create_session / mcp_aiknowsys_append_to_session).');
+  }
+
   // Generate filename
   const date = new Date().toISOString().split('T')[0];
   const filename = `${date}-session.md`;

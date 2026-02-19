@@ -9,7 +9,7 @@ import { parseFrontmatter, updateFrontmatter } from '../utils/yaml-frontmatter.j
 import { JsonStorage } from '../context/json-storage.js';
 import { createLogger } from '../logger.js';
 import { checkFileExists } from '../utils/file-utils.js';
-import { syncPlans } from './sync-plans.js';
+import { syncPlansCore } from '../core/sync-plans.js';
 import { detectUsername } from '../utils/git-utils.js';
 
 // Define valid plan statuses (single source of truth)
@@ -104,6 +104,10 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
   const resolvedTargetDir = path.resolve(targetDir);
 
   const log = createLogger(_silent || json);
+
+  if (!json && !_silent) {
+    log.warn('Human CLI command: for AI/programmatic workflows, prefer MCP mutation tools (mcp_aiknowsys_set_plan_status / mcp_aiknowsys_append_to_plan).');
+  }
 
   // Determine plan ID (provided or auto-detect from active pointer)
   let planId = providedPlanId;
@@ -245,7 +249,7 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
   await storage.rebuildIndex();
 
   // Auto-sync plans to update CURRENT_PLAN.md
-  await syncPlans({ dir: resolvedTargetDir, _silent: true });
+  await syncPlansCore({ targetDir: resolvedTargetDir });
 
   // Prepare response
   const result: UpdatePlanResult = {
