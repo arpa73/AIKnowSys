@@ -25,7 +25,7 @@ import {
   syncPlans
 } from './tools/query.js';
 import { findSkillForTask } from './tools/skills.js';
-import { createSession, createPlan, createReview, createLink, checkConstraintsTool } from './tools/mutations.js';
+import { createSession, createPlan, createReview, createLink, createLearnedPattern, checkConstraintsTool } from './tools/mutations.js';
 import { 
   setPlanStatus, 
   appendToPlan, 
@@ -507,6 +507,26 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         }),
       },
       async (args) => createLink(args)
+    );
+
+    this.server.registerTool(
+      'create_learned_pattern',
+      {
+        description:
+          'Create a learned pattern in SQLite and emit a pattern_discovered knowledge event.',
+        inputSchema: z.object({
+          title: z.string().min(3),
+          pattern: z.string().min(3),
+          solution: z.string().min(3),
+          category: z.enum(['error_resolution', 'best_practice', 'workaround', 'optimization', 'project_specific']).optional().default('project_specific'),
+          keywords: z.array(z.string()).optional().default([]),
+          author: z.string().optional().default('mcp-agent'),
+          reusable: z.boolean().optional().default(true),
+          trigger: z.string().optional(),
+          applicability: z.string().optional(),
+        }),
+      },
+      async (args) => createLearnedPattern(args)
     );
 
     this.server.registerTool(

@@ -1,6 +1,6 @@
 import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
-import { createSession, createPlan, createReview, createLink, checkConstraintsTool } from '../../tools/mutations.js';
+import { createSession, createPlan, createReview, createLink, createLearnedPattern, checkConstraintsTool } from '../../tools/mutations.js';
 import {
   setPlanStatus,
   appendToPlan,
@@ -63,6 +63,25 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
       metadata: z.record(z.unknown()).optional(),
     }),
     handler: createLink,
+  },
+  {
+    name: 'create_learned_pattern',
+    description:
+      'Create a learned pattern in SQLite and emit a pattern_discovered knowledge event.',
+    category: 'mutation',
+    tags: ['patterns', 'learned', 'events', 'create'],
+    inputSchema: z.object({
+      title: z.string().min(3),
+      pattern: z.string().min(3),
+      solution: z.string().min(3),
+      category: z.enum(['error_resolution', 'best_practice', 'workaround', 'optimization', 'project_specific']).optional().default('project_specific'),
+      keywords: z.array(z.string()).optional().default([]),
+      author: z.string().optional().default('mcp-agent'),
+      reusable: z.boolean().optional().default(true),
+      trigger: z.string().optional(),
+      applicability: z.string().optional(),
+    }),
+    handler: createLearnedPattern,
   },
   {
     name: 'check_constraints',

@@ -698,3 +698,11 @@ This is the most important gap in the system before Articulus can do grammar-con
 This must complete before Articulus Phase 2 (Mediator Spike) can succeed. The mediator needs the pattern corpus in the DB to construct its grammar over.
 
 Also noting: **Phase 3 steps 11/12** (export session/plan commands) are DONE per 2026-02-18 entries but not marked complete in Implementation Steps below — see correction in Phase 3 section.
+
+**2026-02-20:** ### 2026-02-20 Continuation: Learned Pattern Event Pipeline (Phase 6 slice)
+- Added MCP mutation tool `create_learned_pattern` to create learned pattern records in SQLite and emit `pattern_discovered` events atomically.
+- Registered the new tool in direct MCP tool list and dynamic mutation metadata.
+- Added MCP tests for success + failure paths (`mcp-server/test/tools/mutations.test.ts`) and server registration coverage (`mcp-server/test/server.test.ts`).
+- Updated migration coordinator learned-pattern path to ensure learned IDs use `learned_` prefix and to emit idempotent `pattern_discovered` events for migrated files.
+- Added migration tests verifying event creation + idempotency (`test/migration/migration-coordinator.test.ts`).
+- Validation: `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts mcp-server/test/server.test.ts` ✅ and `npx vitest run test/migration/migration-coordinator.test.ts` ✅.

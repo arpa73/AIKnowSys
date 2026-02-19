@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { MigrationCoordinator } from '../../lib/migration/migration-coordinator.js';
 import { SqliteStorage } from '../../lib/context/sqlite-storage.js';
+import { EventType } from '../../lib/events/types.js';
 
 describe('MigrationCoordinator', () => {
   let tmpDir: string;
@@ -128,6 +129,35 @@ How to fix migration errors.`;
       // Verify searchable content created
       const searchResult = await storage.search('migration errors', 'all');
       expect(searchResult.results.length).toBeGreaterThan(0);
+
+      const patternEvents = await storage.queryEvents({ eventType: EventType.PATTERN_DISCOVERED });
+      expect(patternEvents.length).toBe(1);
+      expect(patternEvents[0].planId).toMatch(/^learned_/);
+    });
+
+    it('should create pattern_discovered events idempotently for learned patterns', async () => {
+      const aiknowsysDir = path.join(tmpDir, '.aiknowsys');
+      const learnedDir = path.join(aiknowsysDir, 'learned');
+      await fs.mkdir(learnedDir, { recursive: true });
+
+      const learnedContent = `---
+category: project_specific
+---
+
+# Repeatable Pattern
+
+Use this for idempotency checks.`;
+
+      await fs.writeFile(path.join(learnedDir, 'repeatable.md'), learnedContent);
+
+      const first = await coordinator.migrateFromDirectory(tmpDir);
+      expect(first.learnedMigrated).toBe(1);
+
+      const second = await coordinator.migrateFromDirectory(tmpDir);
+      expect(second.learnedMigrated).toBe(0);
+
+      const patternEvents = await storage.queryEvents({ eventType: EventType.PATTERN_DISCOVERED });
+      expect(patternEvents.length).toBe(1);
     });
 
     it('should preserve markdown content in database', async () => {

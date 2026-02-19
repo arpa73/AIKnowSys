@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockInsertReview = vi.fn();
 const mockInsertLink = vi.fn();
 const mockInsertProject = vi.fn();
+const mockInsertPlan = vi.fn();
 const mockInsertSession = vi.fn();
 const mockInsertEvent = vi.fn();
 const mockGetActivePlanId = vi.fn();
@@ -33,6 +34,10 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
 
     async insertSession(...args: unknown[]) {
       return mockInsertSession(...args);
+    }
+
+    async insertPlan(...args: unknown[]) {
+      return mockInsertPlan(...args);
     }
 
     async insertEvent(...args: unknown[]) {
@@ -81,6 +86,7 @@ describe('Mutation Tools', () => {
     mockInsertReview.mockReset();
     mockInsertLink.mockReset();
     mockInsertProject.mockReset();
+    mockInsertPlan.mockReset();
     mockInsertSession.mockReset();
     mockInsertEvent.mockReset();
     mockGetActivePlanId.mockReset();
@@ -94,6 +100,7 @@ describe('Mutation Tools', () => {
     mockInsertReview.mockResolvedValue(undefined);
     mockInsertLink.mockResolvedValue(undefined);
     mockInsertProject.mockResolvedValue(undefined);
+    mockInsertPlan.mockResolvedValue(undefined);
     mockInsertSession.mockResolvedValue(undefined);
     mockInsertEvent.mockResolvedValue(undefined);
     mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
@@ -459,6 +466,52 @@ describe('Mutation Tools', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Failed during createLink storage operation: DB locked');
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('create_learned_pattern', () => {
+    it('should create learned pattern and emit pattern_discovered event', async () => {
+      const { createLearnedPattern } = await import('../../src/tools/mutations.js');
+      const result = await createLearnedPattern({
+        title: 'Zod Validation Recovery',
+        pattern: 'Zod errors repeat across mutation handlers',
+        solution: 'Use handleZodError helper with field-specific suggestions',
+        category: 'best_practice',
+        keywords: ['zod', 'validation'],
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Learned pattern created');
+      expect(mockInsertPlan).toHaveBeenCalledTimes(1);
+      expect(mockInsertEvent).toHaveBeenCalledTimes(1);
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+
+      const insertedPlan = mockInsertPlan.mock.calls[0][0] as { id: string; type: string; title: string };
+      expect(insertedPlan.id).toMatch(/^learned_/);
+      expect(insertedPlan.type).toBe('best_practice');
+      expect(insertedPlan.title).toBe('Zod Validation Recovery');
+
+      const insertedEvent = mockInsertEvent.mock.calls[0][0] as { eventType: string; planId?: string; data: { pattern: string } };
+      expect(insertedEvent.eventType).toBe('pattern_discovered');
+      expect(insertedEvent.planId).toMatch(/^learned_/);
+      expect(insertedEvent.data.pattern).toContain('Zod errors');
+    });
+
+    it('should close storage when learned pattern creation fails', async () => {
+      mockInsertPlan.mockRejectedValueOnce(new Error('DB write failed'));
+
+      const { createLearnedPattern } = await import('../../src/tools/mutations.js');
+      const result = await createLearnedPattern({
+        title: 'Failure path test',
+        pattern: 'Pattern text',
+        solution: 'Solution text',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Failed during createLearnedPattern storage operation: DB write failed');
       expect(mockStorageInit).toHaveBeenCalledTimes(1);
       expect(mockStorageClose).toHaveBeenCalledTimes(1);
     });

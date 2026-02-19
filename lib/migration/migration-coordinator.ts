@@ -10,6 +10,8 @@ import type { SqliteStorage } from '../context/sqlite-storage.js';
 import type { SessionFrontmatter, PlanFrontmatter, LearnedFrontmatter } from './types.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { EventFactory } from '../events/event-factory.js';
+import { EventType } from '../events/types.js';
 
 export interface MigrationResult {
   /** Number of session files migrated */
@@ -303,48 +305,107 @@ export class MigrationCoordinator {
     
     const { frontmatter, content } = parsed;
     
-    // For learned patterns, we'll store them as searchable content
-    // Since there's no strict "learned" table, we can create a plan or session
-    // OR just ensure this specific file becomes searchable
-    
-    // Extract category from frontmatter or use filename
-    const category = frontmatter.category || 'learned';
+    const category = this.normalizePatternCategory(frontmatter.category);
     const keywords = frontmatter.keywords || [];
-    
-    // Create a plan entry for learned patterns
-    // Use relative path as ID (sanitized)
-    const learnedId = fileInfo.relativePath
+
+    // Use stable IDs for learned patterns while preserving compatibility
+    const legacyLearnedId = fileInfo.relativePath
       .replace(/\//g, '_')
       .replace('.md', '')
       .replace(/[^a-z0-9_]/g, '');
-    
+
+    const learnedId = legacyLearnedId.startsWith('learned_')
+      ? legacyLearnedId
+      : `learned_${legacyLearnId(legacyLearnedId)}`;
+
     // Check if already exists (query all and filter by ID)
     const allPlans = await this.storage.queryPlans({});
-    const existing = allPlans.plans.filter(p => p.id === learnedId);
-    if (existing.length > 0) {
-      return false;
+    const existing = allPlans.plans.find(p => p.id === learnedId || p.id === legacyLearnedId);
+    const targetPlanId = existing?.id || learnedId;
+
+    if (!existing) {
+      // Get file timestamps
+      const stats = await fs.stat(fileInfo.absolutePath);
+      const created = stats.birthtime.toISOString();
+      const updated = stats.mtime.toISOString();
+
+      const inferredTitle = fileInfo.filename.replace('.md', '').replace(/[_-]+/g, ' ').trim() || 'Learned Pattern';
+
+      await this.storage.insertPlan({
+        id: targetPlanId,
+        project_id: projectId,
+        title: inferredTitle,
+        status: 'COMPLETE',
+        author: frontmatter.author || 'unknown',
+        created: frontmatter.created || created,
+        updated: frontmatter.updated || updated,
+        topics: keywords,
+        content,
+        type: category,
+        description: `Pattern from ${fileInfo.relativePath}`
+      });
     }
     
-    // Get file timestamps
-    const stats = await fs.stat(fileInfo.absolutePath);
-    const created = stats.birthtime.toISOString();
-    const updated = stats.mtime.toISOString();
-    
-    await this.storage.insertPlan({
-      id: learnedId,
-      project_id: projectId,
-      title: category,
-      status: 'COMPLETE',
-      author: frontmatter.author || 'unknown',
-      created: frontmatter.created || created,
-      updated: frontmatter.updated || updated,
-      topics: keywords,
+    await this.ensurePatternDiscoveredEvent({
+      fileInfo,
+      frontmatter,
       content,
-      type: 'learned-pattern',
-      description: `Pattern from ${fileInfo.relativePath}`
+      projectId,
+      planId: targetPlanId,
+      category,
     });
     
-    return true;
+    return !existing;
+  }
+
+  private normalizePatternCategory(category?: string): 'error_resolution' | 'best_practice' | 'workaround' | 'optimization' | 'project_specific' {
+    const normalized = (category || 'project_specific').toLowerCase().replace(/-/g, '_');
+
+    if (normalized === 'error_resolution' || normalized === 'best_practice' || normalized === 'workaround' || normalized === 'optimization' || normalized === 'project_specific') {
+      return normalized;
+    }
+
+    if (normalized.includes('error')) return 'error_resolution';
+    if (normalized.includes('workaround')) return 'workaround';
+    if (normalized.includes('optimiz')) return 'optimization';
+    if (normalized.includes('practice')) return 'best_practice';
+    return 'project_specific';
+  }
+
+  private async ensurePatternDiscoveredEvent(params: {
+    fileInfo: FileInfo;
+    frontmatter: LearnedFrontmatter;
+    content: string;
+    projectId: string;
+    planId: string;
+    category: 'error_resolution' | 'best_practice' | 'workaround' | 'optimization' | 'project_specific';
+  }): Promise<void> {
+    const existingEvents = await this.storage.queryEvents({
+      projectId: params.projectId,
+      planId: params.planId,
+      eventType: EventType.PATTERN_DISCOVERED,
+      limit: 1,
+    });
+
+    if (existingEvents.length > 0) {
+      return;
+    }
+
+    const inferredPattern = params.fileInfo.filename.replace('.md', '').replace(/[_-]+/g, ' ').trim() || 'learned pattern';
+    const inferredSolution = params.content.trim() || `Migrated learned pattern from ${params.fileInfo.relativePath}`;
+
+    const event = EventFactory.patternDiscovered({
+      projectId: params.projectId,
+      planId: params.planId,
+      pattern: inferredPattern,
+      category: params.category,
+      trigger: params.fileInfo.relativePath,
+      solution: inferredSolution,
+      reusable: true,
+      applicability: 'migrated_from_markdown',
+    });
+
+    await this.storage.insertEvent(event);
   }
   
   /**
@@ -364,4 +425,8 @@ export class MigrationCoordinator {
     // Fallback: use filename without extension
     return filename.replace('.md', '');
   }
+}
+
+function legacyLearnId(id: string): string {
+  return id.replace(/^learned_/, '');
 }

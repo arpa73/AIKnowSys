@@ -14,6 +14,7 @@ import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.
 import { createPlanCore } from '../../../lib/core/create-plan.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
 import { updateSessionCore } from '../../../lib/core/update-session.js';
+import { EventFactory } from '../../../lib/events/event-factory.js';
 
 const PROJECT_ROOT = getProjectRoot();
 
@@ -66,12 +67,46 @@ const createLinkSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 });
 
+const createLearnedPatternSchema = z.object({
+  title: z.string().min(3),
+  pattern: z.string().min(3),
+  solution: z.string().min(3),
+  category: z.enum(['error_resolution', 'best_practice', 'workaround', 'optimization', 'project_specific']).optional().default('project_specific'),
+  keywords: z.array(z.string()).optional().default([]),
+  author: z.string().optional().default('mcp-agent'),
+  reusable: z.boolean().optional().default(true),
+  trigger: z.string().optional(),
+  applicability: z.string().optional(),
+});
+
 const checkConstraintsSchema = z.object({
   action: z.enum(['COMPLETE_PLAN', 'MERGE_PLAN', 'START_SESSION', 'EDIT_CORE_FILE']),
   targetId: z.string().optional(),
   userId: z.string().optional(),
   projectId: z.string().optional(),
 });
+
+function toSafePatternSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_')
+    .slice(0, 40) || 'pattern';
+}
+
+function buildLearnedPatternContent(params: {
+  title: string;
+  pattern: string;
+  solution: string;
+  trigger?: string;
+  applicability?: string;
+  reusable: boolean;
+}): string {
+  const triggerSection = params.trigger ? `\n## Trigger\n${params.trigger}\n` : '';
+  const applicabilitySection = params.applicability ? `\n## Applicability\n${params.applicability}\n` : '';
+  return `# ${params.title}\n\n## Pattern\n${params.pattern}\n\n## Solution\n${params.solution}${triggerSection}${applicabilitySection}\n## Reusable\n${params.reusable ? 'yes' : 'no'}\n`;
+}
 
 /**
  * Create a new session file
@@ -455,6 +490,99 @@ export async function createLink(params: unknown) {
       'link creation',
       error instanceof Error ? error.message : String(error),
       'Ensure source/target IDs exist and link type is valid'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function createLearnedPattern(params: unknown) {
+  try {
+    const validated = createLearnedPatternSchema.parse(params);
+    const now = new Date().toISOString();
+    const projectId = path.basename(PROJECT_ROOT);
+    const learnedPatternId = `learned_${toSafePatternSlug(validated.title)}_${randomUUID().slice(0, 8)}`;
+    let eventId = '';
+
+    await withStorage(async (storage) => {
+      try {
+        await storage.insertProject({
+          id: projectId,
+          name: projectId,
+          path: PROJECT_ROOT,
+          created_at: now,
+          updated_at: now,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!message.includes('UNIQUE constraint')) {
+          throw error;
+        }
+      }
+
+      await storage.insertPlan({
+        id: learnedPatternId,
+        project_id: projectId,
+        title: validated.title,
+        status: 'COMPLETE',
+        author: validated.author,
+        created: now,
+        updated: now,
+        content: buildLearnedPatternContent({
+          title: validated.title,
+          pattern: validated.pattern,
+          solution: validated.solution,
+          trigger: validated.trigger,
+          applicability: validated.applicability,
+          reusable: validated.reusable,
+        }),
+        topics: validated.keywords,
+        description: validated.pattern,
+        type: validated.category,
+      });
+
+      const event = EventFactory.patternDiscovered({
+        projectId,
+        planId: learnedPatternId,
+        pattern: validated.pattern,
+        category: validated.category,
+        trigger: validated.trigger,
+        solution: validated.solution,
+        reusable: validated.reusable,
+        applicability: validated.applicability,
+      });
+
+      eventId = event.eventId;
+      await storage.insertEvent(event);
+    }, 'createLearnedPattern storage operation');
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Learned pattern created\nPattern ID: ${learnedPatternId}\nEvent ID: ${eventId}\nType: pattern_discovered`,
+      }],
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'learned pattern creation', {
+        title: {
+          suggestion: 'Title must be at least 3 characters',
+          examples: ['{ "title": "Zod parse failures", "pattern": "Validation errors are repetitive", "solution": "Use handleZodError helper" }'],
+        },
+        category: {
+          suggestion: 'Use one of: error_resolution, best_practice, workaround, optimization, project_specific',
+          examples: ['{ "category": "error_resolution" }', '{ "category": "best_practice" }'],
+        },
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'learned pattern creation',
+      error instanceof Error ? error.message : String(error),
+      'Ensure SQLite storage is available and parameters are valid'
     );
 
     return {
