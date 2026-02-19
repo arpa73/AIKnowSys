@@ -6,9 +6,12 @@ const mockInsertProject = vi.fn();
 const mockInsertSession = vi.fn();
 const mockInsertEvent = vi.fn();
 const mockGetActivePlanId = vi.fn();
+const mockGetUserState = vi.fn();
+const mockUpsertUserState = vi.fn();
 const mockStorageClose = vi.fn();
 const mockStorageInit = vi.fn();
 const mockCheckConstraints = vi.fn();
+const mockCreatePlanCore = vi.fn();
 
 vi.mock('../../../lib/context/sqlite-storage.js', () => {
   class MockSqliteStorage {
@@ -40,6 +43,14 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
       return mockGetActivePlanId(...args);
     }
 
+    async getUserState(...args: unknown[]) {
+      return mockGetUserState(...args);
+    }
+
+    async upsertUserState(...args: unknown[]) {
+      return mockUpsertUserState(...args);
+    }
+
     close(...args: unknown[]) {
       return mockStorageClose(...args);
     }
@@ -58,6 +69,12 @@ vi.mock('../../../lib/core/constraints.js', () => ({
   },
 }));
 
+vi.mock('../../../lib/core/create-plan.js', () => ({
+  async createPlanCore(...args: unknown[]) {
+    return mockCreatePlanCore(...args);
+  },
+}));
+
 describe('Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,9 +84,12 @@ describe('Mutation Tools', () => {
     mockInsertSession.mockReset();
     mockInsertEvent.mockReset();
     mockGetActivePlanId.mockReset();
+    mockGetUserState.mockReset();
+    mockUpsertUserState.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockReset();
     mockCheckConstraints.mockReset();
+    mockCreatePlanCore.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockInsertReview.mockResolvedValue(undefined);
     mockInsertLink.mockResolvedValue(undefined);
@@ -77,7 +97,15 @@ describe('Mutation Tools', () => {
     mockInsertSession.mockResolvedValue(undefined);
     mockInsertEvent.mockResolvedValue(undefined);
     mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
+    mockGetUserState.mockResolvedValue({ activePlanId: null });
+    mockUpsertUserState.mockResolvedValue(undefined);
     mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
+    mockCreatePlanCore.mockResolvedValue({
+      created: true,
+      planId: 'PLAN_pointer_sync_test',
+      filePath: `${process.cwd()}/.aiknowsys/PLAN_pointer_sync_test.md`,
+      pointerPath: `${process.cwd()}/.aiknowsys/plans/active-mcp-agent.md`
+    });
   });
 
   describe('create_session', () => {
@@ -219,6 +247,51 @@ describe('Mutation Tools', () => {
 
       expect(result.content[0].text).toMatch(/Created plan:|Plan already exists:/);
       expect(result.content[0].text).toMatch(/PLAN_/);
+    });
+
+    it('should sync active plan pointer to user_state when plan is created', async () => {
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      await createPlan({
+        title: `Pointer Sync Plan ${Date.now()}`,
+        author: 'mcp-test-user'
+      });
+
+      expect(mockGetUserState).toHaveBeenCalledWith('mcp-agent');
+      expect(mockUpsertUserState).toHaveBeenCalled();
+      expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'mcp-agent',
+        active_plan_id: expect.stringMatching(/^PLAN_/)
+      }));
+    });
+
+    it('should not overwrite active plan pointer when one already exists', async () => {
+      mockGetUserState.mockResolvedValueOnce({ activePlanId: 'PLAN_existing_active' });
+
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      const result = await createPlan({
+        title: `Non Overwrite Plan ${Date.now()}`,
+        author: 'mcp-test-user'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(mockGetUserState).toHaveBeenCalledWith('mcp-agent');
+      expect(mockUpsertUserState).not.toHaveBeenCalled();
+      expect(result.content[0].text).not.toContain('This plan is now your active plan');
+    });
+
+    it('should still return success when pointer sync fails', async () => {
+      mockUpsertUserState.mockRejectedValueOnce(new Error('DB unavailable'));
+
+      const { createPlan } = await import('../../src/tools/mutations.js');
+      const result = await createPlan({
+        title: 'Pointer Sync Failure Should Not Break Create',
+        author: 'mcp-test-user'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Created plan:');
+      expect(result.content[0].text).toContain('Pointer sync warning:');
+      expect(result.content[0].text).toContain('DB unavailable');
     });
 
     it('should return conversational error for missing title', async () => {

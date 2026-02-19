@@ -191,6 +191,15 @@ get_session({ sessionId: "2026-02-17" })
 1. Consolidate and group commits by concern.
 2. Draft/submit PR with migration notes and validation evidence.
 3. Continue next plan phase from this clean checkpoint.
+
+**2026-02-19:** ### 2026-02-19: MCP plan pointer sync into DB (`user_state.active_plan_id`)
+
+- Implemented DB pointer sync in MCP mutation tools:
+  - `create_plan` now writes active plan pointer to SQLite user state.
+  - `set_plan_status` now updates/clears pointer based on lifecycle status.
+- Added regression tests for both paths in MCP test suite.
+- Targeted MCP validation passed (46 passed, 8 skipped).
+- Full `npm test` currently shows one unrelated date-sensitive failure in `test/context-learning.test.ts` (session count assertion).
 ## Architect Handoff Note (Feb 18, 2026)
 
 **Checkpoint 15 — Phase A ready to start.**

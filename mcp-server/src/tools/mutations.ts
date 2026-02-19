@@ -5,9 +5,8 @@ import { AIFriendlyErrorBuilder } from '../../../lib/utils/error-builder.js';
 import { handleZodError } from './utils/error-helpers.js';
 import type { FieldErrorMap } from './utils/error-helpers.js';
 import { getProjectRoot } from './utils/project-root.js';
-import { findKnowledgeDb } from '../../../lib/utils/find-knowledge-db.js';
-import { SqliteStorage } from '../../../lib/context/sqlite-storage.js';
 import { checkConstraints } from '../../../lib/core/constraints.js';
+import { MCP_AGENT_USER_ID, withStorage, toUserFacingStorageErrorMessage } from './utils/storage-helpers.js';
 
 // Import core business logic directly (NO subprocess spawning!)
 import { createSessionCore } from '../../../lib/core/create-session.js';
@@ -73,26 +72,6 @@ const checkConstraintsSchema = z.object({
   userId: z.string().optional(),
   projectId: z.string().optional(),
 });
-
-async function withStorage<T>(
-  operation: (storage: SqliteStorage) => Promise<T>,
-  operationName = 'storage operation'
-): Promise<T> {
-  let storage: SqliteStorage | null = null;
-
-  try {
-    storage = new SqliteStorage();
-    await storage.init(findKnowledgeDb());
-    return await operation(storage);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const contextualError = new Error(`Failed during ${operationName}: ${message}`);
-    (contextualError as Error & { cause?: unknown }).cause = error;
-    throw contextualError;
-  } finally {
-    storage?.close();
-  }
-}
 
 /**
  * Create a new session file
@@ -256,15 +235,7 @@ export async function createPlan(params: unknown) {
       targetDir: PROJECT_ROOT
     });
 
-    // Format MCP response
-    if (result.created) {
-      return {
-        content: [{
-          type: 'text' as const,
-          text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n🔗 Pointer: ${result.pointerPath}\n📝 Edit plan to add implementation steps`
-        }]
-      };
-    } else {
+    if (!result.created) {
       return {
         content: [{
           type: 'text' as const,
@@ -272,6 +243,36 @@ export async function createPlan(params: unknown) {
         }]
       };
     }
+
+    let pointerSyncWarning = '';
+    let pointerActivationNote = '';
+    const userId = MCP_AGENT_USER_ID;
+    const projectId = path.basename(PROJECT_ROOT);
+
+    try {
+      await withStorage(async (storage) => {
+        const currentState = await storage.getUserState(userId);
+        if (!currentState?.activePlanId) {
+          await storage.upsertUserState({
+            user_id: userId,
+            project_id: projectId,
+            active_plan_id: result.planId,
+            updated_at: new Date().toISOString()
+          });
+          pointerActivationNote = '\n📌 This plan is now your active plan (no previously active plan found).';
+        }
+      }, 'createPlan pointer sync operation');
+    } catch (syncError) {
+      const userMessage = toUserFacingStorageErrorMessage(syncError);
+      pointerSyncWarning = `\n⚠️ Pointer sync warning: ${userMessage}`;
+    }
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n🔗 Pointer: ${result.pointerPath}\n📝 Edit plan to add implementation steps${pointerActivationNote}${pointerSyncWarning}`
+      }]
+    };
   } catch (error) {
     // Handle Zod validation errors with conversational responses
     if (error instanceof z.ZodError) {

@@ -5,9 +5,39 @@ import path from 'path';
 import { getProjectRoot } from './utils/project-root.js';
 import { handleZodError, handleCLIError, MCPErrorResponse } from './utils/error-helpers.js';
 import { checkConstraints } from '../../../lib/core/constraints.js';
+import { MCP_AGENT_USER_ID, withStorage, toUserFacingStorageErrorMessage } from './utils/storage-helpers.js';
 
 const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
+
+async function syncMcpActivePlanPointer(
+  status: 'ACTIVE' | 'PAUSED' | 'COMPLETE' | 'CANCELLED',
+  planId: string
+): Promise<void> {
+  const userId = MCP_AGENT_USER_ID;
+  const projectId = path.basename(PROJECT_ROOT);
+
+  await withStorage(async (storage) => {
+    if (status === 'ACTIVE') {
+      await storage.upsertUserState({
+        user_id: userId,
+        project_id: projectId,
+        active_plan_id: planId,
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      const currentState = await storage.getUserState(userId);
+      if (currentState?.activePlanId === planId) {
+        await storage.upsertUserState({
+          user_id: userId,
+          project_id: projectId,
+          active_plan_id: null,
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+  }, 'setPlanStatus pointer sync operation');
+}
 
 // ============================================================================
 // METADATA MUTATION TOOLS (YAML Frontmatter Updates)
@@ -287,9 +317,17 @@ export async function setPlanStatus(params: unknown) {
     ];
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    let pointerSyncWarning = '';
+
+    try {
+      await syncMcpActivePlanPointer(validated.status, validated.planId);
+    } catch (syncError) {
+      const userMessage = toUserFacingStorageErrorMessage(syncError);
+      pointerSyncWarning = `\n⚠️ Pointer sync warning: ${userMessage}`;
+    }
     
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `${stdout.trim()}${pointerSyncWarning}` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {

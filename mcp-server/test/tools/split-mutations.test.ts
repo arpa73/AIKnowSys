@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Create a mock for the promisified execFile
 const mockExecFileAsync = vi.fn();
+const mockStorageInit = vi.fn();
+const mockStorageClose = vi.fn();
+const mockUpsertUserState = vi.fn();
+const mockGetUserState = vi.fn();
 
 // Mock child_process
 vi.mock('child_process', () => ({
@@ -19,11 +23,45 @@ vi.mock('../../../lib/core/constraints.js', () => ({
   checkConstraints: (...args: unknown[]) => mockCheckConstraints(...args),
 }));
 
+vi.mock('../../../lib/utils/find-knowledge-db.js', () => ({
+  findKnowledgeDb: vi.fn(() => '.aiknowsys/knowledge.db'),
+}));
+
+vi.mock('../../../lib/context/sqlite-storage.js', () => {
+  class MockSqliteStorage {
+    async init(...args: unknown[]) {
+      return mockStorageInit(...args);
+    }
+
+    async upsertUserState(...args: unknown[]) {
+      return mockUpsertUserState(...args);
+    }
+
+    async getUserState(...args: unknown[]) {
+      return mockGetUserState(...args);
+    }
+
+    async close(...args: unknown[]) {
+      return mockStorageClose(...args);
+    }
+  }
+
+  return { SqliteStorage: MockSqliteStorage };
+});
+
 describe('Split Plan Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExecFileAsync.mockReset();
     mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
+    mockStorageInit.mockReset();
+    mockStorageClose.mockReset();
+    mockUpsertUserState.mockReset();
+    mockGetUserState.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
+    mockUpsertUserState.mockResolvedValue(undefined);
+    mockGetUserState.mockResolvedValue({ activePlanId: 'PLAN_feature_x' });
   });
 
   describe('set_plan_status', () => {
@@ -118,6 +156,52 @@ describe('Split Plan Mutation Tools', () => {
         ]),
         expect.anything()
       );
+    });
+
+    it('should sync pointer to user_state when setting ACTIVE', async () => {
+      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan Updated' });
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      await setPlanStatus({
+        planId: 'PLAN_test',
+        status: 'ACTIVE'
+      });
+
+      expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'mcp-agent',
+        active_plan_id: 'PLAN_test'
+      }));
+    });
+
+    it('should clear pointer when pausing currently active plan', async () => {
+      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan Updated' });
+      mockGetUserState.mockResolvedValue({ activePlanId: 'PLAN_feature_x' });
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      await setPlanStatus({
+        planId: 'PLAN_feature_x',
+        status: 'PAUSED'
+      });
+
+      expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'mcp-agent',
+        active_plan_id: null
+      }));
+    });
+
+    it('should still succeed when pointer sync fails', async () => {
+      mockExecFileAsync.mockResolvedValue({ stdout: '✅ Plan Updated' });
+      mockStorageInit.mockRejectedValueOnce(new Error('DB unavailable'));
+
+      const { setPlanStatus } = await import('../../src/tools/split-mutations.js');
+      const result = await setPlanStatus({
+        planId: 'PLAN_feature_x',
+        status: 'ACTIVE'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Plan Updated');
+      expect(result.content[0].text).toContain('Pointer sync warning: DB unavailable');
     });
 
     it('should validate planId format', async () => {
