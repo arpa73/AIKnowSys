@@ -218,6 +218,12 @@ get_session({ sessionId: "2026-02-17" })
 **2026-02-19:** Architect follow-up: corrected team-index guidance wording
 
 **2026-02-19:** Architect follow-up: synced dist runtime guidance for CURRENT_PLAN generation
+
+**2026-02-19:** 
+### Follow-up Tech Debt (2026-02-20)
+- `MigrationCoordinator.insertLearned()` now uses `getPlanById` lookups to avoid per-file full table scans.
+- Remaining optimization opportunity: audit other migration paths still using broad `queryPlans({})` patterns and replace with direct ID queries where applicable.
+
 ## Architect Handoff Note (Feb 18, 2026)
 
 **Checkpoint 15 — Phase A ready to start.**

@@ -133,6 +133,9 @@ How to fix migration errors.`;
       const patternEvents = await storage.queryEvents({ eventType: EventType.PATTERN_DISCOVERED });
       expect(patternEvents.length).toBe(1);
       expect(patternEvents[0].planId).toMatch(/^learned_/);
+      const eventData = patternEvents[0].data as { solution?: string };
+      expect(eventData.solution).toBeDefined();
+      expect(eventData.solution?.length).toBeLessThanOrEqual(400);
     });
 
     it('should create pattern_discovered events idempotently for learned patterns', async () => {

@@ -523,40 +523,42 @@ export async function createLearnedPattern(params: unknown) {
         }
       }
 
-      await storage.insertPlan({
-        id: learnedPatternId,
-        project_id: projectId,
-        title: validated.title,
-        status: 'COMPLETE',
-        author: validated.author,
-        created: now,
-        updated: now,
-        content: buildLearnedPatternContent({
+      await storage.inTransaction(async () => {
+        await storage.insertPlan({
+          id: learnedPatternId,
+          project_id: projectId,
           title: validated.title,
+          status: 'COMPLETE',
+          author: validated.author,
+          created: now,
+          updated: now,
+          content: buildLearnedPatternContent({
+            title: validated.title,
+            pattern: validated.pattern,
+            solution: validated.solution,
+            trigger: validated.trigger,
+            applicability: validated.applicability,
+            reusable: validated.reusable,
+          }),
+          topics: validated.keywords,
+          description: validated.pattern,
+          type: validated.category,
+        });
+
+        const event = EventFactory.patternDiscovered({
+          projectId,
+          planId: learnedPatternId,
           pattern: validated.pattern,
-          solution: validated.solution,
+          category: validated.category,
           trigger: validated.trigger,
-          applicability: validated.applicability,
+          solution: validated.solution,
           reusable: validated.reusable,
-        }),
-        topics: validated.keywords,
-        description: validated.pattern,
-        type: validated.category,
-      });
+          applicability: validated.applicability,
+        });
 
-      const event = EventFactory.patternDiscovered({
-        projectId,
-        planId: learnedPatternId,
-        pattern: validated.pattern,
-        category: validated.category,
-        trigger: validated.trigger,
-        solution: validated.solution,
-        reusable: validated.reusable,
-        applicability: validated.applicability,
+        eventId = event.eventId;
+        await storage.insertEvent(event);
       });
-
-      eventId = event.eventId;
-      await storage.insertEvent(event);
     }, 'createLearnedPattern storage operation');
 
     return {

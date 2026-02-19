@@ -316,11 +316,10 @@ export class MigrationCoordinator {
 
     const learnedId = legacyLearnedId.startsWith('learned_')
       ? legacyLearnedId
-      : `learned_${legacyLearnId(legacyLearnedId)}`;
+      : `learned_${legacyLearnedId}`;
 
-    // Check if already exists (query all and filter by ID)
-    const allPlans = await this.storage.queryPlans({});
-    const existing = allPlans.plans.find(p => p.id === learnedId || p.id === legacyLearnedId);
+    const existing = await this.storage.getPlanById(learnedId)
+      || await this.storage.getPlanById(legacyLearnedId);
     const targetPlanId = existing?.id || learnedId;
 
     if (!existing) {
@@ -392,7 +391,8 @@ export class MigrationCoordinator {
     }
 
     const inferredPattern = params.fileInfo.filename.replace('.md', '').replace(/[_-]+/g, ' ').trim() || 'learned pattern';
-    const inferredSolution = params.content.trim() || `Migrated learned pattern from ${params.fileInfo.relativePath}`;
+    const inferredSolution = this.extractLearnedSolutionSummary(params.content)
+      || `Migrated learned pattern from ${params.fileInfo.relativePath}`;
 
     const event = EventFactory.patternDiscovered({
       projectId: params.projectId,
@@ -406,6 +406,22 @@ export class MigrationCoordinator {
     });
 
     await this.storage.insertEvent(event);
+  }
+
+  private extractLearnedSolutionSummary(content: string): string {
+    const solutionMatch = content.match(/##\s+Solution\s*\n([\s\S]*?)(?=\n##\s+|$)/i);
+    const rawSolution = (solutionMatch?.[1] || content).trim();
+
+    if (!rawSolution) {
+      return '';
+    }
+
+    const maxLength = 400;
+    if (rawSolution.length <= maxLength) {
+      return rawSolution;
+    }
+
+    return `${rawSolution.slice(0, maxLength - 1)}…`;
   }
   
   /**
@@ -425,8 +441,4 @@ export class MigrationCoordinator {
     // Fallback: use filename without extension
     return filename.replace('.md', '');
   }
-}
-
-function legacyLearnId(id: string): string {
-  return id.replace(/^learned_/, '');
 }

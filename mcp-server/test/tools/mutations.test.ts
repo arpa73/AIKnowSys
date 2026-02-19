@@ -9,6 +9,7 @@ const mockInsertEvent = vi.fn();
 const mockGetActivePlanId = vi.fn();
 const mockGetUserState = vi.fn();
 const mockUpsertUserState = vi.fn();
+const mockInTransaction = vi.fn();
 const mockStorageClose = vi.fn();
 const mockStorageInit = vi.fn();
 const mockCheckConstraints = vi.fn();
@@ -56,6 +57,10 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
       return mockUpsertUserState(...args);
     }
 
+    async inTransaction<T>(operation: () => Promise<T>) {
+      return mockInTransaction(operation);
+    }
+
     close(...args: unknown[]) {
       return mockStorageClose(...args);
     }
@@ -92,6 +97,7 @@ describe('Mutation Tools', () => {
     mockGetActivePlanId.mockReset();
     mockGetUserState.mockReset();
     mockUpsertUserState.mockReset();
+    mockInTransaction.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockReset();
     mockCheckConstraints.mockReset();
@@ -106,6 +112,7 @@ describe('Mutation Tools', () => {
     mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
     mockGetUserState.mockResolvedValue({ activePlanId: null });
     mockUpsertUserState.mockResolvedValue(undefined);
+    mockInTransaction.mockImplementation(async <T>(operation: () => Promise<T>) => operation());
     mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
     mockCreatePlanCore.mockResolvedValue({
       created: true,
@@ -484,6 +491,7 @@ describe('Mutation Tools', () => {
 
       expect(result.isError).not.toBe(true);
       expect(result.content[0].text).toContain('Learned pattern created');
+      expect(mockInTransaction).toHaveBeenCalledTimes(1);
       expect(mockInsertPlan).toHaveBeenCalledTimes(1);
       expect(mockInsertEvent).toHaveBeenCalledTimes(1);
       expect(mockStorageInit).toHaveBeenCalledTimes(1);

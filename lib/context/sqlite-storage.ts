@@ -1276,6 +1276,29 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Execute multiple write operations atomically
+   * Rolls back all changes if any operation fails
+   */
+  async inTransaction<T>(operation: () => Promise<T>): Promise<T> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before running transaction. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    this.db.exec('BEGIN');
+    try {
+      const result = await operation();
+      this.db.exec('COMMIT');
+      return result;
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
+  }
+
+  /**
    * Insert a plan into the database (for testing and migration)
    * Internal use only - will be used by migration tools
    */
