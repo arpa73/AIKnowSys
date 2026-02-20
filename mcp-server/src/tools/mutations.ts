@@ -86,6 +86,17 @@ const checkConstraintsSchema = z.object({
   projectId: z.string().optional(),
 });
 
+const setActivePlanPointerSchema = z.object({
+  planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+  userId: z.string().optional(),
+  projectId: z.string().optional(),
+});
+
+const getActivePlanPointerSchema = z.object({
+  userId: z.string().optional(),
+  projectId: z.string().optional(),
+});
+
 function toSafePatternSlug(value: string): string {
   return value
     .toLowerCase()
@@ -623,6 +634,108 @@ export async function checkConstraintsTool(params: unknown) {
       'constraint checking',
       error instanceof Error ? error.message : String(error),
       'Check action and context payload'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function setActivePlanPointer(params: unknown) {
+  try {
+    const validated = setActivePlanPointerSchema.parse(params);
+    const userId = validated.userId || MCP_AGENT_USER_ID;
+    const projectId = validated.projectId || path.basename(PROJECT_ROOT);
+
+    await withStorage(async (storage) => {
+      const plan = await storage.getPlanById(validated.planId);
+
+      if (!plan) {
+        throw new Error(`Plan not found: ${validated.planId}`);
+      }
+
+      if (plan.status !== 'ACTIVE') {
+        throw new Error(`Plan must be ACTIVE to set pointer (current status: ${plan.status})`);
+      }
+
+      if (plan.project_id && plan.project_id !== projectId) {
+        throw new Error(
+          `Plan ${validated.planId} belongs to project '${plan.project_id}', not '${projectId}'`
+        );
+      }
+
+      await storage.upsertUserState({
+        user_id: userId,
+        project_id: projectId,
+        active_plan_id: validated.planId,
+        updated_at: new Date().toISOString(),
+      });
+    }, 'setActivePlanPointer storage operation');
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Active plan pointer set\nUser: ${userId}\nPlan: ${validated.planId}`,
+      }],
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'set active plan pointer', {
+        planId: {
+          suggestion: 'Plan ID must start with PLAN_ and use lowercase snake_case',
+          examples: ['{ "planId": "PLAN_markdownless" }', '{ "planId": "PLAN_feature_auth" }'],
+        },
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'set active plan pointer',
+      error instanceof Error ? error.message : String(error),
+      'Ensure storage is available and planId is valid'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function getActivePlanPointer(params: unknown) {
+  try {
+    const validated = getActivePlanPointerSchema.parse(params);
+    const userId = validated.userId || MCP_AGENT_USER_ID;
+    const projectId = validated.projectId || path.basename(PROJECT_ROOT);
+
+    const state = await withStorage(async (storage) => {
+      return storage.getUserState(userId);
+    }, 'getActivePlanPointer storage operation');
+
+    const activePlanId = state?.projectId === projectId
+      ? (state.activePlanId || null)
+      : null;
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          userId,
+          projectId,
+          activePlanId,
+        }, null, 2),
+      }],
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'get active plan pointer');
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'get active plan pointer',
+      error instanceof Error ? error.message : String(error),
+      'Ensure storage is available and userId is valid'
     );
 
     return {

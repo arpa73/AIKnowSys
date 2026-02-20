@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 44 tools (41 direct + 3 dynamic)', async () => {
+  it('should register all 46 tools (43 direct + 3 dynamic)', async () => {
     const server = new AIKnowSysServer();
     
     // Access the internal low-level server instance
@@ -15,7 +15,7 @@ describe('MCP Server Registration', () => {
       params: {}
     });
 
-    expect(response.tools).toHaveLength(44);
+    expect(response.tools).toHaveLength(46);
     
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);
@@ -50,6 +50,8 @@ describe('MCP Server Registration', () => {
     expect(toolNames).toContain('create_link');
     expect(toolNames).toContain('create_learned_pattern');
     expect(toolNames).toContain('check_constraints');
+    expect(toolNames).toContain('set_active_plan_pointer');
+    expect(toolNames).toContain('get_active_plan_pointer');
 
     // SQLite single-record query tool
     expect(toolNames).toContain('get_session');

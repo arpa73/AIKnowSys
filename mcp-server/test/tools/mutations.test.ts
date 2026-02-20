@@ -8,6 +8,7 @@ const mockInsertSession = vi.fn();
 const mockInsertEvent = vi.fn();
 const mockGetActivePlanId = vi.fn();
 const mockGetUserState = vi.fn();
+const mockGetPlanById = vi.fn();
 const mockUpsertUserState = vi.fn();
 const mockInTransaction = vi.fn();
 const mockStorageClose = vi.fn();
@@ -53,6 +54,10 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
       return mockGetUserState(...args);
     }
 
+    async getPlanById(...args: unknown[]) {
+      return mockGetPlanById(...args);
+    }
+
     async upsertUserState(...args: unknown[]) {
       return mockUpsertUserState(...args);
     }
@@ -96,6 +101,7 @@ describe('Mutation Tools', () => {
     mockInsertEvent.mockReset();
     mockGetActivePlanId.mockReset();
     mockGetUserState.mockReset();
+    mockGetPlanById.mockReset();
     mockUpsertUserState.mockReset();
     mockInTransaction.mockReset();
     mockStorageClose.mockReset();
@@ -110,7 +116,15 @@ describe('Mutation Tools', () => {
     mockInsertSession.mockResolvedValue(undefined);
     mockInsertEvent.mockResolvedValue(undefined);
     mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
-    mockGetUserState.mockResolvedValue({ activePlanId: null });
+    mockGetUserState.mockResolvedValue({
+      activePlanId: null,
+      projectId: 'knowledge-system-template'
+    });
+    mockGetPlanById.mockResolvedValue({
+      id: 'PLAN_pointer_test',
+      project_id: 'knowledge-system-template',
+      status: 'ACTIVE'
+    });
     mockUpsertUserState.mockResolvedValue(undefined);
     mockInTransaction.mockImplementation(async <T>(operation: () => Promise<T>) => operation());
     mockCheckConstraints.mockResolvedValue({ allowed: true, blockers: [] });
@@ -541,6 +555,127 @@ describe('Mutation Tools', () => {
       expect(result.isError).not.toBe(true);
       expect(result.content[0].text).toContain('"allowed": false');
       expect(mockCheckConstraints).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('active plan pointer tools', () => {
+    it('should set active plan pointer for default MCP user', async () => {
+      const { setActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await setActivePlanPointer({ planId: 'PLAN_pointer_test' });
+
+      expect(result.content[0].text).toContain('Active plan pointer set');
+      expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'mcp-agent',
+        active_plan_id: 'PLAN_pointer_test'
+      }));
+    });
+
+    it('should get active plan pointer for default MCP user', async () => {
+      mockGetUserState.mockResolvedValueOnce({
+        activePlanId: 'PLAN_pointer_from_state',
+        projectId: 'knowledge-system-template'
+      });
+      const { getActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await getActivePlanPointer({});
+      const payload = JSON.parse(result.content[0].text);
+
+      expect(mockGetUserState).toHaveBeenCalledWith('mcp-agent');
+      expect(payload).toEqual({
+        userId: 'mcp-agent',
+        projectId: 'knowledge-system-template',
+        activePlanId: 'PLAN_pointer_from_state'
+      });
+    });
+
+    it('should return null when no active plan pointer exists', async () => {
+      mockGetUserState.mockResolvedValueOnce({
+        activePlanId: null,
+        projectId: 'knowledge-system-template'
+      });
+      const { getActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await getActivePlanPointer({ userId: 'custom-user' });
+      const payload = JSON.parse(result.content[0].text);
+
+      expect(mockGetUserState).toHaveBeenCalledWith('custom-user');
+      expect(payload).toEqual({
+        userId: 'custom-user',
+        projectId: 'knowledge-system-template',
+        activePlanId: null
+      });
+    });
+
+    it('should return null when user state belongs to different project', async () => {
+      mockGetUserState.mockResolvedValueOnce({
+        activePlanId: 'PLAN_other_project',
+        projectId: 'another-project'
+      });
+      const { getActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await getActivePlanPointer({ userId: 'mcp-agent', projectId: 'knowledge-system-template' });
+      const payload = JSON.parse(result.content[0].text);
+
+      expect(payload).toEqual({
+        userId: 'mcp-agent',
+        projectId: 'knowledge-system-template',
+        activePlanId: null
+      });
+    });
+
+    it('should fail set pointer when plan does not exist', async () => {
+      mockGetPlanById.mockResolvedValueOnce(null);
+      const { setActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await setActivePlanPointer({ planId: 'PLAN_missing' });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Plan not found');
+      expect(mockUpsertUserState).not.toHaveBeenCalled();
+    });
+
+    it('should fail set pointer when plan is not ACTIVE', async () => {
+      mockGetPlanById.mockResolvedValueOnce({
+        id: 'PLAN_pointer_test',
+        project_id: 'knowledge-system-template',
+        status: 'PAUSED'
+      });
+      const { setActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await setActivePlanPointer({ planId: 'PLAN_pointer_test' });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Plan must be ACTIVE');
+      expect(mockUpsertUserState).not.toHaveBeenCalled();
+    });
+
+    it('should fail set pointer when plan belongs to different project', async () => {
+      mockGetPlanById.mockResolvedValueOnce({
+        id: 'PLAN_pointer_test',
+        project_id: 'another-project',
+        status: 'ACTIVE'
+      });
+      const { setActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await setActivePlanPointer({
+        planId: 'PLAN_pointer_test',
+        projectId: 'knowledge-system-template'
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('belongs to project');
+      expect(mockUpsertUserState).not.toHaveBeenCalled();
+    });
+
+    it('should return conversational error for invalid planId in set pointer', async () => {
+      const { setActivePlanPointer } = await import('../../src/tools/mutations.js');
+
+      const result = await setActivePlanPointer({ planId: 'invalid' });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Invalid parameter');
+      expect(result.content[0].text).toContain('planId');
     });
   });
 });

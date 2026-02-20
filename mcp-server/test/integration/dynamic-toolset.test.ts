@@ -228,7 +228,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
 
   describe('Token efficiency comparison', () => {
     it('should demonstrate token reduction', async () => {
-      // Before: All 36 tools exposed directly
+      // Before: All direct tools exposed directly
       const listResponse = await internalServer._requestHandlers.get('tools/list')({
         method: 'tools/list',
         params: {},
@@ -239,19 +239,19 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const dynamicTools = allTools.filter((t: any) => t.name.startsWith('aiknowsys_'));
 
       // Verify we have both sets
-      expect(directAccessTools.length).toBe(36);
+      expect(directAccessTools.length).toBe(43);
       expect(dynamicTools.length).toBe(3);
 
-      // Dynamic toolset exposes only 3 tools (vs 36 direct)
-      // Token reduction: ~93% (29K → 1.8K tokens for tool definitions)
+      // Dynamic toolset exposes only 3 tools (vs 43 direct)
+      // Token reduction: >90% for tool-definition footprint
       expect(dynamicTools.length).toBeLessThan(directAccessTools.length);
       
-      // Demonstrate workflow - only 3 tool calls instead of loading all 36 schemas
+      // Demonstrate workflow - only 3 tool calls instead of loading all direct schemas
       const tokensForDirectAccess = directAccessTools.length; // All tools loaded upfront
       const tokensForDynamicAccess = dynamicTools.length; // Only 3 tools loaded
       
       expect(tokensForDynamicAccess).toBe(3);
-      expect(tokensForDirectAccess).toBe(36);
+      expect(tokensForDirectAccess).toBe(43);
       
       const tokenReduction = ((tokensForDirectAccess - tokensForDynamicAccess) / tokensForDirectAccess) * 100;
       expect(tokenReduction).toBeGreaterThan(90); // >90% reduction

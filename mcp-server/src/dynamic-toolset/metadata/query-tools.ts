@@ -10,6 +10,7 @@ import {
   syncPlans,
 } from '../../tools/query.js';
 import { searchContext, findPattern, getSkillByName } from '../../tools/enhanced-query.js';
+import { getActivePlanPointer } from '../../tools/mutations.js';
 
 /**
  * Query tools - Query sessions, plans, and learned patterns
@@ -81,6 +82,18 @@ export const QUERY_TOOLS: ToolMetadata[] = [
         .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD'),
     }),
     handler: async ({ date }) => getSessionByDate(date),
+  },
+  {
+    name: 'get_active_plan_pointer',
+    description:
+      'Get active plan pointer for a user from SQLite user_state. Returns activePlanId or null.',
+    category: 'query',
+    tags: ['plans', 'pointer', 'user-state', 'active-plan'],
+    inputSchema: z.object({
+      userId: z.string().optional(),
+      projectId: z.string().optional(),
+    }),
+    handler: getActivePlanPointer,
   },
   {
     name: 'rebuild_index',

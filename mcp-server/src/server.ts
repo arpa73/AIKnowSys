@@ -25,7 +25,16 @@ import {
   syncPlans
 } from './tools/query.js';
 import { findSkillForTask } from './tools/skills.js';
-import { createSession, createPlan, createReview, createLink, createLearnedPattern, checkConstraintsTool } from './tools/mutations.js';
+import {
+  createSession,
+  createPlan,
+  createReview,
+  createLink,
+  createLearnedPattern,
+  checkConstraintsTool,
+  setActivePlanPointer,
+  getActivePlanPointer,
+} from './tools/mutations.js';
 import { 
   setPlanStatus, 
   appendToPlan, 
@@ -542,6 +551,33 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         }),
       },
       async (args) => checkConstraintsTool(args)
+    );
+
+    this.server.registerTool(
+      'set_active_plan_pointer',
+      {
+        description:
+          'Explicitly set active plan pointer for a user in SQLite user_state. Useful for multi-user workflows and manual pointer correction.',
+        inputSchema: z.object({
+          planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+          userId: z.string().optional(),
+          projectId: z.string().optional(),
+        }),
+      },
+      async (args) => setActivePlanPointer(args)
+    );
+
+    this.server.registerTool(
+      'get_active_plan_pointer',
+      {
+        description:
+          'Get active plan pointer for a user from SQLite user_state. Returns activePlanId or null.',
+        inputSchema: z.object({
+          userId: z.string().optional(),
+          projectId: z.string().optional(),
+        }),
+      },
+      async (args) => getActivePlanPointer(args)
     );
 
     // Session Mutation Tools (Split from update_session for clarity)

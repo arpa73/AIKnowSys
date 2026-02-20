@@ -1,6 +1,14 @@
 import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
-import { createSession, createPlan, createReview, createLink, createLearnedPattern, checkConstraintsTool } from '../../tools/mutations.js';
+import {
+  createSession,
+  createPlan,
+  createReview,
+  createLink,
+  createLearnedPattern,
+  checkConstraintsTool,
+  setActivePlanPointer,
+} from '../../tools/mutations.js';
 import {
   setPlanStatus,
   appendToPlan,
@@ -96,6 +104,19 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
       projectId: z.string().optional(),
     }),
     handler: checkConstraintsTool,
+  },
+  {
+    name: 'set_active_plan_pointer',
+    description:
+      'Explicitly set active plan pointer for a user in SQLite user_state. Useful for multi-user workflows and manual pointer correction.',
+    category: 'mutation',
+    tags: ['plans', 'pointer', 'user-state', 'active-plan'],
+    inputSchema: z.object({
+      planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
+      userId: z.string().optional(),
+      projectId: z.string().optional(),
+    }),
+    handler: setActivePlanPointer,
   },
   {
     name: 'append_to_session',
