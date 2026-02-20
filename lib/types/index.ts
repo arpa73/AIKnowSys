@@ -199,12 +199,14 @@ export interface MigrateToEventsOptions {
   all?: boolean;
   verbose?: boolean;
   dryRun?: boolean;
+  archiveMarkdown?: boolean;
 }
 
 export interface MigrateToEventsResult {
   sessions: MigrationStats;
   plans: MigrationStats;
   dbPath?: string;
+  markdownArchived?: number;
 }
 
 // Markdown Export (Phase 3)

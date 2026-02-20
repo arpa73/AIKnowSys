@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { EventType } from '../../../lib/events/types.js';
 
 let tmpDir: string;
 let dbPath: string;
@@ -50,7 +51,7 @@ describe('createLearnedPattern transaction rollback', () => {
     const rolledBackPlan = plans.plans.find((plan) => plan.title === uniqueTitle);
     expect(rolledBackPlan).toBeUndefined();
 
-    const events = await verifyStorage.queryEvents({ eventType: 'pattern_discovered' as any });
+    const events = await verifyStorage.queryEvents({ eventType: EventType.PATTERN_DISCOVERED });
     expect(events.length).toBe(0);
 
     await verifyStorage.close();
@@ -125,7 +126,7 @@ describe('createLearnedPattern transaction rollback', () => {
     const currentProjectId = path.basename(process.cwd());
     const currentProjectEvents = await verifyStorage.queryEvents({
       projectId: currentProjectId,
-      eventType: 'pattern_discovered' as any,
+      eventType: EventType.PATTERN_DISCOVERED,
     });
     expect(currentProjectEvents.length).toBe(0);
 

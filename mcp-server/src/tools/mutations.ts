@@ -76,7 +76,7 @@ const createLearnedPatternSchema = z.object({
   author: z.string().optional().default('mcp-agent'),
   reusable: z.boolean().optional().default(true),
   trigger: z.string().optional(),
-  applicability: z.string().optional(),
+  applicability: z.enum(['project_specific', 'language_specific', 'universal']).optional(),
 });
 
 const checkConstraintsSchema = z.object({

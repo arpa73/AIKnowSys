@@ -156,6 +156,7 @@ program
   .option('-s, --session <id>', 'Migrate specific session by ID')
   .option('-p, --plan <id>', 'Migrate specific plan by ID')
   .option('--all', 'Migrate all sessions and plans')
+  .option('--archive-markdown', 'Archive active markdown session/plan files after successful migration')
   .option('--dry-run', 'Preview migration without making changes')
   .option('-v, --verbose', 'Show detailed progress')
   .action(async (options) => {
@@ -165,6 +166,7 @@ program
       sessionId: options.session,
       planId: options.plan,
       all: options.all,
+      archiveMarkdown: options.archiveMarkdown,
       dryRun: options.dryRun,
       verbose: options.verbose
     });

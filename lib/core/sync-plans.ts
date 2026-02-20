@@ -90,10 +90,14 @@ export async function syncPlansCore(
     const filePath = join(plansDir, file);
     const content = readFileSync(filePath, 'utf-8');
 
-    // Extract plan details
-    const planMatch = content.match(/\*\*Currently Working On:\*\*\s*(.+)/);
+    // Extract plan details (support both legacy and modern pointer formats)
+    const planMatch =
+      content.match(/\*\*Currently Working On:\*\*\s*(.+)/) ||
+      content.match(/\*\*Plan:\*\*\s*(.+)/);
     const statusMatch = content.match(/\*\*Status:\*\*\s*(.+)/);
-    const dateMatch = content.match(/\*\*Last Updated:\*\*\s*(.+)/);
+    const dateMatch =
+      content.match(/\*\*Last Updated:\*\*\s*(.+)/) ||
+      content.match(/\*\*Started:\*\*\s*(.+)/);
 
     let plan = planMatch ? planMatch[1].trim() : 'None';
     const status = statusMatch ? statusMatch[1].trim() : '📋 PLANNED';

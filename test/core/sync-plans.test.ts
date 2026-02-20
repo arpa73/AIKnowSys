@@ -30,6 +30,37 @@ describe('syncPlansCore (Pure Business Logic)', () => {
   });
 
   describe('Architectural Refactor - Pure Function Tests', () => {
+    it('should parse modern active plan pointer format', async () => {
+      const plansDir = resolve(TEST_DIR, '.aiknowsys', 'plans');
+      await mkdir(plansDir, { recursive: true });
+
+      const pointerContent = `# Active Plan: test-user
+
+**Plan:** [Test Plan](../PLAN_test.md)  
+**Status:** 🎯 ACTIVE  
+**Started:** 2026-02-17
+
+---
+
+## Progress
+
+[Update as you work through the plan]
+`;
+
+      await writeFile(resolve(plansDir, 'active-test-user.md'), pointerContent, 'utf-8');
+
+      const result = await syncPlansCore({ targetDir: TEST_DIR });
+
+      expect(result.success).toBe(true);
+      expect(result.planCount).toBe(1);
+      expect(result.developers?.[0].plan).toContain('Test Plan');
+
+      const { readFile } = await import('fs/promises');
+      const content = await readFile(result.outputPath, 'utf-8');
+      expect(content).toContain('| test-user | [Test Plan](PLAN_test.md) | 🎯 ACTIVE | 2026-02-17 |');
+      expect(content).not.toContain('*No active plan*');
+    });
+
     it('should generate empty index when no plans exist', async () => {
       const result = await syncPlansCore({ targetDir: TEST_DIR });
 

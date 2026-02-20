@@ -46,6 +46,11 @@ export async function migrateToEvents(
   const dbPath = path.resolve(options.dbPath);
   const verbose = options.verbose ?? false;
   const dryRun = options.dryRun ?? false;
+  const archiveMarkdown = options.archiveMarkdown ?? false;
+
+  if (archiveMarkdown && !options.all) {
+    throw new Error('The --archive-markdown option currently requires --all to prevent partial/unsafe cleanup.');
+  }
 
   const result: MigrateToEventsResult = {
     sessions: { found: 0, migrated: 0, errors: 0 },
@@ -105,9 +110,16 @@ export async function migrateToEvents(
         const plansResult = await storage.queryPlans({});
         result.sessions.found = sessionsResult.count;
         result.plans.found = plansResult.count;
+
+        if (archiveMarkdown) {
+          result.markdownArchived = 0;
+        }
         
         if (verbose) {
           console.log(chalk.dim(`Would migrate ${sessionsResult.count} sessions and ${plansResult.count} plans`));
+          if (archiveMarkdown) {
+            console.log(chalk.dim('Would archive markdown workflow files after successful non-dry-run migration'));
+          }
         }
       }
       
@@ -228,6 +240,18 @@ export async function migrateToEvents(
       }
     }
     
+    const migrationErrors = result.sessions.errors + result.plans.errors;
+
+    if (archiveMarkdown && !dryRun && migrationErrors === 0) {
+      const archivedCount = archiveMarkdownFiles(targetDir, verbose);
+      result.markdownArchived = archivedCount;
+    } else if (archiveMarkdown) {
+      result.markdownArchived = 0;
+      if (verbose) {
+        console.log(chalk.yellow('⚠️  Skipping markdown archive because migration reported errors.'));
+      }
+    }
+
     result.dbPath = dbPath;
     
     // Summary
@@ -240,6 +264,9 @@ export async function migrateToEvents(
       console.log(chalk.dim(`  Plans: ${result.plans.migrated}/${result.plans.found}`));
       console.log(chalk.dim(`  Total migrated: ${totalMigrated}`));
       console.log(chalk.dim(`  Errors: ${totalErrors}`));
+      if (archiveMarkdown) {
+        console.log(chalk.dim(`  Markdown files archived: ${result.markdownArchived ?? 0}`));
+      }
       console.log(chalk.dim(`  Database: ${dbPath}`));
     }
     
@@ -258,4 +285,74 @@ export async function migrateToEvents(
     
     throw error;
   }
+}
+
+function archiveMarkdownFiles(targetDir: string, verbose: boolean): number {
+  const aiknowsysDir = path.join(targetDir, '.aiknowsys');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const archiveRoot = path.join(aiknowsysDir, 'archive', 'markdownless', timestamp);
+
+  const markdownPaths: string[] = [];
+
+  // Sessions
+  const sessionsDir = path.join(aiknowsysDir, 'sessions');
+  if (fs.existsSync(sessionsDir)) {
+    const sessionFiles = fs.readdirSync(sessionsDir)
+      .filter((file) => file.endsWith('.md') && file !== 'README.md')
+      .map((file) => path.join('sessions', file));
+    markdownPaths.push(...sessionFiles);
+  }
+
+  // Plan pointers
+  const plansDir = path.join(aiknowsysDir, 'plans');
+  if (fs.existsSync(plansDir)) {
+    const pointerFiles = fs.readdirSync(plansDir)
+      .filter((file) => file.startsWith('active-') && file.endsWith('.md'))
+      .map((file) => path.join('plans', file));
+    markdownPaths.push(...pointerFiles);
+  }
+
+  // Root markdown workflow files
+  if (fs.existsSync(aiknowsysDir)) {
+    const rootMarkdownFiles = fs.readdirSync(aiknowsysDir)
+      .filter((file) => file.endsWith('.md'))
+      .filter((file) => file.startsWith('PLAN_') || file === 'CURRENT_PLAN.md');
+    markdownPaths.push(...rootMarkdownFiles);
+  }
+
+  if (markdownPaths.length === 0) {
+    return 0;
+  }
+
+  fs.mkdirSync(archiveRoot, { recursive: true });
+
+  let movedCount = 0;
+
+  for (const relativePath of markdownPaths) {
+    const sourcePath = path.join(aiknowsysDir, relativePath);
+    if (!fs.existsSync(sourcePath)) {
+      continue;
+    }
+
+    const destinationPath = path.join(archiveRoot, relativePath);
+    fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+    try {
+      fs.renameSync(sourcePath, destinationPath);
+      movedCount++;
+
+      if (verbose) {
+        console.log(chalk.dim(`📦 Archived ${relativePath}`));
+      }
+    } catch (error) {
+      if (verbose) {
+        console.log(
+          chalk.yellow(
+            `⚠️  Could not archive ${relativePath}: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
+      }
+    }
+  }
+
+  return movedCount;
 }

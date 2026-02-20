@@ -1278,6 +1278,10 @@ export class SqliteStorage extends StorageAdapter {
   /**
    * Execute multiple write operations atomically
    * Rolls back all changes if any operation fails
+    *
+    * ⚠️ IMPORTANT: The operation callback MUST contain only synchronous
+    * better-sqlite3 calls. Awaiting real async I/O inside this transaction
+    * (file reads, HTTP calls, etc.) is not safe.
    */
   async inTransaction<T>(operation: () => Promise<T>): Promise<T> {
     if (!this.db) {

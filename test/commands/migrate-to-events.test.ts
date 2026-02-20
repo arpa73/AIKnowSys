@@ -49,6 +49,19 @@ describe('migrate-to-events command', () => {
   });
 
   describe('single session migration', () => {
+    it('should reject archiveMarkdown when --all is not set', async () => {
+      const options: MigrateToEventsOptions = {
+        dir: tempDir,
+        dbPath,
+        sessionId: 'sess-2026-02-15-001',
+        archiveMarkdown: true,
+        verbose: false,
+        dryRun: false
+      };
+
+      await expect(migrateToEvents(options)).rejects.toThrow(/requires --all/i);
+    });
+
     it('should migrate one session when --session is provided', async () => {
       // Create a test session with markdown content
       const sessionId = 'sess-2026-02-15-001';
@@ -188,6 +201,188 @@ Test idempotency
   });
 
   describe('all sessions migration', () => {
+    it('should not archive markdown workflow files in dry-run mode', async () => {
+      const sessionId = 'sess-2026-02-15-archive-dry-run';
+      const sessionContent = `---
+date: 2026-02-15
+title: Archive Session Dry Run
+topics:
+  - markdownless
+---
+
+## Goal
+Preview archive markdown files after migration
+`;
+
+      fs.writeFileSync(
+        path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`),
+        sessionContent
+      );
+
+      await storage.insertSession({
+        id: sessionId,
+        project_id: 'test-project',
+        date: '2026-02-15',
+        topic: 'Archive Session Dry Run',
+        status: 'in-progress',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        topics: ['markdownless'],
+        content: sessionContent
+      });
+
+      const planId = 'PLAN_archive_dry_run_test';
+      const planContent = `---
+id: ${planId}
+title: Archive Dry Run Plan
+status: ACTIVE
+author: developer
+---
+
+## Goal
+Preview archive markdown files after migration
+`;
+
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', `${planId}.md`), planContent);
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md'), '# Current Team Plans');
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md'), `# Active Plan\n\n**Plan:** [Archive Dry Run Plan](../${planId}.md)  \n**Status:** 🎯 ACTIVE  \n**Started:** 2026-02-15\n`);
+
+      await storage.insertPlan({
+        id: planId,
+        project_id: 'test-project',
+        title: 'Archive Dry Run Plan',
+        status: 'ACTIVE',
+        author: 'developer',
+        priority: 'medium',
+        type: 'feature',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        content: planContent
+      });
+
+      const options: MigrateToEventsOptions = {
+        dir: tempDir,
+        dbPath,
+        all: true,
+        archiveMarkdown: true,
+        verbose: false,
+        dryRun: true
+      };
+
+      const result = await migrateToEvents(options);
+
+      expect(result.markdownArchived ?? 0).toBe(0);
+
+      expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, '.aiknowsys', `${planId}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md'))).toBe(true);
+      expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md'))).toBe(true);
+
+      const archiveRoot = path.join(tempDir, '.aiknowsys', 'archive', 'markdownless');
+      expect(fs.existsSync(archiveRoot)).toBe(false);
+    });
+
+    it('should archive markdown workflow files when archiveMarkdown is enabled', async () => {
+      const sessionId = 'sess-2026-02-15-archive';
+      const sessionContent = `---
+date: 2026-02-15
+title: Archive Session
+topics:
+  - markdownless
+---
+
+## Goal
+Archive markdown files after migration
+`;
+
+      fs.writeFileSync(
+        path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`),
+        sessionContent
+      );
+
+      await storage.insertSession({
+        id: sessionId,
+        project_id: 'test-project',
+        date: '2026-02-15',
+        topic: 'Archive Session',
+        status: 'in-progress',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        topics: ['markdownless'],
+        content: sessionContent
+      });
+
+      const planId = 'PLAN_archive_test';
+      const planContent = `---
+id: ${planId}
+title: Archive Plan
+status: ACTIVE
+author: developer
+---
+
+## Goal
+Archive markdown files after migration
+`;
+
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', `${planId}.md`), planContent);
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md'), '# Current Team Plans');
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md'), `# Active Plan\n\n**Plan:** [Archive Plan](../${planId}.md)  \n**Status:** 🎯 ACTIVE  \n**Started:** 2026-02-15\n`);
+
+      await storage.insertPlan({
+        id: planId,
+        project_id: 'test-project',
+        title: 'Archive Plan',
+        status: 'ACTIVE',
+        author: 'developer',
+        priority: 'medium',
+        type: 'feature',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        content: planContent
+      });
+
+      const options: MigrateToEventsOptions = {
+        dir: tempDir,
+        dbPath,
+        all: true,
+        archiveMarkdown: true,
+        verbose: false,
+        dryRun: false
+      };
+
+      const result = await migrateToEvents(options);
+
+      expect(result.markdownArchived).toBeGreaterThanOrEqual(4);
+
+      const remainingSessionMarkdown = fs.existsSync(
+        path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`)
+      );
+      const remainingPlanMarkdown = fs.existsSync(
+        path.join(tempDir, '.aiknowsys', `${planId}.md`)
+      );
+      const remainingCurrentPlan = fs.existsSync(
+        path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md')
+      );
+      const remainingPointer = fs.existsSync(
+        path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md')
+      );
+
+      expect(remainingSessionMarkdown).toBe(false);
+      expect(remainingPlanMarkdown).toBe(false);
+      expect(remainingCurrentPlan).toBe(false);
+      expect(remainingPointer).toBe(false);
+
+      const archiveRoot = path.join(tempDir, '.aiknowsys', 'archive', 'markdownless');
+      const archiveSubdirs = fs.existsSync(archiveRoot) ? fs.readdirSync(archiveRoot) : [];
+      expect(archiveSubdirs.length).toBeGreaterThan(0);
+
+      const latestArchive = path.join(archiveRoot, archiveSubdirs[0]);
+      expect(fs.existsSync(path.join(latestArchive, 'sessions', `${sessionId}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(latestArchive, `${planId}.md`))).toBe(true);
+      expect(fs.existsSync(path.join(latestArchive, 'CURRENT_PLAN.md'))).toBe(true);
+      expect(fs.existsSync(path.join(latestArchive, 'plans', 'active-test-user.md'))).toBe(true);
+    });
+
     it('should migrate all sessions when --all is provided', async () => {
       // Create multiple sessions
       const sessions = [
