@@ -7,14 +7,16 @@
 
 ## Quick Start
 
-After running `npx aiknowsys init`, you'll have workflow files including:
+AI-native onboarding is now conversational. Ask your AI assistant to initialize AIKnowSys using `.github/onboarding-setup.md`.
+
+After setup, you'll have workflow files including:
 - `AGENTS.md` - AI workflow and MCP-first instructions
 - `CODEBASE_CHANGELOG.md` - Session history (will grow over time)
 - `.aiknowsys/` context files - plans, sessions, learned patterns
 
 **Two approaches to fill templates:**
 
-1. **AI-Assisted** (Recommended): Use the AI prompt displayed after init
+1. **AI-Assisted** (Recommended): Use your AI assistant with `.github/onboarding-setup.md`
 2. **Manual**: Follow the customization steps below
 
 ---
@@ -93,7 +95,7 @@ All templates use `{{PLACEHOLDER}}` syntax for values you need to fill in.
 
 ### MCP + AGENTS.md Workflow Setup
 
-Use this quick sequence after `npx aiknowsys init`:
+Use this quick sequence after conversational onboarding completes:
 
 **Step 1: Configure MCP Server**
 - Follow [mcp-server/SETUP.md](mcp-server/SETUP.md)
@@ -239,13 +241,13 @@ Ensure the "General Best Practices" section matches your project culture:
 
 ### AI-Assisted Setup (Recommended)
 
-After running `npx aiknowsys init`, you'll see a prompt like:
+After conversational onboarding, use a prompt like:
 
 ```
 🤖 AI Assistant Prompt:
    Copy this prompt to your AI assistant to complete setup:
    
-   "I just initialized aiknowsys for my project...
+   "I just set up AIKnowSys for my project...
    [detailed instructions]"
 ```
 
@@ -694,7 +696,7 @@ Use Context7 for current middleware and route handler patterns.
 
 *Scaffolding verification:*
 ```
-After npx aiknowsys init --stack nextjs
+After onboarding a Next.js project
 "Use Context7 to verify template uses current conventions"
 ```
 
@@ -805,13 +807,13 @@ Set `"enabled": false` in config.json, or remove the hooks:
 **Disabling hooks:**  
 Delete or rename `.github/hooks/hooks.json`. Manual session management still works via AGENTS.md.
 
-**Manual installation (if skipped during init):**
+**Manual installation (if skipped during onboarding):**
 ```bash
 # Copy hook templates
 cp -r node_modules/aiknowsys/templates/hooks/ .github/hooks/
 
-# Or reinstall with hooks
-npx aiknowsys init --yes  # (includes hooks by default)
+# Or enable hooks feature
+npx aiknowsys enable vscodeHooks
 ```
 
 **See also:**

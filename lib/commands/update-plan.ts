@@ -9,7 +9,6 @@ import { parseFrontmatter, updateFrontmatter } from '../utils/yaml-frontmatter.j
 import { JsonStorage } from '../context/json-storage.js';
 import { createLogger } from '../logger.js';
 import { checkFileExists } from '../utils/file-utils.js';
-import { syncPlansCore } from '../core/sync-plans.js';
 import { detectUsername } from '../utils/git-utils.js';
 
 // Define valid plan statuses (single source of truth)
@@ -17,7 +16,7 @@ const VALID_STATUSES = ['PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'] 
 type PlanStatus = typeof VALID_STATUSES[number];
 
 export interface UpdatePlanOptions {
-  planId?: string;              // Plan ID (PLAN_xyz) or auto-detect from active
+  planId?: string;              // Plan ID (PLAN_xyz) or auto-detect from ACTIVE status
   setStatus?: PlanStatus;
   append?: string;              // Append to ## Progress section (Phase 1.3)
   appendFile?: string;          // Append from file (Phase 1.3)
@@ -35,22 +34,14 @@ export interface UpdatePlanResult {
   message?: string;
 }
 
-const STATUS_EMOJIS: Record<string, string> = {
-  'PLANNED': '📋',
-  'ACTIVE': '🎯',
-  'PAUSED': '🔄',
-  'COMPLETE': '✅',
-  'CANCELLED': '❌'
-};
-
 /**
  * Update plan status and progress via mutation command
  * 
- * Manages plan lifecycle transitions, progress tracking, and automatic synchronization.
- * Automatically updates active pointer, rebuilds context index, and syncs team plan index.
+ * Manages plan lifecycle transitions and progress tracking.
+ * Uses plan status metadata as source of truth and rebuilds context index.
  * 
  * @param options - Configuration options for plan update
- * @param options.planId - Plan identifier (PLAN_xyz) or omit to auto-detect from active pointer
+ * @param options.planId - Plan identifier (PLAN_xyz) or omit to auto-detect from ACTIVE status
  * @param options.setStatus - New status (PLANNED|ACTIVE|PAUSED|COMPLETE|CANCELLED)
  * @param options.append - Inline progress note to append (auto-timestamped)
  * @param options.appendFile - Path to file containing progress notes to append
@@ -70,7 +61,7 @@ const STATUS_EMOJIS: Record<string, string> = {
  * await updatePlan({ planId: 'PLAN_feature_xyz', setStatus: 'ACTIVE' });
  * 
  * @example
- * // Auto-detect active plan and add progress
+ * // Auto-detect ACTIVE plan and add progress
  * await updatePlan({ append: 'Phase 1 complete: all tests passing' });
  * 
  * @example
@@ -109,36 +100,23 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
     log.warn('Human CLI command: for AI/programmatic workflows, prefer MCP mutation tools (mcp_aiknowsys_set_plan_status / mcp_aiknowsys_append_to_plan).');
   }
 
-  // Determine plan ID (provided or auto-detect from active pointer)
+  // Determine plan ID (provided or auto-detect from ACTIVE status)
   let planId = providedPlanId;
   if (!planId) {
-    // Auto-detect from active pointer
-    const pointerPath = path.join(resolvedTargetDir, '.aiknowsys', 'plans', `active-${author}.md`);
-    const pointerExists = await checkFileExists(pointerPath, { onExists: 'return' });
-    
-    if (!pointerExists) {
-      const error = new Error(
-        `No active plan found for ${author}. Specify plan ID or activate a plan first.`
-      );
+    const storage = new JsonStorage();
+    await storage.init(resolvedTargetDir);
+    const activePlans = await storage.queryPlans({ status: 'ACTIVE', author });
+
+    const firstActive = activePlans.plans[0];
+    if (!firstActive) {
+      const error = new Error(`No active plan found for ${author}. Specify plan ID or activate a plan first.`);
       if (!json && !_silent) {
         log.error(error.message);
       }
       throw error;
     }
 
-    // Read pointer to get plan ID
-    const pointerContent = await fs.readFile(pointerPath, 'utf-8');
-    const planMatch = pointerContent.match(/\[([^\]]+)\]\(\.\.\/PLAN_([^)]+)\.md\)/);
-    
-    if (planMatch && planMatch[2]) {
-      planId = `PLAN_${planMatch[2]}`;
-    } else {
-      const error = new Error(`No active plan found for ${author}.`);
-      if (!json && !_silent) {
-        log.error(error.message);
-      }
-      throw error;
-    }
+    planId = firstActive.id;
   }
 
   // Find plan file
@@ -235,21 +213,10 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
   const updatedContent = updateFrontmatter(updatedBody, updates);
   await fs.writeFile(planPath, updatedContent, 'utf-8');
 
-  // Update active pointer if status changed
-  if (setStatus) {
-    const planTitle = typeof frontmatter.title === 'string'
-      ? frontmatter.title
-      : planId;
-    await updateActivePointer(resolvedTargetDir, planId, setStatus, author, planTitle);
-  }
-
   // Rebuild context index
   const storage = new JsonStorage();
   await storage.init(resolvedTargetDir);
   await storage.rebuildIndex();
-
-  // Auto-sync plans to update CURRENT_PLAN.md
-  await syncPlansCore({ targetDir: resolvedTargetDir });
 
   // Prepare response
   const result: UpdatePlanResult = {
@@ -271,78 +238,4 @@ export async function updatePlan(options: UpdatePlanOptions = {}): Promise<Updat
   }
 
   return result;
-}
-
-/**
- * Update active pointer file based on status transition
- */
-async function updateActivePointer(
-  targetDir: string,
-  planId: string,
-  status: string,
-  author: string,
-  planTitle: string
-): Promise<void> {
-  const pointerPath = path.join(targetDir, '.aiknowsys', 'plans', `active-${author}.md`);
-  const date = new Date().toISOString().split('T')[0];
-  const emoji = STATUS_EMOJIS[status] || '📋';
-
-  // Determine pointer content based on status
-  let pointerContent: string;
-
-  if (status === 'COMPLETE' || status === 'CANCELLED') {
-    // Clear active plan (set to None)
-    pointerContent = `# Active Plan: ${author}
-
-**Currently Working On:** None  
-**Status:** ${emoji} ${status}  
-**Last Updated:** ${date}
-
----
-
-## Recent Work
-
-Previously completed: **${planTitle}** (${date})
-
----
-
-*Auto-generated by update-plan command*
-`;
-  } else if (status === 'ACTIVE' || status === 'PAUSED') {
-    // Point to plan
-    const planFile = `${planId}.md`;
-    pointerContent = `# Active Plan: ${author}
-
-**Currently Working On:** [${planTitle}](../${planFile})  
-**Status:** ${emoji} ${status}  
-**Last Updated:** ${date}
-
----
-
-## Progress
-
-[Update as you work through the plan]
-
----
-
-*Auto-generated by update-plan command*
-`;
-  } else {
-    // PLANNED or other - keep minimal pointer
-    const planFile = `${planId}.md`;
-    pointerContent = `# Active Plan: ${author}
-
-**Currently Working On:** [${planTitle}](../${planFile})  
-**Status:** ${emoji} ${status}  
-**Last Updated:** ${date}
-
----
-
-*Auto-generated by update-plan command*
-`;
-  }
-
-  // Create plans directory if needed
-  await fs.mkdir(path.dirname(pointerPath), { recursive: true });
-  await fs.writeFile(pointerPath, pointerContent, 'utf-8');
 }

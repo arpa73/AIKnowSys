@@ -191,21 +191,21 @@ describe('Phase 8: Advanced Intelligence', () => {
   describe('Code-to-Doc Mapping', () => {
     it('should map commands to documentation files', () => {
       const codeToDoc: Record<string, string[]> = {
-        'lib/commands/init.js': ['README.md', 'SETUP_GUIDE.md'],
-        'lib/commands/scan.js': ['docs/customization-guide.md'],
-        'lib/commands/migrate.js': ['docs/migration-guide.md']
+        'lib/commands/check.js': ['README.md', 'SETUP_GUIDE.md'],
+        'lib/commands/update.js': ['README.md', 'SETUP_GUIDE.md'],
+        'lib/commands/query-plans.js': ['README.md']
       };
 
-      expect(Array.isArray(codeToDoc['lib/commands/init.js'])).toBeTruthy();
-      expect(codeToDoc['lib/commands/init.js'].length).toBe(2);
+      expect(Array.isArray(codeToDoc['lib/commands/check.js'])).toBeTruthy();
+      expect(codeToDoc['lib/commands/check.js'].length).toBe(2);
     });
 
     it('should support multiple docs per code file', () => {
       const codeToDoc: Record<string, string[]> = {
-        'lib/commands/init.js': ['README.md', 'SETUP_GUIDE.md', 'docs/examples.md']
+        'lib/commands/check.js': ['README.md', 'SETUP_GUIDE.md', 'docs/examples/README.md']
       };
 
-      const docs = codeToDoc['lib/commands/init.js'];
+      const docs = codeToDoc['lib/commands/check.js'];
       expect(docs.length > 1).toBeTruthy();
     });
   });

@@ -53,7 +53,7 @@ pytest path/to/test.py::test_name -v
 npm test -- --testNamePattern="test name"
 
 # Vitest
-npx vitest path/to/test.test.ts
+npx vitest run path/to/test.test.ts
 
 # Go
 go test -run TestName ./...

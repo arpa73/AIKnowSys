@@ -55,7 +55,7 @@
 | Changed | Command | Expected Result |
 |---------|---------|-----------------|
 | **TypeScript** | `npm run type-check` | No errors |
-| **Unit Tests** | `npm run test:run` | All tests pass |
+| **Unit Tests** | `npm test` | All tests pass |
 | **E2E Tests** | `npm run test:e2e` | All flows pass |
 | **Linting** | `npm run lint` | No errors |
 | **Build** | `npm run build` | Successful build |

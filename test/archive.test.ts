@@ -194,31 +194,34 @@ describe('Archive Commands', () => {
   });
 
   describe('archive-plans command', () => {
-    beforeEach(async () => {
-      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
-    });
+    const writePlan = async (planId: string, status: 'PLANNED' | 'ACTIVE' | 'PAUSED' | 'COMPLETE' | 'CANCELLED', daysAgo = 0): Promise<string> => {
+      const filePath = path.join(TEST_DIR, '.aiknowsys', `${planId}.md`);
+      const now = new Date();
+      const updated = new Date();
+      updated.setDate(now.getDate() - daysAgo);
+
+      const content = `---
+id: "${planId}"
+title: "${planId}"
+status: "${status}"
+author: "test"
+created: "2026-02-01"
+updated: "2026-02-01"
+---
+
+# ${planId}
+`;
+
+      await fs.writeFile(filePath, content);
+      if (daysAgo > 0) {
+        await fs.utimes(filePath, updated, updated);
+      }
+      return filePath;
+    };
 
     it('should detect completed plans older than threshold', async () => {
-      // Create plan pointer file (v0.9.0 multi-dev structure)
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status | Progress | Last Updated |
-|------|--------|----------|--------------|
-| [Old Plan](../PLAN_old.md) | ✅ COMPLETE | Done | 2025-12-01 |
-| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | In progress | 2026-01-30 |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
-      // Create plan files
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 30);
-      
-      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
-      await fs.writeFile(oldPlanFile, '# Old Plan');
-      await fs.utimes(oldPlanFile, oldDate, oldDate);
-      
-      const activePlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md');
-      await fs.writeFile(activePlanFile, '# Active Plan');
+      await writePlan('PLAN_old', 'COMPLETE', 30);
+      await writePlan('PLAN_active', 'ACTIVE', 1);
       
       const result = await archivePlans({
         dir: TEST_DIR,
@@ -231,20 +234,7 @@ describe('Archive Commands', () => {
     });
 
     it('should move completed plans to archive/plans/', async () => {
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status |
-|------|--------|
-| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 30);
-      
-      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
-      await fs.writeFile(oldPlanFile, '# Old Plan');
-      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      await writePlan('PLAN_old', 'COMPLETE', 30);
       
       const result = await archivePlans({
         dir: TEST_DIR,
@@ -253,30 +243,16 @@ describe('Archive Commands', () => {
       });
       
       expect(result.archived).toBe(1);
-      expect(result.updated).toBe(1);
       
       // Verify file moved
       const archivePath = path.join(TEST_DIR, '.aiknowsys', 'archive', 'plans', 'PLAN_old.md');
       const exists = await fs.access(archivePath).then(() => true).catch(() => false);
       expect(exists).toBe(true);
-      
-      // Verify pointer file updated
-      const pointerContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
-      expect(pointerContent.includes('../archive/plans/PLAN_old.md')).toBe(true);
     });
 
     it('should preserve active and paused plans', async () => {
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status |
-|------|--------|
-| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE |
-| [Paused Plan](../PLAN_paused.md) | 🔄 PAUSED |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), '# Active');
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_paused.md'), '# Paused');
+      const activePath = await writePlan('PLAN_active', 'ACTIVE', 30);
+      const pausedPath = await writePlan('PLAN_paused', 'PAUSED', 30);
       
       const result = await archivePlans({
         dir: TEST_DIR,
@@ -285,49 +261,14 @@ describe('Archive Commands', () => {
       });
       
       expect(result.archived).toBe(0);
-    });
-
-    it('should update plan pointer with archive links', async () => {
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status |
-|------|--------|
-| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 30);
-      
-      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
-      await fs.writeFile(oldPlanFile, '# Old Plan');
-      await fs.utimes(oldPlanFile, oldDate, oldDate);
-      
-      await archivePlans({
-        dir: TEST_DIR,
-        threshold: 7,
-        _silent: true
-      });
-      
-      const updatedContent = await fs.readFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), 'utf-8');
-      expect(updatedContent).toMatch(/\.\.\/archive\/plans\/PLAN_old\.md/);
+      const activeExists = await fs.access(activePath).then(() => true).catch(() => false);
+      const pausedExists = await fs.access(pausedPath).then(() => true).catch(() => false);
+      expect(activeExists).toBe(true);
+      expect(pausedExists).toBe(true);
     });
 
     it('should handle --dry-run mode', async () => {
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status |
-|------|--------|
-| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 30);
-      
-      const oldPlanFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
-      await fs.writeFile(oldPlanFile, '# Old Plan');
-      await fs.utimes(oldPlanFile, oldDate, oldDate);
+      const oldPlanFile = await writePlan('PLAN_old', 'COMPLETE', 30);
       
       const result = await archivePlans({
         dir: TEST_DIR,
@@ -374,17 +315,18 @@ describe('Archive Commands', () => {
       await fs.writeFile(sessionFile, '# Old Session');
       await fs.utimes(sessionFile, oldDate, oldDate);
       
-      // Create old plan with multi-dev structure
-      const planPointer = `# test-user's Active Plan
-
-| Plan | Status |
-|------|--------|
-| [Old Plan](../PLAN_old.md) | ✅ COMPLETE |
-`;
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test-user.md'), planPointer);
-      
+      // Create old complete plan with frontmatter
       const planFile = path.join(TEST_DIR, '.aiknowsys', 'PLAN_old.md');
-      await fs.writeFile(planFile, '# Old Plan');
+      await fs.writeFile(planFile, `---
+    id: "PLAN_old"
+    title: "PLAN_old"
+    status: "COMPLETE"
+    author: "test"
+    created: "2026-02-01"
+    updated: "2026-02-01"
+    ---
+
+    # Old Plan`);
       await fs.utimes(planFile, oldDate, oldDate);
       
       const result = await clean({
@@ -433,22 +375,17 @@ describe('Archive Commands', () => {
 
   describe('archive-plans --threshold=0 fix', () => {
     it('should archive immediately when threshold is 0', async () => {
-      // Setup multi-dev structure
-      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
-      
-      // Create pointer file with completed plan
-      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
-      await fs.writeFile(pointerPath, `
-# test's Active Plan
-
-| Plan | Status | Description | Last Updated |
-|------|--------|-------------|--------------|
-| [Test Plan](../PLAN_test.md) | ✅ COMPLETE | Done | 2026-02-04 |
-`);
-      
-      // Create the actual plan file (modified today)
       const planPath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_test.md');
-      await fs.writeFile(planPath, '# Test Plan\n\nCompleted today.');
+    await fs.writeFile(planPath, `---
+  id: "PLAN_test"
+  title: "PLAN_test"
+  status: "COMPLETE"
+  author: "test"
+  created: "2026-02-01"
+  updated: "2026-02-01"
+  ---
+
+  # Test Plan\n\nCompleted today.`);
       
       // Archive with threshold=0 (should archive even though file is new)
       const result = await archivePlans({
@@ -461,21 +398,16 @@ describe('Archive Commands', () => {
     });
 
     it('should return zero archived when threshold=0 but no matching plans', async () => {
-      // Setup multi-dev structure
-      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
-      
-      // Create pointer with ACTIVE plan (not COMPLETE)
-      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
-      await fs.writeFile(pointerPath, `
-# test's Active Plan
+      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), `---
+    id: "PLAN_active"
+    title: "PLAN_active"
+    status: "ACTIVE"
+    author: "test"
+    created: "2026-02-01"
+    updated: "2026-02-01"
+    ---
 
-| Plan | Status | Description | Last Updated |
-|------|--------|-------------|--------------|
-| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | Working | 2026-02-04 |
-`);
-      
-      // Create plan file
-      await fs.writeFile(path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md'), '# Active Plan');
+    # Active Plan`);
       
       // Archive with threshold=0 (should not archive ACTIVE plans)
       const result = await archivePlans({
@@ -485,31 +417,35 @@ describe('Archive Commands', () => {
       });
       
       expect(result.archived).toBe(0);
-      expect(result.kept).toBe(1);
+      expect(result.kept).toBe(0);
     });
   });
 
   describe('archive-plans --status option', () => {
     it('should archive plans by custom status', async () => {
-      // Setup multi-dev structure
-      await fs.mkdir(path.join(TEST_DIR, '.aiknowsys', 'plans'), { recursive: true });
-      
-      // Create pointer file with cancelled plan
-      const pointerPath = path.join(TEST_DIR, '.aiknowsys', 'plans', 'active-test.md');
-      await fs.writeFile(pointerPath, `
-# test's Active Plan
-
-| Plan | Status | Description | Last Updated |
-|------|--------|-------------|--------------|
-| [Cancelled Plan](../PLAN_cancelled.md) | ❌ CANCELLED | Abandoned | 2025-12-01 |
-| [Active Plan](../PLAN_active.md) | 🎯 ACTIVE | Working | 2026-02-04 |
-`);
-      
       // Create plan files
       const cancelledPath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_cancelled.md');
       const activePath = path.join(TEST_DIR, '.aiknowsys', 'PLAN_active.md');
-      await fs.writeFile(cancelledPath, '# Cancelled Plan');
-      await fs.writeFile(activePath, '# Active Plan');
+      await fs.writeFile(cancelledPath, `---
+    id: "PLAN_cancelled"
+    title: "PLAN_cancelled"
+    status: "CANCELLED"
+    author: "test"
+    created: "2026-02-01"
+    updated: "2026-02-01"
+    ---
+
+    # Cancelled Plan`);
+      await fs.writeFile(activePath, `---
+    id: "PLAN_active"
+    title: "PLAN_active"
+    status: "ACTIVE"
+    author: "test"
+    created: "2026-02-01"
+    updated: "2026-02-01"
+    ---
+
+    # Active Plan`);
       
       // Set old date for cancelled plan
       const oldDate = new Date();
@@ -520,7 +456,7 @@ describe('Archive Commands', () => {
       const result = await archivePlans({
         dir: TEST_DIR,
         threshold: 0,
-        statusFilter: '❌ CANCELLED',  // Fixed: was 'status' but should be 'statusFilter'
+        statusFilter: 'CANCELLED',
         _silent: true
       });
       

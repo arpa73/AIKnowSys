@@ -276,7 +276,7 @@ Tabnine doesn't support global custom instructions, but you can:
   "project_context": {
     "files": [
       "AGENTS.md",
-      ".aiknowsys/CURRENT_PLAN.md"
+      ".aiknowsys/PLAN_*.md"
     ]
   }
 }

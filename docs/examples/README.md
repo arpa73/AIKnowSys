@@ -95,22 +95,22 @@ const tasks = await api.get('/tasks');
 cat docs/examples/CODEBASE_ESSENTIALS.example.md
 ```
 
-**Step 2:** Generate draft for your project
+**Step 2:** Set up project context via AI-native onboarding
 ```bash
-npx aiknowsys scan --dir .
-# Creates DRAFT_CODEBASE_ESSENTIALS.md
+# Ask your AI assistant to follow .github/onboarding-setup.md
+# and generate/update your project essentials context
 ```
 
 **Step 3:** Fill in TODOs using example as reference
 ```bash
 # Open both files side-by-side
-# - DRAFT_CODEBASE_ESSENTIALS.md (your draft)
+# - Your project CODEBASE_ESSENTIALS.md (or equivalent essentials file)
 # - docs/examples/CODEBASE_ESSENTIALS.example.md (reference)
 ```
 
-**Step 4:** Remove TODOs and rename
+**Step 4:** Remove TODOs and finalize
 ```bash
-mv DRAFT_CODEBASE_ESSENTIALS.md CODEBASE_ESSENTIALS.md
+# Ensure your essentials file has no template placeholders remaining
 ```
 
 ---

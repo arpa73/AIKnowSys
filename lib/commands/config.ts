@@ -396,7 +396,7 @@ export async function uninstall(options: UninstallOptions): Promise<FeatureResul
     }
     
     log.cyan('📖 To reinstall:');
-    log.white('   npx aiknowsys init');
+    log.white('   Use AI-native onboarding via .github/onboarding-setup.md');
     log.blank();
     
     return { success: true, filesRemoved: removedFiles.length };

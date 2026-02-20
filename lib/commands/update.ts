@@ -44,7 +44,7 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
   if (!fs.existsSync(essentialsPath) && !fs.existsSync(agentsPath)) {
     log.error('No knowledge system found in this directory.');
     log.blank();
-    log.log('\x1b[33m💡 Run `aiknowsys init` first to set up the knowledge system.\x1b[0m');
+    log.log('\x1b[33m💡 Use AI-native onboarding via `.github/onboarding-setup.md` to set up the knowledge system.\x1b[0m');
     throw new Error('No knowledge system found');
   }
   

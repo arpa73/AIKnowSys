@@ -133,6 +133,8 @@ See **📦 MCP TOOLS REFERENCE** section below for complete list.
 | README | Links valid, examples accurate | ✅ MANDATORY |
 | Package | `npm pack --dry-run` | ✅ Before publish |
 
+**Vitest non-watch rule:** Use `npm test` (configured as `vitest run`) for one-shot validation. If invoking Vitest directly, always use `npx vitest run ...` (or `npx vitest --run ...`) to avoid hanging on “Waiting for file changes”.
+
 **🚨 RULE: Never claim work is complete without running validation!**
 
 **🚨 DELIVERABLES CHECK:** If you change templates/, you MUST:

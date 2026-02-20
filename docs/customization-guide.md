@@ -30,8 +30,7 @@ The knowledge system template includes **placeholders** that you must fill in ba
 ### Decision Points
 
 **1. Starting from scratch or migrating existing project?**
-- **New project:** Use `npx aiknowsys init` (interactive prompts)
-- **Existing project:** Use `npx aiknowsys migrate` (auto-detection)
+- **New or existing project:** Use AI-native conversational onboarding via `.github/onboarding-setup.md`
 
 **2. What's your primary tech stack?**
 - Determines which validation commands to use
@@ -45,34 +44,24 @@ The knowledge system template includes **placeholders** that you must fill in ba
 
 ---
 
-## Installation: Two Paths
+## Installation: AI-Native Path
 
-### Path A: New Project (Interactive Setup)
-
-**When to use:** Starting a greenfield project.
+**When to use:** Starting a greenfield project or onboarding an existing repository.
 
 ```bash
 # Navigate to your project directory
 cd /path/to/your/project
 
-# Run interactive setup
-npx aiknowsys init
-
-# Or with options
-npx aiknowsys init --stack nextjs  # Use pre-built stack template
-npx aiknowsys init --template minimal  # Use minimal template
+# Ask your AI assistant to follow:
+# .github/onboarding-setup.md
 ```
 
-**What `init` does:**
-1. Detects existing code (if any)
-2. Prompts for language (TypeScript/Python/Rust/Go/Other)
-3. Prompts for framework (Vue/React/Django/Actix/etc.)
-4. Prompts for test framework (Vitest/Jest/pytest/etc.)
-5. Generates customized CODEBASE_ESSENTIALS.md
-6. Generates customized AGENTS.md
-7. Installs custom agents (Developer + Architect)
-8. Installs universal skills
-9. Customizes skills for your package manager
+**What onboarding does:**
+1. Detects project type from manifests
+2. Loads MCP invariants, active plans, recent sessions
+3. Creates/updates core workflow files
+4. Uses Context7 for current framework patterns where needed
+5. Configures validation and workflow defaults conversationally
 
 **Output:**
 - `CODEBASE_ESSENTIALS.md` (ready to fill in patterns)
@@ -81,35 +70,11 @@ npx aiknowsys init --template minimal  # Use minimal template
 - `.github/agents/` (custom agents installed)
 - `.github/skills/` (universal skills + customized dependency-updates)
 
-### Path B: Existing Project (Scanner + Migration)
-
-**When to use:** Adding knowledge system to established codebase.
-
-```bash
-# Navigate to your existing project
-cd /path/to/your/project
-
-# Run migration workflow
-npx aiknowsys migrate
-
-# Or scan only (no agent/skill installation)
-npx aiknowsys scan
-```
-
-**What `migrate` does:**
-1. Scans your codebase (`package.json`, `pyproject.toml`, etc.)
-2. Detects tech stack automatically
-3. Discovers test commands from package.json/Makefile/CI
-4. Generates **CODEBASE_ESSENTIALS.draft.md** (70% complete)
-5. Prompts you to fill in missing sections
-6. Installs agents and skills once confirmed
-
 **Output:**
-- `CODEBASE_ESSENTIALS.draft.md` (review and complete)
 - `AGENTS.md` (workflow configured)
-- `.github/agents/` (custom agents)
-- `.github/skills/` (universal skills)
-- Manual TODOs for patterns/invariants/gotchas
+- `.github/agents/` and `.github/skills/` (when enabled)
+- `.aiknowsys/` context structure (database-first)
+- Project-specific TODOs for patterns/invariants/gotchas
 
 ---
 
@@ -198,7 +163,7 @@ This is your project's constitution. Fill in these sections:
 3. **Test each command:**
    ```bash
    # Run command and note exact output
-   npm run test:run
+   npm test
    # Expected: "X tests passed"
    
    cargo clippy -- -D warnings
@@ -212,7 +177,7 @@ This is your project's constitution. Fill in these sections:
 | Changed | Command | Expected Result |
 |---------|---------|-----------------|
 | **TypeScript** | `npm run type-check` | No errors |
-| **Frontend Tests** | `npm run test:run` | All tests pass |
+| **Frontend Tests** | `npm test` | All tests pass |
 | **Backend Python** | `docker-compose exec backend pytest -x` | All tests pass |
 | **Database** | `python manage.py migrate --check` | No unapplied migrations |
 ```
@@ -368,13 +333,13 @@ const title = computed(() => props.article.title)
 // package.json
 {
   "scripts": {
-    "test": "vitest",           // For watch mode in dev
-    "test:run": "vitest run"    // For CI/one-time runs
+      "test": "vitest run",       // One-shot (CI + automation)
+      "test:watch": "vitest"      // Watch mode for local TDD
   }
 }
 ```
 
-Always use `npm run test:run` in scripts and CI.
+Always use `npm test` (or `npx vitest run ...`) in scripts and CI.
 
 **Why:** Vitest defaults to watch mode, which waits for file changes.
 ```
@@ -407,7 +372,7 @@ Replace placeholders with your actual commands:
 | Changed | Command | Expected |
 |---------|---------|----------|
 | **TypeScript** | `npm run type-check` | No errors |
-| **Tests** | `npm run test:run` | All pass |
+| **Tests** | `npm test` | All pass |
 ```
 
 #### B. Skill Mapping
@@ -672,7 +637,7 @@ echo "export function test() { return 42 }" > src/test.ts
 
 # 4. Verify all commands work
 npm run type-check   # Or your equivalent
-npm run test:run
+npm test
 npm run lint
 
 # 5. If everything passes, merge
@@ -777,7 +742,7 @@ for (let i = 0; i < 10; i++) {
 ```markdown
 | Changed | Command | Expected |
 |---------|---------|----------|
-| TypeScript | `npm run test:run` | "X tests passed, 0 failed" |
+| TypeScript | `npm test` | "X tests passed, 0 failed" |
 ```
 
 ### ❌ Mistake 3: Future-Oriented Patterns

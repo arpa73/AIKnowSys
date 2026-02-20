@@ -32,11 +32,11 @@ export async function sync(options: SyncOptions = {}): Promise<void> {
 
   // Check files exist
   if (!fs.existsSync(essentialsPath)) {
-    throw ErrorTemplates.fileNotFound(essentialsFile, ['npx aiknowsys init']);
+    throw ErrorTemplates.fileNotFound(essentialsFile, ['Use AI-native onboarding: .github/onboarding-setup.md']);
   }
 
   if (!fs.existsSync(agentsPath)) {
-    throw ErrorTemplates.fileNotFound('AGENTS.md', ['npx aiknowsys init']);
+    throw ErrorTemplates.fileNotFound('AGENTS.md', ['Use AI-native onboarding: .github/onboarding-setup.md']);
   }
 
   const spinner: Ora | null = silent ? null : ora('Checking validation matrix...').start();

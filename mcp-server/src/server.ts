@@ -206,7 +206,7 @@ Returns execution result or validation error with details.`,
       'get_active_plans',
       {
         description:
-          'Returns all currently active implementation plans. Much faster than reading CURRENT_PLAN.md or using grep_search. Returns structured data with plan IDs, titles, authors, and file paths.',
+          'Returns all currently active implementation plans using status-based plan metadata. Faster than manual file scanning and returns structured data with plan IDs, titles, authors, and file paths.',
         inputSchema: z.object({}),
       },
       async () => getActivePlans()
@@ -318,7 +318,7 @@ Returns execution result or validation error with details.`,
       'sync_plans',
       {
         description:
-          'Sync individual developer plan pointers (active-*.md) into team index (CURRENT_PLAN.md). Critical for multi-developer workflow.',
+          'Sync plan metadata into a generated team plan index for human-readable overview output.',
         inputSchema: z.object({}),
       },
       async () => syncPlans()

@@ -30,7 +30,7 @@ export const CONTEXT_TOOLS: ToolMetadata[] = [
   {
     name: 'get_active_plans',
     description:
-      'Returns all currently active implementation plans. Much faster than reading CURRENT_PLAN.md or using grep_search. Returns structured data with plan IDs, titles, authors, and file paths.',
+      'Returns all currently active implementation plans using status-based plan metadata. Faster than manual file scanning and returns structured data with plan IDs, titles, authors, and file paths.',
     category: 'context',
     tags: ['plans', 'active', 'current', 'workflow'],
     inputSchema: z.object({}),

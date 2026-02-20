@@ -1,6 +1,6 @@
 {
   "name": "aiknowsys",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "AI-Powered Development Workflow for Consistent, High-Quality Code",
   "keywords": [
     "ai",
@@ -32,6 +32,7 @@
     "dist/",
     "templates/",
     "scripts/",
+    ".github/onboarding-setup.md",
     "SETUP_GUIDE.md",
     "README.md",
     "LICENSE"

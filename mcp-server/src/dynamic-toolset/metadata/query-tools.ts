@@ -107,7 +107,7 @@ export const QUERY_TOOLS: ToolMetadata[] = [
   {
     name: 'sync_plans',
     description:
-      'Sync individual developer plan pointers (active-*.md) into team index (CURRENT_PLAN.md). Critical for multi-developer workflow.',
+      'Sync plan metadata into the generated team plan index for human-readable overview output.',
     category: 'query',
     tags: ['plans', 'sync', 'maintenance', 'team'],
     inputSchema: z.object({}),

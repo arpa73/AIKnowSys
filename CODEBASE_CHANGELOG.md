@@ -11,6 +11,29 @@
 
 ---
 
+## v0.11.0 - AI-Native Onboarding Simplification (Feb 20, 2026)
+
+**Completion Date:** 2026-02-20  
+**Milestone:** Removed CLI-heavy onboarding in favor of conversational AI setup
+
+### Breaking Changes
+
+- 🔥 Removed onboarding CLI commands: `init`, `scan`, `migrate`
+- 🔥 Removed stack template deliverables under `templates/stacks/`
+- 🔥 Removed pointer artifacts: `.aiknowsys/CURRENT_PLAN.md` and `.aiknowsys/plans/active-*.md`
+
+### New Workflow
+
+- ✨ AI-native setup via `.github/onboarding-setup.md`
+- ✨ MCP-first runtime context loading (`get_critical_invariants`, `get_active_plans`, `get_recent_sessions`)
+- ✨ Active plan tracking via `status` in `PLAN_*.md` + query tools (no pointer sync)
+
+### Notes
+
+- See [docs/v0.11-breaking-changes.md](docs/v0.11-breaking-changes.md) for migration guidance.
+
+---
+
 ## Migration Note - ESSENTIALS to MCP Workflow (Feb 18, 2026)
 
 **Change:** `init` no longer distributes `CODEBASE_ESSENTIALS.template.md` as a primary workflow artifact for new projects.

@@ -103,7 +103,7 @@ High-level technical approach
 - [ ] Create Vue component
 - [ ] Write component tests
 - [ ] Add route (if needed)
-- [ ] Run: npm run test:run ✅
+- [ ] Run: npm test ✅
 - [ ] Run: npm run type-check ✅
 
 ## Documentation
@@ -257,7 +257,7 @@ go test ./...
 Example test commands (varies by project):
 ```bash
 # React/Vue with Vitest
-npm run test:run
+npm test
 
 # Type checking
 npm run type-check

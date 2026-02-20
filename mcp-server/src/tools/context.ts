@@ -35,7 +35,7 @@ export async function getCriticalInvariants() {
       rule: 'AI agents never modify templates during normal workflow',
       details: [
         'Templates in templates/ are deliverables distributed to users',
-        'User customization happens in generated files (after aiknowsys init)',
+        'User customization happens in generated files via AI-native onboarding workflow',
         'Exception: Deliberate template maintenance requires implementation plan, TDD, architect review, validation, migration guide',
         'See: .aiknowsys/learned/template-maintenance.md for workflow',
       ],

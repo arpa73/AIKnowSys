@@ -118,8 +118,8 @@ node scripts/migrate-learned-patterns.js
 # Create plan file
 echo "# Feature: Your Feature Name" > .aiknowsys/PLAN_your_feature.md
 
-# Update your plan pointer
-echo "**Currently Working On:** PLAN_your_feature.md" > .aiknowsys/plans/active-<your-username>.md
+# Set status to ACTIVE (database-first)
+npx aiknowsys update-plan PLAN_your_feature --set-status ACTIVE
 ```
 
 3. **Verify team index:**
@@ -130,15 +130,15 @@ npx aiknowsys query-plans --status ACTIVE
 ```
 
 4. **Work independently:**
-- Your plan: `.aiknowsys/plans/active-<username>.md` (no conflicts!)
+- Your plan: `.aiknowsys/PLAN_<topic>.md` with `status: ACTIVE|PAUSED|COMPLETE`
 - Your reviews: `.aiknowsys/reviews/PENDING_<username>.md` (gitignored)
-- Team index: `.aiknowsys/CURRENT_PLAN.md` (auto-generated, shows all active work)
+- Team/AI query: `mcp_aiknowsys_get_active_plans()` or `npx aiknowsys query-plans --status ACTIVE`
 
 **Benefits:**
-- ✅ No merge conflicts on plan files
+- ✅ No pointer files to keep in sync
 - ✅ Clear visibility of who's working on what
 - ✅ Independent architect reviews per developer
-- ✅ Automatic team index generation
+- ✅ Single source of truth via plan status + query tools
 
 **See:** [Advanced Workflows](docs/advanced-workflows.md) for detailed multi-developer patterns
 

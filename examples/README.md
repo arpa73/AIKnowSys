@@ -53,7 +53,8 @@ cat CODEBASE_ESSENTIALS.md
 
 ```bash
 cd your-project
-npx aiknowsys init
+# Ask your AI assistant to onboard using:
+# .github/onboarding-setup.md
 ```
 
 ### 3. Fill Using Example as Reference
@@ -113,7 +114,7 @@ If a section doesn't apply to your project, remove it:
 
 1. Read: [`filled-simple-api/README.md`](filled-simple-api/README.md)
 2. Look at: [`filled-simple-api/CODEBASE_ESSENTIALS.md`](filled-simple-api/CODEBASE_ESSENTIALS.md)
-3. Initialize: `npx aiknowsys init` in your project
+3. Initialize: conversational onboarding via `.github/onboarding-setup.md`
 4. Fill: Use the example as a reference (not a template to copy)
 
 **Already familiar with aiknowsys?**
@@ -149,7 +150,7 @@ Browse stack-specific examples for patterns:
 → Browse template for your stack
 
 **Step 3:** Initialize your project
-→ `npx aiknowsys init`
+→ Use AI-native onboarding via `.github/onboarding-setup.md`
 
 **Step 4:** Fill with specificity
 → Use examples as reference, write about YOUR code

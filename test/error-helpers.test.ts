@@ -123,8 +123,8 @@ describe('ErrorTemplates', () => {
       
       expect(error instanceof AIKnowSysError).toBeTruthy();
       expect(error.message.includes('CODEBASE_ESSENTIALS.md not found')).toBeTruthy();
-      expect(error.suggestion.includes('aiknowsys scan')).toBeTruthy();
-      expect(error.suggestion.includes('aiknowsys init')).toBeTruthy();
+      expect(error.suggestion.includes('onboarding-setup.md')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys update')).toBeTruthy();
       expect(error.learnMore && error.learnMore.includes('github.com')).toBeTruthy();
     });
     
@@ -136,7 +136,7 @@ describe('ErrorTemplates', () => {
       
       expect(error.suggestion.includes('custom command 1')).toBeTruthy();
       expect(error.suggestion.includes('custom command 2')).toBeTruthy();
-      expect(!error.suggestion.includes('aiknowsys scan')).toBeTruthy();
+      expect(!error.suggestion.includes('onboarding-setup.md')).toBeTruthy();
     });
   });
   
@@ -146,7 +146,7 @@ describe('ErrorTemplates', () => {
       
       expect(error.message.includes('AGENTS.md')).toBeTruthy();
       expect(error.message.includes('empty')).toBeTruthy();
-      expect(error.suggestion.includes('aiknowsys scan')).toBeTruthy();
+      expect(error.suggestion.includes('onboarding-setup.md')).toBeTruthy();
       expect(error.learnMore).toBeTruthy();
     });
   });
@@ -201,8 +201,8 @@ describe('ErrorTemplates', () => {
       const error = ErrorTemplates.noKnowledgeSystem();
       
       expect(error.message.includes('No knowledge system found')).toBeTruthy();
-      expect(error.suggestion.includes('aiknowsys init')).toBeTruthy();
-      expect(error.suggestion.includes('aiknowsys migrate')).toBeTruthy();
+      expect(error.suggestion.includes('onboarding-setup.md')).toBeTruthy();
+      expect(error.suggestion.includes('aiknowsys update')).toBeTruthy();
       expect(error.learnMore).toBeTruthy();
     });
   });

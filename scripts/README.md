@@ -9,9 +9,10 @@ The bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have be
 ## ✅ Use the CLI Instead
 
 ```bash
-npx aiknowsys init         # New projects (was: setup.sh)
-npx aiknowsys migrate      # Existing projects (was: migrate-existing.sh)
-npx aiknowsys scan         # Scan codebase (was: scan-codebase.sh)
+# AI-native onboarding is conversational via .github/onboarding-setup.md
+npx aiknowsys check        # Validate setup and configuration
+npx aiknowsys update       # Update existing workflow files
+npx aiknowsys query-plans --status ACTIVE
 ```
 
 ---
@@ -22,13 +23,13 @@ npx aiknowsys scan         # Scan codebase (was: scan-codebase.sh)
 
 - **Node.js version (recommended):** `templates/scripts/install-git-hooks.cjs` - Cross-platform
 - **Bash version (legacy):** `templates/scripts/install-git-hooks.sh` - Unix-like systems
-- Copied to user projects during `npx aiknowsys init --tdd-enforcement`
+- Copied to user projects during onboarding/feature enablement
 - Installs git hooks for TDD enforcement
 - Run in YOUR project (not aiknowsys itself)
 
 **Usage in your project:**
 ```bash
-# After running: npx aiknowsys init --tdd-enforcement
+# After enabling hooks in your project workflow
 cd your-project
 
 # Cross-platform (recommended)

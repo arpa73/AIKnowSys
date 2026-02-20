@@ -483,7 +483,7 @@ Open `CODEBASE_ESSENTIALS.draft.md` and fill in TODO sections:
 ```bash
 # Test each command the scanner found
 npm run type-check          # Does it work?
-npm run test:run           # Does it work?
+npm test                    # Does it work?
 docker-compose exec backend pytest -x  # Does it work?
 ```
 
@@ -646,13 +646,13 @@ const articles = await articlesApi.articlesList()
 // package.json
 {
   "scripts": {
-    "test": "vitest",           // Watch mode for dev
-    "test:run": "vitest run"    // One-shot for CI
+      "test": "vitest run",       // One-shot for CI/automation
+      "test:watch": "vitest"      // Watch mode for local dev
   }
 }
 ```
 
-Always use `npm run test:run` in CI.
+Always use `npm test` (or `npx vitest run ...`) in CI.
 
 **Why:** Vitest defaults to watch mode, waiting for file changes.
 Wasted 4 hours debugging first time this happened (Nov 2025).
@@ -768,7 +768,7 @@ jobs:
         run: npm run type-check
       
       - name: Run Tests
-        run: npm run test:run
+            run: npm test
       
       - name: Lint
         run: npm run lint
@@ -782,7 +782,7 @@ validate:
   stage: test
   script:
     - npm run type-check  # From validation matrix
-    - npm run test:run
+      - npm test
     - npm run lint
 ```
 
@@ -805,7 +805,7 @@ Add knowledge system checklist to `.github/pull_request_template.md`:
 ```bash
 # Paste output from validation commands
 npm run type-check  # ✅ No errors
-npm run test:run    # ✅ 156 tests passed
+npm test             # ✅ 156 tests passed
 ```
 
 ## Changes

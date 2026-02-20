@@ -194,7 +194,8 @@ When creating a new project with a specific stack:
 
 **Example:**
 ```bash
-npx aiknowsys init --stack nextjs
+# Onboard project via:
+# .github/onboarding-setup.md
 
 # In AI chat:
 "Use Context7 to verify the Next.js template uses current conventions.
@@ -353,7 +354,7 @@ mkdir -p .aiknowsys/context7-cache
 
 **Planned CLI Enhancements:**
 - `npx aiknowsys check-skills --context7` - Auto-validate all learned skills
-- `npx aiknowsys init --with-context7` - Scaffold with current framework conventions
+- AI-native onboarding improvements via `.github/onboarding-setup.md`
 - `npx aiknowsys learn extract --validate-context7` - Validate during skill creation
 
 **Planned VSCode Hooks:**

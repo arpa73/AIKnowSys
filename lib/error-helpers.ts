@@ -104,8 +104,8 @@ export const ErrorTemplates = {
    */
   fileNotFound(filename: string, suggestions: string[] = []): AIKnowSysError {
     const defaultSuggestions = [
-      'aiknowsys scan    # Generate from existing codebase',
-      'aiknowsys init    # Start from scratch',
+      'Use AI-native onboarding guide: .github/onboarding-setup.md',
+      'aiknowsys update    # Install/update core workflow files',
     ];
     
     const suggestionText = (suggestions.length > 0 ? suggestions : defaultSuggestions)
@@ -127,7 +127,7 @@ export const ErrorTemplates = {
   emptyFile(filename: string): AIKnowSysError {
     return new AIKnowSysError(
       `${filename} is empty or has no content`,
-      'Generate content by running:\n\n1. aiknowsys scan    # Analyze existing codebase\n2. Fill in manually  # Copy template and customize',
+      'Generate content by running:\n\n1. Use AI-native onboarding guide: .github/onboarding-setup.md\n2. Fill in manually  # Copy template and customize',
       'https://github.com/arpa73/AIKnowSys#scanning-existing-projects'
     );
   },
@@ -185,7 +185,7 @@ export const ErrorTemplates = {
   noKnowledgeSystem(): AIKnowSysError {
     return new AIKnowSysError(
       'No knowledge system found in this directory',
-      'Initialize AIKnowSys by running:\n\n1. aiknowsys init      # Interactive setup\n2. aiknowsys init --yes # Quick setup with defaults\n3. aiknowsys migrate    # Migrate existing project',
+      'Initialize AIKnowSys with AI-native onboarding:\n\n1. Open .github/onboarding-setup.md\n2. Ask your AI assistant to initialize setup\n3. Run aiknowsys update for latest workflow files',
       'https://github.com/arpa73/AIKnowSys#quick-start'
     );
   }

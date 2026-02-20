@@ -49,11 +49,11 @@
 | Changed | Command | Expected Result |
 |---------|---------|-----------------|
 | **TypeScript** | `npm run type-check` | No errors |
-| **Unit Tests** | `npm run test:run` | All tests pass |
+| **Unit Tests** | `npm test` | All tests pass |
 | **Linting** | `npm run lint` | No errors |
 | **Build** | `npm run build` | Successful build, no warnings |
 
-**Never use `npm test` alone - it hangs! Always use `npm run test:run` for CI/scripts.**
+**Use `npm test` for one-shot validation. Use watch mode only when needed via `npm run test:watch` or direct `vitest`.**
 
 ---
 
@@ -770,7 +770,7 @@ src/features/
 ## Next Steps for New Developers
 
 1. **Read this document** - Understand patterns before coding
-2. **Run tests** - `npm run test:run` to verify setup
+2. **Run tests** - `npm test` to verify setup
 3. **Build sample component** - Follow ArticleCard pattern
 4. **Create custom hook** - Practice TanStack Query
 5. **Write tests** - Aim for >80% coverage

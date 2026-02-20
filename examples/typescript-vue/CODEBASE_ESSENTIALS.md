@@ -44,11 +44,11 @@
 | Changed | Command | Expected Result |
 |---------|---------|-----------------|
 | **TypeScript** | `npm run type-check` | No errors |
-| **Unit Tests** | `npm run test:run` | All tests pass |
+| **Unit Tests** | `npm test` | All tests pass |
 | **Linting** | `npm run lint` | No errors |
 | **Build** | `npm run build` | Successful build, no warnings |
 
-**Never use `npm test` alone - it hangs! Always use `npm run test:run` for CI/scripts.**
+**Use `npm test` for one-shot validation. Use watch mode only when needed via `npm run test:watch` or direct `vitest`.**
 
 ---
 
@@ -625,13 +625,13 @@ const { article } = toRefs(props)
 // package.json
 {
   "scripts": {
-    "test": "vitest",           // For watch mode in dev
-    "test:run": "vitest run"    // For CI/one-time runs
+    "test": "vitest run",       // One-shot for CI/automation
+    "test:watch": "vitest"      // Watch mode for local development
   }
 }
 ```
 
-Always use `npm run test:run` in scripts and CI.
+Always use `npm test` (or `npx vitest run ...`) in scripts and CI.
 
 ### 3. Environment Variables
 

@@ -54,7 +54,8 @@ cat examples/filled-simple-api/CODEBASE_ESSENTIALS.md
 
 # Then fill your own project
 cd your-project
-npx aiknowsys init
+# Ask your AI assistant to onboard using:
+# .github/onboarding-setup.md
 ```
 
 ### 2. **Compare Side-by-Side**
@@ -134,7 +135,7 @@ By reading this example, you'll understand:
 ## 🚀 Next Steps
 
 1. **Read** this example thoroughly
-2. **Initialize** your own project: `npx aiknowsys init`
+2. **Initialize** your own project via `.github/onboarding-setup.md`
 3. **Fill** your templates using this as reference
 4. **Remove** sections that don't apply to your project
 5. **Validate** your setup works (run the validation matrix!)

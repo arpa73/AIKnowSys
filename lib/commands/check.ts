@@ -375,12 +375,12 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
     log.cyan('💡 Recommendations:');
     
     if (!fs.existsSync(path.join(targetDir, 'CODEBASE_ESSENTIALS.md'))) {
-      log.white('  • Run: npx aiknowsys init');
+      log.white('  • Use AI-native onboarding: .github/onboarding-setup.md');
     }
     
     if (!fs.existsSync(agentsDir) || !fs.existsSync(skillsDir)) {
-      log.white('  • Run: npx aiknowsys install-agents');
-      log.white('  • Run: npx aiknowsys install-skills');
+      log.white('  • Run: npx aiknowsys update');
+      log.white('  • Or enable needed features: npx aiknowsys enable <feature>');
     }
     
     const hasPlaceholders = checks.find(c => c.name === 'Placeholder completion' && c.status === 'warn');

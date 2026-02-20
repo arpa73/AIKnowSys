@@ -5,11 +5,6 @@ import chalk from 'chalk';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { init } from '../dist/lib/commands/init.js';
-import { scan } from '../dist/lib/commands/scan.js';
-import { migrate } from '../dist/lib/commands/migrate.js';
-import { installAgents } from '../dist/lib/commands/install-agents.js';
-import { installSkills } from '../dist/lib/commands/install-skills.js';
 import { update } from '../dist/lib/commands/update.js';
 import { check } from '../dist/lib/commands/check.js';
 import { sync } from '../dist/lib/commands/sync.js';
@@ -65,43 +60,6 @@ program
   .name('aiknowsys')
   .description('AI-Powered Development Workflow for Consistent, High-Quality Code')
   .version(packageJson.version);
-
-program
-  .command('init')
-  .description('Initialize knowledge system with AI-assisted setup')
-  .option('-d, --dir <directory>', 'Target directory', '.')
-  .option('-y, --yes', 'Skip prompts and use defaults')
-  .option('-t, --template <type>', 'Template size: minimal (10 sections) or full (13+ sections)', 'full')
-  .option('-s, --stack <name>', 'Use pre-built stack template (nextjs, vue-express, etc.)')
-  .option('--list-stacks', 'List available stack templates')
-  .action(init);
-
-program
-  .command('scan')
-  .description('Scan existing codebase and generate draft ESSENTIALS')
-  .option('-d, --dir <directory>', 'Project directory to scan', '.')
-  .option('-o, --output <file>', 'Output file name', 'CODEBASE_ESSENTIALS.draft.md')
-  .action(scan);
-
-program
-  .command('migrate')
-  .description('Full migration workflow for existing projects')
-  .option('-d, --dir <directory>', 'Project directory', '.')
-  .action(migrate);
-
-program
-  .command('install-agents')
-  .description('Install Developer + Architect custom agents')
-  .option('-d, --dir <directory>', 'Target directory', '.')
-  .option('-e, --essentials <file>', 'ESSENTIALS file name', 'CODEBASE_ESSENTIALS.md')
-  .action(installAgents);
-
-program
-  .command('install-skills')
-  .description('Install universal skills to .github/skills/')
-  .option('-d, --dir <directory>', 'Target directory', '.')
-  .option('-s, --skills <skills...>', 'Specific skills to install')
-  .action(installSkills);
 
 program
   .command('update')
@@ -683,7 +641,7 @@ program
 
 program
   .command('create-plan')
-  .description('Create new implementation plan with active pointer (human CLI; MCP preferred for AI/programmatic use)')
+  .description('Create new implementation plan (status-based model; MCP preferred for AI/programmatic use)')
   .option('-d, --dir <directory>', 'Target directory', '.')
   .option('-t, --title <title>', 'Plan title (REQUIRED)')
   .option('-a, --author <author>', 'Plan author (auto-detected from git)')

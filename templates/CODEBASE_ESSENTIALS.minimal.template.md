@@ -456,7 +456,7 @@ openspec archive X --yes   # Archive after deployment
 **⚠️ Critical:** Replace placeholders with REAL values, not other placeholders  
 Example: `{{TEST_CMD}}` → `npm test` (not "run your tests")
 
-**AI-Assisted:** Use the prompt from `npx aiknowsys init` to have AI fill this automatically
+**AI-Assisted:** Use `.github/onboarding-setup.md` to have AI fill this automatically
 
 **Need more sections?** Use the full template with Security, Performance, and Accessibility sections.
 

@@ -46,7 +46,7 @@ When the AI agent detects a Vue/TypeScript task (component work, API integration
 
 1. Read the relevant skill from `.github/skills/`
 2. Follow the step-by-step workflow
-3. Validate with `npm run type-check` and `npm run test:run`
+3. Validate with `npm run type-check` and `npm test`
 4. Update CODEBASE_CHANGELOG.md
 
 ## Example Usage

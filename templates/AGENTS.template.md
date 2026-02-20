@@ -75,6 +75,8 @@ The only acceptable speed-up: Work faster WITHIN the process, not around it.
 
 The validation matrix is served live via MCP as the single source of truth. Always run all commands from that matrix after making changes.
 
+**Vitest non-watch rule:** Use `npm test` when available (should map to `vitest run`). If you run Vitest directly, always use `npx vitest run ...` (or `npx vitest --run ...`) to avoid getting stuck in watch mode.
+
 **🚨 RULE: Never claim work is complete without running validation!**
 
 ---
@@ -117,6 +119,7 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 **ALWAYS read these files at the start of every conversation:**
 1. **MCP invariants** - Call `mcp_aiknowsys_get_critical_invariants()` (MANDATORY)
 2. **@AGENTS.md** - This file for workflow reminders
+3. **@.github/onboarding-setup.md** - AI-native project onboarding flow and stack guidance
 
 **When you need history:**
 - **@CODEBASE_CHANGELOG.md** - Milestone-focused timeline (releases, breaking changes)

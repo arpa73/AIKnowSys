@@ -18,7 +18,7 @@ import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
  * Get all active implementation plans
  * 
  * Returns structured data about currently active plans.
- * Much faster than reading CURRENT_PLAN.md or using grep_search.
+ * Faster than manual markdown scanning or grep_search.
  */
 export async function getActivePlans() {
   try {
@@ -273,10 +273,9 @@ export async function rebuildContextIndex() {
 }
 
 /**
- * Sync developer plan pointers to team index
+ * Sync plan metadata to generated team index
  * 
- * Reads all .aiknowsys/plans/active-*.md files and generates
- * .aiknowsys/CURRENT_PLAN.md team index.
+ * Regenerates a human-readable team plan index from plan metadata.
  * 
  * Convenience tool for human-readable markdown index regeneration.
  * For AI/programmatic plan state, prefer query_plans_sqlite tools.
@@ -302,7 +301,7 @@ export async function syncPlans() {
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
       'sync-plans',
       message,
-      'Check that .aiknowsys/plans/ contains valid active-*.md files'
+      'Check that .aiknowsys/ contains valid PLAN_*.md files with frontmatter'
     );
 
     return {

@@ -290,33 +290,10 @@ export async function createPlan(params: unknown) {
       };
     }
 
-    let pointerSyncWarning = '';
-    let pointerActivationNote = '';
-    const userId = MCP_AGENT_USER_ID;
-    const projectId = path.basename(PROJECT_ROOT);
-
-    try {
-      await withStorage(async (storage) => {
-        const currentState = await storage.getUserState(userId);
-        if (!currentState?.activePlanId) {
-          await storage.upsertUserState({
-            user_id: userId,
-            project_id: projectId,
-            active_plan_id: result.planId,
-            updated_at: new Date().toISOString()
-          });
-          pointerActivationNote = '\n📌 This plan is now your active plan (no previously active plan found).';
-        }
-      }, 'createPlan pointer sync operation');
-    } catch (syncError) {
-      const userMessage = toUserFacingStorageErrorMessage(syncError);
-      pointerSyncWarning = `\n⚠️ Pointer sync warning: ${userMessage}`;
-    }
-
     return {
       content: [{
         type: 'text' as const,
-        text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n🔗 Pointer: ${result.pointerPath}\n📝 Edit plan to add implementation steps${pointerActivationNote}${pointerSyncWarning}`
+        text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n📝 Edit plan to add implementation steps\n💡 Set status to ACTIVE when you want this to be the current focus.`
       }]
     };
   } catch (error) {

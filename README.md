@@ -128,56 +128,30 @@ npx aiknowsys --help
 ### Install via npm (Recommended)
 
 ```bash
-# For new projects - interactive setup
-npx  init
+# Install globally (recommended)
+npm install -g aiknowsys
 
-# For new projects with pre-built stack template
-npx  init --stack nextjs
-
-# For existing projects - auto-detect and migrate
-npx  migrate
-
-# Or install globally
-npm install -g 
- init
+# Or run with npx
+npx aiknowsys --help
 ```
 
-**🚀 Pre-built Stack Templates:**
+### AI-Native Onboarding
 
-Skip most customization work with production-ready stack templates:
+AIKnowSys now uses conversational onboarding instead of `init`/`scan`/`migrate` setup commands.
 
-```bash
-# List available stacks
-npx  init --list-stacks
-
-# Initialize with Next.js stack
-npx  init --stack nextjs
-
-# Initialize with Vue + Express full-stack monorepo
-npx  init --stack vue-express
+```text
+Human: "Initialize AIKnowSys for this Next.js project"
+AI: [Reads .github/onboarding-setup.md]
+AI: [Loads MCP invariants + recent context]
+AI: "Setup complete. What would you like to build?"
 ```
 
-**Available stacks:**
-- `nextjs` - Next.js 15 + App Router + TypeScript + Tailwind + Prisma
-- `vue-express` - Vue 3 + Express full-stack monorepo with shared types
-
-Each stack template includes:
-- ✅ Pre-filled Technology Snapshot
-- ✅ Stack-specific validation matrix with proper commands
-- ✅ Core patterns and conventions for the stack
-- ✅ Common gotchas and solutions
-- ✅ Testing patterns and examples
-- ✅ Architecture decisions (why this stack)
-
-**Setup time:** 2-3 minutes (vs 10-15 min interactive, vs 45 min manual)
+Reference guide for assistants: `.github/onboarding-setup.md`
 
 **Available commands:**
 
 | Command | Description | Auto-installs agents/skills? |
 |---------|-------------|------------------------------|
-| `npx  init` | Initialize for a new project | ✅ Yes |
-| `npx  migrate` | Full migration for existing projects | ✅ Yes |
-| `npx  scan` | Scan codebase and generate draft ESSENTIALS | ❌ No (run install-agents after) |
 | `npx  update` | Update agents, skills, and workflow to latest version | N/A (updates existing) |
 | `npx aiknowsys check` | Validate knowledge system setup and configuration | N/A (validation) |
 | `npx aiknowsys sync` | Sync AGENTS.md validation reference with ESSENTIALS.md | N/A (maintenance) |
@@ -185,45 +159,22 @@ Each stack template includes:
 | `npx aiknowsys compress-essentials --analyze` | Preview ESSENTIALS compression opportunities | N/A (analysis) |
 | `npx aiknowsys compress-essentials --auto` | Auto-extract verbose sections to docs/ | N/A (maintenance) |
 | `npx aiknowsys compress-essentials --interactive` | Interactive compression workflow | N/A (maintenance) |
-| `npx aiknowsys install-agents` | Install Planner + Developer + Architect agents | N/A (standalone) |
-| `npx aiknowsys install-skills` | Install universal skills | N/A (standalone) |
 | `npx aiknowsys enable <feature>` | Enable and install a specific feature | N/A (feature management) |
 | `npx aiknowsys disable <feature>` | Disable a feature (optionally remove files) | N/A (feature management) |
 | `npx aiknowsys uninstall` | Remove AIKnowSys completely from project | N/A (cleanup) |
-
-**🤔 `init` vs `migrate` - Which Should I Use?**
-
-- **`init`** → Recommended for everyone (new OR existing projects)
-  - Detects your situation and offers appropriate options
-  - For existing projects: choose "🔍 Scan Codebase" → runs migrate workflow
-  - More user-friendly with guided choices
-
-- **`migrate`** → Direct path for existing projects only
-  - Skips the setup menu, goes straight to scanning
-  - Same result as `init` → "Scan Codebase"
-  - Use if you prefer fewer prompts
-
-**TL;DR:** Both do the same thing for existing code. `init` with "Scan Codebase" literally calls `migrate` internally. Just use `init` unless you want to skip the setup mode selection.
-
-**💡 AI-Assisted Completion:** When using `init` in AI-guided mode, `migrate`, or `scan`, you'll receive a ready-to-copy prompt that you can paste to your AI assistant (Claude, GPT-4, Copilot Chat, etc.) to automatically complete the TODO sections based on your actual codebase. Manual mode lets you fill sections yourself, but you can always use AI later.
 
 ---
 
 ### 🎯 Advanced: Custom Essentials Filename
 
-All commands support the `--essentials` (or `-e`) flag to use a custom filename instead of `CODEBASE_ESSENTIALS.md`:
+Maintenance commands support the `--essentials` (or `-e`) flag to use a custom filename instead of `CODEBASE_ESSENTIALS.md`:
 
 ```bash
-# Initialize with custom filename
-npx aiknowsys init --essentials ARCHITECTURE.md
-
-# All other commands work with the same flag
+# Commands that support custom essentials filename
 npx aiknowsys check --essentials ARCHITECTURE.md
 npx aiknowsys sync --essentials ARCHITECTURE.md
 npx aiknowsys audit --essentials ARCHITECTURE.md
 npx aiknowsys update --essentials ARCHITECTURE.md
-npx aiknowsys migrate --essentials ARCHITECTURE.md
-npx aiknowsys install-agents --essentials ARCHITECTURE.md
 ```
 
 **Common Use Cases:**
@@ -231,30 +182,30 @@ npx aiknowsys install-agents --essentials ARCHITECTURE.md
 1. **Corporate Naming Standards**
    ```bash
    # Your company requires "ENGINEERING_GUIDE.md"
-   npx aiknowsys init --essentials ENGINEERING_GUIDE.md
+  npx aiknowsys check --essentials ENGINEERING_GUIDE.md
    ```
 
 2. **Monorepo Organization**
    ```bash
-   # Different essentials per package
+  # Different essentials per package (maintenance)
    cd packages/backend
-   npx aiknowsys init --essentials BACKEND_ESSENTIALS.md
+  npx aiknowsys check --essentials BACKEND_ESSENTIALS.md
    
    cd packages/frontend
-   npx aiknowsys init --essentials FRONTEND_ESSENTIALS.md
+  npx aiknowsys check --essentials FRONTEND_ESSENTIALS.md
    ```
 
 3. **Localization**
    ```bash
    # Non-English teams
-   npx aiknowsys init --essentials CODEBASE_ESSENTIALS_FR.md
-   npx aiknowsys init --essentials コードベース要点.md
+  npx aiknowsys check --essentials CODEBASE_ESSENTIALS_FR.md
+  npx aiknowsys check --essentials コードベース要点.md
    ```
 
-4. **Legacy Project Migration**
+4. **Legacy Project Maintenance**
    ```bash
    # You already have "CONTRIBUTING.md" or "ARCHITECTURE.md"
-   npx aiknowsys init --essentials ARCHITECTURE.md
+  npx aiknowsys check --essentials ARCHITECTURE.md
    ```
 
 **Important Notes:**
@@ -262,24 +213,6 @@ npx aiknowsys install-agents --essentials ARCHITECTURE.md
 - All validation and maintenance commands work seamlessly
 - The system defaults to `CODEBASE_ESSENTIALS.md` if flag not provided
 - Backwards compatible - existing projects continue working without changes
-
----
-
-**📋 Template Options:**
-
-- **Minimal Template** (10 sections): For learning projects, prototypes, and simple tools
-  ```bash
-  npx  init --template minimal
-  ```
-  Includes: Tech Stack, Validation Matrix, Structure, Patterns, Invariants, Gotchas, Testing, Architecture, Change Management, Workflow
-
-- **Full Template** (13+ sections): For production projects and complex systems (default)
-  ```bash
-  npx  init --template full  # or just: npx  init
-  ```
-  Includes all minimal sections + Security, Performance, Accessibility
-
-See [examples/filled-simple-api](examples/filled-simple-api) for a realistic filled example using the minimal template.
 
 ---
 
@@ -311,20 +244,6 @@ cat docs/custom-instructions-template.md
 See [docs/custom-instructions-template.md](docs/custom-instructions-template.md) for detailed instructions.
 
 ---
-
-**🚀 Enhanced Interactive Setup (Manual Mode):**
-
-Manual mode now asks intelligent questions about your project and automatically fills many placeholders:
-
-- ✅ **Technology Snapshot**: Framework, language, build tool, package manager
-- ✅ **Validation Matrix**: Auto-generates test, lint, type-check commands
-- ✅ **Tooling Details**: Database, linter, test framework selections
-- ✅ **Individual Commands**: {{TEST_CMD}}, {{LINT_CMD}}, {{TYPE_CHECK_CMD}} all filled
-
-**Before**: 50+ placeholders to fill manually
-**After**: Only structure and pattern placeholders remain (for AI or human completion)
-
-This significantly reduces setup time while maintaining flexibility for project-specific details.
 
 **🔍 Verification & Maintenance Commands:**
 
@@ -661,16 +580,12 @@ Stay tuned for updates!
 
 **Purpose:** Structured memory and continuous learning for AI assistants.
 
-When you run `init`, AIKnowSys creates a `.aiknowsys/` directory that enables AI assistants to maintain context across sessions and accumulate project-specific knowledge over time.
+During AI-native onboarding (`.github/onboarding-setup.md`), AIKnowSys creates a `.aiknowsys/` directory that enables AI assistants to maintain context across sessions and accumulate project-specific knowledge over time.
 
 **Directory Structure:**
 ```
 .aiknowsys/
-├── CURRENT_PLAN.md  # ✅ Committed - Team index (auto-generated)
-├── PLAN_*.md        # ✅ Committed - Implementation plans
-├── plans/           # ✅ Committed - Per-developer plan pointers
-│   ├── README.md    # ✅ Committed - Workflow explanation
-│   └── active-<username>.md  # ✅ Committed - Your active plan
+├── PLAN_*.md        # ✅ Committed - Implementation plans (status in frontmatter)
 ├── reviews/         # 🚫 Gitignored - Per-developer reviews
 │   ├── README.md    # ✅ Committed - Workflow explanation
 │   └── PENDING_<username>.md # 🚫 Temporary architect reviews
@@ -832,7 +747,7 @@ User → @Planner → Creates implementation plan → Writes to PLAN_*.md →
 |---------|----------|----------|
 | Backend | pytest | ✅ MANDATORY |
 | Frontend | npm run type-check | ✅ MANDATORY |
-| Frontend Logic | npm run test:run | ✅ MANDATORY |
+| Frontend Logic | npm test | ✅ MANDATORY |
 ```
 
 **Rule:** Never say "done" until validation passes.
@@ -1062,13 +977,13 @@ Confirm docs updated
 <details>
 <summary>⚠️ Old bash scripts (removed in v0.9.0) - Click for migration path</summary>
 
-The original bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have been removed. They are fully replaced by CLI commands:
+The original bash scripts (`setup.sh`, `migrate-existing.sh`, `scan-codebase.sh`) have been removed. AI-native onboarding is now conversational via `.github/onboarding-setup.md` and maintenance uses CLI commands:
 
 ```bash
 # Old (removed)                   →  New (use this)
-./scripts/setup.sh               →  npx aiknowsys init
-./scripts/migrate-existing.sh    →  npx aiknowsys migrate  
-./scripts/scan-codebase.sh       →  npx aiknowsys scan
+./scripts/setup.sh               →  Ask AI to run onboarding via .github/onboarding-setup.md
+./scripts/migrate-existing.sh    →  npx aiknowsys update
+./scripts/scan-codebase.sh       →  npx aiknowsys check
 ```
 
 See [scripts/README.md](scripts/README.md) for full details.
