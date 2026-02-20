@@ -6,7 +6,7 @@ model: Claude Sonnet 4.5
 handoffs:
   - label: "Send to Architect"
     agent: SeniorArchitect
-      prompt: "Please review the code I just wrote. Check: (1) code quality against {{ESSENTIALS_FILE}}, (2) plan compliance — read the active plan and verify all success criteria are met before approving COMPLETE."
+    prompt: "Please review the code I just wrote. Check: (1) code quality against {{ESSENTIALS_FILE}}, (2) plan compliance — read the active plan and verify all success criteria are met before approving COMPLETE."
     send: true
 ---
 

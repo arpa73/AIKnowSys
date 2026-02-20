@@ -20,6 +20,17 @@ started: "2026-02-20"
 
 **2026-02-20:** Started implementation on reopened markdown-less architecture plan: completed Phase F (architect-gated completion workflow) by updating developer/architect live agent specs and templates to require active-plan success-criteria verification before COMPLETE; architect now owns COMPLETE transition.
 
+**2026-02-20:** 
+## 2026-02-20 (Phase F closure)
+
+Phase F fully delivered and architect-approved:
+- YAML handoff parse fix in `.github/agents/developer.agent.md` and `templates/agents/developer.agent.template.md`
+- Regression test `test/agent-handoff-config.test.ts` added with `extractYamlBlock` DRY helper and generic Handlebars normalizer
+- All Phase F success criteria verified ✅
+- 6/10 plan success criteria now met; Phases A–E remain
+
+**Next:** Phase A — write RED test asserting `create_plan` immediately queryable via `query_plans_sqlite()` without migration.
+
 ## Why Reopened
 
 This plan was marked COMPLETE on 2026-02-19 but the defining deliverable — **mutation tools writing to SQLite directly** — was never shipped. The plan completed excellent infrastructure work (schema, constraints, event sourcing, export commands, `create_learned_pattern`) but the write-path flip itself was never done.
