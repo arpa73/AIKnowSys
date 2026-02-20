@@ -20,7 +20,24 @@ started: "2026-02-20"
 
 **2026-02-20:** Started implementation on reopened markdown-less architecture plan: completed Phase F (architect-gated completion workflow) by updating developer/architect live agent specs and templates to require active-plan success-criteria verification before COMPLETE; architect now owns COMPLETE transition.
 
+**2026-02-20:**
+
 **2026-02-20:** 
+## 2026-02-20 (Phase A progress)
+
+Implemented SQLite-first write path for MCP mutations:
+- `createPlanCore` now persists plans directly to SQLite when storage is provided
+- `createSessionCore` now supports `writeMarkdown` and defaults to no markdown writes in hybrid/SQLite mode
+- MCP `createPlan` and `createSession` now call core with `writeMarkdown: false` and SQLite storage
+- Preserved active-plan pointer sync in `createPlan` response flow
+
+Validation:
+- `npx vitest run test/core/create-plan.test.ts test/core/create-session.test.ts` ✅
+- `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅
+
+Notes:
+- Added RED→GREEN coverage in `test/core/create-plan.test.ts` proving immediate queryability via `queryPlansSqlite()` without migration.
+
 ## 2026-02-20 (Phase F closure)
 
 Phase F fully delivered and architect-approved:

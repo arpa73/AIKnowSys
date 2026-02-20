@@ -135,6 +135,7 @@ export async function createSession(params: unknown) {
       plan: validated.plan || null,
       targetDir: PROJECT_ROOT,
       storage,
+      writeMarkdown: false,
     }), 'createSession storage operation');
 
     // Format MCP response
@@ -273,13 +274,42 @@ export async function createPlan(params: unknown) {
   try {
     const validated = createPlanSchema.parse(params);
     
-    // Direct function call (NO subprocess!)
-    const result = await createPlanCore({
-      title: validated.title,
-      author: validated.author,
-      topics: validated.topics,
-      targetDir: PROJECT_ROOT
-    });
+    const { result, pointerMessage } = await withStorage(async (storage) => {
+      const coreResult = await createPlanCore({
+        title: validated.title,
+        author: validated.author,
+        topics: validated.topics,
+        targetDir: PROJECT_ROOT,
+        storage,
+        writeMarkdown: false,
+      });
+
+      let pointerNotice = '';
+      if (coreResult.created) {
+        const userId = MCP_AGENT_USER_ID;
+        const projectId = path.basename(PROJECT_ROOT);
+
+        try {
+          const userState = await storage.getUserState(userId);
+          const existingActivePlan = userState?.activePlanId || userState?.active_plan_id;
+
+          if (!existingActivePlan) {
+            await storage.upsertUserState({
+              user_id: userId,
+              project_id: projectId,
+              active_plan_id: coreResult.planId,
+              updated_at: new Date().toISOString(),
+            });
+            pointerNotice = '\n🎯 This plan is now your active plan.';
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          pointerNotice = `\n⚠️ Pointer sync warning: ${message}`;
+        }
+      }
+
+      return { result: coreResult, pointerMessage: pointerNotice };
+    }, 'createPlan storage operation');
 
     if (!result.created) {
       return {
@@ -293,7 +323,7 @@ export async function createPlan(params: unknown) {
     return {
       content: [{
         type: 'text' as const,
-        text: `✅ Created plan: ${result.planId}\n📄 Plan file: ${result.filePath}\n📝 Edit plan to add implementation steps\n💡 Set status to ACTIVE when you want this to be the current focus.`
+        text: `✅ Created plan: ${result.planId}\n💾 Stored in SQLite and immediately queryable\n💡 Set status to ACTIVE when you want this to be the current focus.${pointerMessage}`
       }]
     };
   } catch (error) {

@@ -223,5 +223,35 @@ describe('createSessionCore (Pure Business Logic)', () => {
       });
       expect(result.metadata?.plan).toBe('PLAN_auto_linked');
     });
+
+    it('should not write markdown file when writeMarkdown is false in hybrid mode', async () => {
+      const insertProject = vi.fn().mockResolvedValue(undefined);
+      const insertSession = vi.fn().mockResolvedValue(undefined);
+      const insertEvent = vi.fn().mockResolvedValue(undefined);
+      const getActivePlanId = vi.fn().mockResolvedValue(null);
+      const getSessionById = vi.fn().mockResolvedValue(null);
+
+      const options: CreateSessionCoreOptions = {
+        title: 'Hybrid SQLite First Session',
+        topics: ['hybrid', 'sqlite-first'],
+        plan: null,
+        targetDir: testDir,
+        storage: {
+          insertProject,
+          insertSession,
+          insertEvent,
+          getActivePlanId,
+          getSessionById,
+        } as any,
+        writeMarkdown: false,
+      };
+
+      const result = await createSessionCore(options);
+      const fileExists = await fs.access(result.filePath).then(() => true).catch(() => false);
+
+      expect(result.created).toBe(true);
+      expect(fileExists).toBe(false);
+      expect(insertSession).toHaveBeenCalledTimes(1);
+    });
   });
 });

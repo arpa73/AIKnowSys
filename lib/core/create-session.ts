@@ -33,6 +33,8 @@ export interface CreateSessionCoreOptions {
   targetDir?: string;
   /** SQLite storage adapter for hybrid storage (optional - Phase 2.1) */
   storage?: SqliteStorage;
+  /** Whether to write markdown session file (defaults to false when SQLite storage is provided) */
+  writeMarkdown?: boolean;
 }
 
 /**
@@ -82,8 +84,11 @@ export async function createSessionCore(
     topics,
     plan,
     targetDir = process.cwd(),
-    storage: sqliteStorage
+    storage: sqliteStorage,
+    writeMarkdown
   } = options;
+
+  const shouldWriteMarkdown = writeMarkdown ?? !sqliteStorage;
 
   // Validation (throw errors, don't log)
   if (!title || title.length < 3) {
@@ -98,14 +103,26 @@ export async function createSessionCore(
   const filename = `${date}-session.md`;
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', 'sessions', filename);
 
-  // Check if session already exists
-  const exists = await checkFileExists(filepath);
-  if (exists) {
-    return {
-      filePath: filepath,
-      created: false,
-      message: 'Session already exists'
-    };
+  if (shouldWriteMarkdown) {
+    // Check if session already exists
+    const exists = await checkFileExists(filepath);
+    if (exists) {
+      return {
+        filePath: filepath,
+        created: false,
+        message: 'Session already exists'
+      };
+    }
+  } else if (sqliteStorage && typeof sqliteStorage.getSessionById === 'function') {
+    const sessionId = path.basename(filename, '.md');
+    const existingSession = await sqliteStorage.getSessionById(sessionId);
+    if (existingSession) {
+      return {
+        filePath: filepath,
+        created: false,
+        message: 'Session already exists'
+      };
+    }
   }
 
   // Generate session content (hybrid storage or legacy)
@@ -192,17 +209,19 @@ export async function createSessionCore(
     });
   }
 
-  // Create sessions directory if needed
-  await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys', 'sessions'), { recursive: true });
+  if (shouldWriteMarkdown) {
+    // Create sessions directory if needed
+    await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys', 'sessions'), { recursive: true });
 
-  // Write file
-  await fs.writeFile(filepath, content, 'utf-8');
+    // Write file
+    await fs.writeFile(filepath, content, 'utf-8');
 
-  // Update index (pure function call)
-  const storage = new JsonStorage();
-  await storage.init(resolvedTargetDir);
-  await storage.rebuildIndex();
-  await storage.close();
+    // Update index (pure function call)
+    const storage = new JsonStorage();
+    await storage.init(resolvedTargetDir);
+    await storage.rebuildIndex();
+    await storage.close();
+  }
 
   // Return structured data (no logging!)
   return {

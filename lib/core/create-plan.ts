@@ -10,6 +10,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { generatePlanTemplate } from '../templates/plan-template.js';
 import { JsonStorage } from '../context/json-storage.js';
+import type { SqliteStorage } from '../context/sqlite-storage.js';
 import { detectUsername } from '../utils/git-utils.js';
 import { generatePlanId } from '../utils/plan-utils.js';
 import { existsSync } from 'fs';
@@ -22,6 +23,8 @@ export interface CreatePlanCoreOptions {
   author?: string;
   topics?: string[];
   targetDir?: string;
+  storage?: SqliteStorage;
+  writeMarkdown?: boolean;
 }
 
 /**
@@ -58,7 +61,9 @@ export async function createPlanCore(
     title,
     author = detectUsername(),
     topics = [],
-    targetDir = process.cwd()
+    targetDir = process.cwd(),
+    storage,
+    writeMarkdown = true
   } = options;
 
   // Validation: title must be at least 3 characters
@@ -74,8 +79,17 @@ export async function createPlanCore(
   const filename = `${planId}.md`;
   const filepath = path.join(resolvedTargetDir, '.aiknowsys', filename);
 
-  // Check if plan already exists
-  if (existsSync(filepath)) {
+  // Check if plan already exists (database-first if storage is available)
+  if (storage && typeof storage.getPlanById === 'function') {
+    const existingPlan = await storage.getPlanById(planId);
+    if (existingPlan) {
+      return {
+        planId,
+        filePath: filepath,
+        created: false
+      };
+    }
+  } else if (existsSync(filepath)) {
     return {
       planId,
       filePath: filepath,
@@ -92,16 +106,56 @@ export async function createPlanCore(
     status: 'PLANNED'
   });
 
-  // Create .aiknowsys directory if needed
-  await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys'), { recursive: true });
+  const now = new Date().toISOString();
+  const projectId = path.basename(resolvedTargetDir);
 
-  // Write plan file
-  await fs.writeFile(filepath, content, 'utf-8');
+  // Write to SQLite first when storage is available
+  if (storage) {
+    try {
+      await storage.insertProject({
+        id: projectId,
+        name: projectId,
+        path: resolvedTargetDir,
+        created_at: now,
+        updated_at: now
+      });
+    } catch (error: unknown) {
+      const sqliteError = error as { code?: string; message?: string };
+      const isConstraintError = sqliteError.code?.startsWith('SQLITE_CONSTRAINT')
+        || sqliteError.message?.includes('UNIQUE constraint');
 
-  // Update context index
-  const storage = new JsonStorage();
-  await storage.init(resolvedTargetDir);
-  await storage.rebuildIndex();
+      if (!isConstraintError) {
+        throw error;
+      }
+    }
+
+    await storage.insertPlan({
+      id: planId,
+      project_id: projectId,
+      title,
+      status: 'PLANNED',
+      author,
+      created: now,
+      updated: now,
+      content,
+      topics,
+      description: title,
+      type: 'feature'
+    });
+  }
+
+  if (writeMarkdown) {
+    // Create .aiknowsys directory if needed
+    await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys'), { recursive: true });
+
+    // Write plan file
+    await fs.writeFile(filepath, content, 'utf-8');
+
+    // Update context index for markdown workflows
+    const jsonStorage = new JsonStorage();
+    await jsonStorage.init(resolvedTargetDir);
+    await jsonStorage.rebuildIndex();
+  }
 
   // Return structured result
   return {
