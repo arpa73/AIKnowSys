@@ -14,6 +14,7 @@ import { detectUsername } from '../utils/git-utils.js';
 import { existsSync } from 'fs';
 import { enforceConstraints } from './constraints.js';
 import { DatabaseLocator } from '../context/database-locator.js';
+import type { SqliteStorage } from '../context/sqlite-storage.js';
 
 // Define valid plan statuses (single source of truth)
 const VALID_STATUSES = ['PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'] as const;
@@ -29,6 +30,8 @@ export interface UpdatePlanCoreOptions {
   appendFile?: string;       // Append from file
   author?: string;           // Author for auto-detection
   targetDir?: string;
+  storage?: SqliteStorage;
+  writeMarkdown?: boolean;
 }
 
 /**
@@ -36,7 +39,7 @@ export interface UpdatePlanCoreOptions {
  */
 export interface UpdatePlanCoreResult {
   planId: string;
-  filePath: string;
+  filePath: string | null;
   updated: boolean;
   changes?: string[];
   metadata?: {
@@ -67,8 +70,12 @@ export async function updatePlanCore(
     append,
     appendFile: appendFileOption,
     author = detectUsername(),
-    targetDir = process.cwd()
+    targetDir = process.cwd(),
+    storage,
+    writeMarkdown
   } = options;
+
+  const shouldWriteMarkdown = writeMarkdown ?? !storage;
 
   // Always resolve to absolute path
   const resolvedTargetDir = path.resolve(targetDir);
@@ -76,9 +83,14 @@ export async function updatePlanCore(
   // Determine plan ID (provided or auto-detect from ACTIVE status)
   let planId = providedPlanId;
   if (!planId) {
-    const storage = new JsonStorage();
-    await storage.init(resolvedTargetDir);
-    const activePlans = await storage.queryPlans({ status: 'ACTIVE', author });
+    const activePlans = storage
+      ? await storage.queryPlans({ status: 'ACTIVE', author })
+      : await (async () => {
+        const jsonStorage = new JsonStorage();
+        await jsonStorage.init(resolvedTargetDir);
+        return jsonStorage.queryPlans({ status: 'ACTIVE', author });
+      })();
+
     const firstActive = activePlans.plans[0];
 
     if (!firstActive) {
@@ -105,10 +117,6 @@ export async function updatePlanCore(
   // Find plan file
   const planPath = path.join(resolvedTargetDir, '.aiknowsys', `${planId}.md`);
 
-  if (!existsSync(planPath)) {
-    throw new Error(`Plan not found: ${planId}`);
-  }
-
   // Validate status if provided
   if (setStatus && !VALID_STATUSES.includes(setStatus)) {
     throw new Error(
@@ -116,8 +124,20 @@ export async function updatePlanCore(
     );
   }
 
-  // Read current plan content
-  const content = await fs.readFile(planPath, 'utf-8');
+  let content: string;
+  if (storage) {
+    const plan = await storage.getPlanById(planId);
+    if (!plan) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+    content = plan.content || '';
+  } else {
+    if (!existsSync(planPath)) {
+      throw new Error(`Plan not found: ${planId}`);
+    }
+    content = await fs.readFile(planPath, 'utf-8');
+  }
+
   const { frontmatter } = parseFrontmatter(content);
 
   // Track changes
@@ -182,19 +202,31 @@ export async function updatePlanCore(
     changes.push('Added progress note');
   }
 
-  // Update plan file
+  // Update plan content
   const updatedContent = updateFrontmatter(updatedBody, updates);
-  await fs.writeFile(planPath, updatedContent, 'utf-8');
 
-  // Rebuild context index
-  const storage = new JsonStorage();
-  await storage.init(resolvedTargetDir);
-  await storage.rebuildIndex();
+  if (storage) {
+    await storage.updatePlan({
+      id: planId,
+      status: setStatus,
+      content: updatedContent,
+      updated_at: new Date().toISOString(),
+    });
+  }
+
+  if (shouldWriteMarkdown) {
+    await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys'), { recursive: true });
+    await fs.writeFile(planPath, updatedContent, 'utf-8');
+
+    const jsonStorage = new JsonStorage();
+    await jsonStorage.init(resolvedTargetDir);
+    await jsonStorage.rebuildIndex();
+  }
 
   // Return structured result
   return {
     planId,
-    filePath: planPath,
+    filePath: shouldWriteMarkdown ? planPath : null,
     updated: true,
     changes,
     metadata: {

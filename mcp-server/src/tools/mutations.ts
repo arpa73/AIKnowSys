@@ -362,23 +362,25 @@ export async function createPlan(params: unknown) {
 export async function updatePlan(params: unknown) {
   try {
     const validated = updatePlanSchema.parse(params);
-    
-    // Direct function call (NO subprocess!)
-    const result = await updatePlanCore({
+
+    const result = await withStorage(async (storage) => updatePlanCore({
       planId: validated.planId,
       setStatus: validated.operation === 'set-status' ? validated.status : undefined,
       append: validated.operation === 'append' ? validated.content : undefined,
-      targetDir: PROJECT_ROOT
-    });
+      targetDir: PROJECT_ROOT,
+      storage,
+      writeMarkdown: false,
+    }), 'updatePlan storage operation');
 
     // Format MCP response
     const changes = result.changes || [];
     const changeList = changes.map(c => `   • ${c}`).join('\n');
+    const fileLine = result.filePath ? `\n📂 File path: ${result.filePath}` : '';
     
     return {
       content: [{
         type: 'text' as const,
-        text: `✅ Plan Updated\n\n📝 Changes:\n${changeList}\n\n📂 File: ${result.filePath}\n🔍 Index: Rebuilt automatically`
+        text: `✅ Plan Updated\n\n📝 Changes:\n${changeList}\n\n💾 Stored in SQLite and immediately queryable${fileLine}`
       }]
     };
   } catch (error) {
