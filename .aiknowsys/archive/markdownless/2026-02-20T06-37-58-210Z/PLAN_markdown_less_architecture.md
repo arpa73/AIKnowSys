@@ -1,7 +1,7 @@
 ---
 id: "PLAN_markdown_less_architecture"
 title: "JSON-Only AI Workflow (No Markdown for AI Agents)"
-status: "ACTIVE"
+status: "COMPLETE"
 author: "arno"
 topics: 0
 created: "2026-02-17"
@@ -11,7 +11,7 @@ started: "2026-02-17"
 
 # Implementation Plan: JSON-Only AI Workflow (No Markdown for AI Agents)
 
-**Status:** 🎯 ACTIVE  
+**Status:** ✅ COMPLETE  
 **Created:** 2026-02-17  
 **Updated:** 2026-02-17 (Auto-linking for AI agents)  
 **Goal:** AI agents work with JSON from database via MCP tools. No markdown files in `.aiknowsys/` during workflow. Auto-linking: sessions link to active plan automatically (no ID needed). Query results include related entities (one call gets everything). Constraints enforced by architecture. Humans export markdown on-demand.
