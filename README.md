@@ -1288,6 +1288,8 @@ The test suite is split into two projects:
    - Requires build artifacts
    - Runs after `npm run build`
 
+Note on packaging: npm package contents intentionally include both root `templates/` and `dist/templates/`. Runtime init logic resolves template paths relative to package root from compiled output (`dist/`), while root `templates/` remains available for direct/template-maintenance workflows.
+
 ### Running Tests
 
 **Run all tests (default):**

@@ -41,6 +41,16 @@ describe('init command', () => {
     }
   });
 
+  it('should include required init templates in dist build artifacts', () => {
+    const distTemplatesDir: string = path.join(projectRoot, 'dist', 'templates');
+    const essentialsTemplatePath: string = path.join(distTemplatesDir, 'CODEBASE_ESSENTIALS.minimal.template.md');
+    const setupGuidePath: string = path.join(projectRoot, 'dist', 'SETUP_GUIDE.md');
+
+    expect(fs.existsSync(distTemplatesDir)).toBeTruthy();
+    expect(fs.existsSync(essentialsTemplatePath)).toBeTruthy();
+    expect(fs.existsSync(setupGuidePath)).toBeTruthy();
+  });
+
   it('should create core files with --yes flag', async () => {
     await init({ dir: testDir, yes: true });
 
@@ -457,7 +467,8 @@ describe('init command', () => {
     const agentsPath: string = path.join(testDirSession, 'AGENTS.md');
     const agentsContent: string = fs.readFileSync(agentsPath, 'utf-8');
     expect(agentsContent.includes('SESSION START')).toBeTruthy();
-    expect(agentsContent.includes('.aiknowsys/sessions/')).toBeTruthy();
+    expect(agentsContent.includes('Session Storage')).toBeTruthy();
+    expect(agentsContent.includes('knowledge.db')).toBeTruthy();
     expect(agentsContent.includes('CONTINUOUS LEARNING')).toBeTruthy();
     expect(agentsContent.includes('.aiknowsys/learned/')).toBeTruthy();
 

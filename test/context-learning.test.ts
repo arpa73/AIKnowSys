@@ -129,22 +129,31 @@ describe('Context Learning - Pattern Detector', () => {
     // Create mock session files
     const sessionsDir = path.join(tmpDir, '.aiknowsys', 'sessions');
     await fs.mkdir(sessionsDir, { recursive: true });
+
+    const formatDate = (date: Date): string => date.toISOString().slice(0, 10);
+    const now = new Date();
+    const day1 = new Date(now);
+    day1.setDate(now.getDate() - 3);
+    const day2 = new Date(now);
+    day2.setDate(now.getDate() - 2);
+    const day3 = new Date(now);
+    day3.setDate(now.getDate() - 1);
     
     // Session 1: First occurrence
     await fs.writeFile(
-      path.join(sessionsDir, '2026-01-20-session.md'),
+      path.join(sessionsDir, `${formatDate(day1)}-session.md`),
       '**Key Learning:** ESM requires dynamic import for chalk'
     );
     
     // Session 2: Second occurrence
     await fs.writeFile(
-      path.join(sessionsDir, '2026-01-25-session.md'),
+      path.join(sessionsDir, `${formatDate(day2)}-session.md`),
       '**Key Learning:** Cannot import chalk with require() in ESM'
     );
     
     // Session 3: Third occurrence
     await fs.writeFile(
-      path.join(sessionsDir, '2026-01-30-session.md'),
+      path.join(sessionsDir, `${formatDate(day3)}-session.md`),
       '**Key Learning:** chalk import error - use dynamic import'
     );
     
@@ -157,6 +166,8 @@ describe('Context Learning - Pattern Detector', () => {
   });
 
   it('should load recent session files', async () => {
+    // This assertion depends on the initial 3 fixtures created in beforeAll.
+    // Keep this test before any test that adds additional session files.
     const { loadRecentSessions } = patternDetector;
     const sessions = await loadRecentSessions(tmpDir, 30);
     

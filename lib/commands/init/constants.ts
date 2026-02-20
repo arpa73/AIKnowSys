@@ -11,6 +11,8 @@ export const TEMPLATE_PATHS = {
   ESSENTIALS_MINIMAL: 'templates/CODEBASE_ESSENTIALS.minimal.template.md',
   AGENTS: 'templates/AGENTS.template.md',
   CHANGELOG: 'templates/CODEBASE_CHANGELOG.template.md',
+  // Intentionally package-root (not templates/) for backwards compatibility with existing generated projects.
+  // Build step must copy this file to dist/SETUP_GUIDE.md so getPackageDir()-relative resolution continues to work.
   SETUP_GUIDE: 'SETUP_GUIDE.md',
   
   // Session persistence
