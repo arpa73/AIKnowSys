@@ -97,12 +97,19 @@ export async function validateDeliverables(params: unknown) {
 export async function checkTddCompliance(params: unknown) {
   try {
     const validated = checkTddComplianceSchema.parse(params);
-    
-    // For now, wrap the pre-commit TDD check logic
-    // In practice, this would call the actual TDD check from hooks
-    const args = ['node', '.github/hooks/tdd-check.js', ...validated.changedFiles];
 
-    const { stdout } = await execFileAsync('node', args.slice(1), { cwd: PROJECT_ROOT });
+    const libChanged = validated.changedFiles.filter((file) => file.startsWith('lib/'));
+    const testChanged = validated.changedFiles.filter((file) => file.startsWith('test/'));
+
+    let stdout: string;
+    if (libChanged.length === 0) {
+      stdout = 'ℹ️ No changes in lib/ directory\n✅ TDD compliance check passed!';
+    } else if (testChanged.length === 0) {
+      const violations = libChanged.map((file) => `- ${file} modified without test file`).join('\n');
+      stdout = `❌ TDD violation:\n${violations}`;
+    } else {
+      stdout = '✅ TDD compliant: Staged lib/ changes include staged test/ changes';
+    }
     
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]

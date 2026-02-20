@@ -187,23 +187,15 @@ describe('Validation Tools', () => {
 
   describe('check_tdd_compliance', () => {
     it('should check TDD compliance for changed files', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ TDD compliant: All modified files have corresponding tests' 
-      });
-
       const { checkTddCompliance } = await import('../../src/tools/validation.js');
       const result = await checkTddCompliance({
-        changedFiles: ['lib/commands/update-session.ts']
+        changedFiles: ['lib/commands/update-session.ts', 'test/commands/update-session.test.ts']
       });
 
       expect(result.content[0].text).toContain('TDD compliant');
     });
 
     it('should report TDD violations', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '❌ TDD violation:\n- lib/utils/parser.ts modified without test file' 
-      });
-
       const { checkTddCompliance } = await import('../../src/tools/validation.js');
       const result = await checkTddCompliance({
         changedFiles: ['lib/utils/parser.ts']
@@ -211,6 +203,17 @@ describe('Validation Tools', () => {
 
       expect(result.content[0].text).toContain('TDD violation');
       expect(result.content[0].text).toContain('without test file');
+    });
+
+
+    it('should pass when only non-lib files are changed', async () => {
+      const { checkTddCompliance } = await import('../../src/tools/validation.js');
+      const result = await checkTddCompliance({
+        changedFiles: ['README.md', 'docs/usage.md']
+      });
+
+      expect(result.content[0].text).toContain('No changes in lib/ directory');
+      expect(result.content[0].text).toContain('TDD compliance check passed');
     });
 
     it('should return conversational error for empty file list', async () => {

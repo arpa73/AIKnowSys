@@ -11,6 +11,11 @@ vi.mock('../../../lib/core/search-context.js', () => ({
   searchContextCore: vi.fn()
 }));
 
+// Mock queryLearnedPatternsSqlite (used by findPattern)
+vi.mock('../../../lib/core/sqlite-query.js', () => ({
+  queryLearnedPatternsSqlite: vi.fn()
+}));
+
 vi.mock('fs/promises', () => ({
   default: {
     readFile: mockReadFile
@@ -28,6 +33,7 @@ vi.mock('util', () => ({
 
 // Import after mocking
 import { searchContextCore } from '../../../lib/core/search-context.js';
+import { queryLearnedPatternsSqlite } from '../../../lib/core/sqlite-query.js';
 
 describe('Enhanced Query Tools', () => {
   beforeEach(() => {
@@ -169,8 +175,12 @@ describe('Enhanced Query Tools', () => {
 
   describe('find_pattern', () => {
     it('should find patterns by keywords', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📚 Found 2 patterns:\n- mcp-sdk-patterns.md: MCP SDK v2 patterns\n- vscode-file-operations.md: VSCode conflicts' 
+      vi.mocked(queryLearnedPatternsSqlite).mockResolvedValue({
+        count: 2,
+        patterns: [
+          { id: 'learned_1', category: 'project_specific', title: 'MCP SDK patterns', keywords: ['mcp', 'sdk'], created_at: '2026-02-20' },
+          { id: 'learned_2', category: 'workaround', title: 'VSCode file operations', keywords: ['vscode', 'files'], created_at: '2026-02-20' }
+        ]
       });
 
       const { findPattern } = await import('../../src/tools/enhanced-query.js');
@@ -179,12 +189,17 @@ describe('Enhanced Query Tools', () => {
         category: 'all'
       });
 
-      expect(result.content[0].text).toContain('Found 2 patterns');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(2);
+      expect(data.patterns).toHaveLength(2);
     });
 
     it('should filter by category', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📚 Found 1 pattern:\n- hook-troubleshooting.md' 
+      vi.mocked(queryLearnedPatternsSqlite).mockResolvedValue({
+        count: 1,
+        patterns: [
+          { id: 'learned_3', category: 'workarounds', title: 'hook-troubleshooting', keywords: ['hook'], created_at: '2026-02-20' }
+        ]
       });
 
       const { findPattern } = await import('../../src/tools/enhanced-query.js');
@@ -193,7 +208,15 @@ describe('Enhanced Query Tools', () => {
         category: 'workarounds'
       });
 
-      expect(result.content[0].text).toContain('hook-troubleshooting.md');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(1);
+      expect(vi.mocked(queryLearnedPatternsSqlite)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: 'workarounds',
+          keywords: ['hook'],
+          includeContent: false,
+        })
+      );
     });
 
     it('should handle no keywords', async () => {
@@ -220,8 +243,9 @@ describe('Enhanced Query Tools', () => {
     });
 
     it('should handle no results', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '📚 No patterns found matching keywords' 
+      vi.mocked(queryLearnedPatternsSqlite).mockResolvedValue({
+        count: 0,
+        patterns: []
       });
 
       const { findPattern } = await import('../../src/tools/enhanced-query.js');
@@ -230,7 +254,9 @@ describe('Enhanced Query Tools', () => {
         category: 'all'
       });
 
-      expect(result.content[0].text).toContain('No patterns found');
+      const data = JSON.parse(result.content[0].text);
+      expect(data.count).toBe(0);
+      expect(data.patterns).toEqual([]);
     });
   });
 

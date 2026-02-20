@@ -5,6 +5,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { searchContextCore } from '../../../lib/core/search-context.js';
+import { queryLearnedPatternsSqlite } from '../../../lib/core/sqlite-query.js';
 import { handleZodError, MCPErrorResponse } from './utils/error-helpers.js';
 
 const execFileAsync = promisify(execFile);
@@ -73,18 +74,15 @@ export async function searchContext(params: unknown) {
 export async function findPattern(params: unknown) {
   try {
     const validated = findPatternSchema.parse(params);
-    
-    // Use list-patterns command with filtering
-    const args = ['aiknowsys', 'list-patterns', '--keywords', validated.keywords.join(',')];
-    
-    if (validated.category !== 'all') {
-      args.push('--category', validated.category);
-    }
 
-    const { stdout } = await execFileAsync('npx', args);
+    const result = await queryLearnedPatternsSqlite({
+      category: validated.category === 'all' ? undefined : validated.category,
+      keywords: validated.keywords,
+      includeContent: false,
+    });
     
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
