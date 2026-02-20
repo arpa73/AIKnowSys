@@ -14,6 +14,7 @@ import type { SqliteStorage } from '../context/sqlite-storage.js';
 import { detectUsername } from '../utils/git-utils.js';
 import { generatePlanId } from '../utils/plan-utils.js';
 import { existsSync } from 'fs';
+import { isSqliteConstraintError } from '../utils/sqlite-utils.js';
 
 /**
  * Options for creating a plan
@@ -120,11 +121,7 @@ export async function createPlanCore(
         updated_at: now
       });
     } catch (error: unknown) {
-      const sqliteError = error as { code?: string; message?: string };
-      const isConstraintError = sqliteError.code?.startsWith('SQLITE_CONSTRAINT')
-        || sqliteError.message?.includes('UNIQUE constraint');
-
-      if (!isConstraintError) {
+      if (!isSqliteConstraintError(error)) {
         throw error;
       }
     }

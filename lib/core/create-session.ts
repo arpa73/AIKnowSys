@@ -18,6 +18,7 @@ import type { KnowledgeEvent } from '../events/types.js';
 import { EventType } from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
 import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
+import { isSqliteConstraintError } from '../utils/sqlite-utils.js';
 
 /**
  * Options for creating a session (pure)
@@ -147,11 +148,8 @@ export async function createSessionCore(
         updated_at: timestamp
       });
     } catch (error: unknown) {
-      const sqliteError = error as { code?: string; message?: string };
-      const isConstraintError = sqliteError.code?.startsWith('SQLITE_CONSTRAINT')
-        || sqliteError.message?.includes('UNIQUE constraint');
-
-      if (!isConstraintError) {
+      if (!isSqliteConstraintError(error)) {
+        const sqliteError = error as { message?: string };
         throw AIFriendlyErrorBuilder.databaseError(
           `Failed to create project record for '${projectId}': ${sqliteError.message || String(error)}`,
           'Check database permissions and ensure SQLite storage is initialized'

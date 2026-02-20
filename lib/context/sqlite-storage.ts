@@ -1351,6 +1351,38 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Update mutable plan fields
+   */
+  async updatePlan(plan: {
+    id: string;
+    status?: string;
+    content?: string;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before updating data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const result = this.db
+      .prepare(`
+        UPDATE plans
+        SET
+          status = COALESCE(?, status),
+          content = COALESCE(?, content),
+          updated_at = ?
+        WHERE id = ?
+      `)
+      .run(plan.status ?? null, plan.content ?? null, plan.updated_at, plan.id);
+
+    if (result.changes === 0) {
+      throw new Error(`Plan not found: ${plan.id}`);
+    }
+  }
+
+  /**
    * Insert a session into the database (for testing and migration)
    * Internal use only - will be used by migration tools
    */
