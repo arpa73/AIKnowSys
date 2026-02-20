@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { migrateToEvents } from '../../dist/lib/commands/migrate-to-events.js';
@@ -381,6 +381,110 @@ Archive markdown files after migration
       expect(fs.existsSync(path.join(latestArchive, `${planId}.md`))).toBe(true);
       expect(fs.existsSync(path.join(latestArchive, 'CURRENT_PLAN.md'))).toBe(true);
       expect(fs.existsSync(path.join(latestArchive, 'plans', 'active-test-user.md'))).toBe(true);
+    });
+
+    it('should continue archiving remaining files when one rename fails', async () => {
+      const sessionId = 'sess-2026-02-15-archive-partial';
+      const sessionContent = `---
+date: 2026-02-15
+title: Archive Session Partial
+topics:
+  - markdownless
+---
+
+## Goal
+Archive markdown files after migration with one failure
+`;
+
+      fs.writeFileSync(
+        path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`),
+        sessionContent
+      );
+
+      await storage.insertSession({
+        id: sessionId,
+        project_id: 'test-project',
+        date: '2026-02-15',
+        topic: 'Archive Session Partial',
+        status: 'in-progress',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        topics: ['markdownless'],
+        content: sessionContent
+      });
+
+      const planId = 'PLAN_archive_partial_test';
+      const planContent = `---
+id: ${planId}
+title: Archive Partial Plan
+status: ACTIVE
+author: developer
+---
+
+## Goal
+Archive markdown files after migration with one failure
+`;
+
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', `${planId}.md`), planContent);
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md'), '# Current Team Plans');
+      fs.writeFileSync(path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md'), `# Active Plan\n\n**Plan:** [Archive Partial Plan](../${planId}.md)  \n**Status:** 🎯 ACTIVE  \n**Started:** 2026-02-15\n`);
+
+      await storage.insertPlan({
+        id: planId,
+        project_id: 'test-project',
+        title: 'Archive Partial Plan',
+        status: 'ACTIVE',
+        author: 'developer',
+        priority: 'medium',
+        type: 'feature',
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        content: planContent
+      });
+
+      const frozenTime = new Date('2026-02-20T12:34:56.789Z');
+      vi.useFakeTimers();
+      vi.setSystemTime(frozenTime);
+
+      const timestamp = frozenTime.toISOString().replace(/[:.]/g, '-');
+      const archiveRoot = path.join(tempDir, '.aiknowsys', 'archive', 'markdownless', timestamp);
+      const readOnlyPlansDir = path.join(archiveRoot, 'plans');
+      fs.mkdirSync(readOnlyPlansDir, { recursive: true });
+      fs.chmodSync(readOnlyPlansDir, 0o555);
+
+      try {
+        const options: MigrateToEventsOptions = {
+          dir: tempDir,
+          dbPath,
+          all: true,
+          archiveMarkdown: true,
+          verbose: false,
+          dryRun: false
+        };
+
+        const result = await migrateToEvents(options);
+
+        expect(result.markdownArchived).toBeGreaterThanOrEqual(3);
+
+        expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'sessions', `${sessionId}.md`))).toBe(false);
+        expect(fs.existsSync(path.join(tempDir, '.aiknowsys', `${planId}.md`))).toBe(false);
+        expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'CURRENT_PLAN.md'))).toBe(false);
+
+        expect(fs.existsSync(path.join(tempDir, '.aiknowsys', 'plans', 'active-test-user.md'))).toBe(true);
+
+        const archiveParent = path.join(tempDir, '.aiknowsys', 'archive', 'markdownless');
+        const archiveSubdirs = fs.existsSync(archiveParent) ? fs.readdirSync(archiveParent) : [];
+        expect(archiveSubdirs.length).toBeGreaterThan(0);
+
+        const latestArchive = path.join(archiveParent, archiveSubdirs[0]);
+        expect(fs.existsSync(path.join(latestArchive, 'sessions', `${sessionId}.md`))).toBe(true);
+        expect(fs.existsSync(path.join(latestArchive, `${planId}.md`))).toBe(true);
+        expect(fs.existsSync(path.join(latestArchive, 'CURRENT_PLAN.md'))).toBe(true);
+        expect(fs.existsSync(path.join(latestArchive, 'plans', 'active-test-user.md'))).toBe(false);
+      } finally {
+        fs.chmodSync(readOnlyPlansDir, 0o755);
+        vi.useRealTimers();
+      }
     });
 
     it('should migrate all sessions when --all is provided', async () => {
