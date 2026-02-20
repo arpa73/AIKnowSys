@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-02-20T20:15:29.991Z",
+  "updated": "2026-02-20T20:25:32.885Z",
   "plans": [
     {
       "id": "PLAN_ai_native_onboarding_simplification",
@@ -8,7 +8,7 @@
       "status": "PLANNED",
       "author": "\"arno-paffen\"",
       "created": "2026-02-19T23:00:00.000Z",
-      "updated": "2026-02-20T20:15:29.993Z",
+      "updated": "2026-02-20T20:25:32.889Z",
       "topics": [
         "onboarding",
         "ux",
@@ -41,7 +41,7 @@
       "plan": "--archive-markdown flag + sync-plans bugfix",
       "file": "sessions/2026-02-20-session.md",
       "created": "2026-02-20T00:00:00.000Z",
-      "updated": "2026-02-20T20:15:29.995Z"
+      "updated": "2026-02-20T20:25:32.890Z"
     }
   ],
   "learned": [

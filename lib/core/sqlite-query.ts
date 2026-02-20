@@ -230,16 +230,42 @@ export async function querySessionsSqlite(
     }
     
     // Default: metadata-only mode (95% token savings vs full)
-    const sessions = result.sessions.map((row) => ({
-      date: row.date,
-      title: row.topic,
-      topic: row.topic, // Include for consistency
-      goal: row.topic,
-      status: row.status as 'active' | 'paused' | 'complete',
-      topics: parseTopics(row.topics),
-      created_at: row.createdAt,
-      updated_at: row.updatedAt,
-      // No content field - token efficient!
+    const sessions = await Promise.all(result.sessions.map(async (row) => {
+      const linkedPlan = row.planId
+        ? await storage.getPlanById(row.planId)
+        : null;
+
+      const reviewsResult = await storage.queryReviews({ targetId: row.id });
+
+      return {
+        date: row.date,
+        title: row.topic,
+        topic: row.topic, // Include for consistency
+        goal: row.topic,
+        status: row.status as 'active' | 'paused' | 'complete',
+        topics: parseTopics(row.topics),
+        created_at: row.createdAt,
+        updated_at: row.updatedAt,
+        plan: linkedPlan
+          ? {
+            id: linkedPlan.id,
+            title: linkedPlan.title,
+            status: linkedPlan.status,
+            author: linkedPlan.author,
+            priority: linkedPlan.priority,
+            type: linkedPlan.type,
+          }
+          : null,
+        reviews: reviewsResult.reviews.map((review) => ({
+          id: review.id,
+          status: review.status,
+          author: review.author,
+          content: review.content,
+          created_at: review.createdAt,
+          updated_at: review.updatedAt,
+        })),
+        // No content field - token efficient!
+      };
     }));
     
     return {

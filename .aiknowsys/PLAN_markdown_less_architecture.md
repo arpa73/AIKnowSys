@@ -22,7 +22,43 @@ started: "2026-02-20"
 
 **2026-02-20:**
 
+**2026-02-20:**
+
+**2026-02-20:**
+
 **2026-02-20:** 
+## 2026-02-20 (Phase C progress)
+
+Implemented enriched session query results for SQLite metadata mode:
+- `lib/core/sqlite-query.ts`
+  - `querySessionsSqlite()` metadata mode now includes:
+    - linked `plan` metadata (id/title/status/author/priority/type)
+    - `reviews` list (id/status/author/content/timestamps)
+
+Test coverage:
+- `test/lib/core/sqlite-query.test.ts`
+  - Added RED→GREEN test: `should include linked plan metadata and reviews in metadata mode`
+  - Updated fixture expectations for new linked session/review data and enriched metadata payload
+- `mcp-server/test/tools/mutations.test.ts`
+  - Added Phase B test: `should auto-link session to active plan from user state when no plan is provided`
+
+Validation:
+- `npx vitest run test/lib/core/sqlite-query.test.ts` ✅ (25/25)
+- `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/sqlite-query.test.ts mcp-server/test/tools/mutations.test.ts` ✅ (49 passed, 8 skipped)
+- `npm run lint` ✅ (0 errors, warnings only)
+
+## 2026-02-20 (Phase B validation)
+
+Added MCP-level regression coverage for auto-linking sessions to the active plan:
+- `mcp-server/test/tools/mutations.test.ts`
+  - New test: `should auto-link session to active plan from user state when no plan is provided`
+
+Validation:
+- `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (33 passed, 8 skipped)
+
+Result:
+- `mcp_aiknowsys_create_session({ title })` now has explicit test evidence that it auto-links via `user_state.active_plan_id` and keeps response output silent about internal plan IDs.
+
 ## 2026-02-20 (Phase A progress)
 
 Implemented SQLite-first write path for MCP mutations:

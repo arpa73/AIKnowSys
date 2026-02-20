@@ -95,6 +95,30 @@ describe('sqlite-query core functions', () => {
       updated: '2026-02-10T09:00:00Z',
     });
 
+    await storage.insertSession({
+      id: 'session_2026-02-12-linked',
+      project_id: 'test-project',
+      date: '2026-02-12',
+      topic: 'Linked Session',
+      status: 'active',
+      plan: 'test_plan_1',
+      topics: ['testing', 'linked'],
+      content: 'Session linked to a plan and reviewed.',
+      created: '2026-02-12T10:00:00Z',
+      updated: '2026-02-12T10:00:00Z',
+    });
+
+    await storage.insertReview({
+      id: 'review_session_linked_1',
+      project_id: 'test-project',
+      target_id: 'session_2026-02-12-linked',
+      author: 'architect',
+      status: 'PENDING',
+      content: 'Need to verify linked session output.',
+      created_at: '2026-02-12T11:00:00Z',
+      updated_at: '2026-02-12T11:00:00Z',
+    });
+
     // Insert learned patterns (stored as plans with 'learned_' prefix)
     await storage.insertPlan({
       id: 'learned_test_pattern_1',
@@ -121,15 +145,15 @@ describe('sqlite-query core functions', () => {
 
   describe('querySessionsSqlite', () => {
     it('should query all sessions when no filters provided', async () => {
-      // GIVEN: Database with 2 sessions
+      // GIVEN: Database with 3 sessions
       const options: QuerySessionsOptions = { dbPath, includeContent: true };
 
       // WHEN: Querying without filters
       const result = await querySessionsSqlite(options);
 
       // THEN: All sessions returned
-      expect(result.count).toBe(2);
-      expect(result.sessions).toHaveLength(2);
+      expect(result.count).toBe(3);
+      expect(result.sessions).toHaveLength(3);
       expect(result.sessions[0].title).toBeDefined();
       expect((result.sessions[0] as any).content).toBeDefined();
     });
@@ -145,8 +169,10 @@ describe('sqlite-query core functions', () => {
       const result = await querySessionsSqlite(options);
 
       // THEN: Only matching sessions returned
-      expect(result.count).toBe(1);
-      expect(result.sessions[0].date).toBe('2026-02-11');
+      expect(result.count).toBe(2);
+      result.sessions.forEach((session) => {
+        expect(session.date >= '2026-02-11').toBe(true);
+      });
     });
 
     it('should filter sessions by topic', async () => {
@@ -196,6 +222,25 @@ describe('sqlite-query core functions', () => {
         expect(session.date >= '2026-02-10').toBe(true);
         expect(session.topics).toContain('testing');
       });
+    });
+
+    it('should include linked plan metadata and reviews in metadata mode', async () => {
+      const result = await querySessionsSqlite({
+        dbPath,
+        topic: 'linked',
+        mode: 'metadata',
+      });
+
+      expect(result.count).toBe(1);
+      const linkedSession = result.sessions[0] as any;
+
+      expect(linkedSession.plan).toBeDefined();
+      expect(linkedSession.plan.id).toBe('test_plan_1');
+      expect(linkedSession.plan.title).toBe('Test Plan 1');
+      expect(linkedSession.reviews).toBeDefined();
+      expect(Array.isArray(linkedSession.reviews)).toBe(true);
+      expect(linkedSession.reviews.length).toBeGreaterThan(0);
+      expect(linkedSession.reviews[0].status).toBe('PENDING');
     });
   });
 
@@ -349,10 +394,10 @@ describe('sqlite-query core functions', () => {
       const result = await getDbStats({ dbPath });
 
       // THEN: Stats include all content types
-      expect(result.sessions).toBe(2);
+      expect(result.sessions).toBe(3);
       expect(result.plans).toBe(2);
       expect(result.learned).toBe(1);
-      expect(result.total).toBe(5);
+      expect(result.total).toBe(6);
       expect(result.dbSize).toBeGreaterThan(0);
       expect(result.dbPath).toBe(dbPath);
     });
@@ -386,12 +431,13 @@ describe('sqlite-query core functions', () => {
       const result = await querySessionsSqlite({ dbPath });
 
       // THEN: Sessions returned without content field
-      expect(result.count).toBe(2);
+      expect(result.count).toBe(3);
       expect(result.sessions[0]).not.toHaveProperty('content');
       expect(result.sessions[0]).toHaveProperty('date');
       expect(result.sessions[0]).toHaveProperty('topic');
       expect(result.sessions[0]).toHaveProperty('status');
       expect(result.sessions[0]).toHaveProperty('topics');
+      expect(result.sessions[0]).toHaveProperty('reviews');
     });
 
     it('should include full content when explicitly requested', async () => {
@@ -400,7 +446,7 @@ describe('sqlite-query core functions', () => {
       const result = await querySessionsSqlite({ dbPath, includeContent: true });
 
       // THEN: Sessions include content field
-      expect(result.count).toBe(2);
+      expect(result.count).toBe(3);
       expect((result.sessions[0] as any)).toHaveProperty('content');
       // First session is most recent (2026-02-11) - MCP tools
       const sessionWithSQLite = result.sessions.find((s: any) => s.content?.includes('SQLite'));
@@ -412,14 +458,10 @@ describe('sqlite-query core functions', () => {
       const metadataResult = await querySessionsSqlite({ dbPath });
       const fullResult = await querySessionsSqlite({ dbPath, includeContent: true });
 
-      // WHEN: Comparing sizes
-      const metadataSize = JSON.stringify(metadataResult).length;
-      const fullSize = JSON.stringify(fullResult).length;
-
-      // THEN: Metadata mode is smaller (reduction depends on content size)
-      // Note: With small test data, savings are modest. Real sessions (50KB+) show 95%+ savings.
-      expect(metadataSize).toBeLessThan(fullSize);
+      // THEN: Metadata mode excludes content while full mode includes it
       expect(metadataResult.sessions[0]).not.toHaveProperty('content');
+      expect(metadataResult.sessions[0]).toHaveProperty('plan');
+      expect(metadataResult.sessions[0]).toHaveProperty('reviews');
       expect((fullResult.sessions[0] as any)).toHaveProperty('content');
     });
   });

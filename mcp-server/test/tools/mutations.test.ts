@@ -198,6 +198,22 @@ describe('Mutation Tools', () => {
       expect(result.content[0].text).toContain('array of strings');
     });
 
+    it('should auto-link session to active plan from user state when no plan is provided', async () => {
+      const { createSession } = await import('../../src/tools/mutations.js');
+
+      const result = await createSession({
+        title: 'Auto Link MCP Session',
+        topics: ['mcp', 'auto-link']
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(mockGetActivePlanId).toHaveBeenCalledWith('knowledge-system-template');
+      expect(mockInsertSession).toHaveBeenCalledWith(expect.objectContaining({
+        plan: 'PLAN_auto_from_state'
+      }));
+      expect(result.content[0].text).not.toContain('PLAN_auto_from_state');
+    });
+
     it.skip('should handle CLI execution errors', async () => {
       // This test validated execFileAsync error handling when createSession used CLI subprocess.
       // Now it uses createSessionCore() directly which handles errors via structured returns.
