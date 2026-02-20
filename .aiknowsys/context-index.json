@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-02-20T18:16:40.832Z",
+  "updated": "2026-02-20T18:58:04.184Z",
   "plans": [
     {
       "id": "PLAN_ai_native_onboarding_simplification",
@@ -8,7 +8,7 @@
       "status": "PLANNED",
       "author": "\"arno-paffen\"",
       "created": "2026-02-19T23:00:00.000Z",
-      "updated": "2026-02-20T18:16:40.848Z",
+      "updated": "2026-02-20T18:58:04.185Z",
       "topics": [
         "onboarding",
         "ux",
@@ -17,6 +17,15 @@
         "breaking-change"
       ],
       "file": "PLAN_ai_native_onboarding_simplification.md"
+    },
+    {
+      "id": "PLAN_markdown_less_architecture",
+      "title": "Markdown-Less Architecture: SQLite as Live Store",
+      "status": "PLANNED",
+      "author": "\"arno\"",
+      "created": "2026-02-16T23:00:00.000Z",
+      "updated": "2026-02-19T23:00:00.000Z",
+      "file": "PLAN_markdown_less_architecture.md"
     }
   ],
   "sessions": [
@@ -32,7 +41,7 @@
       "plan": "--archive-markdown flag + sync-plans bugfix",
       "file": "sessions/2026-02-20-session.md",
       "created": "2026-02-20T00:00:00.000Z",
-      "updated": "2026-02-20T18:16:40.880Z"
+      "updated": "2026-02-20T18:58:04.189Z"
     }
   ],
   "learned": [

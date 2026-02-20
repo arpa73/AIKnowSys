@@ -1,7 +1,7 @@
 ---
 id: "PLAN_ai_native_onboarding_simplification"
 title: "AI-Native Onboarding Simplification"
-status: "ACTIVE"
+status: "PAUSED"
 priority: "high"
 author: "arno-paffen"
 created: "2026-02-20"
@@ -11,7 +11,7 @@ depends_on: ["PLAN_markdown_less_architecture"]
 
 # Implementation Plan: AI-Native Onboarding Simplification
 
-**Status:** 🎯 ACTIVE  
+**Status:** ⏸️ PAUSED  
 **Priority:** 🔴 HIGH  
 **Created:** 2026-02-20  
 **Timeline:** 2–3 weeks (4 phases)  

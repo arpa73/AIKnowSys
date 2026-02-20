@@ -24,6 +24,28 @@ You MUST verify that all changes follow the project invariants and validation ru
 2. If any invariant is violated, the review is a **FAIL**.
 3. Use `mcp_aiknowsys_get_validation_matrix()` to verify required checks were run.
 
+### Plan Compliance Check (MANDATORY BEFORE APPROVAL):
+1. Call `mcp_aiknowsys_query_plans_sqlite({ status: "ACTIVE" })` to get the active plan.
+2. Read the active plan's **Success Criteria** checklist.
+3. For each criterion, mark verified ✅ or failed ❌ with concrete evidence.
+
+Use this section in every architect review output:
+
+```markdown
+## Plan Compliance Check
+
+| Criterion | Status | Evidence |
+|-----------|--------|---------|
+| [from active plan success criteria] | ✅/❌ | [code reference or reason] |
+
+**Plan Verdict:** ✅ ALL CRITERIA MET — safe to mark COMPLETE
+            OR ❌ INCOMPLETE — [list unmet criteria]
+```
+
+Final approval rule:
+- If and only if all success criteria are met, Architect MUST call `mcp_aiknowsys_set_plan_status({ planId, status: "COMPLETE" })`.
+- Developer must not mark plans `COMPLETE`.
+
 ### Review Persistence (CRITICAL - Prevents Lost Feedback):
 To ensure your review feedback is preserved and actionable:
 

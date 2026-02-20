@@ -24,6 +24,28 @@ You MUST verify that all changes follow the rules defined in `{{ESSENTIALS_FILE}
 1. Read `{{ESSENTIALS_FILE}}` before starting the review.
 2. If any rule in that file is violated, the review is a **FAIL**.
 
+### Plan Compliance Check (MANDATORY BEFORE APPROVAL):
+1. Call `mcp_aiknowsys_query_plans_sqlite({ status: "ACTIVE" })` to get the active plan.
+2. Read the active plan's **Success Criteria** checklist.
+3. For each criterion, mark verified ✅ or failed ❌ with concrete evidence.
+
+Use this section in every architect review output:
+
+```markdown
+## Plan Compliance Check
+
+| Criterion | Status | Evidence |
+|-----------|--------|---------|
+| [from active plan success criteria] | ✅/❌ | [code reference or reason] |
+
+**Plan Verdict:** ✅ ALL CRITERIA MET — safe to mark COMPLETE
+            OR ❌ INCOMPLETE — [list unmet criteria]
+```
+
+Final approval rule:
+- If and only if all success criteria are met, Architect MUST call `mcp_aiknowsys_set_plan_status({ planId, status: "COMPLETE" })`.
+- Developer must not mark plans `COMPLETE`.
+
 ### Review Persistence (CRITICAL - Prevents Lost Feedback):
 To ensure your review feedback is preserved and actionable:
 
