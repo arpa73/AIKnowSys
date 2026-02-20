@@ -131,8 +131,7 @@ describe('Mutation Tools', () => {
     mockCreatePlanCore.mockResolvedValue({
       created: true,
       planId: 'PLAN_pointer_sync_test',
-      filePath: `${process.cwd()}/.aiknowsys/PLAN_pointer_sync_test.md`,
-      pointerPath: `${process.cwd()}/.aiknowsys/plans/active-mcp-agent.md`
+      filePath: `${process.cwd()}/.aiknowsys/PLAN_pointer_sync_test.md`
     });
   });
 

@@ -123,29 +123,25 @@ export async function enableFeature(feature: string, options: FeatureOptions): P
       }
       
       case 'vscodeHooks': {
-        // @ts-ignore - init/templates.js not yet migrated
-        const { setupHooks } = await import('./init/templates.js');
+        const { setupHooks } = await import('./feature-setup/templates.js');
         await setupHooks(targetDir, true);
         break;
       }
       
       case 'sessionPersistence': {
-        // @ts-ignore - init/templates.js not yet migrated
-        const { setupSessionPersistence } = await import('./init/templates.js');
+        const { setupSessionPersistence } = await import('./feature-setup/templates.js');
         await setupSessionPersistence(targetDir, true);
         break;
       }
       
       case 'tddEnforcement': {
-        // @ts-ignore - init/templates.js not yet migrated
-        const { setupTDDEnforcement } = await import('./init/templates.js');
+        const { setupTDDEnforcement } = await import('./feature-setup/templates.js');
         await setupTDDEnforcement(targetDir, true);
         break;
       }
       
       case 'openspec': {
-        // @ts-ignore - init/openspec.ts exists but might have different exports
-        const { setupOpenSpec } = await import('./init/openspec.js');
+        const { setupOpenSpec } = await import('./feature-setup/openspec.js');
         await setupOpenSpec(targetDir, true);
         break;
       }

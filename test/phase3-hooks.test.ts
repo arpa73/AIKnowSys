@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { TEMPLATE_PATHS } from '../lib/commands/init/constants.js';
+import { TEMPLATE_PATHS } from '../lib/commands/feature-setup/constants.js';
 import { getPackageDir } from '../lib/utils.js';
 
-const setupHooksModule = await import('../lib/commands/init/templates.js');
+const setupHooksModule = await import('../lib/commands/feature-setup/templates.js');
 const { setupHooks } = setupHooksModule as any;
 
 describe('Phase 3 collaboration hooks', () => {

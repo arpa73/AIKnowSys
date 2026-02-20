@@ -30,7 +30,6 @@ export interface CreatePlanCoreOptions {
 export interface CreatePlanCoreResult {
   planId: string;
   filePath: string;
-  pointerPath: string;
   created: boolean;
   metadata?: {
     title: string;
@@ -80,7 +79,6 @@ export async function createPlanCore(
     return {
       planId,
       filePath: filepath,
-      pointerPath: '',
       created: false
     };
   }
@@ -109,7 +107,6 @@ export async function createPlanCore(
   return {
     planId,
     filePath: filepath,
-    pointerPath: '',
     created: true,
     metadata: {
       title,

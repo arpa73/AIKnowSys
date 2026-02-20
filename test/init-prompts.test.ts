@@ -36,12 +36,12 @@ describe('Feature Preferences Prompts', () => {
 
   describe('getFeaturePreferences', () => {
     it('should export getFeaturePreferences function', async () => {
-      const prompts = await import('../lib/commands/init/prompts.js');
+      const prompts = await import('../lib/commands/feature-setup/prompts.js');
       expect(typeof prompts.getFeaturePreferences === 'function').toBeTruthy();
     });
 
     it('should return feature selections', async () => {
-      const prompts = await import('../lib/commands/init/prompts.js');
+      const prompts = await import('../lib/commands/feature-setup/prompts.js');
       const { getFeaturePreferences } = prompts as any;
       
       const result = await getFeaturePreferences();
@@ -51,7 +51,7 @@ describe('Feature Preferences Prompts', () => {
     });
 
     it('should include core features in defaults', async () => {
-      const prompts = await import('../lib/commands/init/prompts.js');
+      const prompts = await import('../lib/commands/feature-setup/prompts.js');
       const { getFeaturePreferences } = prompts as any;
       
       const result = await getFeaturePreferences();
