@@ -1,10 +1,9 @@
 import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
+import { createReview, createLink } from '../../tools/reviews.js';
 import {
   createSession,
   createPlan,
-  createReview,
-  createLink,
   createLearnedPattern,
   checkConstraintsTool,
   setActivePlanPointer,

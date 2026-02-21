@@ -1,0 +1,342 @@
+Inspecting DB at: /home/arno/.aiknowsys/knowledge.db
+
+--- Triggers ---
+Trigger: plans_ai
+CREATE TRIGGER plans_ai AFTER INSERT ON plans BEGIN
+  INSERT INTO plans_fts (rowid, plan_id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
+END
+---
+Trigger: plans_ad
+CREATE TRIGGER plans_ad AFTER DELETE ON plans BEGIN
+  DELETE FROM plans_fts WHERE rowid = old.rowid;
+END
+---
+Trigger: plans_au
+CREATE TRIGGER plans_au AFTER UPDATE ON plans BEGIN
+  DELETE FROM plans_fts WHERE rowid = old.rowid;
+  INSERT INTO plans_fts (rowid, plan_id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
+END
+---
+Trigger: sessions_ai
+CREATE TRIGGER sessions_ai AFTER INSERT ON sessions BEGIN
+  INSERT INTO sessions_fts (rowid, session_id, topic, content)
+  VALUES (new.rowid, new.id, new.topic, new.content);
+END
+---
+Trigger: sessions_ad
+CREATE TRIGGER sessions_ad AFTER DELETE ON sessions BEGIN
+  DELETE FROM sessions_fts WHERE rowid = old.rowid;
+END
+---
+Trigger: sessions_au
+CREATE TRIGGER sessions_au AFTER UPDATE ON sessions BEGIN
+  DELETE FROM sessions_fts WHERE rowid = old.rowid;
+  INSERT INTO sessions_fts (rowid, session_id, topic, content)
+  VALUES (new.rowid, new.id, new.topic, new.content);
+END
+---
+Trigger: patterns_ai
+CREATE TRIGGER patterns_ai AFTER INSERT ON patterns BEGIN
+  INSERT INTO patterns_fts (rowid, pattern_id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
+END
+---
+Trigger: patterns_ad
+CREATE TRIGGER patterns_ad AFTER DELETE ON patterns BEGIN
+  DELETE FROM patterns_fts WHERE rowid = old.rowid;
+END
+---
+Trigger: patterns_au
+CREATE TRIGGER patterns_au AFTER UPDATE ON patterns BEGIN
+  DELETE FROM patterns_fts WHERE rowid = old.rowid;
+  INSERT INTO patterns_fts (rowid, pattern_id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
+END
+---
+Trigger: events_ai
+CREATE TRIGGER events_ai AFTER INSERT ON knowledge_events BEGIN
+  INSERT INTO events_fts(rowid, event_id, event_type, data)
+  VALUES (new.rowid, new.event_id, new.event_type, new.data);
+END
+---
+Trigger: events_ad
+CREATE TRIGGER events_ad AFTER DELETE ON knowledge_events BEGIN
+  INSERT INTO events_fts(events_fts, rowid, event_id, event_type, data)
+  VALUES ('delete', old.rowid, old.event_id, old.event_type, old.data);
+END
+---
+Trigger: events_au
+CREATE TRIGGER events_au AFTER UPDATE ON knowledge_events BEGIN
+  INSERT INTO events_fts(events_fts, rowid, event_id, event_type, data)
+  VALUES ('delete', old.rowid, old.event_id, old.event_type, old.data);
+  INSERT INTO events_fts(rowid, event_id, event_type, data)
+  VALUES (new.rowid, new.event_id, new.event_type, new.data);
+END
+---
+
+--- Tables ---
+Table: projects
+┌─────────┬─────┬──────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'         │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'name'       │ 'TEXT' │ 1       │ null       │ 0  │
+│ 2       │ 2   │ 'path'       │ 'TEXT' │ 0       │ null       │ 0  │
+│ 3       │ 3   │ 'tech_stack' │ 'JSON' │ 0       │ null       │ 0  │
+│ 4       │ 4   │ 'created_at' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 5       │ 5   │ 'updated_at' │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴──────────────┴────────┴─────────┴────────────┴────┘
+Table: plans
+┌─────────┬─────┬───────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name          │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼───────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'          │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'project_id'  │ 'TEXT' │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'title'       │ 'TEXT' │ 1       │ null       │ 0  │
+│ 3       │ 3   │ 'status'      │ 'TEXT' │ 1       │ null       │ 0  │
+│ 4       │ 4   │ 'author'      │ 'TEXT' │ 1       │ null       │ 0  │
+│ 5       │ 5   │ 'priority'    │ 'TEXT' │ 0       │ null       │ 0  │
+│ 6       │ 6   │ 'type'        │ 'TEXT' │ 0       │ null       │ 0  │
+│ 7       │ 7   │ 'description' │ 'TEXT' │ 0       │ null       │ 0  │
+│ 8       │ 8   │ 'content'     │ 'TEXT' │ 0       │ null       │ 0  │
+│ 9       │ 9   │ 'topics'      │ 'JSON' │ 0       │ null       │ 0  │
+│ 10      │ 10  │ 'created_at'  │ 'TEXT' │ 1       │ null       │ 0  │
+│ 11      │ 11  │ 'updated_at'  │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴───────────────┴────────┴─────────┴────────────┴────┘
+Table: sessions
+┌─────────┬─────┬──────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'         │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'project_id' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 2       │ 2   │ 'date'       │ 'TEXT' │ 1       │ null       │ 0  │
+│ 3       │ 3   │ 'topic'      │ 'TEXT' │ 1       │ null       │ 0  │
+│ 4       │ 4   │ 'status'     │ 'TEXT' │ 0       │ null       │ 0  │
+│ 5       │ 5   │ 'plan_id'    │ 'TEXT' │ 0       │ null       │ 0  │
+│ 6       │ 6   │ 'duration'   │ 'TEXT' │ 0       │ null       │ 0  │
+│ 7       │ 7   │ 'content'    │ 'TEXT' │ 0       │ null       │ 0  │
+│ 8       │ 8   │ 'topics'     │ 'JSON' │ 0       │ null       │ 0  │
+│ 9       │ 9   │ 'phases'     │ 'JSON' │ 0       │ null       │ 0  │
+│ 10      │ 10  │ 'created_at' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 11      │ 11  │ 'updated_at' │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴──────────────┴────────┴─────────┴────────────┴────┘
+Table: patterns
+┌─────────┬─────┬─────────────────────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name                │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────────────────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'                │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'category'          │ 'TEXT'    │ 1       │ null       │ 0  │
+│ 2       │ 2   │ 'title'             │ 'TEXT'    │ 1       │ null       │ 0  │
+│ 3       │ 3   │ 'content'           │ 'TEXT'    │ 1       │ null       │ 0  │
+│ 4       │ 4   │ 'tags'              │ 'JSON'    │ 0       │ null       │ 0  │
+│ 5       │ 5   │ 'source_project_id' │ 'TEXT'    │ 0       │ null       │ 0  │
+│ 6       │ 6   │ 'applied_count'     │ 'INTEGER' │ 0       │ '0'        │ 0  │
+│ 7       │ 7   │ 'created_at'        │ 'TEXT'    │ 1       │ null       │ 0  │
+└─────────┴─────┴─────────────────────┴───────────┴─────────┴────────────┴────┘
+Table: sqlite_sequence
+┌─────────┬─────┬────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name   │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'name' │ ''   │ 0       │ null       │ 0  │
+│ 1       │ 1   │ 'seq'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴────────┴──────┴─────────┴────────────┴────┘
+Table: plans_fts
+┌─────────┬─────┬───────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name      │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼───────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'plan_id' │ ''   │ 0       │ null       │ 0  │
+│ 1       │ 1   │ 'title'   │ ''   │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'content' │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴───────────┴──────┴─────────┴────────────┴────┘
+Table: plans_fts_data
+┌─────────┬─────┬─────────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'    │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'block' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴───────────┴─────────┴────────────┴────┘
+Table: plans_fts_idx
+┌─────────┬─────┬─────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'segid' │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'term'  │ ''   │ 1       │ null       │ 2  │
+│ 2       │ 2   │ 'pgno'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴──────┴─────────┴────────────┴────┘
+Table: plans_fts_docsize
+┌─────────┬─────┬──────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id' │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'sz' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴───────────┴─────────┴────────────┴────┘
+Table: plans_fts_config
+┌─────────┬─────┬──────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'k'  │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'v'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴──────┴─────────┴────────────┴────┘
+Table: sessions_fts
+┌─────────┬─────┬──────────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'session_id' │ ''   │ 0       │ null       │ 0  │
+│ 1       │ 1   │ 'topic'      │ ''   │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'content'    │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────────────┴──────┴─────────┴────────────┴────┘
+Table: sessions_fts_data
+┌─────────┬─────┬─────────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'    │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'block' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴───────────┴─────────┴────────────┴────┘
+Table: sessions_fts_idx
+┌─────────┬─────┬─────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'segid' │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'term'  │ ''   │ 1       │ null       │ 2  │
+│ 2       │ 2   │ 'pgno'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴──────┴─────────┴────────────┴────┘
+Table: sessions_fts_docsize
+┌─────────┬─────┬──────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id' │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'sz' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴───────────┴─────────┴────────────┴────┘
+Table: sessions_fts_config
+┌─────────┬─────┬──────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'k'  │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'v'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴──────┴─────────┴────────────┴────┘
+Table: patterns_fts
+┌─────────┬─────┬──────────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'pattern_id' │ ''   │ 0       │ null       │ 0  │
+│ 1       │ 1   │ 'title'      │ ''   │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'content'    │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────────────┴──────┴─────────┴────────────┴────┘
+Table: patterns_fts_data
+┌─────────┬─────┬─────────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'    │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'block' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴───────────┴─────────┴────────────┴────┘
+Table: patterns_fts_idx
+┌─────────┬─────┬─────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'segid' │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'term'  │ ''   │ 1       │ null       │ 2  │
+│ 2       │ 2   │ 'pgno'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴──────┴─────────┴────────────┴────┘
+Table: patterns_fts_docsize
+┌─────────┬─────┬──────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id' │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'sz' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴───────────┴─────────┴────────────┴────┘
+Table: patterns_fts_config
+┌─────────┬─────┬──────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'k'  │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'v'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴──────┴─────────┴────────────┴────┘
+Table: knowledge_events
+┌─────────┬─────┬──────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'event_id'   │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'project_id' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 2       │ 2   │ 'session_id' │ 'TEXT' │ 0       │ null       │ 0  │
+│ 3       │ 3   │ 'plan_id'    │ 'TEXT' │ 0       │ null       │ 0  │
+│ 4       │ 4   │ 'timestamp'  │ 'TEXT' │ 1       │ null       │ 0  │
+│ 5       │ 5   │ 'event_type' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 6       │ 6   │ 'data'       │ 'TEXT' │ 1       │ null       │ 0  │
+│ 7       │ 7   │ 'created_at' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 8       │ 8   │ 'embedding'  │ 'BLOB' │ 0       │ null       │ 0  │
+└─────────┴─────┴──────────────┴────────┴─────────┴────────────┴────┘
+Table: events_fts
+┌─────────┬─────┬──────────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'event_id'   │ ''   │ 0       │ null       │ 0  │
+│ 1       │ 1   │ 'event_type' │ ''   │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'data'       │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────────────┴──────┴─────────┴────────────┴────┘
+Table: events_fts_data
+┌─────────┬─────┬─────────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'    │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'block' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴───────────┴─────────┴────────────┴────┘
+Table: events_fts_idx
+┌─────────┬─────┬─────────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name    │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼─────────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'segid' │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'term'  │ ''   │ 1       │ null       │ 2  │
+│ 2       │ 2   │ 'pgno'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴─────────┴──────┴─────────┴────────────┴────┘
+Table: events_fts_docsize
+┌─────────┬─────┬──────┬───────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type      │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼───────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id' │ 'INTEGER' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'sz' │ 'BLOB'    │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴───────────┴─────────┴────────────┴────┘
+Table: events_fts_config
+┌─────────┬─────┬──────┬──────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name │ type │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────┼──────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'k'  │ ''   │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'v'  │ ''   │ 0       │ null       │ 0  │
+└─────────┴─────┴──────┴──────┴─────────┴────────────┴────┘
+Table: reviews
+┌─────────┬─────┬──────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'id'         │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'project_id' │ 'TEXT' │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'target_id'  │ 'TEXT' │ 1       │ null       │ 0  │
+│ 3       │ 3   │ 'author'     │ 'TEXT' │ 1       │ null       │ 0  │
+│ 4       │ 4   │ 'status'     │ 'TEXT' │ 1       │ null       │ 0  │
+│ 5       │ 5   │ 'content'    │ 'TEXT' │ 1       │ null       │ 0  │
+│ 6       │ 6   │ 'created_at' │ 'TEXT' │ 1       │ null       │ 0  │
+│ 7       │ 7   │ 'updated_at' │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴──────────────┴────────┴─────────┴────────────┴────┘
+Table: links
+┌─────────┬─────┬──────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name         │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼──────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'source_id'  │ 'TEXT' │ 1       │ null       │ 1  │
+│ 1       │ 1   │ 'target_id'  │ 'TEXT' │ 1       │ null       │ 2  │
+│ 2       │ 2   │ 'type'       │ 'TEXT' │ 1       │ null       │ 3  │
+│ 3       │ 3   │ 'metadata'   │ 'JSON' │ 0       │ null       │ 0  │
+│ 4       │ 4   │ 'created_at' │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴──────────────┴────────┴─────────┴────────────┴────┘
+Table: user_state
+┌─────────┬─────┬───────────────────┬────────┬─────────┬────────────┬────┐
+│ (index) │ cid │ name              │ type   │ notnull │ dflt_value │ pk │
+├─────────┼─────┼───────────────────┼────────┼─────────┼────────────┼────┤
+│ 0       │ 0   │ 'user_id'         │ 'TEXT' │ 0       │ null       │ 1  │
+│ 1       │ 1   │ 'project_id'      │ 'TEXT' │ 0       │ null       │ 0  │
+│ 2       │ 2   │ 'active_plan_id'  │ 'TEXT' │ 0       │ null       │ 0  │
+│ 3       │ 3   │ 'last_session_id' │ 'TEXT' │ 0       │ null       │ 0  │
+│ 4       │ 4   │ 'focus_context'   │ 'JSON' │ 0       │ null       │ 0  │
+│ 5       │ 5   │ 'updated_at'      │ 'TEXT' │ 1       │ null       │ 0  │
+└─────────┴─────┴───────────────────┴────────┴─────────┴────────────┴────┘
+
+--- Views ---

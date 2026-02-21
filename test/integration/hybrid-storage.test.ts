@@ -42,7 +42,8 @@ describe('Hybrid Storage (Events + Markdown)', () => {
         topics: ['feature', 'implementation'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       expect(result.created).toBe(true);
@@ -57,14 +58,15 @@ describe('Hybrid Storage (Events + Markdown)', () => {
       expect(events.some(e => e.eventType === 'goal_defined')).toBe(true);
     });
 
-    it('should generate markdown from events when creating session',async () => {
+    it('should generate markdown from events when creating session', async () => {
       // Create session
       const result = await createSessionCore({
         title: 'Test Session',
         topics: ['testing'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       // Read markdown file
@@ -83,7 +85,8 @@ describe('Hybrid Storage (Events + Markdown)', () => {
         topics: ['events', 'query'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       const sessionId = path.basename(result.filePath, '.md');
@@ -105,7 +108,8 @@ describe('Hybrid Storage (Events + Markdown)', () => {
         topics: ['project'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       const sessionId = path.basename(result.filePath, '.md');
@@ -129,7 +133,8 @@ describe('Hybrid Storage (Events + Markdown)', () => {
         topics: ['phase-2.1'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       // Read generated markdown
@@ -146,7 +151,8 @@ describe('Hybrid Storage (Events + Markdown)', () => {
         topics: ['dynamic'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       const sessionId = path.basename(result.filePath, '.md');
@@ -219,7 +225,8 @@ This session has NO events in the database
         topics: ['hybrid'],
         plan: null,
         targetDir: tmpDir,
-        storage
+        storage,
+        writeMarkdown: true
       });
 
       const sessionId = path.basename(result.filePath, '.md');

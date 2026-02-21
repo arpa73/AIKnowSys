@@ -35,7 +35,8 @@ export default defineConfig({
             'test/embeddings/semantic-search.test.ts',
             'test/integration/cross-project-queries.test.ts',
             'test/integration/hybrid-storage.test.ts',
-            'test/migration/event-migrator.test.ts'
+            'test/migration/event-migrator.test.ts',
+            'test/core/reviews-and-links.test.ts'
           ],
           setupFiles: ['./vitest.setup.ts'],
           cache: false
@@ -58,7 +59,8 @@ export default defineConfig({
             'test/embeddings/semantic-search.test.ts',
             'test/integration/cross-project-queries.test.ts',
             'test/integration/hybrid-storage.test.ts',
-            'test/migration/event-migrator.test.ts'
+            'test/migration/event-migrator.test.ts',
+            'test/core/reviews-and-links.test.ts'
           ],
           setupFiles: ['./vitest.setup.ts'],
           cache: false

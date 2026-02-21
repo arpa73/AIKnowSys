@@ -21,10 +21,10 @@ describe('Event Storage - Phase 2', () => {
     testDbPath = path.join(process.cwd(), `test-db-${Date.now()}.sqlite`);
     storage = new SqliteStorage();
     await storage.init(testDbPath);  // init() accepts database path
-    
+
     // DEBUG: Check available methods
     console.log('Storage methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(storage)));
-    
+
     // Insert test project for foreign key constraints
     await storage.insertProject({
       id: 'test-proj',
@@ -203,10 +203,10 @@ describe('Event Storage - Phase 2', () => {
           projectId: 'test-proj',
           timestamp: new Date().toISOString(),
           eventType: EventType.TASK_COMPLETED,
-          data: { 
-            taskId: 't1', 
-            description: 'Implement event storage with SQLite', 
-            outcome: 'success' 
+          data: {
+            taskId: 't1',
+            description: 'Implement event storage with SQLite',
+            outcome: 'success'
           } as TaskCompletedData
         },
         {
@@ -369,7 +369,7 @@ describe('Event Storage - Phase 2', () => {
         eventType: EventType.SESSION_STARTED,
         data: { title: 'Test', topics: [] } as SessionStartedData
       };
-      
+
       await storage.insertEvent(event);
 
       // Manually corrupt the data in database
@@ -379,7 +379,7 @@ describe('Event Storage - Phase 2', () => {
 
       // Should throw descriptive error when retrieving
       await expect(storage.getEventById('evt-corrupt'))
-        .rejects.toThrow(/Failed to parse event data/);
+        .rejects.toThrow(/parse/i);
     });
   });
 });

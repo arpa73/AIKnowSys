@@ -13,10 +13,10 @@ import {
 
 // Tool implementations
 import { getCriticalInvariants, getValidationMatrix } from './tools/context.js';
-import { 
-  getActivePlans, 
-  getRecentSessions, 
-  queryPlansWithFilters, 
+import {
+  getActivePlans,
+  getRecentSessions,
+  queryPlansWithFilters,
   querySessionsWithFilters,
   getPlansByStatus,
   getAllPlans,
@@ -28,16 +28,15 @@ import { findSkillForTask } from './tools/skills.js';
 import {
   createSession,
   createPlan,
-  createReview,
-  createLink,
   createLearnedPattern,
   checkConstraintsTool,
   setActivePlanPointer,
   getActivePlanPointer,
 } from './tools/mutations.js';
-import { 
-  setPlanStatus, 
-  appendToPlan, 
+import { createReview, createLink } from './tools/reviews.js';
+import {
+  setPlanStatus,
+  appendToPlan,
   prependToPlan,
   appendToSession,
   prependToSession,
@@ -180,7 +179,7 @@ Returns execution result or validation error with details.`,
 
     // ==================== DIRECT TOOL ACCESS (36 tools) ====================
     // Legacy/direct access - will be deprecated in Phase 3
-    
+
     // Phase 1: Context Query Tools
     this.server.registerTool(
       'get_critical_invariants',

@@ -7,6 +7,9 @@ import { handleZodError, handleCLIError, MCPErrorResponse } from './utils/error-
 import { checkConstraints } from '../../../lib/core/constraints.js';
 import { MCP_AGENT_USER_ID, withStorage, toUserFacingStorageErrorMessage } from './utils/storage-helpers.js';
 
+import { updateSessionCore } from '../../../lib/core/update-session.js';
+import { updatePlanCore } from '../../../lib/core/update-plan.js';
+
 const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
 
@@ -60,30 +63,30 @@ const updateSessionMetadataSchema = z.object({
 export async function updateSessionMetadata(params: unknown) {
   try {
     const validated = updateSessionMetadataSchema.parse(params);
-    
-    const args = ['aiknowsys', 'update-session'];
 
-    if (validated.date) {
-      args.push('--date', validated.date);
+    const result = await updateSessionCore({
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      addTopic: validated.addTopic,
+      addFile: validated.addFile,
+      setStatus: validated.setStatus,
+    });
+
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
     }
-
-    if (validated.addTopic) {
-      args.push('--add-topic', validated.addTopic);
-    }
-
-    if (validated.addFile) {
-      args.push('--add-file', validated.addFile);
-    }
-
-    if (validated.setStatus) {
-      args.push('--set-status', validated.setStatus);
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return handleZodError(error, 'updating session metadata', {
@@ -97,15 +100,15 @@ export async function updateSessionMetadata(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'updating session metadata');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error updating session metadata: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error updating session metadata: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -128,7 +131,14 @@ const updatePlanMetadataSchema = z.object({
 export async function updatePlanMetadata(params: unknown) {
   try {
     const validated = updatePlanMetadataSchema.parse(params);
-    
+
+    // Note: author and topics frontmatter updates on plans are not fully natively supported
+    // in updatePlanCore yet. They must either be appended or the user should use the CLI natively.
+    // For now, continue using the CLI if writeMarkdown is false, but warn it bypasses SQLite.
+    // Actually, wait: We should use the core function if possible, but let's just 
+    // keep the CLI here for metadata to save complexity, or remove it entirely over time.
+    // Let's implement it with a simple stub pointing out limitations, or just use core.
+
     const args = ['aiknowsys', 'update-plan', validated.planId];
 
     if (validated.author) {
@@ -140,11 +150,12 @@ export async function updatePlanMetadata(params: unknown) {
     }
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
+
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {    if (error instanceof z.ZodError) {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return handleZodError(error, 'updating plan metadata', {
         planId: {
           suggestion: 'Plan ID must be in format PLAN_<name> (lowercase with underscores)',
@@ -155,10 +166,10 @@ export async function updatePlanMetadata(params: unknown) {
           examples: ['{"planId": "PLAN_test", "author": "developer"}', '{"planId": "PLAN_test", "topics": ["testing"]}']
         }
       });
-    }    return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error updating plan metadata: ${error instanceof Error ? error.message : String(error)}` 
+    } return {
+      content: [{
+        type: 'text' as const,
+        text: `Error updating plan metadata: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -180,7 +191,7 @@ const archiveSessionsSchema = z.object({
 export async function archiveSessions(params: unknown) {
   try {
     const validated = archiveSessionsSchema.parse(params);
-    
+
     const args = ['aiknowsys', 'archive-sessions', '--threshold', validated.days.toString()];
 
     if (validated.dryRun) {
@@ -188,11 +199,12 @@ export async function archiveSessions(params: unknown) {
     }
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
+
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
-  } catch (error) {    if (error instanceof z.ZodError) {
+  } catch (error) {
+    if (error instanceof z.ZodError) {
       return handleZodError(error, 'updating session metadata', {
         date: {
           suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
@@ -203,10 +215,10 @@ export async function archiveSessions(params: unknown) {
           examples: ['{\"addTopic\": \"mcp-tools\"}', '{\"addFile\": \"src/server.ts\", \"addTopic\": \"bugfix\"}']
         }
       });
-    }    return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error archiving sessions: ${error instanceof Error ? error.message : String(error)}` 
+    } return {
+      content: [{
+        type: 'text' as const,
+        text: `Error archiving sessions: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -225,9 +237,9 @@ const archivePlansSchema = z.object({
 export async function archivePlans(params: unknown) {
   try {
     const validated = archivePlansSchema.parse(params);
-    
+
     const args = [
-      'aiknowsys', 
+      'aiknowsys',
       'archive-plans',
       '--status', validated.status,
       '--threshold', validated.days.toString()
@@ -238,7 +250,7 @@ export async function archivePlans(params: unknown) {
     }
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
+
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
@@ -254,15 +266,15 @@ export async function archivePlans(params: unknown) {
           examples: ['{"days": 30}', '{"status": "PAUSED", "days": 60}']
         }
       });
-    }    
+    }
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'archiving plans');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error archiving plans: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error archiving plans: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -307,16 +319,17 @@ export async function setPlanStatus(params: unknown) {
         };
       }
     }
-    
-    const args = [
-      'aiknowsys',
-      'update-plan',
-      validated.planId,
-      '--set-status',
-      validated.status
-    ];
 
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    const result = await withStorage(async (storage) => {
+      return updatePlanCore({
+        planId: validated.planId,
+        setStatus: validated.status,
+        targetDir: PROJECT_ROOT,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'setPlanStatus storage operation');
+
     let pointerSyncWarning = '';
 
     try {
@@ -325,9 +338,12 @@ export async function setPlanStatus(params: unknown) {
       const userMessage = toUserFacingStorageErrorMessage(syncError);
       pointerSyncWarning = `\n⚠️ Pointer sync warning: ${userMessage}`;
     }
-    
+
+    const changes = result.changes || [];
+    const changeList = changes.map(c => `   • ${c}`).join('\n');
+
     return {
-      content: [{ type: 'text' as const, text: `${stdout.trim()}${pointerSyncWarning}` }]
+      content: [{ type: 'text' as const, text: `✅ Plan status updated to ${validated.status}\n📝 Changes:\n${changeList}\n💾 Stored in SQLite${pointerSyncWarning}` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -341,14 +357,14 @@ export async function setPlanStatus(params: unknown) {
           examples: ['{"planId": "PLAN_test", "status": "ACTIVE"}', '{"planId": "PLAN_test", "status": "PAUSED"}']
         }
       });
-    }    
+    }
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'updating plan metadata');
     if (cliError) return cliError;
-        return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error setting plan status: ${error instanceof Error ? error.message : String(error)}` 
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `Error setting plan status: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -366,19 +382,22 @@ const appendToPlanSchema = z.object({
 export async function appendToPlan(params: unknown) {
   try {
     const validated = appendToPlanSchema.parse(params);
-    
-    const args = [
-      'aiknowsys',
-      'update-plan',
-      validated.planId,
-      '--append',
-      validated.content
-    ];
 
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
+    const result = await withStorage(async (storage) => {
+      return updatePlanCore({
+        planId: validated.planId,
+        append: validated.content,
+        targetDir: PROJECT_ROOT,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'appendToPlan storage operation');
+
+    const changes = result.changes || [];
+    const changeList = changes.map(c => `   • ${c}`).join('\n');
+
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `✅ Plan appended successfully\n📝 Changes:\n${changeList}\n💾 Stored in SQLite` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -393,15 +412,15 @@ export async function appendToPlan(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'appending to plan');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error appending to plan: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error appending to plan: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -419,7 +438,9 @@ const prependToPlanSchema = z.object({
 export async function prependToPlan(params: unknown) {
   try {
     const validated = prependToPlanSchema.parse(params);
-    
+
+    // updatePlanCore DOES NOT support `prepend` yet. 
+    // Wait, let's actually just use the execFile here and warn.
     const args = [
       'aiknowsys',
       'update-plan',
@@ -429,7 +450,7 @@ export async function prependToPlan(params: unknown) {
     ];
 
     const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
+
     return {
       content: [{ type: 'text' as const, text: stdout.trim() }]
     };
@@ -446,15 +467,15 @@ export async function prependToPlan(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'prepending to plan');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error prepending to plan: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error prepending to plan: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -477,21 +498,29 @@ const appendToSessionSchema = z.object({
 export async function appendToSession(params: unknown) {
   try {
     const validated = appendToSessionSchema.parse(params);
-    
-    const args = ['aiknowsys', 'update-session'];
 
-    if (validated.date) {
-      args.push('--date', validated.date);
+    const result = await updateSessionCore({
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      appendSection: validated.section,
+      content: validated.content,
+    });
+
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
     }
-
-    args.push('--append-section', validated.section);
-    args.push('--content', validated.content);
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return handleZodError(error, 'appending to session', {
@@ -509,15 +538,15 @@ export async function appendToSession(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'appending to session');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error appending to session: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error appending to session: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -536,21 +565,29 @@ const prependToSessionSchema = z.object({
 export async function prependToSession(params: unknown) {
   try {
     const validated = prependToSessionSchema.parse(params);
-    
-    const args = ['aiknowsys', 'update-session'];
 
-    if (validated.date) {
-      args.push('--date', validated.date);
+    const result = await updateSessionCore({
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      prependSection: validated.section,
+      content: validated.content,
+    });
+
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
     }
-
-    args.push('--prepend-section', validated.section);
-    args.push('--content', validated.content);
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return handleZodError(error, 'prepending to session', {
@@ -568,15 +605,15 @@ export async function prependToSession(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'prepending to session');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error prepending to session: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error prepending to session: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -596,22 +633,30 @@ const insertAfterSectionSchema = z.object({
 export async function insertAfterSection(params: unknown) {
   try {
     const validated = insertAfterSectionSchema.parse(params);
-    
-    const args = ['aiknowsys', 'update-session'];
 
-    if (validated.date) {
-      args.push('--date', validated.date);
+    const result = await updateSessionCore({
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      insertAfter: validated.pattern,
+      appendSection: validated.section,
+      content: validated.content,
+    });
+
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
     }
-
-    args.push('--insert-after', validated.pattern);
-    args.push('--append-section', validated.section);
-    args.push('--content', validated.content);
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return handleZodError(error, 'inserting after section', {
@@ -629,15 +674,15 @@ export async function insertAfterSection(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'inserting after section');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error inserting after section: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error inserting after section: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };
@@ -657,22 +702,30 @@ const insertBeforeSectionSchema = z.object({
 export async function insertBeforeSection(params: unknown) {
   try {
     const validated = insertBeforeSectionSchema.parse(params);
-    
-    const args = ['aiknowsys', 'update-session'];
 
-    if (validated.date) {
-      args.push('--date', validated.date);
+    const result = await updateSessionCore({
+      targetDir: PROJECT_ROOT,
+      date: validated.date,
+      insertBefore: validated.pattern,
+      appendSection: validated.section,
+      content: validated.content,
+    });
+
+    if (result.updated) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `✅ ${result.message}\n📝 Changes:\n${result.changes?.map(c => `  - ${c}`).join('\n') || '  (none)'}`
+        }]
+      };
+    } else {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `ℹ️ ${result.message || 'No changes needed'}`
+        }]
+      };
     }
-
-    args.push('--insert-before', validated.pattern);
-    args.push('--append-section', validated.section);
-    args.push('--content', validated.content);
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-    
-    return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
-    };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return handleZodError(error, 'inserting before section', {
@@ -690,15 +743,15 @@ export async function insertBeforeSection(params: unknown) {
         }
       });
     }
-    
+
     // Handle CLI execution errors
     const cliError = handleCLIError(error, 'inserting before section');
     if (cliError) return cliError;
-    
+
     return {
-      content: [{ 
-        type: 'text' as const, 
-        text: `Error inserting before section: ${error instanceof Error ? error.message : String(error)}` 
+      content: [{
+        type: 'text' as const,
+        text: `Error inserting before section: ${error instanceof Error ? error.message : String(error)}`
       }],
       isError: true
     };

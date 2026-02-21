@@ -64,8 +64,10 @@ export async function createPlanCore(
     topics = [],
     targetDir = process.cwd(),
     storage,
-    writeMarkdown = true
+    writeMarkdown
   } = options;
+
+  const shouldWriteMarkdown = writeMarkdown ?? !storage;
 
   // Validation: title must be at least 3 characters
   if (!title || title.length < 3) {
@@ -141,7 +143,7 @@ export async function createPlanCore(
     });
   }
 
-  if (writeMarkdown) {
+  if (shouldWriteMarkdown) {
     // Create .aiknowsys directory if needed
     await fs.mkdir(path.join(resolvedTargetDir, '.aiknowsys'), { recursive: true });
 
@@ -157,7 +159,7 @@ export async function createPlanCore(
   // Return structured result
   return {
     planId,
-    filePath: filepath,
+    filePath: shouldWriteMarkdown ? filepath : `sqlite://plans/${planId}`,
     created: true,
     metadata: {
       title,

@@ -720,22 +720,33 @@ Only manually edit session/plan files when:
 
 ---
 
-## 🔧 Custom Agents Integration
+## 🔧 IDE Integration & Custom Workflows
 
-**If custom agents are installed:**
+This project supports automated, persona-driven code review and planning across different AI environments.
 
-This project uses Developer + Architect agents for automated code review.
+### Option A: Antigravity / Agentic Workflows
+If using Google's Antigravity or a compatible agentic UI, use the native slash commands:
 
-**Workflow:**
-1. User requests feature
-2. Developer implements
-3. Developer auto-hands off to Architect
-4. Architect reviews against MCP critical invariants and project patterns
-5. Architect writes review to `.aiknowsys/reviews/PENDING_<username>.md`
-6. Developer reads `.aiknowsys/reviews/PENDING_<username>.md` and addresses issues
-7. Developer updates session with brief status, deletes `.aiknowsys/reviews/PENDING_<username>.md`
+- **Planning:** Run `/plan-feature` → Agent adopts Planner persona.
+- **Implementation:** Run `/develop-feature` → Agent adopts Developer persona, implements plan using TDD.
+- **Architect Review:** Run `/architect-review` → Agent reviews code against critical invariants.
 
-**Review Workflow:**
+**See:** `.agents/workflows/` for workflow definitions.
+
+### Option B: VS Code + GitHub Copilot Custom Agents
+If using VS Code with Copilot, use the `@Developer` and `@Architect` agents.
+
+- **Workflow:**
+  1. User requests feature.
+  2. Developer implements.
+  3. Developer auto-hands off to Architect.
+  4. Architect reviews against MCP critical invariants and project patterns.
+  5. Architect writes review to `.aiknowsys/reviews/PENDING_<username>.md`.
+  6. Developer reads the review, addresses issues, and updates the session.
+
+**See:** `.github/agents/README.md` for details.
+
+### Shared Review Workflow (Both Options)
 
 **Architect writes review:**
 ```markdown
@@ -747,7 +758,7 @@ This project uses Developer + Architect agents for automated code review.
 ```markdown
 ## ⚠️ Architect Review Pending (18:15)
 **Topic:** Logger refactoring  
-**See:** `.aiknowsys/PENDING_REVIEW.md` for details
+**See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
 ```
 
 **After Developer addresses issues:**
@@ -755,12 +766,8 @@ This project uses Developer + Architect agents for automated code review.
 ## Architect Review: Logger Refactoring (18:15) ✅
 **Status:** ADDRESSED (18:30)  
 **Issues found:** 3 (method naming, chalk usage, icons)  
-**Outcome:** All fixed, 164 tests passing, committed as 8a970ab
-
-[PENDING_REVIEW.md deleted - no longer needed]
+**Outcome:** All fixed, 164 tests passing
 ```
-
-**See:** `.github/agents/README.md` for details
 
 ---
 

@@ -19,6 +19,7 @@ import { readFile, writeFile } from 'fs/promises';
 import { resolve, basename } from 'path';
 import { existsSync } from 'fs';
 import { JsonStorage } from '../context/json-storage.js';
+import type { SqliteStorage } from '../context/sqlite-storage.js';
 
 /**
  * Options for updating a session
@@ -26,15 +27,15 @@ import { JsonStorage } from '../context/json-storage.js';
 export interface UpdateSessionOptions {
   // Target directory (defaults to cwd)
   targetDir?: string;
-  
+
   // Date override (defaults to today)
   date?: string;
-  
+
   // Frontmatter updates
   addTopic?: string;
   addFile?: string;
   setStatus?: 'in-progress' | 'complete' | 'abandoned';
-  
+
   // Content manipulation
   appendSection?: string;
   prependSection?: string;
@@ -42,11 +43,15 @@ export interface UpdateSessionOptions {
   insertBefore?: string;
   content?: string;
   appendFile?: string;
-  
+
   // Shortcuts
   done?: boolean;    // Sets status to 'complete'
   wip?: boolean;     // Sets status to 'in-progress'
   append?: string;   // Auto-detects file vs content, appends to "## Update"
+
+  // Storage
+  storage?: SqliteStorage;
+  writeMarkdown?: boolean;
 }
 
 /**
@@ -64,26 +69,26 @@ export interface UpdateSessionCoreResult {
  */
 function expandShortcuts(options: UpdateSessionOptions): UpdateSessionOptions {
   const expanded = { ...options };
-  
+
   // --done → --set-status complete
   if (expanded.done) {
     expanded.setStatus = 'complete';
     delete expanded.done;
   }
-  
+
   // --wip → --set-status in-progress
   if (expanded.wip) {
     expanded.setStatus = 'in-progress';
     delete expanded.wip;
   }
-  
+
   // --append <value> → auto-detect file vs content
   if (expanded.append) {
     const appendValue = expanded.append;
-    
+
     // Auto-detect: if looks like a file path, treat as file
     const looksLikeFile = appendValue.includes('/') || appendValue.endsWith('.md');
-    
+
     if (looksLikeFile && existsSync(resolve(expanded.targetDir || process.cwd(), appendValue))) {
       expanded.appendFile = appendValue;
       expanded.appendSection = '## Update'; // Auto-set section for file appending
@@ -91,10 +96,10 @@ function expandShortcuts(options: UpdateSessionOptions): UpdateSessionOptions {
       expanded.content = appendValue;
       expanded.appendSection = '## Update';
     }
-    
+
     delete expanded.append;
   }
-  
+
   return expanded;
 }
 
@@ -119,14 +124,14 @@ interface SessionFrontmatter {
 
 function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; body: string } {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  
+
   if (!match) {
     throw new Error('Invalid session file: missing frontmatter');
   }
-  
+
   const yamlText = match[1];
   const body = match[2];
-  
+
   // Simple YAML parsing for our specific structure
   const frontmatter: SessionFrontmatter = {
     date: '',
@@ -134,10 +139,10 @@ function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; b
     files: [],
     status: 'in-progress'
   };
-  
+
   const lines = yamlText.split('\n');
   let currentKey: string | null = null;
-  
+
   for (const line of lines) {
     if (line.startsWith('date:')) {
       frontmatter.date = line.substring(5).trim();
@@ -164,7 +169,7 @@ function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; b
       continue;
     }
   }
-  
+
   return { frontmatter, body };
 }
 
@@ -175,7 +180,7 @@ function serializeFrontmatter(frontmatter: SessionFrontmatter): string {
   let yaml = '---\n';
   yaml += `date: ${frontmatter.date}\n`;
   yaml += 'topics:';
-  
+
   if (frontmatter.topics.length === 0) {
     yaml += ' []\n';
   } else {
@@ -184,7 +189,7 @@ function serializeFrontmatter(frontmatter: SessionFrontmatter): string {
       yaml += `  - ${topic}\n`;
     }
   }
-  
+
   yaml += 'files:';
   if (!frontmatter.files || frontmatter.files.length === 0) {
     yaml += ' []\n';
@@ -194,10 +199,10 @@ function serializeFrontmatter(frontmatter: SessionFrontmatter): string {
       yaml += `  - ${file}\n`;
     }
   }
-  
+
   yaml += `status: ${frontmatter.status}\n`;
   yaml += '---\n';
-  
+
   return yaml;
 }
 
@@ -207,26 +212,40 @@ function serializeFrontmatter(frontmatter: SessionFrontmatter): string {
 export async function updateSessionCore(options: UpdateSessionOptions): Promise<UpdateSessionCoreResult> {
   // Expand shortcuts first
   const opts = expandShortcuts(options);
-  
+
   const targetDir = opts.targetDir || process.cwd();
   const date = opts.date || new Date().toISOString().split('T')[0];
-  
-  // Find session file
-  const sessionPath = findSessionFile(targetDir, date);
-  if (!sessionPath) {
-    throw new Error(`No session file found for date: ${date}`);
+  const shouldWriteMarkdown = opts.writeMarkdown ?? !opts.storage;
+
+  let originalContent = '';
+  let sessionPath = '';
+
+  if (opts.storage) {
+    const sessionsResult = await opts.storage.queryFullSessions({ date });
+    if (sessionsResult.sessions.length === 0) {
+      throw new Error(`No session found in database for date: ${date}`);
+    }
+    const sessionDoc = sessionsResult.sessions[0];
+    originalContent = sessionDoc.content;
+    sessionPath = `sessions/${date}-session.md`;
+  } else {
+    // Find session file (FS fallback)
+    const fsPath = findSessionFile(targetDir, date);
+    if (!fsPath) {
+      throw new Error(`No session file found for date: ${date}`);
+    }
+    sessionPath = fsPath;
+    originalContent = await readFile(sessionPath, 'utf-8');
   }
-  
-  // Read current content
-  const originalContent = await readFile(sessionPath, 'utf-8');
+
   const { frontmatter, body } = parseFrontmatter(originalContent);
-  
+
   const changes: string[] = [];
   let frontmatterUpdated = false;
   let bodyUpdated = false;
-  
+
   // FRONTMATTER UPDATES
-  
+
   if (opts.addTopic) {
     if (!frontmatter.topics.includes(opts.addTopic)) {
       frontmatter.topics.push(opts.addTopic);
@@ -234,7 +253,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       frontmatterUpdated = true;
     }
   }
-  
+
   if (opts.addFile) {
     if (!frontmatter.files) {
       frontmatter.files = [];
@@ -245,13 +264,13 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       frontmatterUpdated = true;
     }
   }
-  
+
   if (opts.setStatus) {
     const validStatuses = ['in-progress', 'complete', 'abandoned'];
     if (!validStatuses.includes(opts.setStatus)) {
       throw new Error(`Invalid status: ${opts.setStatus}. Must be one of: ${validStatuses.join(', ')}`);
     }
-    
+
     if (frontmatter.status !== opts.setStatus) {
       const oldStatus = frontmatter.status;
       frontmatter.status = opts.setStatus;
@@ -259,16 +278,16 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       frontmatterUpdated = true;
     }
   }
-  
+
   // CONTENT MANIPULATION
-  
+
   let newBody = body;
-  
+
   // Validate: content requires a section option
   if (opts.content && !opts.appendSection && !opts.prependSection && !opts.insertAfter && !opts.insertBefore) {
     throw new Error('content option requires a section option (appendSection, prependSection, insertAfter, or insertBefore)');
   }
-  
+
   // Handle file appending
   let contentToAdd = opts.content || '';
   if (opts.appendFile) {
@@ -279,13 +298,13 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     const fileContent = await readFile(filePath, 'utf-8');
     contentToAdd += (contentToAdd ? '\n\n' : '') + fileContent;
     changes.push(`Appended content from file: ${opts.appendFile}`);
-    
+
     // If no section specified, default to appending at end
     if (!opts.appendSection && !opts.prependSection && !opts.insertAfter && !opts.insertBefore) {
       opts.appendSection = '## Update';
     }
   }
-  
+
   // Handle different insertion modes
   if (opts.prependSection) {
     // Insert right after frontmatter (before existing body)
@@ -296,11 +315,11 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     // Insert after specific pattern
     const pattern = opts.insertAfter;
     const patternIndex = newBody.indexOf(pattern);
-    
+
     if (patternIndex === -1) {
       throw new Error(`Pattern not found: ${pattern}`);
     }
-    
+
     // Check for multiple matches
     const secondMatch = newBody.indexOf(pattern, patternIndex + 1);
     if (secondMatch !== -1) {
@@ -314,11 +333,11 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       });
       throw new Error(`Pattern "${pattern}" found ${matches.length} times at lines: ${matches.join(', ')}. Please be more specific.`);
     }
-    
+
     // Find end of section (next ## heading or EOF)
     const afterPattern = patternIndex + pattern.length;
     const nextHeadingMatch = newBody.substring(afterPattern).match(/\n## /);
-    
+
     let insertPosition: number;
     if (nextHeadingMatch && nextHeadingMatch.index !== undefined) {
       // Insert before next heading
@@ -327,7 +346,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       // No next heading, insert at end
       insertPosition = newBody.length;
     }
-    
+
     const sectionContent = opts.appendSection ? `\n\n${opts.appendSection}\n${contentToAdd}` : `\n${contentToAdd}`;
     newBody = newBody.substring(0, insertPosition) + sectionContent + newBody.substring(insertPosition);
     changes.push(`Inserted content after: ${pattern}`);
@@ -336,11 +355,11 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     // Insert before specific pattern
     const pattern = opts.insertBefore;
     const patternIndex = newBody.indexOf(pattern);
-    
+
     if (patternIndex === -1) {
       throw new Error(`Pattern not found: ${pattern}`);
     }
-    
+
     // Check for multiple matches
     const secondMatch = newBody.indexOf(pattern, patternIndex + 1);
     if (secondMatch !== -1) {
@@ -353,7 +372,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       });
       throw new Error(`Pattern "${pattern}" found ${matches.length} times at lines: ${matches.join(', ')}. Please be more specific.`);
     }
-    
+
     const sectionContent = opts.appendSection ? `${opts.appendSection}\n${contentToAdd}\n\n` : `${contentToAdd}\n\n`;
     newBody = newBody.substring(0, patternIndex) + sectionContent + newBody.substring(patternIndex);
     changes.push(`Inserted content before: ${pattern}`);
@@ -364,7 +383,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     changes.push(`Appended section: ${opts.appendSection}`);
     bodyUpdated = true;
   }
-  
+
   // Check if anything changed
   if (!frontmatterUpdated && !bodyUpdated) {
     return {
@@ -374,19 +393,41 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       changes: []
     };
   }
-  
+
   // Combine frontmatter and body
   const newContent = serializeFrontmatter(frontmatter) + newBody;
-  
-  // Write back
-  await writeFile(sessionPath, newContent, 'utf-8');
-  
-  // Rebuild context index
-  const storage = new JsonStorage();
-  await storage.init(targetDir);
-  await storage.rebuildIndex();
-  await storage.close();
-  
+
+  if (opts.storage) {
+    const sessionsResult = await opts.storage.queryFullSessions({ date });
+    if (sessionsResult.sessions.length > 0) {
+      const sessionDoc = sessionsResult.sessions[0];
+      await opts.storage['db']?.prepare(`
+        UPDATE sessions SET 
+          content = ?, 
+          topics = ?, 
+          status = ?, 
+          updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+      `).run(
+        newContent,
+        JSON.stringify(frontmatter.topics),
+        frontmatter.status,
+        sessionDoc.id
+      );
+    }
+  }
+
+  // Write back to FS if requested
+  if (shouldWriteMarkdown && resolve(sessionPath) === sessionPath) {
+    await writeFile(sessionPath, newContent, 'utf-8');
+
+    // Rebuild context index
+    const storage = new JsonStorage();
+    await storage.init(targetDir);
+    await storage.rebuildIndex();
+    await storage.close();
+  }
+
   return {
     updated: true,
     filePath: sessionPath,
