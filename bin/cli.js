@@ -39,6 +39,13 @@ import { createPlan } from '../dist/lib/commands/create-plan.js';
 import { updatePlan } from '../dist/lib/commands/update-plan.js';
 import { mcpTest } from '../dist/lib/commands/mcp-test.js';
 import { loadPlugins } from '../dist/lib/plugins/loader.js';
+import { createKnowledgeSystemFiles } from '../dist/lib/commands/feature-setup/templates.js';
+import { askManualQuestions } from '../dist/lib/commands/feature-setup/prompts.js';
+import { displayProjectSummary, displayAIBootstrapPrompt } from '../dist/lib/commands/feature-setup/display.js';
+import { createLogger } from '../dist/lib/logger.js';
+
+import ora from 'ora';
+import path from 'path';
 
 // Get version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -60,6 +67,33 @@ program
   .name('aiknowsys')
   .description('AI-Powered Development Workflow for Consistent, High-Quality Code')
   .version(packageJson.version);
+
+program
+  .command('init')
+  .description('Initialize aiknowsys in a new or existing project (Database-First)')
+  .option('-d, --dir <directory>', 'Target directory', process.cwd())
+  .option('--skip-db', 'Skip database seeding (Phase 2)', false)
+  .action(async (options) => {
+    const targetDir = path.resolve(options.dir);
+    const log = createLogger();
+
+    log.header('AIKnowSys Initialization', '📦');
+
+    try {
+      const answers = await askManualQuestions(targetDir);
+
+      const spinner = ora('Creating knowledge system files...').start();
+      await createKnowledgeSystemFiles(targetDir, answers, 'minimal', { skipDb: options.skipDb });
+      spinner.succeed('Core files and database initialized');
+
+      displayProjectSummary(answers);
+      await displayAIBootstrapPrompt(answers.projectName, true, answers.useOpenSpec);
+
+    } catch (error) {
+      log.error(`Initialization failed: ${error.message}`);
+      process.exit(1);
+    }
+  });
 
 program
   .command('update')
@@ -326,7 +360,7 @@ program
     if (options.dryRun) {
       console.log(chalk.yellow('🔍 DRY RUN MODE'));
     }
-    
+
     console.log(chalk.green('✓'), 'Export complete');
     console.log(chalk.dim(`  Exported: ${result.exported}`));
     if (result.failed > 0) {

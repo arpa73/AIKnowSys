@@ -24,9 +24,10 @@ maintainer: false
 Use this skill when you need to:
 - Find current/active plans without reading CURRENT_PLAN.md
 - Search session history by date or topic
-- Query specific sections from CODEBASE_ESSENTIALS.md (chunked retrieval)
+- Query specific invariants and patterns via MCP
 - Search across all knowledge (plans, sessions, learned patterns)
 - **INSTEAD OF:** grep_search, semantic_search, reading multiple files sequentially
+
 
 **Performance benefit:** O(1) index lookup vs O(n) file reads
 
@@ -142,39 +143,15 @@ npx aiknowsys query-sessions --json
 
 ---
 
-### Query ESSENTIALS Section (Chunked Retrieval)
+### Query Invariants and Patterns (MCP Retrieval)
 
-```bash
-# Get specific section (saves 85% tokens)
-npx aiknowsys query-essentials-section "TypeScript Patterns" --json
+Use MCP tools as the primary method for context retrieval:
+- `mcp_aiknowsys_get_critical_invariants()`
+- `mcp_aiknowsys_find_pattern({ keywords: [...] })`
+- `mcp_aiknowsys_query_learned_patterns_sqlite({ about: "..." })`
 
-# Fuzzy match section name
-npx aiknowsys query-essentials-section "typescript" --json
+**Why use this:** Accesses the single source of truth in `.aiknowsys/knowledge.db`.
 
-# List all available sections
-npx aiknowsys list-essentials-sections --json
-```
-
-**JSON Output:**
-```json
-{
-  "section": "TypeScript Patterns",
-  "content": "### Build System\n\n**Commands:**\n...",
-  "lineRange": { "start": 270, "end": 360 },
-  "relatedSections": ["Testing Philosophy", "TDD Workflow"],
-  "file": "CODEBASE_ESSENTIALS.md"
-}
-```
-
-**Why use this:** ESSENTIALS.md is 803 lines. Loading one section = 100 lines (8x token savings).
-
-**Features:**
-- Fuzzy section name matching
-- Returns line numbers for file references
-- Suggests related sections
-- Falls back to full file if section not found
-
-**Note:** Command name is explicit (`query-essentials-section`) to clarify that it queries ONE section from ONE file (CODEBASE_ESSENTIALS.md), not multiple essentials files.
 
 ---
 
@@ -214,7 +191,7 @@ npx aiknowsys search-context "TypeScript" --limit 10 --json
 - `plans` - Only search plan files
 - `sessions` - Only search session history
 - `learned` - Only search learned patterns
-- `essentials` - Only search CODEBASE_ESSENTIALS.md
+
 
 **Ranking:**
 - Exact phrase match: 1.0
@@ -260,19 +237,19 @@ AI workflow:
 
 ---
 
-### Example 3: Load Specific ESSENTIALS Section
+### Example 3: Load Context Invariants
 
 ```
-AI needs: "How do we handle TypeScript imports?"
+AI needs: "What are the project's critical rules?"
 
 AI workflow:
-1. Run: npx aiknowsys query-essentials-section "TypeScript Patterns" --json
-2. Extract content from JSON (100 lines)
-3. Use content to answer question
+1. Call: mcp_aiknowsys_get_critical_invariants()
+2. Use content to inform planning and execution
 ```
 
-**Old workflow:** Load entire ESSENTIALS.md (803 lines), search manually  
-**New workflow:** Load only needed section (100 lines, 8x token savings)
+**Old workflow:** Load entire ESSENTIALS.md (800+ lines)  
+**New workflow:** Structured, instant invariant retrieval
+
 
 ---
 
@@ -306,10 +283,11 @@ Need session history?
   ├─ Topic research → query-sessions --topic "X"
   └─ Specific date → query-sessions --days 1 (if today)
 
-Need ESSENTIALS info?
-  ├─ Know section name → query-essentials-section "Section Name"
-  ├─ Don't know section → list-essentials-sections, then query-essentials-section
-  └─ Fuzzy search → query-essentials-section "typescript" (fuzzy match)
+Need context information?
+  ├─ Critical Invariants → mcp_get_critical_invariants
+  ├─ Project Patterns → mcp_find_pattern
+  └─ Search database → search-context --scope all
+
 
 Need to search everything?
   └─ search-context "query" --scope all
@@ -349,15 +327,7 @@ Valid statuses: ACTIVE, PAUSED, COMPLETE, CANCELLED
 ```
 
 ```bash
-# ESSENTIALS section not found
-❌ Section not found: "Invalid Section"
-
-Did you mean:
-  • TypeScript Patterns
-  • Testing Philosophy
-  • TDD Workflow
-
-💡 TIP: Run 'aiknowsys list-essentials-sections' to see all sections
+# ... removed legacy essentials troubleshooting ...
 ```
 
 ---
@@ -366,9 +336,9 @@ Did you mean:
 
 - **Use `--json` flag** for programmatic use (AI agents)
 - **Queries complete in <100ms** for <10k items
-- **Chunked retrieval** (query-essentials) saves 85% tokens
-- **Index rebuilds automatically** on git pull (team data)
-- **Personal patterns** never committed (privacy preserved)
+- **MCP-first retrieval** replaces legacy markdown scanning
+- **Index rebuilds automatically** on database changes or manual file edits
+
 
 ---
 

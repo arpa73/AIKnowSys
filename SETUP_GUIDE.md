@@ -11,8 +11,10 @@ AI-native onboarding is now conversational. Ask your AI assistant to initialize 
 
 After setup, you'll have workflow files including:
 - `AGENTS.md` - AI workflow and MCP-first instructions
-- `CODEBASE_CHANGELOG.md` - Session history (will grow over time)
+- `CODEBASE_CHANGELOG.md` - Milestone timeline
+- `.aiknowsys/knowledge.db` - SQLite database for project context
 - `.aiknowsys/` context files - plans, sessions, learned patterns
+
 
 **Two approaches to fill templates:**
 
@@ -30,15 +32,11 @@ All templates use `{{PLACEHOLDER}}` syntax for values you need to fill in.
 | Placeholder | Example Value | Where Used |
 |-------------|---------------|------------|
 | `{{PROJECT_NAME}}` | my-awesome-app | All templates |
-| `{{DATE}}` | January 25, 2026 | All templates |
-| `{{LANGUAGE}}` | TypeScript, Python | ESSENTIALS |
-| `{{FRAMEWORK}}` | Next.js 14, Django 5 | ESSENTIALS |
-| `{{VERSION}}` | Node 20.11.0, Python 3.12 | ESSENTIALS |
-| `{{TEST_FRAMEWORK}}` | Jest, pytest | ESSENTIALS |
-| `{{BUILD_TOOL}}` | Vite, webpack | ESSENTIALS |
-| `{{*_CMD}}` | npm test, pytest | ESSENTIALS |
-| `{{*_DESCRIPTION}}` | Your explanation | ESSENTIALS |
-| `{{*_EXAMPLE}}` | Real code snippets | ESSENTIALS |
+| `{{DATE}}` | February 21, 2026 | AGENTS, CHANGELOG |
+| `{{PROJECT_TYPE}}` | web-app, library | AGENTS |
+| `{{LANGUAGE}}` | TypeScript, Python | AGENTS |
+| `{{USE_TDD}}` | true, false | AGENTS |
+
 
 ### Placeholder Categories
 
@@ -104,8 +102,9 @@ Use this quick sequence after conversational onboarding completes:
 
 **Step 2: Verify Runtime Guidance**
 - Open `AGENTS.md`
-- Confirm session start protocol references MCP tools, not legacy ESSENTIALS workflow
-- Ensure team-specific trigger words and skills are up to date
+- Confirm session start protocol references MCP tools
+- Verify database connectivity: `mcp_aiknowsys_get_db_stats_sqlite()`
+
 
 **Step 3: Validate Deliverables**
 Run:
@@ -198,6 +197,16 @@ Ensure the "General Best Practices" section matches your project culture:
 - This file grows organically as you work
 - Add a new session entry after each coding session
 - See template for entry format
+
+---
+
+### Database-First Architecture
+
+Phase 2 of the Radica Init Simplification introduced a database-first approach:
+- **No more `CODEBASE_ESSENTIALS.md`** by default.
+- Rules and patterns are stored in `.aiknowsys/knowledge.db`.
+- Query context via MCP tools or CLI `query` commands.
+- Export to markdown only when needed for human review.
 
 ---
 

@@ -6,7 +6,7 @@
  * Template file paths - centralized for easy maintenance
  */
 export const TEMPLATE_PATHS = {
-  // Full ESSENTIALS template removed in Phase B; kept as alias for CLI backwards compatibility.
+  // DEPRECATED: Essential patterns are now seeded into SQLite database by default.
   ESSENTIALS_FULL: 'templates/CODEBASE_ESSENTIALS.minimal.template.md',
   ESSENTIALS_MINIMAL: 'templates/CODEBASE_ESSENTIALS.minimal.template.md',
   AGENTS: 'templates/AGENTS.template.md',
@@ -14,19 +14,19 @@ export const TEMPLATE_PATHS = {
   // Intentionally package-root (not templates/) for backwards compatibility with existing generated projects.
   // Build step must copy this file to dist/SETUP_GUIDE.md so getPackageDir()-relative resolution continues to work.
   SETUP_GUIDE: 'SETUP_GUIDE.md',
-  
+
   // Session persistence
   SESSIONS_README: 'templates/aiknowsys-structure/sessions/README.md',
   LEARNED_README: 'templates/aiknowsys-structure/learned/README.md',
   PERSONAL_README: 'templates/aiknowsys-structure/personal/README.md',
   PLAN_MANAGEMENT: 'templates/aiknowsys-structure/learned/plan-management.md',
   ESSENTIALS_COMPRESSION: 'templates/aiknowsys-structure/learned/essentials-compression.md',
-  
+
   // Multi-developer collaboration
   PLANS_README: 'templates/.aiknowsys/plans/README.template.md',
   ACTIVE_PLAN: 'templates/.aiknowsys/plans/active-username.template.md',
   REVIEWS_README: 'templates/.aiknowsys/reviews/README.template.md',
-  
+
   // TDD enforcement
   TDD_SKILL: 'templates/skills/tdd-workflow/SKILL.md',
   GIT_HOOK_PRE_COMMIT: 'templates/git-hooks/pre-commit',
@@ -34,7 +34,7 @@ export const TEMPLATE_PATHS = {
   INSTALL_HOOKS_SCRIPT: 'templates/scripts/install-git-hooks.cjs',  // Node.js version for cross-platform support
   INSTALL_HOOKS_SCRIPT_LEGACY: 'templates/scripts/install-git-hooks.sh',  // Bash fallback
   TDD_WORKFLOW: 'templates/workflows/tdd-compliance.yml',
-  
+
   // VSCode hooks
   VSCODE_HOOKS_JSON: 'templates/hooks/hooks.json',
   VSCODE_HOOKS_CONFIG: 'templates/hooks/config.json',
@@ -50,7 +50,7 @@ export const TEMPLATE_PATHS = {
   VSCODE_DOC_SYNC: 'templates/hooks/doc-sync.cjs',
   VSCODE_MIGRATION_CHECK: 'templates/hooks/migration-check.cjs',
   VSCODE_PERFORMANCE_MONITOR: 'templates/hooks/performance-monitor.cjs',
-  
+
   // Git collaboration hooks (Phase 3)
   GIT_HOOK_LEARNED_REMINDER: 'templates/hooks/learned-reminder.cjs',
   GIT_HOOK_PLAN_REMINDER: 'templates/hooks/plan-reminder.cjs',

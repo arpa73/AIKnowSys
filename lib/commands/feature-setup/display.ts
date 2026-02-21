@@ -11,15 +11,15 @@ import type { ProjectAnswers } from './prompts.js';
  */
 export function buildValidationMatrix(answers: ProjectAnswers): string {
   const rows: string[] = [];
-  
+
   // Test command
   if (answers.testFramework && answers.testFramework !== 'none') {
-    const testCmd = answers.packageManager === 'bun' 
+    const testCmd = answers.packageManager === 'bun'
       ? 'bun test'
       : `${answers.packageManager} test`;
     rows.push(`| Tests | \`${testCmd}\` | Before commit |`);
   }
-  
+
   // Lint command
   if (answers.linter && answers.linter !== 'none') {
     const lintCmd = answers.packageManager === 'bun'
@@ -27,7 +27,7 @@ export function buildValidationMatrix(answers: ProjectAnswers): string {
       : `${answers.packageManager} run lint`;
     rows.push(`| Linting | \`${lintCmd}\` | Before commit |`);
   }
-  
+
   // Type check (for TypeScript)
   if (answers.language === 'typescript') {
     const typeCmd = answers.packageManager === 'bun'
@@ -35,7 +35,7 @@ export function buildValidationMatrix(answers: ProjectAnswers): string {
       : `${answers.packageManager} run type-check`;
     rows.push(`| Type Check | \`${typeCmd}\` | Before commit |`);
   }
-  
+
   // Build command (for frontend/web-app)
   if ((answers.projectType === 'frontend' || answers.projectType === 'web-app') && answers.buildTool && answers.buildTool !== 'none') {
     const buildCmd = answers.packageManager === 'bun'
@@ -43,12 +43,12 @@ export function buildValidationMatrix(answers: ProjectAnswers): string {
       : `${answers.packageManager} run build`;
     rows.push(`| Build | \`${buildCmd}\` | Before push |`);
   }
-  
+
   // Default fallback
   if (rows.length === 0) {
     rows.push(`| Any file | \`${answers.packageManager || 'npm'} test\` (or equivalent) | Before commit |`);
   }
-  
+
   return rows.join('\n');
 }
 
@@ -57,7 +57,7 @@ export function buildValidationMatrix(answers: ProjectAnswers): string {
  */
 export function displayProjectSummary(answers: ProjectAnswers): void {
   const log = createLogger(false);
-  
+
   log.blank();
   log.section('Summary', '📋');
   log.white(`   Project: ${answers.projectName}`);
@@ -80,7 +80,7 @@ export function displayProjectSummary(answers: ProjectAnswers): void {
  */
 export async function displayAIBootstrapPrompt(projectName: string, hasCode: boolean, useOpenSpec = false): Promise<void> {
   const log = createLogger(false);
-  
+
   log.blank();
   log.header('AI-Guided Project Bootstrap', '🤖');
   log.blank();
@@ -89,77 +89,78 @@ export async function displayAIBootstrapPrompt(projectName: string, hasCode: boo
   log.log('\x1b[33m\x1b[1m👉 COPY AND PASTE THIS PROMPT TO YOUR AI ASSISTANT:\x1b[0m');
   log.dim('   (GitHub Copilot Chat, Claude Desktop, ChatGPT, Cursor, etc.).');
   log.blank();
-  
-  const openspecNote = useOpenSpec 
-    ? '\n   📋 Note: This project uses OpenSpec for spec-driven development\n' 
+
+  const openspecNote = useOpenSpec
+    ? '\n   📋 Note: This project uses OpenSpec for spec-driven development\n'
     : '';
-  
-  const promptLines = hasCode 
+
+  const promptLines = hasCode
     ? [
-        `"I just initialized aiknowsys in my project: ${projectName}`,
-        openspecNote,
-        'Please help me set up the knowledge system:',
-        '',
-        '1. Read CODEBASE_ESSENTIALS.md, AGENTS.md, and CODEBASE_CHANGELOG.md',
-        '2. Scan my existing project structure',
-        '3. Complete all TODO sections based on what you find:',
-        '   - Technology Snapshot (all frameworks, tools, versions)',
-        '   - Validation Matrix (test commands, linting, build)',
-        '   - Core Patterns (how I structure code, conventions)',
-        '   - Critical Invariants (rules that must never be violated)',
-        '   - Common Gotchas (things that trip up developers)',
-        '',
-        '4. IMPORTANT - Preserve template structure:',
-        '   ⚠️ DO NOT change section headings (e.g., keep "Testing Patterns" as-is)',
-        '   ⚠️ Replace {{PLACEHOLDERS}} with REAL values from my code, not generic text',
-        '   ⚠️ Use actual commands, file paths, and code examples from my project',
-        '',
-        '5. Make everything specific to MY codebase, not generic',
-        useOpenSpec ? '\n6. Note: Use "openspec create <feature-name>" before implementing new features' : '',
-        '',
-        'Start by reading the files and scanning the project."'
-      ].filter(Boolean)
+      `"I just initialized aiknowsys in my project: ${projectName}`,
+      openspecNote,
+      'Please help me set up the knowledge system:',
+      '',
+      '1. Verify database connection:',
+      '   - Call mcp_aiknowsys_get_critical_invariants()',
+      '   - Ensure 8 base rules are loaded',
+      '',
+      '2. Read AGENTS.md and CODEBASE_CHANGELOG.md',
+      '3. Scan my existing project structure',
+      '4. Document project-specific context via MCP:',
+      '   - Capture Technology Snapshot (tools, versions)',
+      '   - Define Validation Matrix (test commands)',
+      '   - Capture Core Patterns (conventions)',
+      '   - Add project-specific Invariants (unique rules)',
+      '',
+      '4. IMPORTANT - Preserve template structure:',
+      '   ⚠️ DO NOT change section headings (e.g., keep "Testing Patterns" as-is)',
+      '   ⚠️ Replace {{PLACEHOLDERS}} with REAL values from my code, not generic text',
+      '   ⚠️ Use actual commands, file paths, and code examples from my project',
+      '',
+      '5. Make everything specific to MY codebase, not generic',
+      useOpenSpec ? '\n6. Note: Use "openspec create <feature-name>" before implementing new features' : '',
+      '',
+      'Start by reading the files and scanning the project."'
+    ].filter(Boolean)
     : [
-        `"I just initialized aiknowsys for a new project: ${projectName}`,
-        openspecNote,
-        'My project directory is currently empty. Please help me SET UP THE KNOWLEDGE SYSTEM:',
-        '',
-        '🎯 YOUR GOAL: Help me fill in the knowledge system templates, NOT build the full project.',
-        '',
-        '📋 WORKFLOW (3 phases - stop after each):',
-        '',
-        '1️⃣ PHASE 1 OF 3 - DISCUSS: Let\'s design the project (THEN STOP AND WAIT)',
-        '   - What am I building? (ask me)',
-        '   - What technologies should I use? (discuss options)',
-        '   - What should the project structure look like?',
-        '   - What are the key architecture decisions?',
-        '   ⏸️  STOP HERE - Show me the design and wait for my approval',
-        '',
-        '2️⃣ PHASE 2 OF 3 - DOCUMENT: Fill in the knowledge system templates (THEN STOP AND WAIT)',
-        '   - Read CODEBASE_ESSENTIALS.md, AGENTS.md, CODEBASE_CHANGELOG.md',
-        '   - Fill in Technology Snapshot with our tech choices',
-        '   - Document Core Patterns and conventions we agreed on',
-        '   - Define Validation Matrix (how to test/build)',
-        '   - Add Critical Invariants (rules we must follow)',
-        '   - Create first CODEBASE_CHANGELOG.md entry for this session',
-        '   ⚠️ PRESERVE section headings exactly - don\'t rename "Testing Patterns" etc.',
-        '   ⚠️ Replace {{PLACEHOLDERS}} with actual values, not generic placeholders',
-        '   ⏸️  STOP HERE - Show me what you filled in and wait for my approval',
-        '',
-        '3️⃣ PHASE 3 OF 3 - DONE: Knowledge system is ready!',
-        '   - I can now build the project myself OR ask you to help in a separate session',
-        '   - The knowledge system will guide all future development',
-        useOpenSpec ? '   - Remember: Create specs with "openspec create" before coding new features' : '',
-        '',
-        '🚫 DO NOT build the full codebase in this session!',
-        '🚫 DO NOT create package.json, source files, or "Hello World"!',
-        '✅ ONLY fill in the knowledge system documentation!',
-        '',
-        'Let\'s start with Phase 1: Discussing what I want to build."'
-      ].filter(Boolean);
-  
+      `"I just initialized aiknowsys for a new project: ${projectName}`,
+      openspecNote,
+      'My project directory is currently empty. Please help me SET UP THE KNOWLEDGE SYSTEM:',
+      '',
+      '🎯 YOUR GOAL: Help me fill in the knowledge system templates, NOT build the full project.',
+      '',
+      '📋 WORKFLOW (3 phases - stop after each):',
+      '',
+      '1️⃣ PHASE 1 OF 3 - DISCUSS: Let\'s design the project (THEN STOP AND WAIT)',
+      '   - What am I building? (ask me)',
+      '   - What technologies should I use? (discuss options)',
+      '   - What should the project structure look like?',
+      '   - What are the key architecture decisions?',
+      '   ⏸️  STOP HERE - Show me the design and wait for my approval',
+      '',
+      '2️⃣ PHASE 2 OF 3 - SEED: Seed the knowledge system (THEN STOP AND WAIT)',
+      '   - Call mcp_aiknowsys_get_critical_invariants() to confirm base rules',
+      '   - Seed Technology Snapshot and Core Patterns agreement into DB',
+      '   - Define Validation Matrix via mcp_aiknowsys_get_validation_matrix()',
+      '   - Create first session log via mcp_aiknowsys_create_session()',
+      '   ⚠️ PRESERVE section headings exactly - don\'t rename "Testing Patterns" etc.',
+      '   ⚠️ Replace {{PLACEHOLDERS}} with actual values, not generic placeholders',
+      '   ⏸️  STOP HERE - Show me what you filled in and wait for my approval',
+      '',
+      '3️⃣ PHASE 3 OF 3 - DONE: Knowledge system is ready!',
+      '   - I can now build the project myself OR ask you to help in a separate session',
+      '   - The knowledge system will guide all future development',
+      useOpenSpec ? '   - Remember: Create specs with "openspec create" before coding new features' : '',
+      '',
+      '🚫 DO NOT build the full codebase in this session!',
+      '🚫 DO NOT create package.json, source files, or "Hello World"!',
+      '✅ ONLY fill in the knowledge system documentation!',
+      '',
+      'Let\'s start with Phase 1: Discussing what I want to build."'
+    ].filter(Boolean);
+
   await displayAIPrompt(log, promptLines);
-  
+
   log.blank();
   log.cyan('💡 What happens next:');
   if (hasCode) {
@@ -183,18 +184,19 @@ export async function displayAIBootstrapPrompt(projectName: string, hasCode: boo
  */
 export function displayManualSetupInstructions(): void {
   const log = createLogger(false);
-  
+
   log.blank();
   log.header('Manual Setup', '📖');
   log.blank();
   log.white('No problem! Complete these steps manually:');
   log.blank();
-  log.white('   1. Open CODEBASE_ESSENTIALS.md');
-  log.white('   2. Fill in TODO sections:');
-  log.dim('      • Technology Snapshot');
-  log.dim('      • Validation Matrix');
-  log.dim('      • Core Patterns');
-  log.dim('      • Architecture Decisions');
+  log.white('   1. Verify database availability:');
+  log.dim('      • Run: npx aiknowsys mcp-test get_critical_invariants');
+  log.white('   2. Configure project context via CLI or MCP:');
+  log.dim('      • Technology stack');
+  log.dim('      • Validation matrix');
+  log.dim('      • Core patterns');
+  log.dim('      • Project-specific invariants');
   log.blank();
   log.white('   3. Customize AGENTS.md validation matrix');
   log.blank();

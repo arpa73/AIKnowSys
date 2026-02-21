@@ -12,6 +12,17 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TEXT NOT NULL       -- ISO 8601 timestamp
 );
 
+-- Project Invariants (Critical rules for AI agents)
+CREATE TABLE IF NOT EXISTS invariants (
+  id TEXT PRIMARY KEY,
+  number INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  rule TEXT NOT NULL,
+  details TEXT NOT NULL, -- JSON string array
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 -- Plans (implementation plans, can span multiple projects)
 CREATE TABLE IF NOT EXISTS plans (
   id TEXT PRIMARY KEY,           -- Plan identifier (e.g., PLAN_auth_jwt)
@@ -140,6 +151,12 @@ CREATE VIRTUAL TABLE IF NOT EXISTS patterns_fts USING fts5(
   content
 );
 
+CREATE VIRTUAL TABLE IF NOT EXISTS invariants_fts USING fts5(
+  id UNINDEXED,
+  name,
+  rule
+);
+
 -- Triggers to keep FTS indices in sync
 -- Note: Self-managed FTS (not using content= tables) to avoid SQLITE_CORRUPT_VTAB errors
 CREATE TRIGGER IF NOT EXISTS plans_ai AFTER INSERT ON plans BEGIN
@@ -179,6 +196,19 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_au AFTER UPDATE ON patterns BEGIN
   UPDATE patterns_fts SET title = new.title, content = new.content WHERE pattern_id = old.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS invariants_ai AFTER INSERT ON invariants BEGIN
+  INSERT INTO invariants_fts (id, name, rule)
+  VALUES (new.id, new.name, new.rule);
+END;
+
+CREATE TRIGGER IF NOT EXISTS invariants_ad AFTER DELETE ON invariants BEGIN
+  DELETE FROM invariants_fts WHERE id = old.id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS invariants_au AFTER UPDATE ON invariants BEGIN
+  UPDATE invariants_fts SET name = new.name, rule = new.rule WHERE id = old.id;
 END;
 
 -- Reviews (Code/Plan reviews)

@@ -51,9 +51,9 @@ Look for guides in:
 - `docs/guides/` - Developer guides and workflows
 - `docs/planning/` - Planning documents and decision records
 - `docs/patterns/` - Reusable patterns and best practices
-- `CODEBASE_ESSENTIALS.md` - Core patterns and invariants
 - `CONTRIBUTING.md` - Contribution guidelines
 - Project root `.md` files - Key documentation
+
 
 ### Step 2: Extract Key Information
 

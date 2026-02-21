@@ -18,14 +18,15 @@ import type {
   SearchResult,
   PlanFilters,
   SessionFilters,
-  SearchScope
+  SearchScope,
+  Invariant
 } from './types.js';
-import type { 
-  KnowledgeEvent, 
-  EventFilters, 
+import type {
+  KnowledgeEvent,
+  EventFilters,
   EventData,
-  SemanticSearchOptions, 
-  SemanticSearchResult 
+  SemanticSearchOptions,
+  SemanticSearchResult
 } from '../events/types.js';
 import { EventType } from '../events/types.js';
 import { MarkdownGenerator } from '../events/markdown-generator.js';
@@ -163,7 +164,7 @@ export class SqliteStorage extends StorageAdapter {
    * Can be made configurable in future versions
    */
   private static readonly MAX_SEARCH_RESULTS = 50;
-  
+
   private db: Database.Database | null = null;
 
   /**
@@ -176,7 +177,7 @@ export class SqliteStorage extends StorageAdapter {
   async init(targetDir: string): Promise<void> {
     // Validate and resolve user-provided path (Critical Invariant #2)
     const resolvedPath = path.resolve(targetDir);
-    
+
     // Determine if this is a database file path or a directory
     let dbPath: string;
     if (resolvedPath.endsWith('.db') || resolvedPath.endsWith('.sqlite')) {
@@ -188,18 +189,18 @@ export class SqliteStorage extends StorageAdapter {
       await fs.mkdir(aiknowsysDir, { recursive: true });
       dbPath = path.join(aiknowsysDir, 'knowledge.db');
     }
-    
+
     // Ensure database directory exists
     const dbDir = path.dirname(dbPath);
     await fs.mkdir(dbDir, { recursive: true });
-    
+
     try {
       // Open/create database
       this.db = new Database(dbPath);
-      
+
       // Enable foreign keys
       this.db.pragma('foreign_keys = ON');
-      
+
       // Initialize schema
       await this.initSchema();
     } catch (error) {
@@ -212,15 +213,15 @@ export class SqliteStorage extends StorageAdapter {
     if (!this.db) {
       throw new Error('Database connection failed. Unable to initialize schema.');
     }
-    
+
     // Read schema.sql and execute
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const schemaPath = path.join(__dirname, 'schema.sql');
     const schema = await fs.readFile(schemaPath, 'utf-8');
-    
+
     // Execute schema (multiple statements)
     this.db.exec(schema);
-    
+
     // Migration: Add embedding column if it doesn't exist (Phase 2.4)
     // Check if embedding column exists
     const tableInfo = this.db.pragma('table_info(knowledge_events)') as Array<{
@@ -231,9 +232,9 @@ export class SqliteStorage extends StorageAdapter {
       dflt_value: unknown;
       pk: number;
     }>;
-    
+
     const hasEmbeddingColumn = tableInfo.some(col => col.name === 'embedding');
-    
+
     if (!hasEmbeddingColumn) {
       // Add embedding column to existing database
       this.db.exec('ALTER TABLE knowledge_events ADD COLUMN embedding BLOB;');
@@ -253,10 +254,10 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     let query = 'SELECT * FROM plans WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       // Phase 1: Cross-Repository support
       // If allProjects is NOT set (default behavior), filter by projectId
@@ -268,41 +269,41 @@ export class SqliteStorage extends StorageAdapter {
           params.push(filters.projectId);
         }
       }
-      
+
       if (filters.status) {
         query += ' AND status = ?';
         params.push(filters.status);
       }
-      
+
       if (filters.author) {
         query += ' AND author = ?';
         params.push(filters.author);
       }
-      
+
       if (filters.topic) {
         query += ' AND (title LIKE ? OR json_each.value LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
         // Join with json_each for topics array search
-        query = query.replace('FROM plans WHERE', 
+        query = query.replace('FROM plans WHERE',
           'FROM plans LEFT JOIN json_each(plans.topics) WHERE');
       }
-      
+
       if (filters.updatedAfter) {
         query += ' AND updated_at > ?';
         params.push(filters.updatedAfter);
       }
-      
+
       if (filters.updatedBefore) {
         query += ' AND updated_at < ?';
         params.push(filters.updatedBefore);
       }
     }
-    
+
     query += ' ORDER BY updated_at DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as PlanRow[];
-    
+
     const plans: PlanMetadata[] = rows.map(row => ({
       id: row.id,
       projectId: row.project_id,
@@ -315,7 +316,7 @@ export class SqliteStorage extends StorageAdapter {
       description: row.description || undefined,
       file: `PLAN_${row.id}.md` // Virtual file path for compatibility
     }));
-    
+
     return {
       count: plans.length,
       plans
@@ -335,10 +336,10 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     let query = 'SELECT * FROM sessions WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       // Phase 1: Cross-Repository support
       // If allProjects is NOT set (default behavior), filter by projectId
@@ -350,47 +351,47 @@ export class SqliteStorage extends StorageAdapter {
           params.push(filters.projectId);
         }
       }
-      
+
       if (filters.date) {
         query += ' AND date = ?';
         params.push(filters.date);
       }
-      
+
       if (filters.dateAfter) {
         query += ' AND date >= ?';
         params.push(filters.dateAfter);
       }
-      
+
       if (filters.dateBefore) {
         query += ' AND date <= ?';
         params.push(filters.dateBefore);
       }
-      
+
       if (filters.days) {
         const daysAgo = new Date();
         daysAgo.setDate(daysAgo.getDate() - filters.days);
         query += ' AND date >= ?';
         params.push(daysAgo.toISOString().split('T')[0]); // YYYY-MM-DD
       }
-      
+
       if (filters.topic) {
         query += ' AND (topic LIKE ? OR json_each.value LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
         query = query.replace('FROM sessions WHERE',
           'FROM sessions LEFT JOIN json_each(sessions.topics) WHERE');
       }
-      
+
       if (filters.plan) {
         query += ' AND plan_id = ?';
         params.push(filters.plan);
       }
     }
-    
+
     query += ' ORDER BY date DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as SessionRow[];
-    
+
     const sessions: SessionMetadata[] = rows.map(row => {
       const session: SessionMetadata = {
         id: row.id, // Phase 1: Include session ID for cross-repository support
@@ -402,15 +403,15 @@ export class SqliteStorage extends StorageAdapter {
         created: row.created_at,
         updated: row.updated_at
       };
-      
+
       // Add optional fields only if present
       if (row.plan_id) session.plan = row.plan_id;
       if (row.duration) session.duration = row.duration;
       if (row.phases) session.phases = JSON.parse(row.phases);
-      
+
       return session;
     });
-    
+
     return {
       count: sessions.length,
       sessions
@@ -443,16 +444,16 @@ export class SqliteStorage extends StorageAdapter {
       JOIN ${sourceTable} ${tableAlias} ON ${tableAlias}.rowid = ${ftsTableName}.rowid
       WHERE ${ftsTableName} MATCH ?
     `;
-    
+
     const params = [ftsQuery];
-    
+
     if (filterByProject && projectId) {
       sql += ` AND ${tableAlias}.project_id = ?`;
       params.push(projectId);
     }
-    
+
     sql += ` LIMIT ${SqliteStorage.MAX_SEARCH_RESULTS}`;
-    
+
     return { sql, params };
   }
 
@@ -464,7 +465,7 @@ export class SqliteStorage extends StorageAdapter {
    * @throws Error if database not initialized
    */
   async search(
-    query: string, 
+    query: string,
     scope: SearchScope,
     options?: { projectId?: string; allProjects?: boolean }
   ): Promise<{ query: string; count: number; results: SearchResult[] }> {
@@ -474,16 +475,16 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     const results: SearchResult[] = [];
-    
+
     // Prepare query for FTS5 - wrap in quotes for phrase search to avoid syntax errors
     const ftsQuery = `"${query.replace(/"/g, '""')}"`;
-    
+
     // Determine if we need project filtering
     const filterByProject = !options?.allProjects;
     const projectId = options?.projectId; // Use projectId from options (passed by caller)
-    
+
     // Search in plans if scope includes them
     if (scope === 'all' || scope === 'plans') {
       const { sql: planQuery, params: planParams } = this.buildFtsQuery(
@@ -495,14 +496,14 @@ export class SqliteStorage extends StorageAdapter {
         filterByProject,
         projectId
       );
-      
+
       const stmt = this.db.prepare(planQuery);
       const rows = stmt.all(...planParams) as SearchRow[];
-      
+
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
         const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : (row.title || '');
-        
+
         results.push({
           file: `PLAN_${row.plan_id}.md`,
           line: 1, // SQLite FTS doesn't track line numbers
@@ -514,7 +515,7 @@ export class SqliteStorage extends StorageAdapter {
         });
       }
     }
-    
+
     // Search in sessions if scope includes them
     if (scope === 'all' || scope === 'sessions') {
       const { sql: sessionQuery, params: sessionParams } = this.buildFtsQuery(
@@ -526,14 +527,14 @@ export class SqliteStorage extends StorageAdapter {
         filterByProject,
         projectId
       );
-      
+
       const stmt = this.db.prepare(sessionQuery);
       const rows = stmt.all(...sessionParams) as SearchRow[];
-      
+
       for (const row of rows) {
         // Extract snippet from content (first 100 chars)
         const contextSnippet = row.content ? row.content.substring(0, 100).replace(/\n/g, ' ') : (row.topic || '');
-        
+
         results.push({
           file: `sessions/${row.session_id}.md`,
           line: 1,
@@ -545,7 +546,7 @@ export class SqliteStorage extends StorageAdapter {
         });
       }
     }
-    
+
     return {
       query,
       count: results.length,
@@ -566,13 +567,13 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // SQLite FTS indices are automatically maintained by triggers
     // This method returns current counts
     const plansCount = this.db.prepare('SELECT COUNT(*) as count FROM plans').get() as { count: number };
     const sessionsCount = this.db.prepare('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
     const patternsCount = this.db.prepare('SELECT COUNT(*) as count FROM patterns').get() as { count: number };
-    
+
     return {
       plansIndexed: plansCount.count,
       sessionsIndexed: sessionsCount.count,
@@ -594,57 +595,57 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     let query = 'SELECT * FROM plans WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.idStartsWith) {
         query += ' AND id LIKE ?';
         params.push(`${filters.idStartsWith}%`);
       }
-      
+
       if (filters.contentContains) {
         query += ' AND (content LIKE ? OR title LIKE ?)';
         params.push(`%${filters.contentContains}%`, `%${filters.contentContains}%`);
       }
-      
+
       if (filters.status) {
         query += ' AND status = ?';
         params.push(filters.status);
       }
-      
+
       if (filters.author) {
         query += ' AND author = ?';
         params.push(filters.author);
       }
-      
+
       if (filters.topic) {
         query += ' AND (title LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.priority) {
         query += ' AND priority = ?';
         params.push(filters.priority);
       }
-      
+
       if (filters.updatedAfter) {
         query += ' AND updated_at > ?';
         params.push(filters.updatedAfter);
       }
-      
+
       if (filters.updatedBefore) {
         query += ' AND updated_at < ?';
         params.push(filters.updatedBefore);
       }
     }
-    
+
     query += ' ORDER BY updated_at DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as PlanRow[];
-    
+
     return {
       count: rows.length,
       plans: rows
@@ -665,10 +666,10 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     let query = 'SELECT * FROM sessions WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.id) {
         query += ' AND id = ?';
@@ -679,50 +680,50 @@ export class SqliteStorage extends StorageAdapter {
         query += ' AND (content LIKE ? OR topic LIKE ?)';
         params.push(`%${filters.contentContains}%`, `%${filters.contentContains}%`);
       }
-      
+
       if (filters.date) {
         query += ' AND date = ?';
         params.push(filters.date);
       }
-      
+
       if (filters.dateAfter) {
         query += ' AND date >= ?';
         params.push(filters.dateAfter);
       }
-      
+
       if (filters.dateBefore) {
         query += ' AND date <= ?';
         params.push(filters.dateBefore);
       }
-      
+
       if (filters.days) {
         const daysAgo = new Date();
         daysAgo.setDate(daysAgo.getDate() - filters.days);
         query += ' AND date >= ?';
         params.push(daysAgo.toISOString().split('T')[0]);
       }
-      
+
       if (filters.topic) {
         query += ' AND (topic LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.plan) {
         query += ' AND plan_id = ?';
         params.push(filters.plan);
       }
-      
+
       if (filters.status) {
         query += ' AND status = ?';
         params.push(filters.status);
       }
     }
-    
+
     query += ' ORDER BY date DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as SessionRow[];
-    
+
     return {
       count: rows.length,
       sessions: rows
@@ -785,39 +786,39 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, date, topic, status, plan_id, duration, topics, phases, created_at, updated_at FROM sessions WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.date) {
         query += ' AND date = ?';
         params.push(filters.date);
       }
-      
+
       if (filters.dateAfter) {
         query += ' AND date >= ?';
         params.push(filters.dateAfter);
       }
-      
+
       if (filters.dateBefore) {
         query += ' AND date <= ?';
         params.push(filters.dateBefore);
       }
-      
+
       if (filters.days) {
         const daysAgo = new Date();
         daysAgo.setDate(daysAgo.getDate() - filters.days);
         query += ' AND date >= ?';
         params.push(daysAgo.toISOString().split('T')[0]);
       }
-      
+
       if (filters.topic) {
         query += ' AND (topic LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.plan) {
         query += ' AND plan_id = ?';
         params.push(filters.plan);
@@ -829,12 +830,12 @@ export class SqliteStorage extends StorageAdapter {
         params.push(filters.status);
       }
     }
-    
+
     query += ' ORDER BY date DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as SessionRow[];
-    
+
     // Map to camelCase for consistency with querySessions()
     const sessions: SessionMetadataRecord[] = rows.map(row => ({
       id: row.id,
@@ -849,7 +850,7 @@ export class SqliteStorage extends StorageAdapter {
       createdAt: row.created_at,
       updatedAt: row.updated_at
     }));
-    
+
     return {
       count: sessions.length,
       items: sessions,
@@ -871,53 +872,53 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // Select everything EXCEPT content column
     let query = 'SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE 1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.idStartsWith) {
         query += ' AND id LIKE ?';
         params.push(`${filters.idStartsWith}%`);
       }
-      
+
       if (filters.status) {
         query += ' AND status = ?';
         params.push(filters.status);
       }
-      
+
       if (filters.author) {
         query += ' AND author = ?';
         params.push(filters.author);
       }
-      
+
       if (filters.topic) {
         query += ' AND (title LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.priority) {
         query += ' AND priority = ?';
         params.push(filters.priority);
       }
-      
+
       if (filters.updatedAfter) {
         query += ' AND updated_at > ?';
         params.push(filters.updatedAfter);
       }
-      
+
       if (filters.updatedBefore) {
         query += ' AND updated_at < ?';
         params.push(filters.updatedBefore);
       }
     }
-    
+
     query += ' ORDER BY updated_at DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as PlanRow[];
-    
+
     // Map to camelCase for consistency with queryPlans()
     const plans: PlanMetadataRecord[] = rows.map(row => ({
       id: row.id,
@@ -932,7 +933,7 @@ export class SqliteStorage extends StorageAdapter {
       priority: row.priority,
       type: row.type
     }));
-    
+
     return {
       count: plans.length,
       items: plans,
@@ -954,33 +955,33 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // Build WHERE clause for filters
     let whereClause = '1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.dateAfter) {
         whereClause += ' AND date >= ?';
         params.push(filters.dateAfter);
       }
-      
+
       if (filters.dateBefore) {
         whereClause += ' AND date <= ?';
         params.push(filters.dateBefore);
       }
-      
+
       if (filters.topic) {
         whereClause += ' AND (topic LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.status) {
         whereClause += ' AND status = ?';
         params.push(filters.status);
       }
     }
-    
+
     // Get aggregate stats
     const statsQuery = `
       SELECT 
@@ -990,9 +991,9 @@ export class SqliteStorage extends StorageAdapter {
       FROM sessions 
       WHERE ${whereClause}
     `;
-    
+
     const stats = this.db.prepare(statsQuery).get(...params) as { total: number; earliest: string | null; latest: string | null };
-    
+
     // Get status counts
     const statusQuery = `
       SELECT status, COUNT(*) as count
@@ -1000,19 +1001,19 @@ export class SqliteStorage extends StorageAdapter {
       WHERE ${whereClause}
       GROUP BY status
     `;
-    
+
     const statusRows = this.db.prepare(statusQuery).all(...params) as Array<{ status: string; count: number }>;
-    
+
     // Get unique topics (aggregate from JSON arrays)
     const topicsQuery = `
       SELECT DISTINCT topics
       FROM sessions
       WHERE ${whereClause} AND topics IS NOT NULL
     `;
-    
+
     const topicsRows = this.db.prepare(topicsQuery).all(...params) as Array<{ topics: string }>;
     const uniqueTopics = new Set<string>();
-    
+
     for (const row of topicsRows) {
       try {
         const topics = JSON.parse(row.topics);
@@ -1023,7 +1024,7 @@ export class SqliteStorage extends StorageAdapter {
         // Skip invalid JSON
       }
     }
-    
+
     // Get session previews (lightweight)
     const previewQuery = `
       SELECT date, topic as title, status, topics
@@ -1032,21 +1033,21 @@ export class SqliteStorage extends StorageAdapter {
       ORDER BY date DESC
       LIMIT ${QUERY_LIMITS.PREVIEW_SESSION_LIMIT}
     `;
-    
-    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{ 
-      date: string; 
-      title: string; 
-      status: string; 
+
+    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{
+      date: string;
+      title: string;
+      status: string;
       topics: string | null;
     }>;
-    
+
     const sessions = previewRows.map(row => ({
       date: row.date,
       title: row.title,
       topics_count: row.topics ? JSON.parse(row.topics).length : 0,
       status: row.status
     }));
-    
+
     return {
       count: stats.total,
       earliest: stats.earliest || undefined,
@@ -1071,33 +1072,33 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // Build WHERE clause for filters
     let whereClause = '1=1';
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.status) {
         whereClause += ' AND status = ?';
         params.push(filters.status);
       }
-      
+
       if (filters.author) {
         whereClause += ' AND author = ?';
         params.push(filters.author);
       }
-      
+
       if (filters.topic) {
         whereClause += ' AND (title LIKE ? OR topics LIKE ?)';
         params.push(`%${filters.topic}%`, `%${filters.topic}%`);
       }
-      
+
       if (filters.priority) {
         whereClause += ' AND priority = ?';
         params.push(filters.priority);
       }
     }
-    
+
     // Get aggregate stats
     const statsQuery = `
       SELECT 
@@ -1107,13 +1108,13 @@ export class SqliteStorage extends StorageAdapter {
       FROM plans 
       WHERE ${whereClause}
     `;
-    
-    const stats = this.db.prepare(statsQuery).get(...params) as { 
-      total: number; 
-      earliest_created: string | null; 
+
+    const stats = this.db.prepare(statsQuery).get(...params) as {
+      total: number;
+      earliest_created: string | null;
       latest_updated: string | null;
     };
-    
+
     // Get status counts
     const statusQuery = `
       SELECT status, COUNT(*) as count
@@ -1121,19 +1122,19 @@ export class SqliteStorage extends StorageAdapter {
       WHERE ${whereClause}
       GROUP BY status
     `;
-    
+
     const statusRows = this.db.prepare(statusQuery).all(...params) as Array<{ status: string; count: number }>;
-    
+
     // Get unique topics
     const topicsQuery = `
       SELECT DISTINCT topics
       FROM plans
       WHERE ${whereClause} AND topics IS NOT NULL
     `;
-    
+
     const topicsRows = this.db.prepare(topicsQuery).all(...params) as Array<{ topics: string }>;
     const uniqueTopics = new Set<string>();
-    
+
     for (const row of topicsRows) {
       try {
         const topics = JSON.parse(row.topics);
@@ -1144,7 +1145,7 @@ export class SqliteStorage extends StorageAdapter {
         // Skip invalid JSON
       }
     }
-    
+
     // Get plan previews (lightweight)
     const previewQuery = `
       SELECT id, title, status, created_at, topics
@@ -1153,15 +1154,15 @@ export class SqliteStorage extends StorageAdapter {
       ORDER BY updated_at DESC
       LIMIT ${QUERY_LIMITS.PREVIEW_PLAN_LIMIT}
     `;
-    
-    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{ 
-      id: string; 
-      title: string; 
+
+    const previewRows = this.db.prepare(previewQuery).all(...params) as Array<{
+      id: string;
+      title: string;
       status: string;
       created_at: string;
       topics: string | null;
     }>;
-    
+
     const plans = previewRows.map(row => ({
       id: row.id,
       title: row.title,
@@ -1169,7 +1170,7 @@ export class SqliteStorage extends StorageAdapter {
       topics_count: row.topics ? JSON.parse(row.topics).length : 0,
       created_at: row.created_at
     }));
-    
+
     return {
       count: stats.total,
       earliestCreated: stats.earliest_created || undefined,
@@ -1194,17 +1195,17 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     // Select everything EXCEPT content column, filter to learned patterns only
     let query = "SELECT id, project_id, title, status, author, created_at, updated_at, topics, description, priority, type FROM plans WHERE id LIKE 'learned_%'";
     const params: SqliteValue[] = [];
-    
+
     if (filters) {
       if (filters.category) {
         query += ' AND type = ?';
         params.push(filters.category);
       }
-      
+
       if (filters.keywords && filters.keywords.length > 0) {
         query += ' AND (';
         const keywordConditions = filters.keywords.map(() => 'topics LIKE ?').join(' OR ');
@@ -1212,9 +1213,9 @@ export class SqliteStorage extends StorageAdapter {
         filters.keywords.forEach(keyword => params.push(`%${keyword}%`));
       }
     }
-    
+
     query += ' ORDER BY created_at DESC';
-    
+
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as PlanRow[];
 
@@ -1231,7 +1232,7 @@ export class SqliteStorage extends StorageAdapter {
       priority: row.priority,
       type: row.type
     }));
-    
+
     return {
       count: patterns.length,
       items: patterns,
@@ -1252,11 +1253,11 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     const sessionCount = this.db.prepare('SELECT COUNT(*) as count FROM sessions').get() as { count: number };
     const planCount = this.db.prepare("SELECT COUNT(*) as count FROM plans WHERE id NOT LIKE 'learned_%'").get() as { count: number };
     const learnedCount = this.db.prepare("SELECT COUNT(*) as count FROM plans WHERE id LIKE 'learned_%'").get() as { count: number };
-    
+
     return {
       sessions: sessionCount.count,
       plans: planCount.count,
@@ -1326,14 +1327,14 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     const stmt = this.db.prepare(`
-      INSERT INTO plans (
+      INSERT OR REPLACE INTO plans (
         id, project_id, title, status, author, priority, type,
         description, content, topics, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     stmt.run(
       plan.id,
       plan.project_id,
@@ -1406,14 +1407,14 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     const stmt = this.db.prepare(`
       INSERT INTO sessions (
         id, project_id, date, topic, status, plan_id, duration,
         content, topics, phases, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     stmt.run(
       session.id,
       session.project_id,
@@ -1448,12 +1449,12 @@ export class SqliteStorage extends StorageAdapter {
         'Example: await storage.init(process.cwd())'
       );
     }
-    
+
     const stmt = this.db.prepare(`
-      INSERT INTO projects (id, name, path, tech_stack, created_at, updated_at)
+      INSERT OR IGNORE INTO projects (id, name, path, tech_stack, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-    
+
     stmt.run(
       project.id,
       project.name,
@@ -1725,13 +1726,13 @@ export class SqliteStorage extends StorageAdapter {
     const row = this.db
       .prepare('SELECT * FROM user_state WHERE user_id = ?')
       .get(userId) as {
-      user_id: string;
-      project_id: string | null;
-      active_plan_id: string | null;
-      last_session_id: string | null;
-      focus_context: string | null;
-      updated_at: string;
-    } | undefined;
+        user_id: string;
+        project_id: string | null;
+        active_plan_id: string | null;
+        last_session_id: string | null;
+        focus_context: string | null;
+        updated_at: string;
+      } | undefined;
 
     if (!row) {
       return undefined;
@@ -2012,17 +2013,17 @@ export class SqliteStorage extends StorageAdapter {
       params.push(filters.endDate);
     }
 
-    const whereClause = whereClauses.length > 0 
+    const whereClause = whereClauses.length > 0
       ? `WHERE ${whereClauses.join(' AND ')}`
       : '';
-    
+
     const sql = `
       SELECT * FROM knowledge_events
       ${whereClause}
       ORDER BY timestamp DESC
       ${filters.limit ? 'LIMIT ?' : ''}
     `;
-    
+
     if (filters.limit) params.push(filters.limit);
 
     const stmt = this.db.prepare(sql);
@@ -2267,7 +2268,7 @@ export class SqliteStorage extends StorageAdapter {
    *   console.log('Using legacy markdown (needs migration)');
    * }
    */
-  async getSessionContent(sessionId: string): Promise<{format: 'events' | 'markdown'; data: string }> {
+  async getSessionContent(sessionId: string): Promise<{ format: 'events' | 'markdown'; data: string }> {
     // Try to get events first (with graceful fallback on corruption)
     try {
       const events = await this.queryEvents({ sessionId });
@@ -2395,7 +2396,7 @@ export class SqliteStorage extends StorageAdapter {
     if (!this.db) {
       throw new Error('Database not initialized');
     }
-    
+
     return this.db.pragma(`table_info(${tableName})`) as Array<{
       cid: number;
       name: string;
@@ -2433,6 +2434,43 @@ export class SqliteStorage extends StorageAdapter {
    */
   async getEvent(eventId: string): Promise<KnowledgeEvent | undefined> {
     return this.getEventById(eventId);
+  }
+
+  /**
+   * Insert or update a project invariant
+   */
+  async insertInvariant(invariant: Invariant): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const query = `
+      INSERT OR REPLACE INTO invariants (
+        id, number, name, rule, details, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    this.db.prepare(query).run(
+      invariant.id,
+      invariant.number,
+      invariant.name,
+      invariant.rule,
+      JSON.stringify(invariant.details),
+      invariant.created_at,
+      invariant.updated_at
+    );
+  }
+
+  /**
+   * Query all invariants ordered by number
+   */
+  async queryInvariants(): Promise<Invariant[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const rows = this.db.prepare('SELECT * FROM invariants ORDER BY number ASC').all() as any[];
+
+    return rows.map((row) => ({
+      ...row,
+      details: JSON.parse(row.details)
+    }));
   }
 }
 

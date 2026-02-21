@@ -107,8 +107,9 @@ High-level technical approach
 - [ ] Run: npm run type-check ✅
 
 ## Documentation
-- [ ] Update project pattern source (MCP invariants/AGENTS.md, or CODEBASE_ESSENTIALS.md in generated project)
+- [ ] Update project pattern source (MCP invariants/AGENTS.md)
 - [ ] Add to CODEBASE_CHANGELOG.md
+
 ```
 
 ### Step 4: Validate & Get Approval
@@ -223,7 +224,8 @@ Create a task list in your notes:
 
 ### Phase 2: Implement Backend First
 
-**Follow your project's backend patterns from the active invariant source (MCP critical invariants or project pattern file)**
+**Follow your project's backend patterns from the active invariant source (MCP critical invariants)**
+
 
 #### General Backend Checklist:
 1. **Create/modify data models**
@@ -245,7 +247,8 @@ go test ./...
 
 ### Phase 3: Implement Frontend
 
-**Follow your project's frontend patterns from the active invariant source (MCP critical invariants or project pattern file)**
+**Follow your project's frontend patterns from the active invariant source (MCP critical invariants)**
+
 
 #### General Frontend Checklist:
 1. **Create/modify components**
@@ -281,13 +284,14 @@ npm run type-check
 ### Phase 5: Documentation & Commit
 
 #### Update Documentation
-If you created a new pattern, add it to your project's pattern source (`AGENTS.md`/skills, or `CODEBASE_ESSENTIALS.md` in generated projects):
+If you created a new pattern, add it to your project's pattern source (MCP mutation tools or `AGENTS.md`/skills):
 ```markdown
 ### Pattern: Feature Name
 - How to use it
 - Why this approach
 - Example code
 ```
+
 
 #### Update Changelog
 Add entry to `CODEBASE_CHANGELOG.md`:

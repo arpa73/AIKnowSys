@@ -105,6 +105,7 @@ The validation matrix is served live via MCP as the single source of truth. Alwa
 
 **Session Storage:** Database-first (`.aiknowsys/knowledge.db`)
 
+
 **VSCode Hooks (Automated):**  
 If VSCode hooks are installed (`.github/hooks/`), session files are automatically created/updated:
 - `sessionStart` hook: Detects recent sessions and reminds you to load context
@@ -116,25 +117,25 @@ If VSCode hooks are installed (`.github/hooks/`), session files are automaticall
 
 ### 1️⃣ START: Read Context (REQUIRED)
 
-**ALWAYS read these files at the start of every conversation:**
+**ALWAYS read these context sources at the start of every conversation:**
 1. **MCP invariants** - Call `mcp_aiknowsys_get_critical_invariants()` (MANDATORY)
 2. **@AGENTS.md** - This file for workflow reminders
-3. **@.github/onboarding-setup.md** - AI-native project onboarding flow and stack guidance
+3. **@.github/onboarding-setup.md** - AI-native project onboarding flow
+
 
 **When you need history:**
 - **@CODEBASE_CHANGELOG.md** - Milestone-focused timeline (releases, breaking changes)
 - **@.aiknowsys/learned/** - Project-specific patterns discovered over time
 - **Query commands:** Use `query-sessions`, `search-context` for historical work (faster than file reading)
 
-### 2️⃣ PLAN: Check Skills Before Coding
+**Check Skills Before Coding**
 
-**Read the relevant skill FIRST based on trigger words:**
+**Search for relevant skills or patterns via MCP FIRST:**
+- `mcp_aiknowsys_find_skill_for_task({ task: "..." })`
+- `mcp_aiknowsys_find_pattern({ keywords: [...] })`
 
-| Trigger Words | Skill to Read | Why |
-|---------------|---------------|-----|
-{{SKILL_MAPPING}}
+**⚠️ DON'T start coding until you've checked for relevant existing knowledge!**
 
-**⚠️ DON'T start coding until you've read the relevant skill!**
 
 **For breaking changes or new features, consider using OpenSpec:**
 - See `openspec/AGENTS.md` for proposal workflow
