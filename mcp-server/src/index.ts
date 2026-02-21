@@ -11,6 +11,12 @@
  * - Skills discovery
  */
 
+
+// Force TypeScript to emit all modules (even if not directly referenced)
+import './tools/split-mutations.js';
+import './tools/utils/storage-helpers.js';
+import './dynamic-toolset/index.js';
+
 import { AIKnowSysServer } from './server.js';
 
 const server = new AIKnowSysServer();

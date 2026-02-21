@@ -14,10 +14,10 @@
  * @module dynamic-toolset
  */
 
-export { ToolRegistry } from './tool-registry.js';
-export type { ToolMetadata, SearchResult } from './tool-registry.js';
-
-export { ToolSearch } from './tool-search.js';
+export * from './handlers.js';
+export * from './tool-metadata.js';
+export * from './tool-registry.js';
+export * from './tool-search.js';
 export type { SearchOptions } from './tool-search.js';
 
 export { TOOL_METADATA, TOOL_CATEGORIES } from './tool-metadata.js';

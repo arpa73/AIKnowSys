@@ -156,7 +156,8 @@ export async function executeToolHandler(
     );
     
     // Include validation details for debugging
-    errorResponse.error.details = validation.error.format();
+    // Only add details if error object supports it
+    (errorResponse.error as any).details = validation.error.format();
     
     return {
       content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],

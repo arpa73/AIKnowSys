@@ -1,13 +1,14 @@
 ---
 id: "markdown_less_architecture"
 title: "Markdown-Less Architecture: SQLite as Live Store (Reopened)"
-status: "ACTIVE"
+status: "COMPLETE"
 priority: "high"
 type: "feature"
 author: "arno"
 created: "2026-02-17"
 updated: "2026-02-20"
 started: "2026-02-20"
+completed: "2026-02-20"
 ---
 
 # Markdown-Less Architecture: SQLite as Live Store
@@ -20,13 +21,24 @@ started: "2026-02-20"
 
 **2026-02-20:** Started implementation on reopened markdown-less architecture plan: completed Phase F (architect-gated completion workflow) by updating developer/architect live agent specs and templates to require active-plan success-criteria verification before COMPLETE; architect now owns COMPLETE transition.
 
-**2026-02-20:**
+## 2026-02-20 (Architect follow-up resolved)
 
-**2026-02-20:**
+Addressed all blocking architect feedback from Phases F/A/B/C review:
+- Fixed `updatePlanCore` regression for SQLite-only plans by adding SQLite-first read/write update path
+- MCP `updatePlan` now injects storage and uses `writeMarkdown: false` (aligned with SQLite-first architecture)
+- Added `test/core/create-review-link.test.ts` for real DB review/link round-trip coverage (Criterion D)
+- Added `test/core/update-plan.test.ts` coverage for:
+  - SQLite-only status update without markdown file
+  - COMPLETE blocked when pending review exists (Criterion E)
+- Applied recommended cleanup:
+  - extracted `isSqliteConstraintError()` helper
+  - removed duplicate empty progress stubs in this plan file
 
-**2026-02-20:**
+Validation:
+- `npx vitest run test/core/create-plan.test.ts test/core/create-session.test.ts test/core/create-review-link.test.ts test/core/update-plan.test.ts` ✅ (13/13)
+- `npx vitest run --config mcp-server/vitest.config.ts mcp-server/test/tools/mutations.test.ts` ✅ (33 passed, 8 skipped)
+- `npx eslint lib/core/update-plan.ts lib/core/create-plan.ts lib/core/create-session.ts lib/context/sqlite-storage.ts lib/utils/sqlite-utils.ts test/core/update-plan.test.ts test/core/create-review-link.test.ts` ✅
 
-**2026-02-20:** 
 ## 2026-02-20 (Phase C progress)
 
 Implemented enriched session query results for SQLite metadata mode:

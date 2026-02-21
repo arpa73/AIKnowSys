@@ -291,7 +291,7 @@ export async function createPlan(params: unknown) {
 
         try {
           const userState = await storage.getUserState(userId);
-          const existingActivePlan = userState?.activePlanId || userState?.active_plan_id;
+          const existingActivePlan = userState?.activePlanId;
 
           if (!existingActivePlan) {
             await storage.upsertUserState({
@@ -738,7 +738,7 @@ export async function getActivePlanPointer(params: unknown) {
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return handleZodError(error, 'get active plan pointer');
+      return handleZodError(error, 'get active plan pointer', {});
     }
 
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
