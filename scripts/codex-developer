@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: scripts/codex-developer [task...]
+
+Starts Codex with:
+  - profile: developer
+  - skill: developer-agent-workflow
+
+Examples:
+  scripts/codex-developer
+  scripts/codex-developer implement export-session JSON output with tests
+EOF
+  exit 0
+fi
+
+base_prompt="Use developer-agent-workflow."
+if [[ "$#" -gt 0 ]]; then
+  exec codex --profile developer "$base_prompt $*"
+fi
+
+exec codex --profile developer "$base_prompt Wait for my implementation task."

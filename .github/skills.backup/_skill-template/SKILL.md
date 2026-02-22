@@ -1,3 +1,9 @@
+---
+name: _skill-template
+maintainer: true
+description: Template for creating new skills following VS Code Agent Skills standard
+---
+
 # {{SKILL_NAME}}
 
 ## When to Use This Skill

@@ -115,6 +115,20 @@ Covers backend Python (pyproject.toml) and frontend npm packages, vulnerability 
 **What it does:**
 Covers changelog archiving, AI-friendly writing patterns (from kapa.ai best practices), semantic structure, self-contained sections, and knowledge retrieval optimization. Ensures documentation stays readable and discoverable for both humans and AI systems.
 
+### 🔍 validation-troubleshooting
+**Purpose**: Universal troubleshooting guide for validation failures
+
+**Use when:**
+- "Tests are failing"
+- "Validation errors"
+- "Build is broken"
+- "Lint errors"
+- "Why won't this compile?"
+- Debugging test, lint, or build failures
+
+**What it does:**
+Framework-agnostic debugging strategies for test failures, linting errors, build/compilation errors, type checking issues, and validation matrix failures. Covers Node.js, Python, Rust, and Go with step-by-step workflows and common patterns.
+
 ## How Skills Work
 
 Skills use **progressive disclosure** with 3 levels:

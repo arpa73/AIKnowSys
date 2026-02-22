@@ -61,6 +61,10 @@ Thumbs.db
 .aiknowsys/skill-usage.json
 .aiknowsys/sessions/*.md
 
+# Errant knowledge databases in root
+/knowledge.db
+:memory:/
+
 # Test artifacts
 test-fixtures/
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: scripts/codex-architect [task...]
+
+Starts Codex with:
+  - profile: architect
+  - skill: architect-agent-review
+
+Examples:
+  scripts/codex-architect
+  scripts/codex-architect review latest developer changes for invariants and plan compliance
+EOF
+  exit 0
+fi
+
+base_prompt="Use architect-agent-review."
+if [[ "$#" -gt 0 ]]; then
+  exec codex --profile architect "$base_prompt $*"
+fi
+
+exec codex --profile architect "$base_prompt Wait for my review request."

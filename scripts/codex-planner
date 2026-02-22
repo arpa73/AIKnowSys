@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: scripts/codex-planner [task...]
+
+Starts Codex with:
+  - profile: planner
+  - skill: planner-agent-workflow
+
+Examples:
+  scripts/codex-planner
+  scripts/codex-planner create implementation plan for sqlite metadata optimization
+EOF
+  exit 0
+fi
+
+base_prompt="Use planner-agent-workflow."
+if [[ "$#" -gt 0 ]]; then
+  exec codex --profile planner "$base_prompt $*"
+fi
+
+exec codex --profile planner "$base_prompt Wait for my planning request."

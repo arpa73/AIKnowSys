@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-02-21T17:56:05.871Z",
+  "updated": "2026-02-22T01:45:06.083Z",
   "plans": [
     {
       "id": "PLAN_ai_native_onboarding_simplification",
@@ -8,7 +8,7 @@
       "status": "PLANNED",
       "author": "\"arno-paffen\"",
       "created": "2026-02-19T23:00:00.000Z",
-      "updated": "2026-02-21T17:56:05.873Z",
+      "updated": "2026-02-22T01:45:06.087Z",
       "topics": [
         "onboarding",
         "ux",
@@ -33,11 +33,20 @@
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-20T00:00:00.000Z",
-      "updated": "2026-02-21T17:56:05.875Z",
+      "updated": "2026-02-22T01:45:06.098Z",
       "file": "PLAN_project_record_dynamic_config.md"
     }
   ],
-  "sessions": [],
+  "sessions": [
+    {
+      "date": "2026-02-22",
+      "topic": "MCP Tools Rationalization",
+      "plan": "MCP Tools Rationalization & CLI Filesystem Dependency Fixes  ",
+      "file": "sessions/2026-02-22-session.md",
+      "created": "2026-02-22T00:00:00.000Z",
+      "updated": "2026-02-22T01:45:06.102Z"
+    }
+  ],
   "learned": [
     {
       "file": "learned/agent-mode-boundaries.md",

@@ -1,0 +1,140 @@
+{
+  "projects": [
+    {
+      "id": "default",
+      "name": "Default Project",
+      "path": null,
+      "tech_stack": null,
+      "created_at": "2026-02-13T19:29:26.232Z",
+      "updated_at": "2026-02-13T19:29:26.232Z"
+    },
+    {
+      "id": "test-project-1771358297338-29",
+      "name": "Test Project",
+      "path": null,
+      "tech_stack": null,
+      "created_at": "2026-02-17T19:58:17.338Z",
+      "updated_at": "2026-02-17T19:58:17.338Z"
+    },
+    {
+      "id": "test-project-1771358335414-472",
+      "name": "Test Project",
+      "path": null,
+      "tech_stack": null,
+      "created_at": "2026-02-17T19:58:55.414Z",
+      "updated_at": "2026-02-17T19:58:55.414Z"
+    },
+    {
+      "id": "test-project-1771361331439-834",
+      "name": "Test Project",
+      "path": null,
+      "tech_stack": null,
+      "created_at": "2026-02-17T20:48:51.439Z",
+      "updated_at": "2026-02-17T20:48:51.439Z"
+    },
+    {
+      "id": "arpa73-aiknowsys",
+      "name": "knowledge-system-template",
+      "path": "/home/arno/development/knowledge-system-template",
+      "tech_stack": null,
+      "created_at": "2026-02-19T23:34:23.788Z",
+      "updated_at": "2026-02-19T23:34:23.788Z"
+    },
+    {
+      "id": "system",
+      "name": "AIKnowSys System",
+      "path": null,
+      "tech_stack": null,
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "knowledge-system-template",
+      "name": "knowledge-system-template",
+      "path": "/home/arno/development/knowledge-system-template",
+      "tech_stack": null,
+      "created_at": "2026-02-21T17:34:15.253Z",
+      "updated_at": "2026-02-21T17:34:15.253Z"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "invariant-1",
+      "number": 1,
+      "name": "ES Modules Only",
+      "rule": "All internal files use import/export, never require()",
+      "details": "[\"package.json has \\\"type\\\": \\\"module\\\"\",\"Exception: Templates distributed to users may use .cjs for compatibility\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-2",
+      "number": 2,
+      "name": "Absolute Paths Required",
+      "rule": "Always use path.resolve() for user-provided paths",
+      "details": "[\"Use getPackageDir() for template paths\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-3",
+      "number": 3,
+      "name": "Graceful Failures",
+      "rule": "All commands must handle missing files/directories",
+      "details": "[\"Show helpful error messages, not stack traces\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-4",
+      "number": 4,
+      "name": "Template Preservation",
+      "rule": "AI agents never modify templates during normal workflow",
+      "details": "[\"Templates in templates/ are deliverables distributed to users\",\"User customization happens in generated files via AI-native onboarding workflow\",\"Exception: Deliberate template maintenance requires implementation plan, TDD, architect review, validation, migration guide\",\"See: .aiknowsys/learned/template-maintenance.md for workflow\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-5",
+      "number": 5,
+      "name": "Template Structure Integrity",
+      "rule": "When AI fills CODEBASE_ESSENTIALS.md, NEVER change section headings",
+      "details": "[\"Replace {{PLACEHOLDERS}} with real values, not generic placeholders\",\"Preserve template structure exactly (don't rename sections)\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-6",
+      "number": 6,
+      "name": "Backwards Compatibility",
+      "rule": "Bash scripts in scripts/ must remain functional",
+      "details": "[\"npm CLI is additive, not replacement\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-7",
+      "number": 7,
+      "name": "Test-Driven Development (TDD) - MANDATORY",
+      "rule": "For new features: Write tests BEFORE implementation (RED → GREEN → REFACTOR)",
+      "details": "[\"For bugfixes: Write test that reproduces bug FIRST, then fix, then refactor\",\"Follow RED-GREEN-REFACTOR cycle for both features and bugs\",\"Exception: Configuration-only changes (adding properties to const objects)\",\"Full workflow: .github/skills/tdd-workflow/SKILL.md\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    },
+    {
+      "id": "invariant-8",
+      "number": 8,
+      "name": "Deliverables Consistency",
+      "rule": "Templates (templates/ directory) are deliverables distributed to users",
+      "details": "[\"ANY change to core functionality MUST update corresponding templates\",\"Templates must match non-template equivalents\",\"Run npx aiknowsys validate-deliverables before commits/releases\",\"Pre-commit hook automatically validates when templates/ changed\"]",
+      "created_at": "2026-02-21T13:58:38.845Z",
+      "updated_at": "2026-02-21T13:58:38.845Z"
+    }
+  ],
+  "plansCount": {
+    "count": 104
+  },
+  "sessionsCount": {
+    "count": 12
+  }
+}

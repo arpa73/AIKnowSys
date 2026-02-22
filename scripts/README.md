@@ -17,6 +17,20 @@ npx aiknowsys query-plans --status ACTIVE
 
 ---
 
+## Codex Role Wrappers (Local Convenience)
+
+Use these local wrappers for faster role-based starts:
+
+```bash
+scripts/codex-developer [task...]
+scripts/codex-architect [task...]
+scripts/codex-planner [task...]
+```
+
+Each wrapper sets the matching Codex profile and injects the matching role skill prompt.
+
+---
+
 ## What About install-git-hooks Scripts?  
 
 ✅ **STILL ACTIVE** - These are templates, not setup scripts!

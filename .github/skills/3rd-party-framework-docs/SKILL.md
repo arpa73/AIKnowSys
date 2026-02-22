@@ -1,30 +1,15 @@
----
-name: 3rd-party-framework-docs
-description: Query up-to-date 3rd-party framework/library documentation using Context7 MCP
-triggers:
-  - "query framework docs"
-  - "library documentation"
-  - "current API docs"
-  - "latest docs for"
-  - "framework API"
-  - "check current docs"
-  - "context7"
-  - "version-specific docs"
-maintainer: false
----
+# Context7 Usage Skill
 
-# Framework Documentation Query Skill
+**Trigger Words:** `context7`, `current docs`, `latest API`, `version-specific`, `use context7`, `query context7`
 
-**What:** Query current framework/library documentation using Context7 MCP
+**What:** Guide for using Context7 MCP with AIKnowSys workflows
 
-**When to use:**
-- Need current library API documentation
-- Validating learned patterns against latest APIs
-- Working with unfamiliar frameworks
-- Checking version-specific features
-- Planning with external dependencies
-
-**Why not web search:** Context7 provides structured, version-specific docs optimized for AI consumption
+**When to use this skill:**
+- AI needs current library documentation
+- Validating learned skills against latest APIs
+- Scaffolding with specific framework version
+- Planning with unfamiliar technologies
+- Checking if patterns are still recommended
 
 ---
 

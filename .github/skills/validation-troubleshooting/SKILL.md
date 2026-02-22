@@ -7,9 +7,6 @@ description: Universal troubleshooting guide for validation failures (tests, lin
 
 Step-by-step debugging guide for when validation commands fail.
 
-**💡 Automation Available:**  
-If VSCode hooks are installed (`.github/hooks/`), the `validation-reminder.cjs` hook will automatically remind you to run validation when code changes but no tests ran. See [docs/vscode-hooks-guide.md](../../../docs/vscode-hooks-guide.md) for details.
-
 ## When to Use This Skill
 
 Use when:
@@ -74,7 +71,8 @@ cargo test test_name
 1. Is the test expectation still valid?
 2. Did I change behavior the test depends on?
 3. Are mocks/fixtures up to date?
-4. Does the test match CODEBASE_ESSENTIALS.md patterns?
+4. Does the test match project invariants (Call `mcp_aiknowsys_get_critical_invariants()`)?
+
 
 ### Step 4: Debug the Test
 
@@ -163,10 +161,11 @@ go fmt ./...
 
 ### Step 3: Manual Fixes
 
-**Read CODEBASE_ESSENTIALS.md for style rules:**
-- Check "Code Patterns" section
-- Verify naming conventions
-- Review import ordering
+**Check project patterns for style rules:**
+- Call `mcp_aiknowsys_get_critical_invariants()`
+- Call `mcp_aiknowsys_find_pattern()`
+- Review import ordering conventions
+
 
 **DON'T disable rules without justification:**
 ```javascript
@@ -182,10 +181,11 @@ console.log(data);
 ### Step 4: Update Rules If Wrong
 
 If rule conflicts with project patterns:
-1. Discuss with team/review ESSENTIALS
+1. Discuss with team/review project invariants via MCP
 2. Update linting config
 3. Document change in CODEBASE_CHANGELOG.md
-4. Update CODEBASE_ESSENTIALS.md if pattern changed
+4. Persist updated invariant via MCP mutation tools if pattern changed
+
 
 ---
 
@@ -239,7 +239,8 @@ go build
 
 ### Step 3: Check Environment
 
-**Verify versions match CODEBASE_ESSENTIALS.md:**
+**Verify versions match project requirements:**
+
 ```bash
 # Check Node.js version
 node --version
@@ -324,7 +325,8 @@ result = something()  # type: ignore[attr-defined]
 
 ### Strategy: Work Through Matrix Systematically
 
-**From CODEBASE_ESSENTIALS.md validation matrix:**
+**Call `mcp_aiknowsys_get_validation_matrix()` for truth:**
+
 
 ```markdown
 | Command | Purpose | Expected |
@@ -479,7 +481,8 @@ npm test && npm run lint && npm run build
 
 If stuck for >15 minutes:
 1. Read error message again (slowly)
-2. Check CODEBASE_ESSENTIALS.md for relevant pattern
+2. Check project invariants via MCP (`mcp_aiknowsys_get_critical_invariants()`)
+
 3. Search project for similar code that works
 4. Check dependency documentation
 5. Ask for help (provide full error message)
