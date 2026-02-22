@@ -239,6 +239,121 @@ export class SqliteStorage extends StorageAdapter {
       // Add embedding column to existing database
       this.db.exec('ALTER TABLE knowledge_events ADD COLUMN embedding BLOB;');
     }
+
+    // Migration: Fix FTS tables column names (plan_id/session_id/pattern_id -> id)
+    // This migration is idempotent - it checks if the fix is needed before applying
+    this.migrateFtsColumnNames();
+  }
+
+  /**
+   * Migrate FTS tables from old column names (plan_id, session_id, pattern_id) to 'id'
+   * This is needed because the schema was updated but existing databases have the old column names
+   */
+  private migrateFtsColumnNames(): void {
+    if (!this.db) return;
+
+    // Check if plans_fts has the old column name
+    const plansFtsInfo = this.db.pragma('table_info(plans_fts)') as Array<{ name: string }>;
+    const hasOldColumnName = plansFtsInfo.some(col => col.name === 'plan_id');
+
+    if (!hasOldColumnName) {
+      // Already migrated or new database, nothing to do
+      return;
+    }
+
+    // Drop old FTS tables and triggers
+    this.db.exec(`
+      DROP TABLE IF EXISTS plans_fts;
+      DROP TABLE IF EXISTS sessions_fts;
+      DROP TABLE IF EXISTS patterns_fts;
+      DROP TRIGGER IF EXISTS plans_ai;
+      DROP TRIGGER IF EXISTS plans_ad;
+      DROP TRIGGER IF EXISTS plans_au;
+      DROP TRIGGER IF EXISTS sessions_ai;
+      DROP TRIGGER IF EXISTS sessions_ad;
+      DROP TRIGGER IF EXISTS sessions_au;
+      DROP TRIGGER IF EXISTS patterns_ai;
+      DROP TRIGGER IF EXISTS patterns_ad;
+      DROP TRIGGER IF EXISTS patterns_au;
+    `);
+
+    // Recreate FTS tables with correct column names
+    this.db.exec(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS plans_fts USING fts5(
+        id UNINDEXED,
+        title,
+        content
+      );
+
+      CREATE VIRTUAL TABLE IF NOT EXISTS sessions_fts USING fts5(
+        id UNINDEXED,
+        topic,
+        content
+      );
+
+      CREATE VIRTUAL TABLE IF NOT EXISTS patterns_fts USING fts5(
+        id UNINDEXED,
+        title,
+        content
+      );
+
+      CREATE TRIGGER IF NOT EXISTS plans_ai AFTER INSERT ON plans BEGIN
+        INSERT INTO plans_fts (rowid, id, title, content)
+        VALUES (new.rowid, new.id, new.title, new.content);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS plans_ad AFTER DELETE ON plans BEGIN
+        DELETE FROM plans_fts WHERE rowid = old.rowid;
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS plans_au AFTER UPDATE ON plans BEGIN
+        DELETE FROM plans_fts WHERE rowid = old.rowid;
+        INSERT INTO plans_fts (rowid, id, title, content)
+        VALUES (new.rowid, new.id, new.title, new.content);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS sessions_ai AFTER INSERT ON sessions BEGIN
+        INSERT INTO sessions_fts (rowid, id, topic, content)
+        VALUES (new.rowid, new.id, new.topic, new.content);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS sessions_ad AFTER DELETE ON sessions BEGIN
+        DELETE FROM sessions_fts WHERE rowid = old.rowid;
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS sessions_au AFTER UPDATE ON sessions BEGIN
+        DELETE FROM sessions_fts WHERE rowid = old.rowid;
+        INSERT INTO sessions_fts (rowid, id, topic, content)
+        VALUES (new.rowid, new.id, new.topic, new.content);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS patterns_ai AFTER INSERT ON patterns BEGIN
+        INSERT INTO patterns_fts (rowid, id, title, content)
+        VALUES (new.rowid, new.id, new.title, new.content);
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS patterns_ad AFTER DELETE ON patterns BEGIN
+        DELETE FROM patterns_fts WHERE rowid = old.rowid;
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS patterns_au AFTER UPDATE ON patterns BEGIN
+        DELETE FROM patterns_fts WHERE rowid = old.rowid;
+        INSERT INTO patterns_fts (rowid, id, title, content)
+        VALUES (new.rowid, new.id, new.title, new.content);
+      END;
+    `);
+
+    // Rebuild FTS indices from existing data
+    this.db.exec(`
+      INSERT INTO plans_fts (rowid, id, title, content)
+      SELECT rowid, id, title, content FROM plans WHERE content IS NOT NULL;
+
+      INSERT INTO sessions_fts (rowid, id, topic, content)
+      SELECT rowid, id, topic, content FROM sessions WHERE content IS NOT NULL;
+
+      INSERT INTO patterns_fts (rowid, id, title, content)
+      SELECT rowid, id, title, content FROM patterns WHERE content IS NOT NULL;
+    `);
   }
 
   /**

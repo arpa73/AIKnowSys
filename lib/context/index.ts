@@ -15,7 +15,7 @@ import { DatabaseLocator } from './database-locator.js';
 export interface StorageOptions {
   /** Storage adapter type (default: 'json') */
   adapter?: 'json' | 'sqlite';
-  
+
   /** Auto-rebuild index on initialization (default: false) */
   autoRebuild?: boolean;
 }
@@ -44,40 +44,41 @@ export async function createStorage(
   targetDir: string,
   options: StorageOptions = {}
 ): Promise<StorageAdapter> {
-  const { adapter = 'json', autoRebuild = false } = options;
-  
+  const { adapter = 'sqlite', autoRebuild = false } = options;
+
+
   // Convert relative paths to absolute
   const absoluteDir = path.resolve(targetDir);
-  
+
   // Create storage adapter based on type
   let storage: StorageAdapter;
-  
+
   switch (adapter) {
     case 'json':
       storage = new JsonStorage();
       await storage.init(absoluteDir);
       break;
-      
+
     case 'sqlite': {
       // Use DatabaseLocator to determine database path
       const locator = new DatabaseLocator();
       const dbConfig = await locator.getDatabaseConfig(absoluteDir);
-      
+
       // Create SqliteStorage and init with database path
       storage = new SqliteStorage();
       await storage.init(dbConfig.dbPath);
       break;
     }
-      
+
     default:
       throw new Error(`Unsupported storage adapter: ${adapter}`);
   }
-  
+
   // Optionally rebuild index from markdown files
   if (autoRebuild) {
     await storage.rebuildIndex();
   }
-  
+
   return storage;
 }
 

@@ -27,20 +27,16 @@ import chalk from 'chalk';
 import { createLogger } from '../logger.js';
 import { AIFriendlyErrorBuilder } from '../utils/error-builder.js';
 
-// Import MCP tool functions via clean barrel export (Phase 4: Path Resolution)
 import {
   // SQLite tools
-  querySessionsSqlite,
-  queryPlansSqlite,
-  queryLearnedPatternsSqlite,
-  searchContextSqlite,
-  getDbStatsSqlite,
+  querySessions,
+  queryPlans,
+  queryLearnedPatterns,
+  searchContext,
+  getDbStats,
   // Context tools
   getCriticalInvariants,
   getValidationMatrix,
-  // Query tools
-  getActivePlans,
-  getRecentSessions,
   // Skills tools
   findSkillForTask
 } from '../../mcp-server/src/api.js';
@@ -48,15 +44,13 @@ import {
 // Tool registry - maps command names to functions
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TOOLS: Record<string, (args: any) => Promise<any>> = {
-  'query-sessions': querySessionsSqlite,
-  'query-plans': queryPlansSqlite,
-  'query-patterns': queryLearnedPatternsSqlite,
-  'search-context': searchContextSqlite,
-  'get-db-stats': getDbStatsSqlite,
+  'query-sessions': querySessions,
+  'query-plans': queryPlans,
+  'query-patterns': queryLearnedPatterns,
+  'search-context': searchContext,
+  'get-db-stats': getDbStats,
   'get-invariants': getCriticalInvariants,
   'get-validation-matrix': getValidationMatrix,
-  'get-active-plans': getActivePlans,
-  'get-recent-sessions': getRecentSessions,
   'find-skill': findSkillForTask
 };
 
@@ -66,18 +60,18 @@ const TOOLS: Record<string, (args: any) => Promise<any>> = {
 function findSimilarTools(input: string): string[] {
   const toolNames = Object.keys(TOOLS);
   const similar: string[] = [];
-  
+
   for (const name of toolNames) {
     // Check for substring match
     if (name.includes(input) || input.includes(name)) {
       similar.push(name);
       continue;
     }
-    
+
     // Check for partial word match (e.g., "query-session" → "query-sessions")
     const inputParts = input.split('-');
     const nameParts = name.split('-');
-    
+
     let matches = 0;
     for (const inputPart of inputParts) {
       for (const namePart of nameParts) {
@@ -86,12 +80,12 @@ function findSimilarTools(input: string): string[] {
         }
       }
     }
-    
+
     if (matches >= inputParts.length - 1) {
       similar.push(name);
     }
   }
-  
+
   return similar.slice(0, 5); // Max 5 suggestions
 }
 
@@ -101,7 +95,7 @@ function findSimilarTools(input: string): string[] {
 export interface McpTestOptions {
   /** Output raw JSON (no pretty-print) */
   json?: boolean;
-  
+
   /** Silent mode (suppress output) */
   _silent?: boolean;
 }
@@ -111,7 +105,7 @@ export interface McpTestOptions {
  */
 function prettyPrint(data: unknown): string {
   const json = JSON.stringify(data, null, 2);
-  
+
   // Simple syntax highlighting
   return json
     .replace(/"([^"]+)":/g, chalk.cyan('"$1"') + ':')  // Keys
@@ -130,24 +124,24 @@ export async function mcpTest(
 ) {
   const log = createLogger(options._silent);
   const startTime = Date.now();
-  
+
   // Show header unless in JSON mode
   if (!options.json) {
     log.header('MCP Tool Test', '🧪');
     log.dim('─'.repeat(60));
   }
-  
+
   // Validate tool exists
   if (!TOOLS[toolName as keyof typeof TOOLS]) {
     const similar = findSimilarTools(toolName);
     const error = AIFriendlyErrorBuilder.toolNotFound(toolName, similar);
-    
+
     // In JSON mode, return the structured error
     if (options.json) {
       console.log(JSON.stringify(error, null, 2));
       return error;
     }
-    
+
     // Human-readable error output
     log.error(`Unknown tool: ${toolName}`);
     if (similar.length > 0) {
@@ -161,7 +155,7 @@ export async function mcpTest(
     });
     process.exit(1);
   }
-  
+
   // Parse arguments
   let args: Record<string, unknown>;
   try {
@@ -177,38 +171,38 @@ export async function mcpTest(
       'Invalid JSON format',
       '\'{"key": "value"}\''
     );
-    
+
     // In JSON mode, return the structured error
     if (options.json) {
       console.log(JSON.stringify(error, null, 2));
       return error;
     }
-    
+
     // Human-readable error output
     log.error(`Invalid JSON arguments: ${argsJson}`);
     log.dim('Expected format: {"key":"value"}');
     log.dim(`Example: npx aiknowsys mcp-test ${toolName} '{"topic":"test"}'`);
     process.exit(1);
   }
-  
+
   // Execute tool
   try {
     const tool = TOOLS[toolName as keyof typeof TOOLS];
     const result = await tool(args);
-    
+
     const duration = Date.now() - startTime;
-    
+
     // Extract text from MCP response format if present
-    const output = result.content?.[0]?.text 
+    const output = result.content?.[0]?.text
       ? JSON.parse(result.content[0].text)
       : result;
-    
+
     // JSON output mode (for scripting) - early return with just the data
     if (options.json) {
       console.log(JSON.stringify(output, null, 2));
       return output;
     }
-    
+
     // Human-readable output
     log.blank();
     log.success('SUCCESS');
@@ -217,21 +211,21 @@ export async function mcpTest(
     log.log(chalk.bold('Result:'));
     log.log(prettyPrint(output));
     log.blank();
-    
+
     return output;
-    
+
   } catch (error) {
     const duration = Date.now() - startTime;
-    
+
     log.blank();
     log.error('ERROR');
     log.dim(`Execution time: ${duration}ms`);
     log.blank();
-    
+
     const message = error instanceof Error ? error.message : String(error);
     log.log(chalk.red(message));
     log.blank();
-    
+
     process.exit(1);
   }
 }

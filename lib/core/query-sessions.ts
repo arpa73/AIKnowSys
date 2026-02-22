@@ -45,6 +45,7 @@ export interface QuerySessionsOptions {
   dbPath?: string; // Phase 1: Direct database path for cross-repository queries
   projectId?: string; // Phase 1: Filter by specific project ID
   allProjects?: boolean; // Phase 1: Query across all projects (default: false)
+  adapter?: 'json' | 'sqlite'; // Override adapter for testing
 }
 
 /**
@@ -71,7 +72,7 @@ export interface QuerySessionsResult {
 function isValidDate(dateStr: string): boolean {
   const regex = /^\d{4}-\d{2}-\d{2}$/;
   if (!regex.test(dateStr)) return false;
-  
+
   const date = new Date(dateStr);
   return !isNaN(date.getTime());
 }
@@ -109,18 +110,18 @@ export async function querySessionsCore(
   if (options.date && !isValidDate(options.date)) {
     throw new Error(`Invalid date format: ${options.date}. Expected YYYY-MM-DD`);
   }
-  
+
   if (options.dateAfter && !isValidDate(options.dateAfter)) {
     throw new Error(`Invalid dateAfter format: ${options.dateAfter}. Expected YYYY-MM-DD`);
   }
-  
+
   if (options.dateBefore && !isValidDate(options.dateBefore)) {
     throw new Error(`Invalid dateBefore format: ${options.dateBefore}. Expected YYYY-MM-DD`);
   }
-  
+
   // Phase 1: Support explicit dbPath for cross-repository queries
   let storage: SessionQueryStorage;
-  
+
   if (options.dbPath) {
     // Direct database path provided - create SqliteStorage directly
     const { SqliteStorage } = await import('../context/sqlite-storage.js');
@@ -129,25 +130,28 @@ export async function querySessionsCore(
   } else {
     // Get target directory - ALWAYS resolve user input to absolute path
     // (Critical Invariant #2: Absolute Paths Required)
-    const workingDir = targetDir 
+    const workingDir = targetDir
       ? path.resolve(targetDir)
       : (options.dir ? path.resolve(options.dir) : process.cwd());
-    
+
     // Create storage adapter (uses DatabaseLocator for global DB by default)
-    storage = await createStorage(workingDir, { autoRebuild: true });
+    storage = await createStorage(workingDir, {
+      adapter: options.adapter || 'sqlite',
+      autoRebuild: true
+    });
   }
-  
+
   try {
     // Build filters object (Phase 1: Cross-Repository support)
     const filters: SessionFilters = {};
-    
+
     // Handle --days convenience filter (calculates dateAfter from N days ago)
     if (options.days !== undefined) {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - options.days);
       filters.dateAfter = cutoff.toISOString().split('T')[0];
     }
-    
+
     // Apply other filters (explicit dateAfter overrides days calculation)
     if (options.date) filters.date = options.date;
     if (options.dateAfter) filters.dateAfter = options.dateAfter;
@@ -156,13 +160,13 @@ export async function querySessionsCore(
     if (options.plan) filters.plan = options.plan;
     if (options.projectId) filters.projectId = options.projectId;
     if (options.allProjects !== undefined) filters.allProjects = options.allProjects;
-    
+
     // Query storage (read-only operation)
     const result = await storage.querySessions(filters);
-    
+
     // Sort sessions by date descending (newest first)
     result.sessions.sort((a: SessionResultItem, b: SessionResultItem) => b.date.localeCompare(a.date));
-    
+
     // Return structured data
     return result;
   } finally {

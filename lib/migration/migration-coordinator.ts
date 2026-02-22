@@ -16,19 +16,19 @@ import { EventType } from '../events/types.js';
 export interface MigrationResult {
   /** Number of session files migrated */
   sessionsMigrated: number;
-  
+
   /** Number of plan files migrated */
   plansMigrated: number;
-  
+
   /** Number of learned pattern files migrated */
   learnedMigrated: number;
-  
+
   /** Total files processed */
   totalFiles: number;
-  
+
   /** Number of files skipped (already in database) */
   skipped: number;
-  
+
   /** Errors encountered during migration */
   errors: string[];
 }
@@ -40,13 +40,13 @@ export class MigrationCoordinator {
   private scanner: FileScanner;
   private parser: MarkdownParser;
   private locator: DatabaseLocator;
-  
+
   constructor(private storage: SqliteStorage) {
     this.scanner = new FileScanner();
     this.parser = new MarkdownParser();
     this.locator = new DatabaseLocator();
   }
-  
+
   /**
    * Migrate all .aiknowsys markdown files to database
    * @param targetDir - Directory containing .aiknowsys folder
@@ -61,34 +61,34 @@ export class MigrationCoordinator {
       skipped: 0,
       errors: []
     };
-    
+
     // Get project ID from directory using DatabaseLocator
     const projectId = await this.locator.getProjectId(targetDir);
     const projectName = path.basename(path.resolve(targetDir));
-    
+
     // Ensure project exists in database
     await this.ensureProjectExists(projectId, projectName, path.resolve(targetDir));
-    
+
     // Scan directory for markdown files
     const scanResult = await this.scanner.scanDirectory(targetDir);
-    
+
     // Add scan errors to result
     result.errors.push(...scanResult.errors);
-    
+
     // Migrate plans FIRST (before sessions that might reference them)
     for (const fileInfo of scanResult.plans) {
       try {
         const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
         const parsed = this.parser.parse<PlanFrontmatter>(content);
-        
+
         // Check for parse errors
         if (parsed.errors && parsed.errors.length > 0) {
           result.errors.push(`${fileInfo.filename}: ${parsed.errors.join(', ')}`);
         }
-        
+
         // Extract plan ID from filename (PLAN_xyz.md -> xyz)
         const planId = this.extractPlanId(fileInfo.filename);
-        
+
         // Insert into database
         const inserted = await this.insertPlan(fileInfo, parsed, planId, projectId);
         if (inserted) {
@@ -96,25 +96,25 @@ export class MigrationCoordinator {
         } else {
           result.skipped++;
         }
-        
+
         result.totalFiles++;
       } catch (error) {
         result.errors.push(`Error migrating ${fileInfo.filename}: ${(error as Error).message}`);
         result.totalFiles++;
       }
     }
-    
+
     // Migrate learned patterns SECOND
     for (const fileInfo of scanResult.learned) {
       try {
         const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
         const parsed = this.parser.parse<LearnedFrontmatter>(content);
-        
+
         // Check for parse errors
         if (parsed.errors && parsed.errors.length > 0) {
           result.errors.push(`${fileInfo.filename}: ${parsed.errors.join(', ')}`);
         }
-        
+
         // Insert into database (learned patterns treated as searchable content)
         const inserted = await this.insertLearned(fileInfo, parsed, projectId);
         if (inserted) {
@@ -122,25 +122,25 @@ export class MigrationCoordinator {
         } else {
           result.skipped++;
         }
-        
+
         result.totalFiles++;
       } catch (error) {
         result.errors.push(`Error migrating ${fileInfo.filename}: ${(error as Error).message}`);
         result.totalFiles++;
       }
     }
-    
+
     // Migrate sessions LAST (after plans exist to satisfy foreign key constraints)
     for (const fileInfo of scanResult.sessions) {
       try {
         const content = await fs.readFile(fileInfo.absolutePath, 'utf-8');
         const parsed = this.parser.parse<SessionFrontmatter>(content);
-        
+
         // Check for parse errors
         if (parsed.errors && parsed.errors.length > 0) {
           result.errors.push(`${fileInfo.filename}: ${parsed.errors.join(', ')}`);
         }
-        
+
         // Insert into database
         const inserted = await this.insertSession(fileInfo, parsed, projectId);
         if (inserted) {
@@ -148,17 +148,20 @@ export class MigrationCoordinator {
         } else {
           result.skipped++;
         }
-        
+
         result.totalFiles++;
       } catch (error) {
         result.errors.push(`Error migrating ${fileInfo.filename}: ${(error as Error).message}`);
         result.totalFiles++;
       }
     }
-    
+
+    if (result.errors.length > 0) {
+      console.warn('MIGRATION ERRORS:', result.errors);
+    }
     return result;
   }
-  
+
   /**
    * Ensure a project exists in database
    * @param projectId - Project identifier
@@ -186,7 +189,7 @@ export class MigrationCoordinator {
       throw new Error(`Failed to create project ${projectId}: ${(error as Error).message}`);
     }
   }
-  
+
   /**
    * Insert session into database
    * @param projectId - Project identifier for this session
@@ -200,27 +203,27 @@ export class MigrationCoordinator {
     if (!projectId || projectId.trim() === '') {
       throw new Error(`Cannot insert session: projectId is required but got "${projectId}"`);
     }
-    
+
     const { frontmatter, content } = parsed;
-    
+
     // Check if session already exists for this date
     const existing = await this.storage.querySessions({ date: frontmatter.date });
     if (existing.sessions.length > 0) {
       // Skip - already migrated
       return false;
     }
-    
+
     // Get file timestamps
     const stats = await fs.stat(fileInfo.absolutePath);
     const created = stats.birthtime.toISOString();
     const updated = stats.mtime.toISOString();
-    
+
     // Normalize plan reference (remove PLAN_ prefix to match plan IDs)
     let planId = frontmatter.plan;
     if (planId && planId.startsWith('PLAN_')) {
       planId = planId.replace('PLAN_', '');
     }
-    
+
     // Insert session in database
     await this.storage.insertSession({
       id: frontmatter.date || `session-${Date.now()}`,
@@ -236,10 +239,10 @@ export class MigrationCoordinator {
       duration: frontmatter.duration,
       phases: frontmatter.phases
     });
-    
+
     return true;
   }
-  
+
   /**
    * Insert plan into database
    * @param projectId - Project identifier for this plan
@@ -254,9 +257,9 @@ export class MigrationCoordinator {
     if (!projectId || projectId.trim() === '') {
       throw new Error(`Cannot insert plan: projectId is required but got "${projectId}"`);
     }
-    
+
     const { frontmatter, content } = parsed;
-    
+
     // Check if plan already exists (query all and filter by ID)
     const allPlans = await this.storage.queryPlans({});
     const existing = allPlans.plans.filter(p => p.id === planId);
@@ -264,12 +267,12 @@ export class MigrationCoordinator {
       // Skip - already migrated
       return false;
     }
-    
+
     // Get file timestamps
     const stats = await fs.stat(fileInfo.absolutePath);
     const created = stats.birthtime.toISOString();
     const updated = stats.mtime.toISOString();
-    
+
     // Insert plan in database
     await this.storage.insertPlan({
       id: planId,
@@ -285,10 +288,10 @@ export class MigrationCoordinator {
       priority: frontmatter.priority,
       type: frontmatter.type
     });
-    
+
     return true;
   }
-  
+
   /**
    * Insert learned pattern into database
    * @param projectId - Project identifier for this learned pattern
@@ -302,9 +305,9 @@ export class MigrationCoordinator {
     if (!projectId || projectId.trim() === '') {
       throw new Error(`Cannot insert learned pattern: projectId is required but got "${projectId}"`);
     }
-    
+
     const { frontmatter, content } = parsed;
-    
+
     const category = this.normalizePatternCategory(frontmatter.category);
     const keywords = frontmatter.keywords || [];
 
@@ -344,7 +347,7 @@ export class MigrationCoordinator {
         description: `Pattern from ${fileInfo.relativePath}`
       });
     }
-    
+
     await this.ensurePatternDiscoveredEvent({
       fileInfo,
       frontmatter,
@@ -353,7 +356,7 @@ export class MigrationCoordinator {
       planId: targetPlanId,
       category,
     });
-    
+
     return !existing;
   }
 
@@ -423,7 +426,7 @@ export class MigrationCoordinator {
 
     return `${rawSolution.slice(0, maxLength - 1)}…`;
   }
-  
+
   /**
    * Extract plan ID from filename
    * PLAN_xyz.md -> xyz
@@ -433,11 +436,11 @@ export class MigrationCoordinator {
     if (filename.startsWith('PLAN_')) {
       return filename.replace('PLAN_', '').replace('.md', '');
     }
-    
+
     if (filename.startsWith('active-')) {
       return filename.replace('active-', '').replace('.md', '');
     }
-    
+
     // Fallback: use filename without extension
     return filename.replace('.md', '');
   }

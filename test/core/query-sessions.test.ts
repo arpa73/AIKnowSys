@@ -54,7 +54,7 @@ Session content here
 
   describe('Basic Queries', () => {
     it('should return empty results when no sessions exist', async () => {
-      const result = await querySessionsCore({}, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json',}, TEST_DIR);
       
       expect(result.count).toBe(0);
       expect(result.sessions).toEqual([]);
@@ -64,7 +64,7 @@ Session content here
       await createSession('2026-02-08', { topic: 'Session One' });
       await createSession('2026-02-09', { topic: 'Session Two' });
       
-      const result = await querySessionsCore({}, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json',}, TEST_DIR);
       
       expect(result.count).toBe(2);
       expect(result.sessions).toHaveLength(2);
@@ -75,7 +75,7 @@ Session content here
       await createSession('2026-02-10', { topic: 'Newer' });
       await createSession('2026-02-09', { topic: 'Middle' });
       
-      const result = await querySessionsCore({}, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json',}, TEST_DIR);
       
       expect(result.sessions[0].date).toBe('2026-02-10');
       expect(result.sessions[1].date).toBe('2026-02-09');
@@ -87,7 +87,7 @@ Session content here
       await createSession('2026-02-09', { topic: 'Day 9' });
       await createSession('2026-02-10', { topic: 'Day 10' });
       
-      const result = await querySessionsCore({ date: '2026-02-09' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', date: '2026-02-09' }, TEST_DIR);
       
       expect(result.count).toBe(1);
       expect(result.sessions[0].topic).toBe('Day 9');
@@ -98,7 +98,7 @@ Session content here
       await createSession('2026-02-09', { topic: 'Refactoring' });
       await createSession('2026-02-10', { topic: 'TDD Practice' });
       
-      const result = await querySessionsCore({ topic: 'TDD' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', topic: 'TDD' }, TEST_DIR);
       
       expect(result.count).toBe(2);
       expect(result.sessions.map(s => s.topic)).toContain('TDD Workflow');
@@ -110,7 +110,7 @@ Session content here
       await createSession('2026-02-09', { topic: 'Work', plan: 'PLAN_feature_y' });
       await createSession('2026-02-10', { topic: 'Work', plan: '' });
       
-      const result = await querySessionsCore({ plan: 'PLAN_feature_x' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', plan: 'PLAN_feature_x' }, TEST_DIR);
       
       expect(result.count).toBe(1);
       expect(result.sessions[0].plan).toBe('PLAN_feature_x');
@@ -123,7 +123,7 @@ Session content here
       await createSession('2026-02-05', { topic: 'Recent' });
       await createSession('2026-02-10', { topic: 'Very Recent' });
       
-      const result = await querySessionsCore({ dateAfter: '2026-02-01' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', dateAfter: '2026-02-01' }, TEST_DIR);
       
       expect(result.count).toBe(2);
       expect(result.sessions.map(s => s.topic)).toContain('Recent');
@@ -135,7 +135,7 @@ Session content here
       await createSession('2026-02-05', { topic: 'Recent' });
       await createSession('2026-02-10', { topic: 'Very Recent' });
       
-      const result = await querySessionsCore({ dateBefore: '2026-02-01' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', dateBefore: '2026-02-01' }, TEST_DIR);
       
       expect(result.count).toBe(1);
       expect(result.sessions[0].topic).toBe('Old');
@@ -146,7 +146,7 @@ Session content here
       await createSession('2026-01-28', { topic: 'In Range' });
       await createSession('2026-02-10', { topic: 'Too Recent' });
       
-      const result = await querySessionsCore({
+      const result = await querySessionsCore({ adapter: 'json',
         dateAfter: '2026-01-20',
         dateBefore: '2026-02-01'
       }, TEST_DIR);
@@ -168,7 +168,7 @@ Session content here
       await createSession(threeDaysAgo.toISOString().split('T')[0], { topic: 'Recent' });
       await createSession(yesterday.toISOString().split('T')[0], { topic: 'Yesterday' });
       
-      const result = await querySessionsCore({ days: 7 }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', days: 7 }, TEST_DIR);
       
       expect(result.count).toBe(2);
       expect(result.sessions.map(s => s.topic)).toContain('Recent');
@@ -183,7 +183,7 @@ Session content here
       await createSession('2026-02-08', { topic: 'TDD Recent' });
       await createSession('2026-02-09', { topic: 'Other Recent' });
       
-      const result = await querySessionsCore({
+      const result = await querySessionsCore({ adapter: 'json',
         topic: 'TDD',
         dateAfter: '2026-02-01'
       }, TEST_DIR);
@@ -197,7 +197,7 @@ Session content here
       await createSession('2026-02-09', { topic: 'TDD Work', plan: 'PLAN_feature_y' });
       await createSession('2026-02-10', { topic: 'Other Work', plan: 'PLAN_feature_x' });
       
-      const result = await querySessionsCore({
+      const result = await querySessionsCore({ adapter: 'json',
         topic: 'TDD',
         plan: 'PLAN_feature_x',
         dateAfter: '2026-02-07'
@@ -211,26 +211,26 @@ Session content here
   describe('Date Validation', () => {
     it('should throw error for invalid date format', async () => {
       await expect(
-        querySessionsCore({ date: 'invalid' }, TEST_DIR)
+        querySessionsCore({ adapter: 'json', date: 'invalid' }, TEST_DIR)
       ).rejects.toThrow('Invalid date format: invalid. Expected YYYY-MM-DD');
     });
 
     it('should throw error for invalid dateAfter format', async () => {
       await expect(
-        querySessionsCore({ dateAfter: '2026/02/01' }, TEST_DIR)
+        querySessionsCore({ adapter: 'json', dateAfter: '2026/02/01' }, TEST_DIR)
       ).rejects.toThrow('Invalid dateAfter format: 2026/02/01. Expected YYYY-MM-DD');
     });
 
     it('should throw error for invalid dateBefore format', async () => {
       await expect(
-        querySessionsCore({ dateBefore: '02-01-2026' }, TEST_DIR)
+        querySessionsCore({ adapter: 'json', dateBefore: '02-01-2026' }, TEST_DIR)
       ).rejects.toThrow('Invalid dateBefore format: 02-01-2026. Expected YYYY-MM-DD');
     });
 
     it('should accept valid YYYY-MM-DD dates', async () => {
       await createSession('2026-02-10', { topic: 'Test' });
       
-      const result = await querySessionsCore({ date: '2026-02-10' }, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json', date: '2026-02-10' }, TEST_DIR);
       
       expect(result.count).toBe(1);
     });
@@ -242,7 +242,7 @@ Session content here
       const consoleErrorSpy = vi.spyOn(console, 'error');
       
       await createSession('2026-02-10', { topic: 'Test' });
-      await querySessionsCore({}, TEST_DIR);
+      await querySessionsCore({ adapter: 'json',}, TEST_DIR);
       
       expect(consoleLogSpy).not.toHaveBeenCalled();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -254,7 +254,7 @@ Session content here
     it('should return structured result with count and sessions array', async () => {
       await createSession('2026-02-10', { topic: 'Test' });
       
-      const result = await querySessionsCore({}, TEST_DIR);
+      const result = await querySessionsCore({ adapter: 'json',}, TEST_DIR);
       
       expect(result).toHaveProperty('count');
       expect(result).toHaveProperty('sessions');

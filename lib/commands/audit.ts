@@ -56,7 +56,7 @@ export async function audit(options: AuditOptions = {}): Promise<AuditResult> {
   const changelogPath = path.join(targetDir, 'CODEBASE_CHANGELOG.md');
 
   // Check if knowledge system exists
-  if (!fs.existsSync(essentialsPath) && !fs.existsSync(agentsPath)) {
+  if (!fs.existsSync(essentialsPath) && !fs.existsSync(agentsPath) && !fs.existsSync(path.join(targetDir, '.aiknowsys'))) {
     throw ErrorTemplates.noKnowledgeSystem();
   }
 

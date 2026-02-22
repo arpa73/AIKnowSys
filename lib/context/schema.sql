@@ -132,9 +132,10 @@ CREATE TRIGGER IF NOT EXISTS events_au AFTER UPDATE ON knowledge_events BEGIN
 END;
 
 -- Full-text search indices (SQLite FTS5)
--- Self-managed FTS tables (not external content) to avoid corruption with manual triggers
+-- Self-managed FTS tables (not external content) to avoid SQLITE_CORRUPT_VTAB errors
+-- Column name: id (maps to id in source tables)
 CREATE VIRTUAL TABLE IF NOT EXISTS plans_fts USING fts5(
-  plan_id UNINDEXED,
+  id UNINDEXED,
   title,
   content
 );
@@ -146,7 +147,7 @@ CREATE VIRTUAL TABLE IF NOT EXISTS sessions_fts USING fts5(
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS patterns_fts USING fts5(
-  pattern_id UNINDEXED,
+  id UNINDEXED,
   title,
   content
 );
@@ -158,53 +159,67 @@ CREATE VIRTUAL TABLE IF NOT EXISTS invariants_fts USING fts5(
 );
 
 -- Triggers to keep FTS indices in sync
--- Note: Self-managed FTS (not using content= tables) to avoid SQLITE_CORRUPT_VTAB errors
+-- Note: Uses rowid-based operations for FTS5 compatibility
+-- FTS5 UPDATE is problematic, so we use DELETE + INSERT pattern
+-- Column name in FTS tables is 'id' (not plan_id/session_id/pattern_id)
 CREATE TRIGGER IF NOT EXISTS plans_ai AFTER INSERT ON plans BEGIN
-  INSERT INTO plans_fts (plan_id, title, content)
-  VALUES (new.id, new.title, new.content);
+  INSERT INTO plans_fts (rowid, id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS plans_ad AFTER DELETE ON plans BEGIN
-  DELETE FROM plans_fts WHERE plan_id = old.id;
+  DELETE FROM plans_fts WHERE rowid = old.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS plans_au AFTER UPDATE ON plans BEGIN
-  UPDATE plans_fts SET title = new.title, content = new.content WHERE plan_id = old.id;
+  DELETE FROM plans_fts WHERE rowid = old.rowid;
+  INSERT INTO plans_fts (rowid, id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_ai AFTER INSERT ON sessions BEGIN
-  INSERT INTO sessions_fts (id, topic, content)
-  VALUES (new.id, new.topic, new.content);
+  INSERT INTO sessions_fts (rowid, id, topic, content)
+  VALUES (new.rowid, new.id, new.topic, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_ad AFTER DELETE ON sessions BEGIN
-  DELETE FROM sessions_fts WHERE id = old.id;
+  DELETE FROM sessions_fts WHERE rowid = old.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS sessions_au AFTER UPDATE ON sessions BEGIN
-  UPDATE sessions_fts SET topic = new.topic, content = new.content WHERE id = old.id;
+  DELETE FROM sessions_fts WHERE rowid = old.rowid;
+  INSERT INTO sessions_fts (rowid, id, topic, content)
+  VALUES (new.rowid, new.id, new.topic, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_ai AFTER INSERT ON patterns BEGIN
-  INSERT INTO patterns_fts (pattern_id, title, content)
-  VALUES (new.id, new.title, new.content);
+  INSERT INTO patterns_fts (rowid, id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_ad AFTER DELETE ON patterns BEGIN
-  DELETE FROM patterns_fts WHERE pattern_id = old.id;
+  DELETE FROM patterns_fts WHERE rowid = old.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS patterns_au AFTER UPDATE ON patterns BEGIN
-  UPDATE patterns_fts SET title = new.title, content = new.content WHERE pattern_id = old.id;
+  DELETE FROM patterns_fts WHERE rowid = old.rowid;
+  INSERT INTO patterns_fts (rowid, id, title, content)
+  VALUES (new.rowid, new.id, new.title, new.content);
 END;
 
 CREATE TRIGGER IF NOT EXISTS invariants_ai AFTER INSERT ON invariants BEGIN
-  INSERT INTO invariants_fts (id, name, rule)
-  VALUES (new.id, new.name, new.rule);
+  INSERT INTO invariants_fts (rowid, id, name, rule)
+  VALUES (new.rowid, new.id, new.name, new.rule);
 END;
 
 CREATE TRIGGER IF NOT EXISTS invariants_ad AFTER DELETE ON invariants BEGIN
-  DELETE FROM invariants_fts WHERE id = old.id;
+  DELETE FROM invariants_fts WHERE rowid = old.rowid;
+END;
+
+CREATE TRIGGER IF NOT EXISTS invariants_au AFTER UPDATE ON invariants BEGIN
+  DELETE FROM invariants_fts WHERE rowid = old.rowid;
+  INSERT INTO invariants_fts (rowid, id, name, rule)
+  VALUES (new.rowid, new.id, new.name, new.rule);
 END;
 
 CREATE TRIGGER IF NOT EXISTS invariants_au AFTER UPDATE ON invariants BEGIN

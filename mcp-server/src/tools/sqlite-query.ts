@@ -40,7 +40,7 @@ import { SqliteStorage } from '../../../lib/context/sqlite-storage.js';
  * @param params - Flexible query filters and database path
  * @returns MCP-compliant response with session data
  */
-export async function querySessionsSqlite(params: {
+export async function querySessions(params: {
   // Natural language
   when?: string;
   about?: string;
@@ -61,10 +61,10 @@ export async function querySessionsSqlite(params: {
       ...params,
       dbPath: params.dbPath || findKnowledgeDb(),
     };
-    
+
     // Parse flexible parameters into structured format
     const parsed = parseQueryParams(effectiveParams);
-    
+
     // Type-safe narrowing: Extract only QuerySessionsOptions fields
     const sessionOptions: QuerySessionsOptions = {
       dbPath: parsed.dbPath,
@@ -74,7 +74,7 @@ export async function querySessionsSqlite(params: {
       status: parsed.status,
       includeContent: parsed.includeContent,
     };
-    
+
     const result = await querySessionsCore(sessionOptions);
 
     return {
@@ -107,7 +107,7 @@ export async function querySessionsSqlite(params: {
  * Get a single session with related entities in one call
  * Returns session + linked plan + reviews + events
  */
-export async function getSessionSqlite(params: {
+export async function getSession(params: {
   sessionId: string;
   dbPath?: string;
 }) {
@@ -170,7 +170,7 @@ export async function getSessionSqlite(params: {
  * @param params - Flexible query filters and database path
  * @returns MCP-compliant response with plan data
  */
-export async function queryPlansSqlite(params: {
+export async function queryPlans(params: {
   // Natural language
   when?: string;
   about?: string;
@@ -188,7 +188,7 @@ export async function queryPlansSqlite(params: {
   try {
     // Parse flexible parameters into structured format
     const parsed = parseQueryParams(params);
-    
+
     // Type-safe narrowing: Extract only QueryPlansOptions fields
     const planOptions: QueryPlansOptions = {
       dbPath: parsed.dbPath,
@@ -198,7 +198,7 @@ export async function queryPlansSqlite(params: {
       priority: parsed.priority,
       includeContent: parsed.includeContent,
     };
-    
+
     const result = await queryPlansCore(planOptions);
 
     return {
@@ -241,7 +241,7 @@ export async function queryPlansSqlite(params: {
  * @param params - Flexible query filters and database path
  * @returns MCP-compliant response with pattern data
  */
-export async function queryLearnedPatternsSqlite(params: {
+export async function queryLearnedPatterns(params: {
   // Natural language
   when?: string;
   about?: string;
@@ -257,7 +257,7 @@ export async function queryLearnedPatternsSqlite(params: {
   try {
     // Parse flexible parameters into structured format
     const parsed = parseQueryParams(params);
-    
+
     // Type-safe narrowing: Extract only QueryLearnedPatternsOptions fields
     const patternOptions: QueryLearnedPatternsOptions = {
       dbPath: parsed.dbPath,
@@ -265,7 +265,7 @@ export async function queryLearnedPatternsSqlite(params: {
       keywords: parsed.keywords,
       includeContent: parsed.includeContent,
     };
-    
+
     const result = await queryLearnedPatternsCore(patternOptions);
 
     return {
@@ -304,7 +304,7 @@ export async function queryLearnedPatternsSqlite(params: {
  * @param params - Search query, database path, and optional limit
  * @returns MCP-compliant response with search results
  */
-export async function searchContextSqlite(params: {
+export async function searchContext(params: {
   dbPath?: string;
   query: string;
   limit?: number;
@@ -350,7 +350,7 @@ export async function searchContextSqlite(params: {
  * @param params - Database path
  * @returns MCP-compliant response with statistics
  */
-export async function getDbStatsSqlite(params: {
+export async function getDbStats(params: {
   dbPath?: string;
 }) {
   try {

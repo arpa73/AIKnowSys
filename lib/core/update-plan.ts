@@ -28,6 +28,8 @@ export interface UpdatePlanCoreOptions {
   setStatus?: PlanStatus;
   append?: string;           // Append progress note
   appendFile?: string;       // Append from file
+  prepend?: string;          // Prepend critical update
+  updates?: Record<string, any>; // Arbitrary frontmatter updates
   author?: string;           // Author for auto-detection
   targetDir?: string;
   storage?: SqliteStorage;
@@ -69,6 +71,8 @@ export async function updatePlanCore(
     setStatus,
     append,
     appendFile: appendFileOption,
+    prepend,
+    updates: providedUpdates,
     author = detectUsername(),
     targetDir = process.cwd(),
     storage,
@@ -106,7 +110,7 @@ export async function updatePlanCore(
     const locator = new DatabaseLocator();
     // Resolve project config to get ID
     const config = await locator.getDatabaseConfig(resolvedTargetDir);
-    
+
     await enforceConstraints('COMPLETE_PLAN', {
       userId: author, // Using author as user ID
       projectId: config.projectId,
@@ -142,7 +146,7 @@ export async function updatePlanCore(
 
   // Track changes
   const changes: string[] = [];
-  const updates: Record<string, string | number> = {};
+  const updates: Record<string, any> = providedUpdates ? { ...providedUpdates } : {};
 
   // Status update
   if (setStatus) {
@@ -191,8 +195,8 @@ export async function updatePlanCore(
       if (firstHeadingMatch && firstHeadingMatch.index) {
         const insertPos = firstHeadingMatch.index;
         updatedBody = updatedBody.slice(0, insertPos) +
-                      '\n\n## Progress\n\n' + progressNote + '\n' +
-                      updatedBody.slice(insertPos);
+          '\n\n## Progress\n\n' + progressNote + '\n' +
+          updatedBody.slice(insertPos);
       } else {
         // No headings found, append at end
         updatedBody = updatedBody.trimEnd() + '\n\n## Progress\n\n' + progressNote + '\n';
@@ -200,6 +204,24 @@ export async function updatePlanCore(
     }
 
     changes.push('Added progress note');
+  }
+
+  // Prepend critical update
+  if (prepend) {
+    const date = new Date().toISOString().split('T')[0];
+    const prependNote = `**${date}:** ${prepend}`;
+
+    // Find the first heading to insert right before it, or just at the top of the body
+    const firstHeadingMatch = updatedBody.match(/\n## /);
+    if (firstHeadingMatch && firstHeadingMatch.index !== undefined) {
+      const insertPos = firstHeadingMatch.index;
+      updatedBody = updatedBody.slice(0, insertPos) +
+        '\n\n' + prependNote + '\n\n' +
+        updatedBody.slice(insertPos);
+    } else {
+      updatedBody = '\n' + prependNote + '\n\n' + updatedBody.trimStart();
+    }
+    changes.push('Prepended critical update');
   }
 
   // Update plan content

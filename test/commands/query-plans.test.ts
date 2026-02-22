@@ -2,13 +2,18 @@ import { describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { queryPlans } from '../../lib/commands/query-plans.js';
+import { migrateToSqlite } from '../../lib/commands/migrate-to-sqlite.js';
 
 describe('query-plans command', () => {
   let tmpDir: string;
+  let originalDbPath: string | undefined;
 
   beforeEach(async () => {
+    originalDbPath = process.env.AIKNOWSYS_DB_PATH;
+
     // Create temp project directory for tests
     tmpDir = path.join(process.cwd(), 'test-tmp-query-plans-' + Date.now());
+    process.env.AIKNOWSYS_DB_PATH = path.join(tmpDir, '.aiknowsys', 'knowledge.db');
     await fs.mkdir(tmpDir, { recursive: true });
     await fs.mkdir(path.join(tmpDir, '.aiknowsys'), { recursive: true });
     await fs.mkdir(path.join(tmpDir, '.aiknowsys', 'plans'), { recursive: true });
@@ -35,49 +40,76 @@ describe('query-plans command', () => {
     // Create plan files
     await fs.writeFile(
       path.join(tmpDir, '.aiknowsys', 'PLAN_typescript_migration.md'),
-      `# TypeScript Migration
+      `---
+title: TypeScript Migration
+status: ACTIVE
+author: alice
+created: '2026-02-01'
+updated: '2026-02-05'
+topics: [typescript, migration]
+---
 
-**Status:** 🎯 ACTIVE  
-**Created:** 2026-02-01  
-**Updated:** 2026-02-05
+# TypeScript Migration
 
 Migrating entire codebase to TypeScript.`
     );
 
     await fs.writeFile(
       path.join(tmpDir, '.aiknowsys', 'PLAN_context_query.md'),
-      `# Context Query System
+      `---
+title: Context Query System
+status: ACTIVE
+author: bob
+created: '2026-02-06'
+updated: '2026-02-06'
+topics: [query, cli]
+---
 
-**Status:** 🎯 ACTIVE  
-**Created:** 2026-02-06  
-**Updated:** 2026-02-06
+# Context Query System
 
 Implement CLI query commands for context.`
     );
 
     await fs.writeFile(
       path.join(tmpDir, '.aiknowsys', 'PLAN_archived_work.md'),
-      `# Archived Work
+      `---
+title: Archived Work
+status: COMPLETE
+author: charlie
+created: '2026-01-15'
+updated: '2026-01-31'
+topics: [archive, legacy]
+---
 
-**Status:** ✅ COMPLETE  
-**Created:** 2026-01-15  
-**Updated:** 2026-01-31
+# Archived Work
 
 Completed project from last month.`
     );
+
+    // Ingest into isolated test database
+    await migrateToSqlite({
+      dir: tmpDir,
+      dbPath: process.env.AIKNOWSYS_DB_PATH as string
+    });
   });
 
   afterEach(async () => {
+    if (originalDbPath === undefined) {
+      delete process.env.AIKNOWSYS_DB_PATH;
+    } else {
+      process.env.AIKNOWSYS_DB_PATH = originalDbPath;
+    }
+
     // Cleanup
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
   describe('basic functionality', () => {
     it('should return all plans when no filters provided', async () => {
-      const result = await queryPlans({ 
+      const result = await queryPlans({
         dir: tmpDir,
         json: true,
-        _silent: true 
+        _silent: true
       });
 
       expect(result).toHaveProperty('count');
@@ -131,7 +163,7 @@ Completed project from last month.`
       });
 
       expect(result.count).toBeGreaterThan(0);
-      expect(result.plans.some((p: any) => 
+      expect(result.plans.some((p: any) =>
         p.title.toLowerCase().includes('typescript')
       )).toBe(true);
     });
@@ -212,6 +244,7 @@ Completed project from last month.`
 
     it('should handle missing .aiknowsys directory gracefully', async () => {
       const emptyDir = path.join(process.cwd(), 'test-tmp-empty-' + Date.now());
+      process.env.AIKNOWSYS_DB_PATH = path.join(emptyDir, '.aiknowsys', 'knowledge.db');
       await fs.mkdir(emptyDir, { recursive: true });
 
       try {
@@ -266,7 +299,7 @@ Completed project from last month.`
         _silent: true
       });
 
-      expect(result.plans.every((p: any) => 
+      expect(result.plans.every((p: any) =>
         p.updated > '2026-02-01'
       )).toBe(true);
     });
@@ -279,7 +312,7 @@ Completed project from last month.`
         _silent: true
       });
 
-      expect(result.plans.every((p: any) => 
+      expect(result.plans.every((p: any) =>
         p.updated < '2026-02-06'
       )).toBe(true);
     });
@@ -293,7 +326,7 @@ Completed project from last month.`
         _silent: true
       });
 
-      expect(result.plans.every((p: any) => 
+      expect(result.plans.every((p: any) =>
         p.updated > '2026-02-01' && p.updated < '2026-02-06'
       )).toBe(true);
     });

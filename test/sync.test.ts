@@ -31,17 +31,17 @@ describe('sync command', () => {
       hasAgents: true,
       hasValidationMatrix: true
     });
-    
+
     await sync({ dir: testDir, _silent: true });
-    
+
     // Should pass the matrix existence check
     expect(true).toBeTruthy();
   });
 
-  it('should exit if ESSENTIALS not found', async () => {
+  it('should exit successfully if ESSENTIALS not found (Markdown-less Architecture)', async () => {
     // No CODEBASE_ESSENTIALS.md in directory
-    
-    await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/ESSENTIALS.*not found/i);
+
+    await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   it('should exit if AGENTS not found', async () => {
@@ -49,18 +49,18 @@ describe('sync command', () => {
       hasEssentials: true
       // No AGENTS.md
     });
-    
+
     await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/AGENTS.*not found/i);
   });
 
-  it('should exit if validation matrix missing in ESSENTIALS', async () => {
+  it('should exit successfully if validation matrix missing in ESSENTIALS (Markdown-less Architecture)', async () => {
     createMockProject(testDir, {
       hasEssentials: true,
       hasAgents: true,
       hasValidationMatrix: false // No matrix
     });
-    
-    await expect(async () => await sync({ dir: testDir, _silent: true })).rejects.toThrow(/validation matrix/i);
+
+    await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   // ========================================
@@ -74,14 +74,14 @@ describe('sync command', () => {
       hasValidationMatrix: true,
       hasDuplicateMatrix: true // Matrix in both files
     });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
-    
+
     // Before sync - matrix exists in AGENTS
     assertFileContains(agentsPath, /\|\s*Command\s*\|/);
-    
+
     await sync({ dir: testDir, _silent: true });
-    
+
     // After sync - matrix removed from AGENTS
     assertFileNotContains(agentsPath, /\|\s*Command\s*\|/);
   });
@@ -93,16 +93,16 @@ describe('sync command', () => {
       hasValidationMatrix: true,
       hasDuplicateMatrix: true
     });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
-    
+
     // AGENTS has other content we want to keep
     let agentsContent: string = fs.readFileSync(agentsPath, 'utf-8');
     agentsContent += '\n\n## Important Section\n\nKeep this content.\n';
     fs.writeFileSync(agentsPath, agentsContent);
-    
+
     await sync({ dir: testDir, _silent: true });
-    
+
     // Important section should still be there
     assertFileContains(agentsPath, 'Important Section');
     assertFileContains(agentsPath, 'Keep this content');
@@ -115,11 +115,11 @@ describe('sync command', () => {
       hasValidationMatrix: true,
       hasDuplicateMatrix: true
     });
-    
+
     await sync({ dir: testDir, _silent: true });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
-    
+
     // Should add text like "See CODEBASE_ESSENTIALS.md for validation matrix"
     // or reference the ESSENTIALS file
     assertFileContains(agentsPath, 'CODEBASE_ESSENTIALS.md');
@@ -131,30 +131,30 @@ describe('sync command', () => {
 
   it('should detect matrix with "## 2. Validation Matrix" heading', async () => {
     createMockProject(testDir, { hasEssentials: true, hasAgents: true });
-    
+
     const essentialsPath: string = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
     let content: string = fs.readFileSync(essentialsPath, 'utf-8');
-    
+
     // Ensure numbered heading format
     if (!content.includes('## 2. Validation Matrix')) {
       content = content.replace('## Validation Matrix', '## 2. Validation Matrix');
       fs.writeFileSync(essentialsPath, content);
     }
-    
+
     // sync should detect this format
     await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
 
   it('should detect matrix with "## Validation Matrix" heading', async () => {
     createMockProject(testDir, { hasEssentials: true, hasAgents: true });
-    
+
     const essentialsPath: string = path.join(testDir, 'CODEBASE_ESSENTIALS.md');
     let content: string = fs.readFileSync(essentialsPath, 'utf-8');
-    
+
     // Ensure non-numbered heading
     content = content.replace(/## \d+\.\s*Validation Matrix/, '## Validation Matrix');
     fs.writeFileSync(essentialsPath, content);
-    
+
     // sync should detect this format too
     await expect(sync({ dir: testDir, _silent: true })).resolves.not.toThrow();
   });
@@ -165,14 +165,14 @@ describe('sync command', () => {
       hasAgents: true,
       hasDuplicateMatrix: true
     });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
     const content: string = fs.readFileSync(agentsPath, 'utf-8');
-    
+
     // Verify the matrix pattern exists before sync
     const hasCommandColumn: boolean = /\|\s*Command\s*\|/i.test(content);
     const hasTestCommand: boolean = /npm test/i.test(content);
-    
+
     expect(hasCommandColumn && hasTestCommand).toBeTruthy();
   });
 
@@ -182,16 +182,16 @@ describe('sync command', () => {
 
   it('should work with --dir option', async () => {
     const customDir: string = createTestDir();
-    
+
     try {
       createMockProject(customDir, {
         hasEssentials: true,
         hasAgents: true,
         hasValidationMatrix: true
       });
-      
+
       await sync({ dir: customDir, _silent: true });
-      
+
       expect(true).toBeTruthy();
     } finally {
       cleanupTestDir(customDir);
@@ -209,17 +209,17 @@ describe('sync command', () => {
       hasValidationMatrix: true,
       hasDuplicateMatrix: true
     });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
-    
+
     // Run sync once
     await sync({ dir: testDir, _silent: true });
     const contentAfterFirst: string = fs.readFileSync(agentsPath, 'utf-8');
-    
+
     // Run sync again
     await sync({ dir: testDir, _silent: true });
     const contentAfterSecond: string = fs.readFileSync(agentsPath, 'utf-8');
-    
+
     // Content should be the same (idempotent)
     expect(contentAfterFirst).toBe(contentAfterSecond);
   });
@@ -231,14 +231,14 @@ describe('sync command', () => {
       hasValidationMatrix: true,
       hasDuplicateMatrix: false // Already correct (no duplicate)
     });
-    
+
     const agentsPath: string = path.join(testDir, 'AGENTS.md');
     const contentBefore: string = fs.readFileSync(agentsPath, 'utf-8');
-    
+
     await sync({ dir: testDir, _silent: true });
-    
+
     const contentAfter: string = fs.readFileSync(agentsPath, 'utf-8');
-    
+
     // If already synced, should not change
     expect(contentBefore).toBe(contentAfter);
   });

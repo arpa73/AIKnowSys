@@ -179,14 +179,14 @@ Per-developer plan tracking for multi-developer teams.
 
 1. Create plan: \`PLAN_<name>.md\` in \`.aiknowsys/\`
 2. Update your pointer: Edit \`active-${username}.md\`
-3. Sync team index: \`npx aiknowsys sync-plans\`
-4. Team sees your progress (no merge conflicts!)
+3. Query active plans: \`npx aiknowsys query-plans --status ACTIVE\`
+4. Team sees your progress via DB queries (no merge conflicts!)
 
 ## Why Per-Developer Files?
 
 - ✅ No merge conflicts (each dev has own file)
 - ✅ Clear ownership (who's working on what)
-- ✅ Team visibility (sync-plans aggregates)
+- ✅ Team visibility (DB queries aggregate)
 - ✅ Git-tracked (committed to repository)
 
 ---
@@ -219,7 +219,7 @@ Per-developer plan tracking for multi-developer teams.
 
 *Migrated from CURRENT_PLAN.md*  
 *Update this file to point to your active plan.*  
-*Run \`npx aiknowsys sync-plans\` to regenerate team index.*
+*Query active plans via: npx aiknowsys query-plans --status ACTIVE*
 `;
         await fs.writeFile(activePlanPath, activePlanContent);
         if (!options._silent) {
@@ -323,7 +323,7 @@ Per-developer review files for multi-developer teams.
       }
       log.blank();
       log.white('📝 Next steps:');
-      log.dim('   1. Run: npx aiknowsys sync-plans (to regenerate team index)');
+      log.dim('   1. Query plans: npx aiknowsys query-plans --status ACTIVE');
       log.dim('   2. New patterns will save to personal/ by default');
       log.dim('   3. Share patterns: npx aiknowsys share-pattern <name>');
       log.dim('   4. List patterns: npx aiknowsys list-patterns');

@@ -9,12 +9,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  querySessionsSqlite,
-  getSessionSqlite,
-  queryPlansSqlite,
-  queryLearnedPatternsSqlite,
-  searchContextSqlite,
-  getDbStatsSqlite,
+  querySessions,
+  getSession,
+  queryPlans,
+  queryLearnedPatterns,
+  searchContext,
+  getDbStats,
 } from '../../src/tools/sqlite-query.js';
 
 const mockStorageInit = vi.fn();
@@ -56,7 +56,7 @@ import {
   getDbStats as getDbStatsCore,
 } from '../../../lib/core/sqlite-query.js';
 
-describe('querySessionsSqlite (MCP Tool)', () => {
+describe('querySessions (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -88,7 +88,7 @@ describe('querySessionsSqlite (MCP Tool)', () => {
     vi.mocked(querySessionsCore).mockResolvedValue(mockResult);
 
     // WHEN: Tool is called with filters
-    const result = await querySessionsSqlite({
+    const result = await querySessions({
       dbPath: '/tmp/test.db',
       dateAfter: '2026-02-10',
     });
@@ -108,7 +108,7 @@ describe('querySessionsSqlite (MCP Tool)', () => {
     vi.mocked(querySessionsCore).mockRejectedValue(new Error('Database not found'));
 
     // WHEN: Tool is called
-    const result = await querySessionsSqlite({
+    const result = await querySessions({
       dbPath: '/tmp/missing.db',
     });
 
@@ -129,7 +129,7 @@ describe('querySessionsSqlite (MCP Tool)', () => {
       status: 'complete',
     };
 
-    await querySessionsSqlite(filters);
+    await querySessions(filters);
 
     // Expect parsed parameters (includes default includeContent: false)
     expect(querySessionsCore).toHaveBeenCalledWith({
@@ -139,7 +139,7 @@ describe('querySessionsSqlite (MCP Tool)', () => {
   });
 });
 
-describe('queryPlansSqlite (MCP Tool)', () => {
+describe('queryPlans (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -170,7 +170,7 @@ describe('queryPlansSqlite (MCP Tool)', () => {
     vi.mocked(queryPlansCore).mockResolvedValue(mockResult);
 
     // WHEN: Tool is called
-    const result = await queryPlansSqlite({
+    const result = await queryPlans({
       dbPath: '/tmp/test.db',
       status: 'ACTIVE',
     });
@@ -184,7 +184,7 @@ describe('queryPlansSqlite (MCP Tool)', () => {
   it('should handle errors gracefully', async () => {
     vi.mocked(queryPlansCore).mockRejectedValue(new Error('Query failed'));
 
-    const result = await queryPlansSqlite({
+    const result = await queryPlans({
       dbPath: '/tmp/test.db',
     });
 
@@ -193,7 +193,7 @@ describe('queryPlansSqlite (MCP Tool)', () => {
   });
 });
 
-describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
+describe('queryLearnedPatterns (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -221,7 +221,7 @@ describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
     vi.mocked(queryLearnedPatternsCore).mockResolvedValue(mockResult);
 
     // WHEN: Tool is called
-    const result = await queryLearnedPatternsSqlite({
+    const result = await queryLearnedPatterns({
       dbPath: '/tmp/test.db',
       category: 'testing',
     });
@@ -235,7 +235,7 @@ describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
   it('should handle errors gracefully', async () => {
     vi.mocked(queryLearnedPatternsCore).mockRejectedValue(new Error('Query failed'));
 
-    const result = await queryLearnedPatternsSqlite({
+    const result = await queryLearnedPatterns({
       dbPath: '/tmp/test.db',
     });
 
@@ -244,7 +244,7 @@ describe('queryLearnedPatternsSqlite (MCP Tool)', () => {
   });
 });
 
-describe('searchContextSqlite (MCP Tool)', () => {
+describe('searchContext (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -286,7 +286,7 @@ describe('searchContextSqlite (MCP Tool)', () => {
     vi.mocked(searchContextCore).mockResolvedValue(mockResult);
 
     // WHEN: Tool is called
-    const result = await searchContextSqlite({
+    const result = await searchContext({
       dbPath: '/tmp/test.db',
       query: 'SQLite',
     });
@@ -305,7 +305,7 @@ describe('searchContextSqlite (MCP Tool)', () => {
       query: 'test',
     });
 
-    const result = await searchContextSqlite({
+    const result = await searchContext({
       dbPath: '/tmp/test.db',
       query: 'test',
       limit: 5,
@@ -318,7 +318,7 @@ describe('searchContextSqlite (MCP Tool)', () => {
   it('should handle errors gracefully', async () => {
     vi.mocked(searchContextCore).mockRejectedValue(new Error('Search failed'));
 
-    const result = await searchContextSqlite({
+    const result = await searchContext({
       dbPath: '/tmp/test.db',
       query: 'test',
     });
@@ -328,7 +328,7 @@ describe('searchContextSqlite (MCP Tool)', () => {
   });
 });
 
-describe('getDbStatsSqlite (MCP Tool)', () => {
+describe('getDbStats (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -351,7 +351,7 @@ describe('getDbStatsSqlite (MCP Tool)', () => {
     vi.mocked(getDbStatsCore).mockResolvedValue(mockResult);
 
     // WHEN: Tool is called
-    const result = await getDbStatsSqlite({
+    const result = await getDbStats({
       dbPath: '/tmp/test.db',
     });
 
@@ -374,7 +374,7 @@ describe('getDbStatsSqlite (MCP Tool)', () => {
       dbPath: '/tmp/empty.db',
     });
 
-    const result = await getDbStatsSqlite({
+    const result = await getDbStats({
       dbPath: '/tmp/empty.db',
     });
 
@@ -385,7 +385,7 @@ describe('getDbStatsSqlite (MCP Tool)', () => {
   it('should handle errors gracefully', async () => {
     vi.mocked(getDbStatsCore).mockRejectedValue(new Error('Database error'));
 
-    const result = await getDbStatsSqlite({
+    const result = await getDbStats({
       dbPath: '/tmp/test.db',
     });
 
@@ -394,7 +394,7 @@ describe('getDbStatsSqlite (MCP Tool)', () => {
   });
 });
 
-describe('getSessionSqlite (MCP Tool)', () => {
+describe('getSession (MCP Tool)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
@@ -412,7 +412,7 @@ describe('getSessionSqlite (MCP Tool)', () => {
       events: [{ eventId: 'evt-1', eventType: 'SESSION_STARTED' }],
     });
 
-    const result = await getSessionSqlite({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
+    const result = await getSession({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
 
     const data = JSON.parse(result.content[0].text);
     expect(data.session.id).toBe('sess-1');
@@ -426,7 +426,7 @@ describe('getSessionSqlite (MCP Tool)', () => {
   it('should return structured not-found response', async () => {
     mockGetSessionWithRelations.mockResolvedValue(undefined);
 
-    const result = await getSessionSqlite({ sessionId: 'missing', dbPath: '/tmp/test.db' });
+    const result = await getSession({ sessionId: 'missing', dbPath: '/tmp/test.db' });
 
     const data = JSON.parse(result.content[0].text);
     expect(data.error).toBe(true);
@@ -437,7 +437,7 @@ describe('getSessionSqlite (MCP Tool)', () => {
   it('should close storage when initialization fails', async () => {
     mockStorageInit.mockRejectedValueOnce(new Error('DB init failed'));
 
-    const result = await getSessionSqlite({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
+    const result = await getSession({ sessionId: 'sess-1', dbPath: '/tmp/test.db' });
 
     const data = JSON.parse(result.content[0].text);
     expect(data.error).toBe(true);

@@ -78,7 +78,7 @@ export async function rebuildIndex(
       log.info(`🧠 Learned patterns indexed: ${result.learnedIndexed}`);
     }
     log.blank();
-    log.info('Index saved to: .aiknowsys/context-index.json');
+    log.info('Index saved to: SQLite knowledge database');
 
     return {
       plansIndexed: result.plansIndexed,

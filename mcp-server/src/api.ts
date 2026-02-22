@@ -12,12 +12,12 @@
  */
 
 // SQLite Query Tools
-export { 
-  querySessionsSqlite,
-  queryPlansSqlite,
-  queryLearnedPatternsSqlite,
-  searchContextSqlite,
-  getDbStatsSqlite
+export {
+  querySessions,
+  queryPlans,
+  queryLearnedPatterns,
+  searchContext,
+  getDbStats
 } from './tools/sqlite-query.js';
 
 // Context Tools
@@ -26,11 +26,6 @@ export {
   getValidationMatrix
 } from './tools/context.js';
 
-// Query Tools
-export {
-  getActivePlans,
-  getRecentSessions
-} from './tools/query.js';
 
 // Skills Tools
 export {

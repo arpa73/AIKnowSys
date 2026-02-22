@@ -1,8 +1,6 @@
 export * from './context.js';
 export * from './enhanced-query.js';
 export * from './mutations.js';
-export * from './query.js';
-export * from './skills.js';
-export * from './split-mutations.js';
-export * from './sqlite-query.js';
+export { querySessions, getSession, queryPlans, queryLearnedPatterns, getDbStats } from './sqlite-query.js';
+export { searchContext as searchContextSqlite } from './sqlite-query.js';
 export * from './validation.js';

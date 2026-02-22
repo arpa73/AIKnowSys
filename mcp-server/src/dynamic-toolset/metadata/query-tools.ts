@@ -1,87 +1,126 @@
 import type { ToolMetadata } from '../tool-registry.js';
 import { z } from 'zod';
 import {
-  queryPlansWithFilters,
-  querySessionsWithFilters,
-  getPlansByStatus,
-  getAllPlans,
-  getSessionByDate,
-  rebuildContextIndex,
-  syncPlans,
-} from '../../tools/query.js';
-import { searchContext, findPattern, getSkillByName } from '../../tools/enhanced-query.js';
+  querySessions,
+  getSession,
+  queryPlans,
+  queryLearnedPatterns,
+  searchContext,
+  getDbStats,
+} from '../../tools/sqlite-query.js';
+import { findPattern, getSkillByName } from '../../tools/enhanced-query.js';
 import { getActivePlanPointer } from '../../tools/mutations.js';
+import { rebuildContextIndex } from '../../tools/context.js';
 
 /**
- * Query tools - Query sessions, plans, and learned patterns
- * These tools provide flexible filtering and search capabilities
+ * Query tools - High-performance SQLite queries for context finding
  */
 export const QUERY_TOOLS: ToolMetadata[] = [
   {
+    name: 'query_sessions',
+    description:
+      'Query sessions with 4 levels of detail for token efficiency. Modes: preview (150 tokens), metadata (500 tokens), section (1.2K tokens), full (22K tokens). Supports natural language (when/about) and structured filters.',
+    category: 'query',
+    tags: ['sessions', 'database', 'fast', 'progressive', 'natural-language'],
+    inputSchema: z.object({
+      mode: z
+        .enum(['preview', 'metadata', 'section', 'full'])
+        .optional()
+        .default('metadata'),
+      section: z.string().optional(),
+      when: z.string().optional(),
+      about: z.string().optional(),
+      last: z.number().optional(),
+      unit: z.enum(['days', 'weeks', 'months']).optional(),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+      dateAfter: z.string().optional(),
+      dateBefore: z.string().optional(),
+      topic: z.string().optional(),
+      status: z.string().optional(),
+      includeContent: z.boolean().optional().default(false),
+    }),
+    handler: querySessions,
+  },
+  {
+    name: 'get_session',
+    description:
+      'Get a single session with related entities (plan, reviews, events) in one response.',
+    category: 'query',
+    tags: ['sessions', 'database', 'related', 'single-record'],
+    inputSchema: z.object({
+      sessionId: z.string().min(1),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+    }),
+    handler: getSession,
+  },
+  {
     name: 'query_plans',
     description:
-      'Query plans with flexible filters: status (ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED), author, topic, date range. Returns structured plan metadata.',
+      'Query plans with 4 levels of detail for token efficiency. Modes: preview (150 tokens), metadata (500 tokens), section (1.2K tokens), full (22K tokens). Supports natural language and structured filters.',
     category: 'query',
-    tags: ['plans', 'filter', 'search', 'metadata'],
+    tags: ['plans', 'database', 'fast', 'progressive', 'natural-language'],
     inputSchema: z.object({
+      mode: z
+        .enum(['preview', 'metadata', 'section', 'full'])
+        .optional()
+        .default('metadata'),
+      section: z.string().optional(),
+      when: z.string().optional(),
+      about: z.string().optional(),
+      last: z.number().optional(),
+      unit: z.enum(['days', 'weeks', 'months']).optional(),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
       status: z
         .enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED'])
         .optional(),
       author: z.string().optional(),
       topic: z.string().optional(),
-      updatedAfter: z.string().optional(),
-      updatedBefore: z.string().optional(),
+      priority: z.enum(['high', 'medium', 'low']).optional(),
+      includeContent: z.boolean().optional().default(false),
     }),
-    handler: queryPlansWithFilters,
+    handler: queryPlans,
   },
   {
-    name: 'query_sessions',
+    name: 'query_learned_patterns',
     description:
-      'Query sessions with flexible filters: exact date, date range (dateAfter/dateBefore), topic, plan reference, or last N days. Returns structured session metadata.',
+      'Query learned patterns with flexible natural language or structured parameters. Returns metadata-only by default (95% savings).',
     category: 'query',
-    tags: ['sessions', 'filter', 'search', 'metadata', 'date'],
+    tags: ['patterns', 'database', 'fast', 'natural-language'],
     inputSchema: z.object({
-      date: z.string().optional(),
-      dateAfter: z.string().optional(),
-      dateBefore: z.string().optional(),
-      topic: z.string().optional(),
-      plan: z.string().optional(),
-      days: z.number().optional(),
+      when: z.string().optional(),
+      about: z.string().optional(),
+      last: z.number().optional(),
+      unit: z.enum(['days', 'weeks', 'months']).optional(),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+      category: z.string().optional(),
+      keywords: z.array(z.string()).optional(),
+      includeContent: z.boolean().optional().default(false),
     }),
-    handler: querySessionsWithFilters,
+    handler: queryLearnedPatterns,
   },
   {
-    name: 'get_plans_by_status',
+    name: 'search_context',
     description:
-      'Get all plans with a specific status. Simpler than query_plans for status-only queries. Status values: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED.',
+      'Full-text search across all content using SQLite FTS. Returns ranked snippets. 10-100x faster than file-based search.',
     category: 'query',
-    tags: ['plans', 'status', 'filter'],
+    tags: ['search', 'database', 'fast', 'full-text'],
     inputSchema: z.object({
-      status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+      query: z.string().min(1),
+      limit: z.number().int().positive().optional(),
     }),
-    handler: async ({ status }) => getPlansByStatus(status),
+    handler: searchContext,
   },
   {
-    name: 'get_all_plans',
+    name: 'get_db_stats',
     description:
-      'Get complete inventory of all plans with metadata (id, title, author, status, dates). No filters applied.',
+      'Get SQLite database statistics: record counts, database size, last updated. Use for monitoring and health checks.',
     category: 'query',
-    tags: ['plans', 'all', 'inventory', 'metadata'],
-    inputSchema: z.object({}),
-    handler: getAllPlans,
-  },
-  {
-    name: 'get_session_by_date',
-    description:
-      'Get session file for a specific date (YYYY-MM-DD). Returns session metadata and content reference.',
-    category: 'query',
-    tags: ['sessions', 'date', 'specific'],
+    tags: ['database', 'stats', 'monitoring', 'health'],
     inputSchema: z.object({
-      date: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD'),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
     }),
-    handler: async ({ date }) => getSessionByDate(date),
+    handler: getDbStats,
   },
   {
     name: 'get_active_plan_pointer',
@@ -103,27 +142,6 @@ export const QUERY_TOOLS: ToolMetadata[] = [
     tags: ['index', 'rebuild', 'maintenance', 'sync'],
     inputSchema: z.object({}),
     handler: rebuildContextIndex,
-  },
-  {
-    name: 'sync_plans',
-    description:
-      'Sync plan metadata into the generated team plan index for human-readable overview output.',
-    category: 'query',
-    tags: ['plans', 'sync', 'maintenance', 'team'],
-    inputSchema: z.object({}),
-    handler: syncPlans,
-  },
-  {
-    name: 'search_context',
-    description:
-      'Full-text search across plans, sessions, and learned patterns. Faster than grep_search for finding historical work.',
-    category: 'query',
-    tags: ['search', 'full-text', 'context', 'history'],
-    inputSchema: z.object({
-      query: z.string(),
-      type: z.enum(['all', 'sessions', 'plans', 'learned']).optional(),
-    }),
-    handler: searchContext,
   },
   {
     name: 'find_pattern',

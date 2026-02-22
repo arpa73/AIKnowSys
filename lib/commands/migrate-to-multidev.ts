@@ -3,7 +3,6 @@ import { join, resolve } from 'node:path';
 import { createLogger } from '../logger.js';
 // @ts-ignore - git-username.js not yet migrated to TypeScript
 import { getGitUsername } from '../utils/git-username.js';
-import { syncPlansCore } from '../core/sync-plans.js';
 
 export interface MigrateToMultidevOptions {
   dir?: string;
@@ -98,15 +97,11 @@ export async function migrateToMultidev(options: MigrateToMultidevOptions = {}):
     // Update .gitignore
     updateGitignore(gitignorePath, log);
 
-    // Regenerate CURRENT_PLAN.md as team index
-    log.info('Regenerating CURRENT_PLAN.md as team index...');
-    await syncPlansCore({ targetDir });
-
     // Success message
     log.success('Migration complete! 🎉');
     log.cyan('\n📖 Next steps:');
     log.info('  1. Review .aiknowsys/plans/active-<username>.md');
-    log.info('  2. Verify .aiknowsys/CURRENT_PLAN.md is up to date');
+    log.info('  2. Verify plans in database: npx aiknowsys query-plans --status ACTIVE');
     log.info('  3. Commit changes to .aiknowsys/');
 
     return {

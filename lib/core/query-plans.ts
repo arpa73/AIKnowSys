@@ -39,6 +39,7 @@ export interface QueryPlansOptions {
   dbPath?: string;
   projectId?: string; // Filter by specific project ID
   allProjects?: boolean; // Query across all projects (default: false)
+  adapter?: 'json' | 'sqlite'; // Override adapter for testing
 }
 
 /**
@@ -94,10 +95,10 @@ export async function queryPlansCore(
       `Valid statuses: ${VALID_STATUSES.join(', ')}`
     );
   }
-  
+
   // Phase 1: Support explicit dbPath for cross-repository queries
   let storage: any;
-  
+
   if (options.dbPath) {
     // Direct database path provided - create SqliteStorage directly
     const { SqliteStorage } = await import('../context/sqlite-storage.js');
@@ -106,14 +107,17 @@ export async function queryPlansCore(
   } else {
     // Get target directory - ALWAYS resolve user input to absolute path
     // (Critical Invariant #2: Absolute Paths Required)
-    const workingDir = targetDir 
+    const workingDir = targetDir
       ? path.resolve(targetDir)
       : (options.dir ? path.resolve(options.dir) : process.cwd());
-    
+
     // Create storage adapter (uses DatabaseLocator for global DB by default)
-    storage = await createStorage(workingDir, { autoRebuild: true });
+    storage = await createStorage(workingDir, {
+      adapter: options.adapter || 'sqlite',
+      autoRebuild: true
+    });
   }
-  
+
   try {
     // Build filters object (Phase 1: Cross-Repository support)
     const filters: PlanFilters = {};
@@ -124,10 +128,10 @@ export async function queryPlansCore(
     if (options.updatedBefore) filters.updatedBefore = options.updatedBefore;
     if (options.projectId) filters.projectId = options.projectId;
     if (options.allProjects !== undefined) filters.allProjects = options.allProjects;
-    
+
     // Query storage (read-only operation)
     const result = await storage.queryPlans(filters);
-    
+
     // Return structured data
     return result;
   } finally {

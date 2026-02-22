@@ -7,6 +7,7 @@
  */
 
 import { withStorage } from './utils/storage-helpers.js';
+import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
 
 export async function getCriticalInvariants() {
   return withStorage(async (storage) => {
@@ -123,3 +124,34 @@ export async function getValidationMatrix() {
     ],
   };
 }
+
+export async function rebuildContextIndex() {
+  try {
+    await rebuildIndex({
+      json: true,
+      _silent: true,
+    });
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: true,
+            message: 'Context index rebuilt successfully',
+          }),
+        },
+      ],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({ error: true, message }, null, 2),
+        },
+      ],
+    };
+  }
+}
+

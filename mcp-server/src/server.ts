@@ -13,17 +13,7 @@ import {
 
 // Tool implementations
 import { getCriticalInvariants, getValidationMatrix } from './tools/context.js';
-import {
-  getActivePlans,
-  getRecentSessions,
-  queryPlansWithFilters,
-  querySessionsWithFilters,
-  getPlansByStatus,
-  getAllPlans,
-  getSessionByDate,
-  rebuildContextIndex,
-  syncPlans
-} from './tools/query.js';
+
 import { findSkillForTask } from './tools/skills.js';
 import {
   createSession,
@@ -50,12 +40,12 @@ import {
 import { validateDeliverables, checkTddCompliance, validateSkill } from './tools/validation.js';
 import { searchContext, findPattern, getSkillByName } from './tools/enhanced-query.js';
 import {
-  querySessionsSqlite,
-  getSessionSqlite,
-  queryPlansSqlite,
-  queryLearnedPatternsSqlite,
-  searchContextSqlite,
-  getDbStatsSqlite,
+  querySessions,
+  getSession,
+  queryPlans,
+  queryLearnedPatterns,
+  searchContext as searchContextSqlite,
+  getDbStats as getDbStatsSqlite,
 } from './tools/sqlite-query.js';
 
 export class AIKnowSysServer {
@@ -202,28 +192,6 @@ Returns execution result or validation error with details.`,
     );
 
     this.server.registerTool(
-      'get_active_plans',
-      {
-        description:
-          'Returns all currently active implementation plans using status-based plan metadata. Faster than manual file scanning and returns structured data with plan IDs, titles, authors, and file paths.',
-        inputSchema: z.object({}),
-      },
-      async () => getActivePlans()
-    );
-
-    this.server.registerTool(
-      'get_recent_sessions',
-      {
-        description:
-          'Returns recent session files with metadata (topics, dates, status). Faster than list_dir + reading each file. Works with indexed session data.',
-        inputSchema: z.object({
-          days: z.number().min(1).max(365).optional().default(7),
-        }),
-      },
-      async ({ days }) => getRecentSessions(days)
-    );
-
-    this.server.registerTool(
       'find_skill_for_task',
       {
         description:
@@ -235,99 +203,12 @@ Returns execution result or validation error with details.`,
       async (args) => findSkillForTask(args)
     );
 
-    // Phase 1.2: Advanced Query Tools (NEW - 2026-02-10)
-    this.server.registerTool(
-      'query_plans',
-      {
-        description:
-          'Query plans with flexible filters: status (ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED), author, topic, date range. Returns structured plan metadata.',
-        inputSchema: z.object({
-          status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']).optional(),
-          author: z.string().optional(),
-          topic: z.string().optional(),
-          updatedAfter: z.string().optional(),
-          updatedBefore: z.string().optional(),
-        }),
-      },
-      async (args) => queryPlansWithFilters(args)
-    );
-
+    // Phase 1 Week 2: SQLite Query Tools (10-100x faster than file-based queries)
     this.server.registerTool(
       'query_sessions',
       {
-        description:
-          'Query sessions with flexible filters: exact date, date range (dateAfter/dateBefore), topic, plan reference, or last N days. Returns structured session metadata.',
-        inputSchema: z.object({
-          date: z.string().optional(),
-          dateAfter: z.string().optional(),
-          dateBefore: z.string().optional(),
-          topic: z.string().optional(),
-          plan: z.string().optional(),
-          days: z.number().optional(),
-        }),
-      },
-      async (args) => querySessionsWithFilters(args)
-    );
-
-    this.server.registerTool(
-      'get_plans_by_status',
-      {
-        description:
-          'Get all plans with a specific status. Simpler than query_plans for status-only queries. Status values: ACTIVE, PAUSED, PLANNED, COMPLETE, CANCELLED.',
-        inputSchema: z.object({
-          status: z.enum(['ACTIVE', 'PAUSED', 'PLANNED', 'COMPLETE', 'CANCELLED']),
-        }),
-      },
-      async ({ status }) => getPlansByStatus(status)
-    );
-
-    this.server.registerTool(
-      'get_all_plans',
-      {
-        description:
-          'Get complete inventory of all plans with metadata (id, title, author, status, dates). No filters applied.',
-        inputSchema: z.object({}),
-      },
-      async () => getAllPlans()
-    );
-
-    this.server.registerTool(
-      'get_session_by_date',
-      {
-        description:
-          'Get session file for a specific date (YYYY-MM-DD). Returns session metadata and content reference.',
-        inputSchema: z.object({
-          date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format, expected YYYY-MM-DD'),
-        }),
-      },
-      async ({ date }) => getSessionByDate(date)
-    );
-
-    this.server.registerTool(
-      'rebuild_index',
-      {
-        description:
-          'Rebuild context index (.aiknowsys/context-index.json) from markdown files. Use after manual file edits or when index is corrupted.',
-        inputSchema: z.object({}),
-      },
-      async () => rebuildContextIndex()
-    );
-
-    this.server.registerTool(
-      'sync_plans',
-      {
-        description:
-          'Sync plan metadata into a generated team plan index for human-readable overview output.',
-        inputSchema: z.object({}),
-      },
-      async () => syncPlans()
-    );
-
-    // Phase 1 Week 2: SQLite Query Tools (10-100x faster than file-based queries)
-    this.server.registerTool(
-      'query_sessions_sqlite',
-      {
-        description: `Query sessions with 4 levels of detail for token efficiency:
+        description: `This is a tool from the aiknowsys MCP server.
+Query sessions with 4 levels of detail for token efficiency:
 
 MODES (default: metadata):
   preview    - Ultra-light summary (~150 tokens) → counts, dates, topics
@@ -363,7 +244,7 @@ Natural language also supported:
           includeContent: z.boolean().optional().default(false), // DEPRECATED: Use mode instead
         }),
       },
-      async (args) => querySessionsSqlite(args)
+      async (args) => await querySessions(args)
     );
 
     this.server.registerTool(
@@ -375,13 +256,14 @@ Natural language also supported:
           dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
         }),
       },
-      async (args) => getSessionSqlite(args)
+      async (args) => getSession(args)
     );
 
     this.server.registerTool(
-      'query_plans_sqlite',
+      'query_plans',
       {
-        description: `Query plans with 4 levels of detail for token efficiency:
+        description: `This is a tool from the aiknowsys MCP server.
+Query plans with 4 levels of detail for token efficiency:
 
 MODES (default: metadata):
   preview    - Ultra-light summary (~150 tokens) → counts, status, topics
@@ -417,11 +299,11 @@ Natural language also supported:
           includeContent: z.boolean().optional().default(false), // DEPRECATED: Use mode instead
         }),
       },
-      async (args) => queryPlansSqlite(args)
+      async (args) => await queryPlans(args)
     );
 
     this.server.registerTool(
-      'query_learned_patterns_sqlite',
+      'query_learned_patterns',
       {
         description: `Query learned patterns with flexible natural language or structured parameters.
 
@@ -445,11 +327,11 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
           includeContent: z.boolean().optional().default(false),
         }),
       },
-      async (args) => queryLearnedPatternsSqlite(args)
+      async (args) => await queryLearnedPatterns(args)
     );
 
     this.server.registerTool(
-      'search_context_sqlite',
+      'search_context',
       {
         description: 'Full-text search across all content. Returns ranked snippets.',
         inputSchema: z.object({

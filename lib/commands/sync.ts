@@ -32,7 +32,10 @@ export async function sync(options: SyncOptions = {}): Promise<void> {
 
   // Check files exist
   if (!fs.existsSync(essentialsPath)) {
-    throw ErrorTemplates.fileNotFound(essentialsFile, ['Use AI-native onboarding: .github/onboarding-setup.md']);
+    log.blank();
+    log.success(`${essentialsFile} not found (Markdown-less Architecture). Validation matrix is managed via SQLite / MCP.`);
+    log.blank();
+    return;
   }
 
   if (!fs.existsSync(agentsPath)) {
@@ -44,11 +47,12 @@ export async function sync(options: SyncOptions = {}): Promise<void> {
   // Read ESSENTIALS to verify validation matrix exists
   const essentialsContent = fs.readFileSync(essentialsPath, 'utf-8');
   const hasValidationMatrix = essentialsContent.includes('## 2. Validation Matrix') ||
-                               essentialsContent.includes('## Validation Matrix');
+    essentialsContent.includes('## Validation Matrix');
 
   if (!hasValidationMatrix) {
-    if (spinner) spinner.fail('Validation matrix not found in CODEBASE_ESSENTIALS.md');
-    throw ErrorTemplates.missingSection('Validation Matrix', essentialsFile);
+    if (spinner) spinner.fail(`Validation matrix not found in ${essentialsFile}. Validation is likely managed via SQLite / MCP.`);
+    log.success('If using Markdown-less architecture, this is expected.');
+    return;
   }
 
   if (spinner) spinner.text = 'Reading AGENTS.md...';
@@ -58,7 +62,7 @@ export async function sync(options: SyncOptions = {}): Promise<void> {
 
   // Check if AGENTS already has the reference format
   const hasReference = agentsContent.includes(`${essentialsFile} - Validation Matrix`) ||
-                       agentsContent.includes(`${essentialsFile}#validation-matrix`);
+    agentsContent.includes(`${essentialsFile}#validation-matrix`);
 
   if (hasReference) {
     if (spinner) spinner.succeed('Validation matrix reference already up to date');

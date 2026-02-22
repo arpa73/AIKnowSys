@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "aiknowsys": {
+      "type": "local",
+      "command": ["node", "/home/arno/development/knowledge-system-template/mcp-server/dist/mcp-server/src/index.js"],
+      "enabled": true
+    }
+  }
+}

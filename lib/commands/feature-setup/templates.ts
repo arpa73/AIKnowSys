@@ -293,9 +293,8 @@ export async function setupSessionPersistence(targetDir: string, silent: boolean
     // @ts-ignore - JavaScript module, will be migrated in later batch
   );
 
-  // Generate CURRENT_PLAN.md as team index (auto-generated from plans/)
-  const { syncPlansCore } = await import('../../core/sync-plans.js');
-  await syncPlansCore({ targetDir });
+  // Note: CURRENT_PLAN.md is no longer generated (DB-first workflow)
+// Plans are queried via MCP tools: query_plans_sqlite, get_active_plans
 
   if (aiknowsysSpinner) aiknowsysSpinner.succeed('Session persistence ready');
 }

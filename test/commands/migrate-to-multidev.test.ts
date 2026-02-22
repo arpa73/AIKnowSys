@@ -123,20 +123,6 @@ describe('migrate-to-multidev command', () => {
     });
   });
 
-  describe('RED: CURRENT_PLAN.md regeneration', () => {
-    it('should regenerate CURRENT_PLAN.md as team index', async () => {
-      writeFileSync(
-        path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md'),
-        '# Old Plan\nManual edits here...'
-      );
-
-      await migrateToMultidev({ dir: testDir, _silent: true, username: 'eve' });
-
-      const newContent: string = readFileSync(path.join(testDir, '.aiknowsys', 'CURRENT_PLAN.md'), 'utf-8');
-      expect(newContent).toMatch(/Current Team Plans/);
-      expect(newContent).toMatch(/AUTO-GENERATED FILE/);
-    });
-  });
 
   describe('RED: .gitignore updates', () => {
     it('should update .gitignore with reviews/ and personal/', async () => {

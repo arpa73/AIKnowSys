@@ -132,27 +132,25 @@ export async function updatePlanMetadata(params: unknown) {
   try {
     const validated = updatePlanMetadataSchema.parse(params);
 
-    // Note: author and topics frontmatter updates on plans are not fully natively supported
-    // in updatePlanCore yet. They must either be appended or the user should use the CLI natively.
-    // For now, continue using the CLI if writeMarkdown is false, but warn it bypasses SQLite.
-    // Actually, wait: We should use the core function if possible, but let's just 
-    // keep the CLI here for metadata to save complexity, or remove it entirely over time.
-    // Let's implement it with a simple stub pointing out limitations, or just use core.
+    const updates: Record<string, any> = {};
+    if (validated.author !== undefined) updates.author = validated.author;
+    if (validated.topics !== undefined) updates.topics = validated.topics;
 
-    const args = ['aiknowsys', 'update-plan', validated.planId];
+    const result = await withStorage(async (storage) => {
+      return updatePlanCore({
+        planId: validated.planId,
+        updates,
+        targetDir: PROJECT_ROOT,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'updatePlanMetadata storage operation');
 
-    if (validated.author) {
-      args.push('--author', validated.author);
-    }
-
-    if (validated.topics) {
-      args.push('--topics', validated.topics.join(','));
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    const changes = result.changes || [];
+    const changeList = changes.length > 0 ? changes.map(c => `   • ${c}`).join('\n') : '   • (no changes)';
 
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `✅ Plan metadata updated successfully\n📝 Changes:\n${changeList}\n💾 Stored in SQLite` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -290,14 +288,15 @@ export async function archivePlans(params: unknown) {
  */
 const setPlanStatusSchema = z.object({
   planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
-  status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'])
+  status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED']),
+  force: z.boolean().optional().default(false)
 });
 
 export async function setPlanStatus(params: unknown) {
   try {
     const validated = setPlanStatusSchema.parse(params);
 
-    if (validated.status === 'COMPLETE' || validated.status === 'CANCELLED') {
+    if (!validated.force && (validated.status === 'COMPLETE' || validated.status === 'CANCELLED')) {
       const action = validated.status === 'COMPLETE' ? 'COMPLETE_PLAN' : 'CANCEL_PLAN';
       const constraintResult = await checkConstraints(action, {
         userId: 'mcp-server',
@@ -313,7 +312,7 @@ export async function setPlanStatus(params: unknown) {
         return {
           content: [{
             type: 'text' as const,
-            text: `Plan completion blocked by constraints.${blockers}`
+            text: `Plan completion blocked by constraints.${blockers}\n\n💡 Tip: Use force: true to bypass constraints (e.g., for manual completion).`
           }],
           isError: true
         };
@@ -439,20 +438,21 @@ export async function prependToPlan(params: unknown) {
   try {
     const validated = prependToPlanSchema.parse(params);
 
-    // updatePlanCore DOES NOT support `prepend` yet. 
-    // Wait, let's actually just use the execFile here and warn.
-    const args = [
-      'aiknowsys',
-      'update-plan',
-      validated.planId,
-      '--prepend',
-      validated.content
-    ];
+    const result = await withStorage(async (storage) => {
+      return updatePlanCore({
+        planId: validated.planId,
+        prepend: validated.content,
+        targetDir: PROJECT_ROOT,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'prependToPlan storage operation');
 
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
+    const changes = result.changes || [];
+    const changeList = changes.map(c => `   • ${c}`).join('\n');
 
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `✅ Plan prepended successfully\n📝 Changes:\n${changeList}\n💾 Stored in SQLite` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -499,12 +499,16 @@ export async function appendToSession(params: unknown) {
   try {
     const validated = appendToSessionSchema.parse(params);
 
-    const result = await updateSessionCore({
-      targetDir: PROJECT_ROOT,
-      date: validated.date,
-      appendSection: validated.section,
-      content: validated.content,
-    });
+    const result = await withStorage(async (storage) => {
+      return updateSessionCore({
+        targetDir: PROJECT_ROOT,
+        date: validated.date,
+        appendSection: validated.section,
+        content: validated.content,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'appendToSession storage operation');
 
     if (result.updated) {
       return {
@@ -566,12 +570,16 @@ export async function prependToSession(params: unknown) {
   try {
     const validated = prependToSessionSchema.parse(params);
 
-    const result = await updateSessionCore({
-      targetDir: PROJECT_ROOT,
-      date: validated.date,
-      prependSection: validated.section,
-      content: validated.content,
-    });
+    const result = await withStorage(async (storage) => {
+      return updateSessionCore({
+        targetDir: PROJECT_ROOT,
+        date: validated.date,
+        prependSection: validated.section,
+        content: validated.content,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'prependToSession storage operation');
 
     if (result.updated) {
       return {
@@ -634,13 +642,17 @@ export async function insertAfterSection(params: unknown) {
   try {
     const validated = insertAfterSectionSchema.parse(params);
 
-    const result = await updateSessionCore({
-      targetDir: PROJECT_ROOT,
-      date: validated.date,
-      insertAfter: validated.pattern,
-      appendSection: validated.section,
-      content: validated.content,
-    });
+    const result = await withStorage(async (storage) => {
+      return updateSessionCore({
+        targetDir: PROJECT_ROOT,
+        date: validated.date,
+        insertAfter: validated.pattern,
+        appendSection: validated.section,
+        content: validated.content,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'insertAfterSection storage operation');
 
     if (result.updated) {
       return {
@@ -703,13 +715,17 @@ export async function insertBeforeSection(params: unknown) {
   try {
     const validated = insertBeforeSectionSchema.parse(params);
 
-    const result = await updateSessionCore({
-      targetDir: PROJECT_ROOT,
-      date: validated.date,
-      insertBefore: validated.pattern,
-      appendSection: validated.section,
-      content: validated.content,
-    });
+    const result = await withStorage(async (storage) => {
+      return updateSessionCore({
+        targetDir: PROJECT_ROOT,
+        date: validated.date,
+        insertBefore: validated.pattern,
+        appendSection: validated.section,
+        content: validated.content,
+        storage,
+        writeMarkdown: false,
+      });
+    }, 'insertBeforeSection storage operation');
 
     if (result.updated) {
       return {

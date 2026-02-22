@@ -32,53 +32,53 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
   const essentialsFile = options.essentials || 'CODEBASE_ESSENTIALS.md';
   const silent = options._silent || false;
   const log = createLogger(silent);
-  
+
   log.blank();
   log.header('Update Knowledge System', '🔄');
   log.blank();
-  
+
   // Check if this is an aiknowsys project
   const essentialsPath = path.join(targetDir, essentialsFile);
   const agentsPath = path.join(targetDir, 'AGENTS.md');
-  
-  if (!fs.existsSync(essentialsPath) && !fs.existsSync(agentsPath)) {
+
+  if (!fs.existsSync(essentialsPath) && !fs.existsSync(agentsPath) && !fs.existsSync(path.join(targetDir, '.aiknowsys'))) {
     log.error('No knowledge system found in this directory.');
     log.blank();
     log.log('\x1b[33m💡 Use AI-native onboarding via `.github/onboarding-setup.md` to set up the knowledge system.\x1b[0m');
     throw new Error('No knowledge system found');
   }
-  
+
   // Get current and latest versions
   const currentVersion = getCurrentVersion(targetDir);
   const latestVersion = getLatestVersion();
-  
+
   log.white(`   Current version: ${currentVersion || 'Unknown'}`);
   log.white(`   Latest version:  ${latestVersion}`);
   log.blank();
-  
+
   if (currentVersion === latestVersion && !options.force) {
     log.success('Already up to date!');
     log.blank();
     log.dim('💡 To force update: aiknowsys update --force');
     return { alreadyUpToDate: true, currentVersion, latestVersion };
   }
-  
+
   // Ask what to update (unless --yes flag or silent)
   let updateChoices: UpdateChoice[];
-  
+
   if (!options.yes && !silent) {
     const { choices } = await inquirer.prompt([{
       type: 'checkbox',
       name: 'choices',
       message: '📦 What would you like to update?',
       choices: [
-        { 
-          name: '🤖 Custom Agents (Developer + Architect)', 
+        {
+          name: '🤖 Custom Agents (Developer + Architect)',
           value: 'agents',
           checked: true
         },
-        { 
-          name: '🎓 Universal Skills (latest best practices)', 
+        {
+          name: '🎓 Universal Skills (latest best practices)',
           value: 'skills',
           checked: true
         },
@@ -94,12 +94,12 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
         }
       ]
     }]);
-    
+
     if (choices.length === 0) {
       log.log('\x1b[33mNo updates selected. Exiting.\x1b[0m');
       return { updated: 0, choices: [], currentVersion, latestVersion };
     }
-    
+
     updateChoices = choices as UpdateChoice[];
   } else {
     // --yes flag: update everything
@@ -107,18 +107,18 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
     log.dim('Updating all components (--yes flag)');
     log.blank();
   }
-  
+
   // Perform updates
   const packageDir = getPackageDir();
   let updatedCount = 0;
-  
+
   // Update custom agents
   if (updateChoices.includes('agents')) {
     const agentSpinner: Ora | null = silent ? null : ora('Updating custom agents...').start();
-    
+
     try {
       const agentsDir = path.join(targetDir, '.github', 'agents');
-      
+
       // Backup existing agents
       if (fs.existsSync(agentsDir)) {
         const backupDir = path.join(targetDir, '.github', 'agents.backup');
@@ -128,12 +128,12 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
         fs.cpSync(agentsDir, backupDir, { recursive: true });
         if (agentSpinner) agentSpinner.text = 'Updating custom agents (backup created)...';
       }
-      
+
       // Copy new agent templates (only the final .md files, not .template.md sources)
       if (!fs.existsSync(agentsDir)) {
         fs.mkdirSync(agentsDir, { recursive: true });
       }
-      
+
       // Copy specific files only (not .template.md or .sh files)
       await copyTemplate(
         path.join(packageDir, 'templates', 'agents', 'developer.agent.template.md'),
@@ -143,7 +143,7 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
           '{{PROJECT_GUIDELINES}}': 'See CODEBASE_ESSENTIALS.md'
         }
       );
-      
+
       await copyTemplate(
         path.join(packageDir, 'templates', 'agents', 'architect.agent.template.md'),
         path.join(agentsDir, 'architect.agent.md'),
@@ -151,12 +151,12 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
           '{{ESSENTIALS_FILE}}': essentialsFile
         }
       );
-      
+
       await copyTemplate(
         path.join(packageDir, 'templates', 'agents', 'USAGE.txt'),
         path.join(agentsDir, 'USAGE.txt')
       );
-      
+
       if (agentSpinner) agentSpinner.succeed('Custom agents updated');
       updatedCount++;
     } catch (error) {
@@ -164,14 +164,14 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.error(`Error: ${(error as Error).message}`);
     }
   }
-  
+
   // Update skills
   if (updateChoices.includes('skills')) {
     const skillsSpinner: Ora | null = silent ? null : ora('Updating universal skills...').start();
-    
+
     try {
       const skillsDir = path.join(targetDir, '.github', 'skills');
-      
+
       // Backup existing skills
       if (fs.existsSync(skillsDir)) {
         const backupDir = path.join(targetDir, '.github', 'skills.backup');
@@ -181,17 +181,17 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
         fs.cpSync(skillsDir, backupDir, { recursive: true });
         if (skillsSpinner) skillsSpinner.text = 'Updating universal skills (backup created)...';
       }
-      
+
       // Copy new skills
       if (!fs.existsSync(skillsDir)) {
         fs.mkdirSync(skillsDir, { recursive: true });
       }
-      
+
       await copyDirectory(
         path.join(packageDir, 'templates', 'skills'),
         skillsDir
       );
-      
+
       if (skillsSpinner) skillsSpinner.succeed('Universal skills updated');
       updatedCount++;
     } catch (error) {
@@ -199,32 +199,32 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.error(`Error: ${(error as Error).message}`);
     }
   }
-  
+
   // Update AGENTS.md
   let agentsMdHadCustomizations = false;
   if (updateChoices.includes('agents-md')) {
     const agentsMdSpinner: Ora | null = silent ? null : ora('Updating AGENTS.md...').start();
-    
+
     try {
       const agentsMdPath = path.join(targetDir, 'AGENTS.md');
-      
+
       // Check if current AGENTS.md has customizations (no placeholders)
       if (fs.existsSync(agentsMdPath)) {
         const currentContent = fs.readFileSync(agentsMdPath, 'utf-8');
         agentsMdHadCustomizations = !currentContent.includes('{{VALIDATION_MATRIX}}') && !currentContent.includes('{{SKILL_MAPPING}}');
-        
+
         // Backup existing AGENTS.md
         const backupPath = path.join(targetDir, 'AGENTS.md.backup');
         fs.copyFileSync(agentsMdPath, backupPath);
         if (agentsMdSpinner) agentsMdSpinner.text = 'Updating AGENTS.md (backup created)...';
       }
-      
+
       // Copy new AGENTS.md template
       await copyTemplate(
         path.join(packageDir, 'templates', 'AGENTS.template.md'),
         agentsMdPath
       );
-      
+
       if (agentsMdSpinner) agentsMdSpinner.succeed('AGENTS.md updated');
       updatedCount++;
     } catch (error) {
@@ -232,48 +232,49 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.error(`Error: ${(error as Error).message}`);
     }
   }
-  
+
   // Update CODEBASE_ESSENTIALS.md (opt-in only, unchecked by default)
   let essentialsMdHadCustomizations = false;
   if (updateChoices.includes('essentials-md')) {
     const essentialsMdSpinner: Ora | null = silent ? null : ora('Updating CODEBASE_ESSENTIALS.md...').start();
-    
+
     try {
       const essentialsMdPath = path.join(targetDir, 'CODEBASE_ESSENTIALS.md');
-      
+
       // Check if current CODEBASE_ESSENTIALS.md has customizations (no TODO markers)
       if (fs.existsSync(essentialsMdPath)) {
         const currentContent = fs.readFileSync(essentialsMdPath, 'utf-8');
         essentialsMdHadCustomizations = !currentContent.includes('TODO:') && !currentContent.includes('{{');
-        
+
         // Backup existing CODEBASE_ESSENTIALS.md
         const backupPath = path.join(targetDir, 'CODEBASE_ESSENTIALS.md.backup');
         fs.copyFileSync(essentialsMdPath, backupPath);
         if (essentialsMdSpinner) essentialsMdSpinner.text = 'Updating CODEBASE_ESSENTIALS.md (backup created)...';
       }
-      
-      // Copy new CODEBASE_ESSENTIALS.md template
-      await copyTemplate(
-        path.join(packageDir, 'templates', 'CODEBASE_ESSENTIALS.minimal.template.md'),
-        essentialsMdPath
-      );
-      
-      if (essentialsMdSpinner) essentialsMdSpinner.succeed('CODEBASE_ESSENTIALS.md updated');
-      updatedCount++;
+
+      // Copy new CODEBASE_ESSENTIALS.md template if it exists
+      const templatePath = path.join(packageDir, 'templates', 'CODEBASE_ESSENTIALS.minimal.template.md');
+      if (fs.existsSync(templatePath)) {
+        await copyTemplate(templatePath, essentialsMdPath);
+        if (essentialsMdSpinner) essentialsMdSpinner.succeed('CODEBASE_ESSENTIALS.md updated');
+        updatedCount++;
+      } else {
+        if (essentialsMdSpinner) essentialsMdSpinner.warn('No template found for CODEBASE_ESSENTIALS.md');
+      }
     } catch (error) {
       if (essentialsMdSpinner) essentialsMdSpinner.fail('Failed to update CODEBASE_ESSENTIALS.md');
       log.error(`Error: ${(error as Error).message}`);
     }
   }
-  
+
   // Update version tracking
   saveCurrentVersion(targetDir, latestVersion);
-  
+
   // Success summary
   log.blank();
   log.log(`\x1b[32m\x1b[1m✅ Updated ${updatedCount} component${updatedCount !== 1 ? 's' : ''}!\x1b[0m`);
   log.blank();
-  
+
   if (updatedCount > 0) {
     log.white('📁 Backups created:');
     if (updateChoices.includes('agents')) {
@@ -289,9 +290,9 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.dim('   • CODEBASE_ESSENTIALS.md.backup');
     }
     log.blank();
-      
-      // If AGENTS.md had customizations, show AI restoration prompt
-      if (agentsMdHadCustomizations) {
+
+    // If AGENTS.md had customizations, show AI restoration prompt
+    if (agentsMdHadCustomizations) {
       log.header('AI-Assisted Restoration', '🤖');
       log.blank();
       log.log('\x1b[33m⚠️  AGENTS.md was updated with new workflow improvements.\x1b[0m');
@@ -313,9 +314,9 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.dim('   💡 This takes ~10 seconds with AI assistance');
       log.blank();
     }
-      
+
     // If CODEBASE_ESSENTIALS.md had customizations, show AI restoration prompt
-    if (essentialsMdHadCustomizations) {
+    if (essentialsMdHadCustomizations && fs.existsSync(path.join(packageDir, 'templates', 'CODEBASE_ESSENTIALS.minimal.template.md'))) {
       log.header('AI-Assisted Restoration (CODEBASE_ESSENTIALS.md)', '🤖');
       log.blank();
       log.log('\x1b[31m\x1b[1m⚠️  IMPORTANT: CODEBASE_ESSENTIALS.md was replaced with template!\x1b[0m');
@@ -341,7 +342,7 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
       log.dim('   💡 This may take 30-60 seconds for complex projects');
       log.blank();
     }
-      
+
     log.cyan('💡 What\'s new:');
     log.white('   • Check the changelog: https://github.com/arpa73/aiknowsys/blob/main/CODEBASE_CHANGELOG.md');
     log.white('   • Review updated files for new features and improvements');
@@ -358,7 +359,7 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
     }
     log.blank();
   }
-  
+
   // Return data for tests
   return {
     updated: updatedCount,
@@ -372,11 +373,11 @@ export async function update(options: UpdateOptions): Promise<UpdateResult> {
 
 function getCurrentVersion(targetDir: string): string | null {
   const versionFile = path.join(targetDir, '.aiknowsys-version');
-  
+
   if (fs.existsSync(versionFile)) {
     return fs.readFileSync(versionFile, 'utf-8').trim();
   }
-  
+
   return null;
 }
 

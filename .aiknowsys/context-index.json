@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-02-21T10:18:26.710Z",
+  "updated": "2026-02-21T17:56:05.871Z",
   "plans": [
     {
       "id": "PLAN_ai_native_onboarding_simplification",
@@ -8,7 +8,7 @@
       "status": "PLANNED",
       "author": "\"arno-paffen\"",
       "created": "2026-02-19T23:00:00.000Z",
-      "updated": "2026-02-21T10:18:26.717Z",
+      "updated": "2026-02-21T17:56:05.873Z",
       "topics": [
         "onboarding",
         "ux",
@@ -33,26 +33,11 @@
       "status": "PLANNED",
       "author": "unknown",
       "created": "2026-02-20T00:00:00.000Z",
-      "updated": "2026-02-21T10:18:26.719Z",
+      "updated": "2026-02-21T17:56:05.875Z",
       "file": "PLAN_project_record_dynamic_config.md"
     }
   ],
-  "sessions": [
-    {
-      "date": "2026-02-20",
-      "topic": "Markdownless archive-markdown feature + sync-plans bugfix review",
-      "topics": [
-        "markdownless-architecture",
-        "archive-markdown",
-        "sync-plans-bugfix",
-        "architect-review"
-      ],
-      "plan": "--archive-markdown flag + sync-plans bugfix",
-      "file": "sessions/2026-02-20-session.md",
-      "created": "2026-02-20T00:00:00.000Z",
-      "updated": "2026-02-21T10:18:26.722Z"
-    }
-  ],
+  "sessions": [],
   "learned": [
     {
       "file": "learned/agent-mode-boundaries.md",

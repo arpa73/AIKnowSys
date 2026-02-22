@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 
 describe('Base Template Validation', () => {
-  const templatePath = path.resolve('templates/CODEBASE_ESSENTIALS.minimal.template.md');
+  const templatePath = path.resolve('dist/templates/CODEBASE_ESSENTIALS.minimal.template.md');
   const template = readFileSync(templatePath, 'utf-8');
   const lines = template.split('\n');
 

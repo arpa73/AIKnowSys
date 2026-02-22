@@ -41,48 +41,53 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
   const essentialsFile = options.essentials || 'CODEBASE_ESSENTIALS.md';
   const silent = options._silent || false;
   const log = createLogger(silent);
-  
+
   // Define commonly-used paths
   const essentialsPath = path.join(targetDir, essentialsFile);
   const agentsPath = path.join(targetDir, 'AGENTS.md');
-  
+
   log.blank();
   log.header('Knowledge System Health Check', '🔍');
   log.blank();
-  
+
   const checks: CheckResult[] = [];
   let passed = 0;
   let failed = 0;
-  
+
   // Check 1: Required files exist
   const requiredFiles = [
-    { path: essentialsFile, name: 'Codebase Essentials' },
-    { path: 'AGENTS.md', name: 'Agents Workflow' },
-    { path: 'CODEBASE_CHANGELOG.md', name: 'Changelog' }
+    { path: essentialsFile, name: 'Codebase Essentials', missingAction: 'warn' },
+    { path: 'AGENTS.md', name: 'Agents Workflow', missingAction: 'fail' },
+    { path: 'CODEBASE_CHANGELOG.md', name: 'Changelog', missingAction: 'fail' }
   ];
-  
+
   log.white('📁 Checking required files...');
   const warnings: string[] = [];
-  
+
   for (const file of requiredFiles) {
     const filePath = path.join(targetDir, file.path);
     if (fs.existsSync(filePath)) {
       // Check file size and content
       const stats = fs.statSync(filePath);
       const fileSize = stats.size;
-      
+
       // Edge case: Empty file
       if (fileSize === 0) {
-        log.log(`  ✗ ${file.name} - Empty file`);
-        checks.push({ name: file.name, status: 'fail', error: 'File is empty' });
-        failed++;
-        throw ErrorTemplates.emptyFile(file.path);
+        if (file.missingAction === 'fail') {
+          log.log(`  ✗ ${file.name} - Empty file`);
+          checks.push({ name: file.name, status: 'fail', error: 'File is empty' });
+          failed++;
+          throw ErrorTemplates.emptyFile(file.path);
+        } else {
+          log.log(`  ⚠ ${file.name} - Empty file`);
+          checks.push({ name: file.name, status: 'warn', error: 'File is empty' });
+        }
       }
-      
+
       // Edge case: Huge file (>5MB warning, >50MB error)
       const fiveMB = 5 * 1024 * 1024;
       const fiftyMB = 50 * 1024 * 1024;
-      
+
       if (fileSize > fiftyMB) {
         log.log(`  ✗ ${file.name} - File too large (${(fileSize / 1024 / 1024).toFixed(1)}MB)`);
         checks.push({ name: file.name, status: 'fail', error: 'File size exceeds 50MB limit' });
@@ -91,25 +96,33 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
       } else if (fileSize > fiveMB) {
         warnings.push(`${file.name} is large (${(fileSize / 1024 / 1024).toFixed(1)}MB). Consider splitting content into multiple files.`);
       }
-      
-      log.log(`  ✓ ${file.name}`);
-      checks.push({ name: file.name, status: 'pass' });
-      passed++;
+
+      if (fileSize > 0) {
+        log.log(`  ✓ ${file.name}`);
+        checks.push({ name: file.name, status: 'pass' });
+        passed++;
+      }
     } else {
-      log.log(`  ✗ ${file.name} - Missing`);
-      checks.push({ name: file.name, status: 'fail', error: 'File not found' });
-      failed++;
+      if (file.missingAction === 'fail') {
+        log.log(`  ✗ ${file.name} - Missing`);
+        checks.push({ name: file.name, status: 'fail', error: 'File not found' });
+        failed++;
+      } else {
+        log.log(`  ℹ ${file.name} - Missing (likely managed via SQLite / MCP)`);
+        checks.push({ name: file.name, status: 'pass', info: 'Handled via MCP architecture' });
+        passed++;
+      }
     }
   }
-  
+
   log.blank();
-  
+
   // Check 2: Agents and skills installed
   log.white('🤖 Checking agents and skills...');
-  
+
   const agentsDir = path.join(targetDir, '.github', 'agents');
   const skillsDir = path.join(targetDir, '.github', 'skills');
-  
+
   if (fs.existsSync(agentsDir)) {
     const agentFiles = fs.readdirSync(agentsDir).filter(f => f.endsWith('.agent.md'));
     if (agentFiles.length > 0) {
@@ -124,7 +137,7 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
     log.log('  ⚠ Custom agents not installed');
     checks.push({ name: 'Custom agents', status: 'warn', error: 'Not installed' });
   }
-  
+
   if (fs.existsSync(skillsDir)) {
     const skillDirs = fs.readdirSync(skillsDir, { withFileTypes: true })
       .filter(d => d.isDirectory());
@@ -140,22 +153,22 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
     log.log('  ⚠ Skills not installed');
     checks.push({ name: 'Skills', status: 'warn', error: 'Not installed' });
   }
-  
+
   log.blank();
-  
+
   // Check 3: ESSENTIALS bloat detection
   log.white('📏 Checking ESSENTIALS size...');
-  
+
   if (fs.existsSync(essentialsPath)) {
     const content = fs.readFileSync(essentialsPath, 'utf-8');
     const totalLines = content.split('\n').length;
-    
+
     // Parse sections using shared utility
     const sections = parseEssentialsSections(content);
-    
+
     // Check thresholds using configured values
     const bloatWarnings: BloatWarning[] = [];
-    
+
     // Total file size check
     if (totalLines > COMPRESSION_THRESHOLDS.TOTAL_ERROR) {
       bloatWarnings.push({
@@ -168,7 +181,7 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
         message: `File size exceeds recommendation (${totalLines} lines, recommended: <${COMPRESSION_THRESHOLDS.TOTAL_WARN})`
       });
     }
-    
+
     // Per-section check using configured threshold
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sections.forEach((section: any) => {
@@ -179,7 +192,7 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
         });
       }
     });
-    
+
     // Display results
     if (bloatWarnings.length === 0) {
       log.log(`  ✓ File size OK (${totalLines} lines)`);
@@ -196,14 +209,14 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
           checks.push({ name: 'ESSENTIALS bloat', status: 'warn', error: w.message });
         }
       });
-      
+
       // Add to warnings array for recommendation section
       bloatWarnings.forEach(w => {
         if (w.level === 'warn') {
           warnings.push(w.message);
         }
       });
-      
+
       // Show compression suggestion
       if (bloatWarnings.length > 0) {
         log.blank();
@@ -214,29 +227,29 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
       }
     }
   }
-  
+
   log.blank();
-  
+
   // Check 4: Placeholder completion
   log.white('📝 Checking placeholder completion...');
-  
+
   const placeholderRegex = /{{([A-Z_]+)}}/g;
   const allPlaceholders: Array<{ file: string; name: string }> = [];
-  
+
   // Check CODEBASE_ESSENTIALS.md
   if (fs.existsSync(essentialsPath)) {
     const content = fs.readFileSync(essentialsPath, 'utf-8');
     const placeholders = [...content.matchAll(placeholderRegex)];
     allPlaceholders.push(...placeholders.map(m => ({ file: 'CODEBASE_ESSENTIALS.md', name: m[1] })));
   }
-  
+
   // Check AGENTS.md for critical placeholders
   if (fs.existsSync(agentsPath)) {
     const content = fs.readFileSync(agentsPath, 'utf-8');
     const placeholders = [...content.matchAll(placeholderRegex)];
     allPlaceholders.push(...placeholders.map(m => ({ file: 'AGENTS.md', name: m[1] })));
   }
-  
+
   if (allPlaceholders.length === 0) {
     log.log('  ✓ No placeholders remaining');
     checks.push({ name: 'Placeholder completion', status: 'pass' });
@@ -244,14 +257,14 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
   } else {
     const uniquePlaceholders = [...new Set(allPlaceholders.map(p => p.name))];
     log.log(`  ⚠ ${uniquePlaceholders.length} placeholders remaining:`);
-    
+
     // Group by file and show
     const byFile: { [file: string]: Set<string> } = {};
     allPlaceholders.forEach(p => {
       if (!byFile[p.file]) byFile[p.file] = new Set();
       byFile[p.file].add(p.name);
     });
-    
+
     Object.entries(byFile).forEach(([file, placeholders]) => {
       log.dim(`    ${file}:`);
       [...placeholders].slice(0, 3).forEach(p => {
@@ -261,32 +274,32 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
         log.dim(`      ... and ${placeholders.size - 3} more`);
       }
     });
-    
-    checks.push({ 
-      name: 'Placeholder completion', 
-      status: 'warn', 
-      error: `${uniquePlaceholders.length} placeholders need filling` 
+
+    checks.push({
+      name: 'Placeholder completion',
+      status: 'warn',
+      error: `${uniquePlaceholders.length} placeholders need filling`
     });
   }
-  
+
   log.blank();
-  
+
   // Check 5: Validation matrix exists
   log.white('✅ Checking validation matrix...');
-  
+
   if (fs.existsSync(essentialsPath)) {
     const content = fs.readFileSync(essentialsPath, 'utf-8');
-    const hasValidationMatrix = content.includes('## 2. Validation Matrix') || 
-                                 content.includes('## Validation Matrix');
-    
+    const hasValidationMatrix = content.includes('## 2. Validation Matrix') ||
+      content.includes('## Validation Matrix');
+
     if (hasValidationMatrix) {
       // Check if it has actual commands (not just TBD)
       const matrixSection = content.split(/## \d*\.?\s*Validation Matrix/i)[1]?.split(/##/)[0] || '';
-      const hasRealCommands = matrixSection.includes('npm') || 
-                              matrixSection.includes('test') ||
-                              matrixSection.includes('lint') ||
-                              matrixSection.includes('build');
-      
+      const hasRealCommands = matrixSection.includes('npm') ||
+        matrixSection.includes('test') ||
+        matrixSection.includes('lint') ||
+        matrixSection.includes('build');
+
       if (hasRealCommands) {
         log.log('  ✓ Validation matrix configured');
         checks.push({ name: 'Validation matrix', status: 'pass' });
@@ -300,42 +313,46 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
       checks.push({ name: 'Validation matrix', status: 'fail', error: 'Section missing' });
       failed++;
     }
+  } else {
+    log.log('  ℹ Validation matrix check bypassed (Markdown-less architecture)');
+    checks.push({ name: 'Validation matrix', status: 'pass', info: 'Handled via MCP' });
+    passed++;
   }
-  
+
   log.blank();
-  
+
   // Check 6: Configuration status
   log.white('✅ Checking configuration...');
-  
+
   const configPath = path.join(targetDir, '.aiknowsys.config.json');
   if (fs.existsSync(configPath)) {
     try {
       const configContent = fs.readFileSync(configPath, 'utf-8');
       const config = JSON.parse(configContent);
-      
+
       // Validate config structure
       const validation = validateConfig(config);
       if (validation.valid) {
         log.log(`  ✓ Config file valid (version ${config.version || '1.0'})`);
-        
+
         // Show enabled features
         const enabledFeatures = Object.entries(config.features || {})
           .filter(([_, enabled]) => enabled)
           .map(([name]) => name);
-        
+
         if (enabledFeatures.length > 0) {
           log.dim(`    Enabled: ${enabledFeatures.join(', ')}`);
         }
-        
+
         // Show disabled features
         const disabledFeatures = Object.entries(config.features || {})
           .filter(([_, enabled]) => !enabled)
           .map(([name]) => name);
-        
+
         if (disabledFeatures.length > 0) {
           log.dim(`    Disabled: ${disabledFeatures.join(', ')}`);
         }
-        
+
         checks.push({ name: 'Configuration', status: 'pass' });
         passed++;
       } else {
@@ -353,9 +370,9 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
     checks.push({ name: 'Configuration', status: 'pass', info: 'Using defaults' });
     passed++;
   }
-  
+
   log.blank();
-  
+
   // Summary
   log.section('Summary', '📊');
   log.log(`  ✓ Passed: ${passed}`);
@@ -367,31 +384,31 @@ export async function check(options: CheckOptions): Promise<HealthCheckResult> {
     log.log(`  ⚠ Warnings: ${warningCount + warnings.length}`);
     warnings.forEach(w => log.warn(`  • ${w}`));
   }
-  
+
   log.blank();
-  
+
   // Recommendations
   if (failed > 0 || warnings.length > 0) {
     log.cyan('💡 Recommendations:');
-    
+
     if (!fs.existsSync(path.join(targetDir, 'CODEBASE_ESSENTIALS.md'))) {
       log.white('  • Use AI-native onboarding: .github/onboarding-setup.md');
     }
-    
+
     if (!fs.existsSync(agentsDir) || !fs.existsSync(skillsDir)) {
       log.white('  • Run: npx aiknowsys update');
       log.white('  • Or enable needed features: npx aiknowsys enable <feature>');
     }
-    
+
     const hasPlaceholders = checks.find(c => c.name === 'Placeholder completion' && c.status === 'warn');
     if (hasPlaceholders) {
-      log.white('  • Complete TODO sections in CODEBASE_ESSENTIALS.md');
+      log.white('  • Complete TODO sections in your files');
       log.white('  • Use AI assistant to fill remaining placeholders');
     }
-    
+
     log.blank();
   }
-  
+
   // Exit with appropriate code
   if (failed > 0) {
     log.error('Health check failed');
