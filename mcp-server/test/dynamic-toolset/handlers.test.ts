@@ -25,7 +25,7 @@ describe('Dynamic Toolset Handlers', () => {
 
       expect(response.content).toBeDefined();
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toBeDefined();
       expect(result.tools.length).toBeGreaterThan(0);
@@ -35,19 +35,19 @@ describe('Dynamic Toolset Handlers', () => {
 
     it('should include tool metadata in results', async () => {
       const response = await searchToolsHandler(registry, {
-        query: 'query_sessions_sqlite',
+        query: 'query_sessions',
         limit: 1,
       });
 
       expect(response.content).toBeDefined();
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools[0]).toHaveProperty('name');
       expect(result.tools[0]).toHaveProperty('description');
       expect(result.tools[0]).toHaveProperty('category');
       expect(result.tools[0]).toHaveProperty('relevance_score');
-      expect(result.tools[0].name).toBe('query_sessions_sqlite');
+      expect(result.tools[0].name).toBe('query_sessions');
     });
 
     it('should include categories overview', async () => {
@@ -58,7 +58,7 @@ describe('Dynamic Toolset Handlers', () => {
 
       expect(response.content).toBeDefined();
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.categories_overview).toBeDefined();
       expect(result.categories_overview).toContain('context');
@@ -74,10 +74,10 @@ describe('Dynamic Toolset Handlers', () => {
 
       expect(response.content).toBeDefined();
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toBeDefined();
-      
+
       // All results should have 'sqlite' tag
       result.tools.forEach((tool: any) => {
         const metadata = registry.get(tool.name);
@@ -92,7 +92,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools.length).toBeLessThanOrEqual(3);
     });
@@ -103,25 +103,25 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools.length).toBeLessThanOrEqual(5);
     });
 
     it('should handle category filter syntax', async () => {
       const response = await searchToolsHandler(registry, {
-        query: 'category:sqlite',
+        query: 'category:query',
         limit: 10,
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools.length).toBeGreaterThan(0);
-      
-      // All results should be in sqlite category
+
+      // All results should be in query category
       result.tools.forEach((tool: any) => {
-        expect(tool.category).toBe('sqlite');
+        expect(tool.category).toBe('query');
       });
     });
 
@@ -132,7 +132,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toEqual([]);
       expect(result.total_found).toBe(0);
@@ -145,7 +145,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toEqual([]);
       expect(result.total_found).toBe(0);
@@ -155,15 +155,15 @@ describe('Dynamic Toolset Handlers', () => {
   describe('describeToolsHandler', () => {
     it('should return schemas for requested tools', async () => {
       const response = await describeToolsHandler(registry, {
-        tools: ['get_critical_invariants', 'query_sessions_sqlite'],
+        tools: ['get_critical_invariants', 'query_sessions'],
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toHaveLength(2);
       expect(result.tools[0].name).toBe('get_critical_invariants');
-      expect(result.tools[1].name).toBe('query_sessions_sqlite');
+      expect(result.tools[1].name).toBe('query_sessions');
     });
 
     it('should include full metadata for each tool', async () => {
@@ -172,7 +172,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools[0]).toHaveProperty('name');
       expect(result.tools[0]).toHaveProperty('description');
@@ -187,7 +187,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools[0].inputSchema).toBeDefined();
       expect(result.tools[0].inputSchema).toHaveProperty('type');
@@ -200,7 +200,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toHaveLength(1);
       expect(result.tools[0]).toHaveProperty('type');
@@ -216,18 +216,18 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toHaveLength(3);
-      
+
       // First and third should have schemas
       expect(result.tools[0]).not.toHaveProperty('type'); // No error type
       expect(result.tools[0]).toHaveProperty('inputSchema');
-      
+
       // Second should have error structure
       expect(result.tools[1]).toHaveProperty('type');
       expect(result.tools[1].type).toBe('ToolNotFound');
-      
+
       // Third should have schema
       expect(result.tools[2]).not.toHaveProperty('type'); // No error type
       expect(result.tools[2]).toHaveProperty('inputSchema');
@@ -239,7 +239,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.tools).toEqual([]);
     });
@@ -253,7 +253,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.result).toBeDefined();
       expect(result.result.content).toBeDefined();
@@ -269,7 +269,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
       expect(result.error.type).toBe('ValidationFailed');
@@ -284,7 +284,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
       expect(result.error.type).toBe('ToolNotFound');
@@ -299,7 +299,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(true);
       expect(result.result).toBeDefined();
       expect(result.result.content).toBeDefined();
@@ -307,14 +307,14 @@ describe('Dynamic Toolset Handlers', () => {
 
     it('should reject invalid argument types', async () => {
       const response = await executeToolHandler(registry, {
-        tool: 'get_recent_sessions',
+        tool: 'archive_sessions',
         arguments: {
           days: 'not-a-number', // Should be number
         },
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
       expect(result.error.type).toBe('ValidationFailed');
@@ -330,7 +330,7 @@ describe('Dynamic Toolset Handlers', () => {
       });
 
       const result = JSON.parse(response.content[0].text);
-      
+
       // Should fail validation (title too short)
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();

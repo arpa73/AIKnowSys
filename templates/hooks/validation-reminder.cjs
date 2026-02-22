@@ -15,40 +15,49 @@ const path = require('path');
 /**
  * Main hook execution
  */
+function readHookInput() {
+  if (process.env.HOOK_INPUT_JSON) {
+    return process.env.HOOK_INPUT_JSON;
+  }
+
+  if (process.stdin.isTTY) {
+    return '';
+  }
+
+  try {
+    return fs.readFileSync(0, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 async function main() {
-  let input = '';
-  
-  // Read JSON input from stdin
-  process.stdin.on('data', chunk => input += chunk.toString());
-  
-  process.stdin.on('end', () => {
-    try {
-      const data = JSON.parse(input || '{}');
-      
-      // Load configuration
-      const config = loadConfig();
-      
-      // Check if code files were edited
-      const codeChanged = detectCodeChanges(data, config);
-      
-      // Check if validation was run
-      const validationRun = detectValidation(data, config);
-      
-      // Warn if code changed but no validation
-      if (codeChanged && !validationRun) {
-        const commands = config.validationCommands || ['npm test'];
-        console.error('[Hook] ⚠️  Validation check:');
-        console.error('[Hook] Code changes detected but no validation commands found');
-        console.error(`[Hook] Required: ${commands.join(' OR ')}`);
-        console.error('[Hook] See: CODEBASE_ESSENTIALS.md Section 2');
-      }
-      
-      process.exit(0); // Always non-blocking
-    } catch (err) {
-      // Fail silently - don't block workflow
-      process.exit(0);
+  try {
+    const input = readHookInput();
+    const data = JSON.parse(input || '{}');
+
+    // Load configuration
+    const config = loadConfig();
+
+    // Check if code files were edited
+    const codeChanged = detectCodeChanges(data, config);
+
+    // Check if validation was run
+    const validationRun = detectValidation(data, config);
+
+    // Warn if code changed but no validation
+    if (codeChanged && !validationRun) {
+      const commands = config.validationCommands || ['npm test'];
+      console.error('[Hook] ⚠️  Validation check:');
+      console.error('[Hook] Code changes detected but no validation commands found');
+      console.error(`[Hook] Required: ${commands.join(' OR ')}`);
+      console.error('[Hook] See: CODEBASE_ESSENTIALS.md Section 2');
     }
-  });
+  } catch (err) {
+    // Fail silently - don't block workflow
+  }
+
+  process.exit(0); // Always non-blocking
 }
 
 /**
@@ -147,7 +156,7 @@ function matchesGlob(filePath, pattern) {
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')        // Escape regex chars
     .replace(/<!GLOBSTAR_MIDDLE!>/g, '/(?:.*/)?') // /**/ → /(?:.*/)? (optional middle)
     .replace(/<!GLOBSTAR_END!>/g, '(?:/.*)?')     // /** → (?:/.*)? (optional trailing)
-    .replace(/<!GLOBSTAR_START!>/g, '(?:.*/)? ')  // **/ → (?:.*/)? (optional leading)
+    .replace(/<!GLOBSTAR_START!>/g, '(?:.*/)?')   // **/ → (?:.*/)? (optional leading)
     .replace(/<!GLOBSTAR_ONLY!>/g, '.*')          // ** → .* (rare case)
     .replace(/<!STAR!>/g, '[^/]*');               // * → [^/]*
   

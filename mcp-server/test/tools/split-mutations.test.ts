@@ -123,7 +123,8 @@ Test the plan mutations.`,
       expect(result.content[0].text).toContain('Plan status updated');
       expect(result.content[0].text).toContain('COMPLETE');
       expect(mockCheckConstraints).toHaveBeenCalledWith('COMPLETE_PLAN', expect.objectContaining({
-        targetId: 'PLAN_feature_x'
+        targetId: 'PLAN_feature_x',
+        targetDir: expect.any(String),
       }));
     });
 
@@ -152,7 +153,8 @@ Test the plan mutations.`,
 
       expect(result.isError).not.toBe(true);
       expect(mockCheckConstraints).toHaveBeenCalledWith('CANCEL_PLAN', expect.objectContaining({
-        targetId: 'PLAN_feature_x'
+        targetId: 'PLAN_feature_x',
+        targetDir: expect.any(String),
       }));
     });
 

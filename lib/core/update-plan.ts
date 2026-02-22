@@ -114,7 +114,8 @@ export async function updatePlanCore(
     await enforceConstraints('COMPLETE_PLAN', {
       userId: author, // Using author as user ID
       projectId: config.projectId,
-      targetId: planId
+      targetId: planId,
+      targetDir: resolvedTargetDir
     });
   }
 

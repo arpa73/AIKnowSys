@@ -34,6 +34,41 @@ description: AI-assisted workflow for sharing personal patterns with the team. D
 - Don't share patterns with project secrets (use .env patterns instead)
 - Don't share patterns that duplicate existing team patterns (check first)
 
+## MCP-First Pattern Sharing (Primary)
+
+Use MCP tools first for pattern discovery and persistence.
+
+**Primary tools:**
+- `mcp_aiknowsys_find_pattern` - Check existing learned patterns and avoid duplicates
+- `mcp_aiknowsys_query_learned_patterns` - Explore recent/high-signal learned patterns
+- `mcp_aiknowsys_create_learned_pattern` - Persist the final team pattern in SQLite and emit knowledge events
+- `mcp_aiknowsys_append_to_session` - Record sharing decision and rationale in session notes
+
+**MCP-first flow:**
+1. Search existing patterns with `mcp_aiknowsys_find_pattern` before creating anything new.
+2. If unique or intentionally distinct, persist with `mcp_aiknowsys_create_learned_pattern`.
+3. Append outcome and context to session via `mcp_aiknowsys_append_to_session`.
+
+**Example:**
+```typescript
+mcp_aiknowsys_find_pattern({
+  keywords: ["rate-limiting", "backoff"]
+})
+
+mcp_aiknowsys_create_learned_pattern({
+  title: "API Rate Limiting Backoff Pattern",
+  pattern: "Use exponential backoff with jitter after 429 responses.",
+  solution: "Base delay 250ms, cap 10s, reset on success.",
+  category: "error_resolution",
+  keywords: ["api", "rate-limiting", "backoff"],
+  reusable: true
+})
+```
+
+## CLI/file fallback
+
+Use legacy `.aiknowsys/*` file operations only when MCP mutation/query tools are unavailable in the current runtime.
+
 ---
 
 ## Prerequisites

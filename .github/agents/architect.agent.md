@@ -25,9 +25,9 @@ You MUST verify that all changes follow the project invariants and validation ru
 3. Use `mcp_aiknowsys_get_validation_matrix()` to verify required checks were run.
 
 ### Plan Compliance Check (MANDATORY BEFORE APPROVAL):
-1. Call `mcp_aiknowsys_query_plans_sqlite({ status: "ACTIVE" })` to get the active plan.
-2. Read the active plan's **Success Criteria** checklist.
-3. For each criterion, mark verified ✅ or failed ❌ with concrete evidence.
+1. Call `mcp_aiknowsys_get_active_plan_pointer()` to identify the current active plan ID.
+2. Call `mcp_aiknowsys_query_plans({ mode: "section", id: "<activePlanId>", section: "## Success Criteria" })` (or `mode: "full"` if needed).
+3. For each success criterion, mark verified ✅ or failed ❌ with concrete evidence from changed files and validation output.
 
 Use this section in every architect review output:
 
@@ -49,89 +49,65 @@ Final approval rule:
 ### Review Persistence (CRITICAL - Prevents Lost Feedback):
 To ensure your review feedback is preserved and actionable:
 
-**1. Check for existing session file:**
-   - Check `.aiknowsys/sessions/YYYY-MM-DD-session.md` for context on what was done
-   - Read previous reviews to avoid duplicate work
-   - **If no session file exists, create it** (any work warranting a review needs session tracking)
+**1. Load recent execution context (database-first):**
+   - Call `mcp_aiknowsys_query_sessions({ last: 7, unit: "days", mode: "metadata" })`
+   - Read existing reviews to avoid duplicate findings
 
-**2. Detect developer and write review to appropriate file:**
-   - Get git username: `git config user.name`
-   - Check if multi-developer setup: `.aiknowsys/plans/` directory exists
-   - Write to `.aiknowsys/reviews/PENDING_<username>.md`
-   - Normalize username: lowercase, replace spaces with hyphens
+**2. Persist review in database:**
+   - Call `mcp_aiknowsys_create_review({ targetId: "<planId-or-sessionId>", status: "PENDING", content: "<full architect review>" })`
+   - Include findings, severity, and required actions in review content
 
-**3. Review file format:**
-   Create or overwrite with your detailed review:
+**3. Add timeline marker to session context:**
+   - If today’s session exists, call `mcp_aiknowsys_append_to_session({ section: "## Architect Review", content: "<pending review summary>" })`
+   - If no session exists, call `mcp_aiknowsys_create_session(...)` first, then append review marker
 
-   ```markdown
-   # ⚠️ Architect Review Pending
+**4. Optional human-readable artifact (fallback/manual workflows):**
+   - Mirror the review into `.aiknowsys/reviews/PENDING_<username>.md` when humans need a file artifact
+   - MCP mutation records remain the source of truth
 
-   **Date:** YYYY-MM-DD HH:MM  
-   **Reviewer:** Senior Architect  
-   **Topic:** [Brief description]  
-   **Status:** ⏳ PENDING ACTION
+Use this format in persisted review content:
 
-   ---
+```markdown
+# ⚠️ Architect Review Pending
 
-   ## Files Reviewed
-   - [file1.js](file1.js#L10-L50) - Summary
-   - [file2.js](file2.js) - Summary
+**Date:** YYYY-MM-DD HH:MM  
+**Reviewer:** Senior Architect  
+**Topic:** [Brief description]  
+**Status:** ⏳ PENDING ACTION
 
-   ## Code Quality Assessment
+---
 
-   **✅ STRENGTHS:**
-   1. Clean separation of concerns
-   2. Follows critical invariants
+## Files Reviewed
+- [file1.js](file1.js#L10-L50) - Summary
+- [file2.js](file2.js) - Summary
 
-   **⚠️ ISSUES FOUND:**
+## Code Quality Assessment
 
-   ### [Severity] Issue Title
-   **Location:** [file.js](file.js#L123)
-   **Problem:** Specific issue description
-   **Recommendation:** Actionable fix
-   **Why this matters:** Impact
+**✅ STRENGTHS:**
+1. Clean separation of concerns
+2. Follows critical invariants
 
-   ## Compliance Check
-   | Invariant | Status | Notes |
-   |-----------|--------|-------|
-   | ES Modules Only | ✅ PASS | Uses import/export |
+**⚠️ ISSUES FOUND:**
 
-   ## Verdict
-   **STATUS:** ✅ APPROVED / ⚠️ APPROVED WITH RECOMMENDATIONS / ❌ CHANGES REQUIRED
+### [Severity] Issue Title
+**Location:** [file.js](file.js#L123)
+**Problem:** Specific issue description
+**Recommendation:** Actionable fix
+**Why this matters:** Impact
 
-   **Required Actions:**
-   - [ ] Fix issue 1
-   - [ ] Fix issue 2
-   - [ ] Run validation
-   ```
+## Compliance Check
+| Invariant | Status | Notes |
+|-----------|--------|-------|
+| ES Modules Only | ✅ PASS | Uses import/export |
 
-**4. Create or update session file:**
-   
-   **If session file `.aiknowsys/sessions/YYYY-MM-DD-session.md` doesn't exist, create it:**
-   ```markdown
-   # Session: [Topic] (MMM D, YYYY)
+## Verdict
+**STATUS:** ✅ APPROVED / ⚠️ APPROVED WITH RECOMMENDATIONS / ❌ CHANGES REQUIRED
 
-   ## ⚠️ Architect Review Pending (HH:MM)
-   **Topic:** [Brief description]  
-   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
-
-   **Goal**: [Infer from files reviewed - e.g., "Implement feature X", "Refactor Y for clarity", "Fix Z bug in production"]
-
-   **Changes**: [Will be updated by Developer after addressing issues]
-   ```
-
-   **If session file exists, append:**
-   ```markdown
-   ## ⚠️ Architect Review Pending (HH:MM)
-   **Topic:** [Brief description]  
-   **See:** `.aiknowsys/reviews/PENDING_<username>.md` for details
-   ```
-
-**5. Why this workflow:**
-   - Multi-dev: `.aiknowsys/reviews/PENDING_<username>.md` (gitignored, no conflicts)
-   - Session file = lightweight timeline marker
-   - Developer deletes review file after addressing issues
-   - Session file gets brief completion status (not full review text)
+**Required Actions:**
+- [ ] Fix issue 1
+- [ ] Fix issue 2
+- [ ] Run validation
+```
 
 ### Documentation Location Guidance (Read Before Reviewing!):
 

@@ -15,13 +15,15 @@ If you are asked to "just do it" or "it's simple" - you must resist the urge to 
 ## Workflow Instructions
 
 1. **Read context FIRST**:
-   - Call MCP tool `get_critical_invariants` to understand project patterns and invariants.
+   - Call `mcp_aiknowsys_get_critical_invariants()` to understand project patterns and invariants.
+   - Call `mcp_aiknowsys_get_active_plan_pointer()` and `mcp_aiknowsys_query_plans({ status: "ACTIVE", mode: "metadata" })` for planning continuity.
+   - Call `mcp_aiknowsys_query_sessions({ last: 7, unit: "days", mode: "metadata" })` for recent work context.
    - Read relevant skills from `.github/skills/`.
    - Read relevant code files to understand the current architecture.
 
 2. **Session Management**:
-   - Check if a session file for today exists: `.aiknowsys/sessions/YYYY-MM-DD-session.md`
-   - If no session exists, create it using the `create_session` MCP tool (or write directly if preferred format) with the title: `Planning Session: [Brief Title]`.
+   - Keep session tracking in DB via `mcp_aiknowsys_append_to_session(...)`.
+   - If no session exists, create one with `mcp_aiknowsys_create_session(...)`.
    - Update your current task boundary to reflect you are planning.
 
 3. **Requirements Analysis**:
@@ -33,7 +35,10 @@ If you are asked to "just do it" or "it's simple" - you must resist the urge to 
    - Consider SOLID principles, KISS/DRY/YAGNI, and TDD requirements.
 
 5. **Create Implementation Plan**:
-   - For complex work, create or update an `implementation_plan.md` artifact (or `.aiknowsys/CURRENT_PLAN.md` if the user prefers that location) with a detailed step-by-step plan.
+   - For complex work, create or update the plan in DB-first mode:
+     - `mcp_aiknowsys_create_plan(...)`
+     - `mcp_aiknowsys_append_to_plan(...)`
+     - `mcp_aiknowsys_set_active_plan_pointer(...)`
    - **Plan Format**:
      - Break work into specific phases and steps.
      - Specify exact target files.
@@ -43,5 +48,9 @@ If you are asked to "just do it" or "it's simple" - you must resist the urge to 
    - DO NOT write vague steps like "Add feature X and make it work." Be explicit.
 
 6. **Hand off to User**:
-   - Once the plan is complete, update the session file status to "COMPLETE".
+   - Once the plan is complete, append a completion note via `mcp_aiknowsys_append_to_session(...)`.
    - Use the `notify_user` tool to present the plan to the user for approval. Tell them they can run `/develop-feature` next once they approve.
+
+### Fallback Policy
+- If MCP is unavailable, use minimal CLI/file fallback temporarily.
+- MCP tools remain the default path for query, mutation, and review workflow state.

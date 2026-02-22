@@ -29,7 +29,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       expect(searchResult.success).toBe(true);
       expect(searchResult.tools.length).toBeGreaterThan(0);
       expect(searchResult.tools.length).toBeLessThanOrEqual(5);
-      
+
       // Verify results have session-related tools
       const toolNames = searchResult.tools.map((t: any) => t.name);
       expect(toolNames.some((name: string) => name.includes('session'))).toBe(true);
@@ -77,7 +77,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
         params: {
           name: 'aiknowsys_search_tools',
           arguments: {
-            query: 'category:sqlite',
+            query: 'category:query',
             limit: 10,
           },
         },
@@ -86,10 +86,10 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const searchResult = JSON.parse(searchResponse.content[0].text);
       expect(searchResult.success).toBe(true);
       expect(searchResult.tools.length).toBeGreaterThan(0);
-      
-      // All results should be in sqlite category
+
+      // All results should be in query category
       searchResult.tools.forEach((tool: any) => {
-        expect(tool.category).toBe('sqlite');
+        expect(tool.category).toBe('query');
       });
     });
 
@@ -99,8 +99,8 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
         params: {
           name: 'aiknowsys_search_tools',
           arguments: {
-            query: 'query',
-            tags: ['sqlite'],
+            query: 'session',
+            tags: ['core'],
             limit: 10,
           },
         },
@@ -108,12 +108,12 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
 
       const searchResult = JSON.parse(searchResponse.content[0].text);
       expect(searchResult.success).toBe(true);
-      
+
       if (searchResult.tools.length > 0) {
-        // Verify tools have sqlite tag
+        // Verify tools have core tag
         searchResult.tools.forEach((tool: any) => {
           const toolMetadata = (server as any).toolRegistry.get(tool.name);
-          expect(toolMetadata.tags).toContain('sqlite');
+          expect(toolMetadata.tags).toContain('core');
         });
       }
     });
@@ -124,7 +124,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
         params: {
           name: 'aiknowsys_describe_tools',
           arguments: {
-            tools: ['get_critical_invariants', 'get_validation_matrix', 'get_active_plans'],
+            tools: ['get_critical_invariants', 'get_validation_matrix', 'create_session'],
           },
         },
       });
@@ -132,7 +132,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const describeResult = JSON.parse(describeResponse.content[0].text);
       expect(describeResult.success).toBe(true);
       expect(describeResult.tools).toHaveLength(3);
-      
+
       describeResult.tools.forEach((tool: any) => {
         expect(tool).toHaveProperty('name');
         expect(tool).toHaveProperty('description');
@@ -222,7 +222,6 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       expect(searchResult.categories_overview).toContain('query');
       expect(searchResult.categories_overview).toContain('mutation');
       expect(searchResult.categories_overview).toContain('validation');
-      expect(searchResult.categories_overview).toContain('sqlite');
     });
   });
 
@@ -239,20 +238,20 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const dynamicTools = allTools.filter((t: any) => t.name.startsWith('aiknowsys_'));
 
       // Verify we have both sets
-      expect(directAccessTools.length).toBe(43);
+      expect(directAccessTools.length).toBe(33);
       expect(dynamicTools.length).toBe(3);
 
-      // Dynamic toolset exposes only 3 tools (vs 43 direct)
+      // Dynamic toolset exposes only 3 tools (vs 33 direct)
       // Token reduction: >90% for tool-definition footprint
       expect(dynamicTools.length).toBeLessThan(directAccessTools.length);
-      
+
       // Demonstrate workflow - only 3 tool calls instead of loading all direct schemas
       const tokensForDirectAccess = directAccessTools.length; // All tools loaded upfront
       const tokensForDynamicAccess = dynamicTools.length; // Only 3 tools loaded
-      
+
       expect(tokensForDynamicAccess).toBe(3);
-      expect(tokensForDirectAccess).toBe(43);
-      
+      expect(tokensForDirectAccess).toBe(33);
+
       const tokenReduction = ((tokensForDirectAccess - tokensForDynamicAccess) / tokensForDirectAccess) * 100;
       expect(tokenReduction).toBeGreaterThan(90); // >90% reduction
     });

@@ -677,18 +677,6 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
     );
 
     // Phase 2B: Enhanced Query Tools
-    this.server.registerTool(
-      'search_context',
-      {
-        description:
-          'Full-text search across plans, sessions, and learned patterns. Faster than grep_search for finding historical work.',
-        inputSchema: z.object({
-          query: z.string(),
-          type: z.enum(['all', 'sessions', 'plans', 'learned']).optional(),
-        }),
-      },
-      async (args) => searchContext(args)
-    );
 
     this.server.registerTool(
       'find_pattern',

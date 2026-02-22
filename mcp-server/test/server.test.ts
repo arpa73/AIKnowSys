@@ -3,46 +3,39 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 46 tools (43 direct + 3 dynamic)', async () => {
+  it('should register all 36 tools (33 direct + 3 dynamic)', async () => {
     const server = new AIKnowSysServer();
-    
+
     // Access the internal low-level server instance
     const internalServer = (server as any).server.server;
-    
+
     // Simulate ListToolsRequest
     const response = await internalServer._requestHandlers.get('tools/list')({
       method: 'tools/list',
       params: {}
     });
 
-    expect(response.tools).toHaveLength(46);
-    
+    expect(response.tools).toHaveLength(36);
+
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);
-    
+
     // Dynamic toolset (Phase 2 - NEW)
     expect(toolNames).toContain('aiknowsys_search_tools');
     expect(toolNames).toContain('aiknowsys_describe_tools');
     expect(toolNames).toContain('aiknowsys_execute_tool');
-    
+
     // Context tools
     expect(toolNames).toContain('get_critical_invariants');
     expect(toolNames).toContain('get_validation_matrix');
-    
+
     // Query tools (Phase 1)
-    expect(toolNames).toContain('get_active_plans');
-    expect(toolNames).toContain('get_recent_sessions');
     expect(toolNames).toContain('find_skill_for_task');
-    
+
     // Advanced Query tools (Phase 1.2 - NEW)
     expect(toolNames).toContain('query_plans');
     expect(toolNames).toContain('query_sessions');
-    expect(toolNames).toContain('get_plans_by_status');
-    expect(toolNames).toContain('get_all_plans');
-    expect(toolNames).toContain('get_session_by_date');
-    expect(toolNames).toContain('rebuild_index');
-    expect(toolNames).toContain('sync_plans');
-    
+
     // Mutation tools (creation - unchanged)
     expect(toolNames).toContain('create_session');
     expect(toolNames).toContain('create_plan');
@@ -55,31 +48,31 @@ describe('MCP Server Registration', () => {
 
     // SQLite single-record query tool
     expect(toolNames).toContain('get_session');
-    
+
     // Session mutation tools (split from update_session)
     expect(toolNames).toContain('append_to_session');
     expect(toolNames).toContain('prepend_to_session');
     expect(toolNames).toContain('insert_after_section');
     expect(toolNames).toContain('insert_before_section');
-    
+
     // Plan mutation tools (split from update_plan)
     expect(toolNames).toContain('set_plan_status');
     expect(toolNames).toContain('append_to_plan');
     expect(toolNames).toContain('prepend_to_plan');
-    
+
     // Metadata mutation tools (Phase 1.3 - NEW)
     expect(toolNames).toContain('update_session_metadata');
     expect(toolNames).toContain('update_plan_metadata');
-    
+
     // Archive tools (Phase 1.3 - NEW)
     expect(toolNames).toContain('archive_sessions');
     expect(toolNames).toContain('archive_plans');
-    
+
     // Validation tools
     expect(toolNames).toContain('validate_deliverables');
     expect(toolNames).toContain('check_tdd_compliance');
     expect(toolNames).toContain('validate_skill');
-    
+
     // Enhanced query tools
     expect(toolNames).toContain('search_context');
     expect(toolNames).toContain('find_pattern');
@@ -89,8 +82,8 @@ describe('MCP Server Registration', () => {
 
 describe('MCP Server Input Validation', () => {
   describe('days parameter validation', () => {
-    const schema = z.object({ 
-      days: z.number().min(1).max(365).optional().default(7) 
+    const schema = z.object({
+      days: z.number().min(1).max(365).optional().default(7)
     });
 
     it('should reject days parameter less than 1', () => {

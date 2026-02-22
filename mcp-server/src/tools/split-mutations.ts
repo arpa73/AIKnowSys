@@ -302,6 +302,7 @@ export async function setPlanStatus(params: unknown) {
         userId: 'mcp-server',
         projectId: path.basename(PROJECT_ROOT),
         targetId: validated.planId,
+        targetDir: PROJECT_ROOT,
       });
 
       if (!constraintResult.allowed) {

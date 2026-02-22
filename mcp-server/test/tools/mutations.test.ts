@@ -570,6 +570,13 @@ describe('Mutation Tools', () => {
       expect(result.isError).not.toBe(true);
       expect(result.content[0].text).toContain('"allowed": false');
       expect(mockCheckConstraints).toHaveBeenCalledTimes(1);
+      expect(mockCheckConstraints).toHaveBeenCalledWith(
+        'COMPLETE_PLAN',
+        expect.objectContaining({
+          targetId: 'PLAN_test',
+          targetDir: expect.any(String),
+        }),
+      );
     });
   });
 

@@ -15,51 +15,60 @@ const path = require('path');
 /**
  * Main hook execution
  */
+function readHookInput() {
+  if (process.env.HOOK_INPUT_JSON) {
+    return process.env.HOOK_INPUT_JSON;
+  }
+
+  if (process.stdin.isTTY) {
+    return '';
+  }
+
+  try {
+    return fs.readFileSync(0, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 async function main() {
-  let input = '';
-  
-  // Read JSON input from stdin
-  process.stdin.on('data', chunk => input += chunk.toString());
-  
-  process.stdin.on('end', () => {
-    try {
-      const data = JSON.parse(input || '{}');
-      
-      // Only check Edit/Write operations
-      if (data.tool !== 'Edit' && data.tool !== 'Write') {
-        process.exit(0);
-        return;
-      }
-      
-      const filePath = data.tool_input?.file_path;
-      if (!filePath) {
-        process.exit(0);
-        return;
-      }
-      
-      // Only check implementation files
-      if (!isImplementationFile(filePath)) {
-        process.exit(0);
-        return;
-      }
-      
-      // Find expected test file
-      const testPath = getExpectedTestPath(filePath);
-      
-      // Check if test exists and is recent
-      if (!isTestRecentlyEdited(testPath)) {
-        console.error('[Hook] 🧪 TDD Reminder: Implementing ' + filePath);
-        console.error('[Hook] Did you write the test FIRST? (RED phase)');
-        console.error('[Hook] Expected test: ' + testPath);
-        console.error('[Hook] See: .github/skills/tdd-workflow/SKILL.md');
-      }
-      
-      process.exit(0); // Always non-blocking
-    } catch (err) {
-      // Fail silently - don't block workflow
+  try {
+    const input = readHookInput();
+    const data = JSON.parse(input || '{}');
+
+    // Only check Edit/Write operations
+    if (data.tool !== 'Edit' && data.tool !== 'Write') {
       process.exit(0);
+      return;
     }
-  });
+
+    const filePath = data.tool_input?.file_path;
+    if (!filePath) {
+      process.exit(0);
+      return;
+    }
+
+    // Only check implementation files
+    if (!isImplementationFile(filePath)) {
+      process.exit(0);
+      return;
+    }
+
+    // Find expected test file
+    const testPath = getExpectedTestPath(filePath);
+
+    // Check if test exists and is recent
+    if (!isTestRecentlyEdited(testPath)) {
+      console.error('[Hook] 🧪 TDD Reminder: Implementing ' + filePath);
+      console.error('[Hook] Did you write the test FIRST? (RED phase)');
+      console.error('[Hook] Expected test: ' + testPath);
+      console.error('[Hook] See: .github/skills/tdd-workflow/SKILL.md');
+    }
+  } catch (err) {
+    // Fail silently - don't block workflow
+  }
+
+  process.exit(0); // Always non-blocking
 }
 
 /**

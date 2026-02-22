@@ -27,6 +27,7 @@ describe('Constraint Engine', () => {
       CREATE TABLE knowledge_events (
         event_id TEXT PRIMARY KEY,
         plan_id TEXT,
+        project_id TEXT,
         event_type TEXT
       );
       CREATE TABLE user_state (
@@ -66,8 +67,8 @@ describe('Constraint Engine', () => {
   it('should ALLOW completing a plan if all reviews are ADDRESSED', async () => {
     // Setup: Insert an addressed review and a validation pass event
     db.prepare('INSERT INTO reviews (id, target_id, status) VALUES (\'rev1\', \'PLAN_A\', \'ADDRESSED\')').run();
-    db.prepare('INSERT INTO knowledge_events (event_id, plan_id, event_type) VALUES (?, ?, ?)')
-      .run('evt1', 'PLAN_A', EventType.VALIDATION_PASSED);
+    db.prepare('INSERT INTO knowledge_events (event_id, plan_id, project_id, event_type) VALUES (?, ?, ?, ?)')
+      .run('evt1', 'PLAN_A', 'proj1', EventType.VALIDATION_PASSED);
 
     const result = await checkConstraints('COMPLETE_PLAN', { 
       userId: 'user1', 
@@ -114,8 +115,8 @@ describe('Constraint Engine', () => {
 
   it('should ALLOW canceling a plan when reviews are addressed and validation exists', async () => {
     db.prepare('INSERT INTO reviews (id, target_id, status) VALUES (\'rev1\', \'PLAN_A\', \'ADDRESSED\')').run();
-    db.prepare('INSERT INTO knowledge_events (event_id, plan_id, event_type) VALUES (?, ?, ?)')
-      .run('evt1', 'PLAN_A', EventType.VALIDATION_PASSED);
+    db.prepare('INSERT INTO knowledge_events (event_id, plan_id, project_id, event_type) VALUES (?, ?, ?, ?)')
+      .run('evt1', 'PLAN_A', 'proj1', EventType.VALIDATION_PASSED);
 
     const result = await checkConstraints('CANCEL_PLAN', {
       userId: 'user1',
@@ -149,5 +150,19 @@ describe('Constraint Engine', () => {
     });
 
     expect(result.allowed).toBe(true);
+  });
+
+  it('should BLOCK completion when validation event exists for a different project', async () => {
+    db.prepare('INSERT INTO knowledge_events (event_id, plan_id, project_id, event_type) VALUES (?, ?, ?, ?)')
+      .run('evt-other-project', 'PLAN_A', 'other-project', EventType.VALIDATION_PASSED);
+
+    const result = await checkConstraints('COMPLETE_PLAN', {
+      userId: 'user1',
+      projectId: 'proj1',
+      targetId: 'PLAN_A'
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(result.blockers?.[0]).toContain('No \'VALIDATION_PASSED\' event');
   });
 });

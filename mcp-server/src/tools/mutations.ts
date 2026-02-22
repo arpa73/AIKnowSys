@@ -621,6 +621,7 @@ export async function checkConstraintsTool(params: unknown) {
       userId: validated.userId || 'mcp-agent',
       projectId: validated.projectId || path.basename(PROJECT_ROOT),
       targetId: validated.targetId,
+      targetDir: PROJECT_ROOT,
     });
 
     return {

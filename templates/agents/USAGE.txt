@@ -61,6 +61,17 @@
 
 ## Usage
 
+### MCP-First Quick Start (Recommended)
+
+Load context and active planning state via MCP first:
+```text
+mcp_aiknowsys_get_critical_invariants()
+mcp_aiknowsys_query_plans({ status: "ACTIVE", mode: "metadata" })
+mcp_aiknowsys_query_sessions({ last: 7, unit: "days", mode: "metadata" })
+```
+
+Use CLI/file operations only as fallback when MCP is unavailable.
+
 ### In VS Code with GitHub Copilot Agent Mode
 
 **Start with Developer:**
@@ -261,10 +272,12 @@ handoffs:
 
 ### Architect cannot load MCP invariants
 
-**Check:** Does Architect have `search` tool enabled?
-```yaml
-tools: [search, search/changes]  # ← Required
+**Check:** Verify MCP tools are available in your runtime, then call:
+```text
+mcp_aiknowsys_get_critical_invariants()
 ```
+
+If MCP is unavailable, use CLI fallback until MCP access is restored.
 
 ### Review is too strict / too lenient
 

@@ -53,7 +53,46 @@ Use this skill when you need to:
 
 ---
 
-## Commands Available
+## MCP Mutation Tools (Primary)
+
+Use MCP mutation tools as the default path for session and plan updates.
+
+**Primary tools:**
+- `mcp_aiknowsys_create_session` - Create session records with validated metadata
+- `mcp_aiknowsys_update_session_metadata` - Update session status/topics/files metadata
+- `mcp_aiknowsys_append_to_session` / `mcp_aiknowsys_prepend_to_session` - Add progress notes
+- `mcp_aiknowsys_create_plan` - Create implementation plans
+- `mcp_aiknowsys_set_plan_status` - Transition plan state (ACTIVE/PAUSED/COMPLETE/CANCELLED)
+- `mcp_aiknowsys_append_to_plan` / `mcp_aiknowsys_prepend_to_plan` - Persist plan progress and blockers
+
+**MCP-first examples:**
+
+```typescript
+// Start a new session linked to ongoing work
+mcp_aiknowsys_create_session({
+  title: "Work Session",
+  topics: ["mcp-migration", "validation"]
+})
+
+// Record progress in session
+mcp_aiknowsys_append_to_session({
+  section: "## Progress",
+  content: "Completed context-mutation MCP-first migration slice."
+})
+
+// Create and activate implementation plan
+mcp_aiknowsys_create_plan({
+  id: "PLAN_context_mutation_mcp_first",
+  title: "Context Mutation MCP-first migration",
+  type: "feature"
+})
+mcp_aiknowsys_set_plan_status({
+  planId: "PLAN_context_mutation_mcp_first",
+  status: "ACTIVE"
+})
+```
+
+## Commands Available (CLI fallback)
 
 ### create-session
 

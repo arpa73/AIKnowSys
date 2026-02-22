@@ -42,9 +42,10 @@ export async function checkConstraints(
     userId: string; 
     projectId: string; 
     targetId?: string; // planId or sessionId
+    targetDir?: string;
   }
 ): Promise<ConstraintCheckResult> {
-  const db = await getKnowledgeDb();
+  const db = await getKnowledgeDb(context.targetDir ?? process.cwd());
   const blockers: string[] = [];
 
   switch (action) {
@@ -71,7 +72,8 @@ export async function checkConstraints(
       const validationEvents = db.prepare(`
         SELECT count(*) as count FROM knowledge_events 
         WHERE plan_id = ? AND event_type = ?
-      `).get(context.targetId, EventType.VALIDATION_PASSED) as { count: number };
+          AND (project_id = ? OR project_id IS NULL)
+      `).get(context.targetId, EventType.VALIDATION_PASSED, context.projectId) as { count: number };
 
       if (validationEvents.count === 0) {
         blockers.push('No \'VALIDATION_PASSED\' event recorded for this plan. Run tests and log success using \'log_work_event\'.');
@@ -110,7 +112,7 @@ export async function checkConstraints(
  */
 export async function enforceConstraints(
   action: ActionType, 
-  context: { userId: string; projectId: string; targetId?: string }
+  context: { userId: string; projectId: string; targetId?: string; targetDir?: string }
 ): Promise<void> {
   const result = await checkConstraints(action, context);
   

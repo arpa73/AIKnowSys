@@ -21,7 +21,49 @@ maintainer: false
 - Before major releases (declutter workspace)
 - Plan pointer files getting cluttered
 
-**Commands:** `archive-plans`, `clean`
+**Primary workflow:** MCP archival tools first
+**Commands:** `archive-plans`, `clean` (fallback)
+
+---
+
+## MCP-First Cleanup Workflow (Primary)
+
+Use MCP mutation tools as the default cleanup mechanism.
+
+**Primary tools:**
+- `mcp_aiknowsys_archive_plans` - Archive plans by status/age with dry-run support
+- `mcp_aiknowsys_archive_sessions` - Archive old session files with dry-run support
+- `mcp_aiknowsys_query_plans` - Verify active vs archived plan state after cleanup
+
+**MCP-first sequence:**
+1. Preview archive candidates with `mcp_aiknowsys_archive_plans({ dryRun: true })`.
+2. Execute plan archival with explicit status/age.
+3. Preview and execute session archival via `mcp_aiknowsys_archive_sessions`.
+4. Verify active plan set with `mcp_aiknowsys_query_plans({ status: "ACTIVE" })`.
+
+**Example:**
+```typescript
+mcp_aiknowsys_archive_plans({
+  status: "COMPLETE",
+  days: 7,
+  dryRun: true
+})
+
+mcp_aiknowsys_archive_plans({
+  status: "COMPLETE",
+  days: 7,
+  dryRun: false
+})
+
+mcp_aiknowsys_archive_sessions({
+  days: 30,
+  dryRun: false
+})
+```
+
+## CLI/file fallback
+
+Use CLI commands or manual file operations only when MCP tools are unavailable in the runtime.
 
 ---
 

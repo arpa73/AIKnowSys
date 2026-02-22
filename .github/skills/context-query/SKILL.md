@@ -62,6 +62,25 @@ Use this skill when you need to:
 
 ## Commands Available
 
+### MCP-First Queries (Default)
+
+Use MCP query tools first for AI/programmatic workflows:
+
+```typescript
+// Active plans (metadata)
+mcp_aiknowsys_query_plans({ status: "ACTIVE", mode: "metadata" })
+
+// Recent sessions
+mcp_aiknowsys_query_sessions({ last: 7, unit: "days", mode: "metadata" })
+
+// Full-text search across context
+mcp_aiknowsys_search_context({ query: "validation strategy", limit: 10 })
+```
+
+### CLI fallback
+
+If MCP is unavailable in the current runtime, use CLI commands below as fallback.
+
 ### Query Plans
 
 ```bash

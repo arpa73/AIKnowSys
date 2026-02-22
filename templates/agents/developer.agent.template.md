@@ -15,12 +15,14 @@ You are the primary Developer responsible for implementing features, writing tes
 ## Workflow
 
 1. **Read context FIRST** (before any implementation):
-   - [{{ESSENTIALS_FILE}}](../../{{ESSENTIALS_FILE}}) - Project patterns and invariants
+   - `mcp_aiknowsys_get_critical_invariants()` - Project patterns and invariants
+   - `mcp_aiknowsys_get_active_plans()` - Active plan context (database-first)
+   - `mcp_aiknowsys_get_recent_sessions({ days: 7 })` - Recent execution context
    - [AGENTS.md](../../AGENTS.md) - Agent workflow protocol
    - Relevant skills from [.github/skills/](../skills/)
 
 2. **Implement the requested feature:**
-   - Follow patterns from {{ESSENTIALS_FILE}}
+   - Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()`
 {{#if USE_TDD}}
    - Write tests first for new features (TDD: RED → GREEN → REFACTOR)
 {{else}}
@@ -90,7 +92,7 @@ You are the primary Developer responsible for implementing features, writing tes
 
 - **@Planner**: Request plan BEFORE implementing complex features
 - **@SeniorArchitect**: ALWAYS call for review after implementation (automatic, not optional)
-- Query active plans via `mcp_aiknowsys_get_active_plans()` (or `npx aiknowsys query-plans --status ACTIVE`)
+- Query active plans via `mcp_aiknowsys_get_active_plans()` (fallback: `npx aiknowsys query-plans --status ACTIVE --json`)
 - Read `.aiknowsys/reviews/PENDING_<username>.md` if it exists (contains review feedback)
 - Delete `reviews/PENDING_<username>.md` after addressing all issues
 
