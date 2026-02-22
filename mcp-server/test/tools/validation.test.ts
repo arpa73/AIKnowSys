@@ -5,15 +5,16 @@ vi.mock('../../../lib/core/validate-deliverables.js', () => ({
   validateDeliverablesCore: vi.fn(),
 }));
 
-// Mock child_process for other tools (checkTddCompliance, validateSkill still use subprocess)
+// Mock child_process for other tools (checkTddCompliance still uses subprocess)
 const mockExecFileAsync = vi.fn();
 
 vi.mock('child_process', () => ({
   execFile: vi.fn()
 }));
 
-vi.mock('util', () => ({
-  promisify: vi.fn(() => mockExecFileAsync)
+const mockValidateSkillsCore = vi.fn();
+vi.mock('../../../lib/core/validate-skills.js', () => ({
+  validateSkillsCore: (...args: any[]) => mockValidateSkillsCore(...args)
 }));
 
 import { validateDeliverablesCore } from '../../../lib/core/validate-deliverables.js';
@@ -22,6 +23,7 @@ describe('Validation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExecFileAsync.mockReset();
+    mockValidateSkillsCore.mockReset();
   });
 
   describe('validate_deliverables - Phase 2 Batch 3 Direct Core Import', () => {
@@ -36,7 +38,7 @@ describe('Validation Tools', () => {
         exitCode: 0,
         metrics: { templatesChecked: 10, patternsValidated: 5, duration: 123 }
       };
-      
+
       vi.mocked(validateDeliverablesCore).mockResolvedValue(mockResult);
 
       const { validateDeliverables } = await import('../../src/tools/validation.js');
@@ -44,7 +46,7 @@ describe('Validation Tools', () => {
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
-      
+
       const data = JSON.parse(result.content[0].text);
       expect(data.passed).toBe(true);
       expect(data.summary).toContain('All deliverables valid');
@@ -63,7 +65,7 @@ describe('Validation Tools', () => {
         fixed: ['Fixed patterns in .github/agents/architect.agent.md'],
         metrics: { templatesChecked: 10, patternsValidated: 5, duration: 156 }
       };
-      
+
       vi.mocked(validateDeliverablesCore).mockResolvedValue(mockResult);
 
       const { validateDeliverables } = await import('../../src/tools/validation.js');
@@ -85,7 +87,7 @@ describe('Validation Tools', () => {
         exitCode: 1,
         metrics: { templatesChecked: 10, patternsValidated: 5, duration: 145 }
       };
-      
+
       vi.mocked(validateDeliverablesCore).mockResolvedValue(mockResult);
 
       const { validateDeliverables } = await import('../../src/tools/validation.js');
@@ -142,7 +144,7 @@ describe('Validation Tools', () => {
       expect(Array.isArray(result.content)).toBe(true);
       expect(result.content[0]).toHaveProperty('type', 'text');
       expect(result.content[0]).toHaveProperty('text');
-      
+
       // Verify JSON structure
       const data = JSON.parse(result.content[0].text);
       expect(data).toHaveProperty('passed');
@@ -169,7 +171,7 @@ describe('Validation Tools', () => {
       });
 
       const { validateDeliverables } = await import('../../src/tools/validation.js');
-      
+
       // Valid parameter (boolean)
       await validateDeliverables({ fix: true });
       expect(validateDeliverablesCore).toHaveBeenCalled();
@@ -237,74 +239,50 @@ describe('Validation Tools', () => {
 
   describe('validate_skill', () => {
     it('should validate all skills (skill validation is global)', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '✅ All skills valid\n10 skills checked' 
+      mockValidateSkillsCore.mockResolvedValue({
+        passed: true,
+        summary: 'All 10 skills valid',
+        skillsChecked: 10,
+        issues: []
       });
 
       const { validateSkill } = await import('../../src/tools/validation.js');
-      const result = await validateSkill({
-        skillPath: '.github/skills/feature-implementation/SKILL.md'
-      });
+      const result = await validateSkill({});
 
-      expect(result.content[0].text).toContain('skills');
+      expect(result.content[0].text).toContain('skills valid');
       // Note: Validates ALL skills, not individual file
-      // skillPath parameter is accepted but not used (validates all)
     });
 
-    it('should use --type skills flag only', async () => {
-      mockExecFileAsync.mockResolvedValue({ stdout: '✅ All skills valid' });
-
-      const { validateSkill } = await import('../../src/tools/validation.js');
-      await validateSkill({
-        skillPath: '.github/skills/tdd-workflow/SKILL.md'
+    it('should call validateSkillsCore natively', async () => {
+      mockValidateSkillsCore.mockResolvedValue({
+        passed: true,
+        summary: 'All 10 skills valid',
+        skillsChecked: 10,
+        issues: []
       });
 
-      // Verify correct CLI arguments (uses node + bin/cli.js, not npx)
-      expect(mockExecFileAsync).toHaveBeenCalledWith(
-        'node',
-        expect.arrayContaining([
-          expect.stringContaining('bin/cli.js'),
-          'validate',
-          '-t', 'skills'
-        ]),
-        expect.anything()  // Accept cwd options object
-      );
-      
-      // Verify --file is NOT used (doesn't exist in CLI)
-      const callArgs = mockExecFileAsync.mock.calls[0][1];
-      expect(callArgs).not.toContain('--file');
+      const { validateSkill } = await import('../../src/tools/validation.js');
+      await validateSkill({});
+
+      // Verify correct parameters
+      expect(mockValidateSkillsCore).toHaveBeenCalledWith(expect.any(String));
     });
 
     it('should report skill validation errors', async () => {
-      mockExecFileAsync.mockResolvedValue({ 
-        stdout: '❌ Skill validation failed:\n- Missing YAML frontmatter\n- No trigger_words field' 
+      mockValidateSkillsCore.mockResolvedValue({
+        passed: false,
+        summary: 'Validation failed with 2 issues',
+        skillsChecked: 1,
+        issues: ['Missing YAML frontmatter', 'No trigger_words field']
       });
 
       const { validateSkill } = await import('../../src/tools/validation.js');
-      const result = await validateSkill({
-        skillPath: '.github/skills/broken-skill/SKILL.md'
-      });
+      const result = await validateSkill({});
 
       expect(result.content[0].text).toContain('validation failed');
       expect(result.content[0].text).toContain('Missing YAML frontmatter');
     });
 
-    it('should return conversational error for missing skillPath', async () => {
-      const { validateSkill } = await import('../../src/tools/validation.js');
-      const result = await validateSkill({});
 
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain("Invalid parameter 'skillPath'");
-      expect(result.content[0].text).toContain('at least 1 character');
-    });
-
-    it('should return conversational error for empty skillPath', async () => {
-      const { validateSkill } = await import('../../src/tools/validation.js');
-      const result = await validateSkill({ skillPath: '' });
-
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain("Invalid parameter 'skillPath'");
-      expect(result.content[0].text).toContain('at least 1 character');
-    });
   });
 });

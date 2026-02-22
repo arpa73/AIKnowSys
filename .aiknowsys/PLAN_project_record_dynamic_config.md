@@ -1,3 +1,20 @@
+---
+id: PLAN_project_record_dynamic_config
+title: Implementation Plan - Project Record Lifecycle + Dynamic Config
+status: ACTIVE
+author: Planner
+priority: high
+type: feature
+created: '2026-02-20'
+updated: '2026-02-22'
+topics:
+  - project-record
+  - dynamic-config
+  - validation-matrix
+  - tech-stack
+  - mcp-tools
+---
+
 # Implementation Plan: Project Record Lifecycle + Dynamic Config
 
 **Status:** 🎯 PLANNING  

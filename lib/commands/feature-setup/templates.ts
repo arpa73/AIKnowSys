@@ -10,6 +10,7 @@ import { getGitUsername } from '../../utils/git-username.js';
 import { getProjectTypeName, getLanguageName, getFrameworkName, buildValidationMatrix, TEMPLATE_PATHS, type ProjectAnswers } from './index.js';
 import { SqliteStorage } from '../../context/sqlite-storage.js';
 import { seedDatabase } from '../init/seed.js';
+import { seedProjectConfig } from '../../core/seed-project-config.js';
 
 
 /**
@@ -124,6 +125,8 @@ export async function createKnowledgeSystemFiles(
     const storage = new SqliteStorage();
     await storage.init(targetDir);
     await seedDatabase(storage);
+    await seedProjectConfig({ targetDir, storage });
+    await storage.close();
   }
 }
 
@@ -294,7 +297,7 @@ export async function setupSessionPersistence(targetDir: string, silent: boolean
   );
 
   // Note: CURRENT_PLAN.md is no longer generated (DB-first workflow)
-// Plans are queried via MCP tools: query_plans_sqlite, get_active_plans
+  // Plans are queried via MCP tools: query_plans_sqlite, get_active_plans
 
   if (aiknowsysSpinner) aiknowsysSpinner.succeed('Session persistence ready');
 }

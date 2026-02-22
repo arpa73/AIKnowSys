@@ -238,10 +238,10 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const dynamicTools = allTools.filter((t: any) => t.name.startsWith('aiknowsys_'));
 
       // Verify we have both sets
-      expect(directAccessTools.length).toBe(33);
+      expect(directAccessTools.length).toBe(34);
       expect(dynamicTools.length).toBe(3);
 
-      // Dynamic toolset exposes only 3 tools (vs 33 direct)
+      // Dynamic toolset exposes only 3 tools (vs 34 direct)
       // Token reduction: >90% for tool-definition footprint
       expect(dynamicTools.length).toBeLessThan(directAccessTools.length);
 
@@ -250,7 +250,7 @@ describe('Dynamic Toolset Integration (End-to-End)', () => {
       const tokensForDynamicAccess = dynamicTools.length; // Only 3 tools loaded
 
       expect(tokensForDynamicAccess).toBe(3);
-      expect(tokensForDirectAccess).toBe(33);
+      expect(tokensForDirectAccess).toBe(34);
 
       const tokenReduction = ((tokensForDirectAccess - tokensForDynamicAccess) / tokensForDirectAccess) * 100;
       expect(tokenReduction).toBeGreaterThan(90); // >90% reduction

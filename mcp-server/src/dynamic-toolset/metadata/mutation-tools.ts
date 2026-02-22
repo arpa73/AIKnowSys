@@ -7,6 +7,8 @@ import {
   createLearnedPattern,
   checkConstraintsTool,
   setActivePlanPointer,
+  logWorkEventTool,
+  logWorkEventSchema,
 } from '../../tools/mutations.js';
 import {
   setPlanStatus,
@@ -302,5 +304,14 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
       dryRun: z.boolean().optional().default(false),
     }),
     handler: archivePlans,
+  },
+  {
+    name: 'log_work_event',
+    description:
+      'Log a structured work event to the database (e.g., validation_passed, task_completed). Crucial for EVENT SOURCING and unblocking COMPLETE_PLAN constraint checks.',
+    category: 'mutation',
+    tags: ['events', 'validation', 'log', 'workflow', 'tests'],
+    inputSchema: logWorkEventSchema,
+    handler: logWorkEventTool,
   },
 ];

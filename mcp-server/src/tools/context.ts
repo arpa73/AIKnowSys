@@ -6,35 +6,31 @@
  * reading CODEBASE_ESSENTIALS.md manually.
  */
 
+import path from 'node:path';
 import { withStorage } from './utils/storage-helpers.js';
 import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
 
-export async function getCriticalInvariants() {
-  return withStorage(async (storage) => {
-    const invariants = await storage.queryInvariants();
-
-    return {
-      content: [
-        {
-          type: 'text' as const,
-          text: JSON.stringify(
-            {
-              count: invariants.length,
-              warning:
-                'These critical rules are MANDATORY. AI agents cannot skip or "think they know" these.',
-              invariants,
-            },
-            null,
-            2
-          ),
-        },
-      ],
-    };
-  }, 'get_critical_invariants');
+function resolveProjectId(projectId?: string): string {
+  if (projectId && projectId.trim().length > 0) {
+    return projectId.trim();
+  }
+  return path.basename(path.resolve(process.cwd()));
 }
 
-export async function getValidationMatrix() {
-  const validationMatrix = {
+function parseProjectConfigValue<T>(rawValue: string | null): T | null {
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawValue) as T;
+  } catch {
+    return null;
+  }
+}
+
+function defaultValidationMatrix() {
+  return {
     categories: [
       {
         name: 'Required on Every Change',
@@ -114,15 +110,64 @@ export async function getValidationMatrix() {
       coverage: '737+ tests',
     },
   };
+}
 
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify(validationMatrix, null, 2),
-      },
-    ],
-  };
+export async function getCriticalInvariants(projectId?: string) {
+  return withStorage(async (storage) => {
+    const resolvedProjectId = resolveProjectId(projectId);
+    const configValue = await storage.getProjectConfig(
+      resolvedProjectId,
+      'critical_invariants'
+    );
+
+    const configuredInvariants = parseProjectConfigValue<unknown[]>(configValue);
+    const invariants = Array.isArray(configuredInvariants)
+      ? configuredInvariants
+      : await storage.queryInvariants();
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(
+            {
+              count: invariants.length,
+              warning:
+                'These critical rules are MANDATORY. AI agents cannot skip or "think they know" these.',
+              invariants,
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  }, 'get_critical_invariants');
+}
+
+export async function getValidationMatrix(projectId?: string) {
+  return withStorage(async (storage) => {
+    const resolvedProjectId = resolveProjectId(projectId);
+    const configValue = await storage.getProjectConfig(
+      resolvedProjectId,
+      'validation_matrix'
+    );
+
+    const configuredMatrix = parseProjectConfigValue<Record<string, unknown>>(configValue);
+    const validationMatrix =
+      configuredMatrix && typeof configuredMatrix === 'object'
+        ? configuredMatrix
+        : defaultValidationMatrix();
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(validationMatrix, null, 2),
+        },
+      ],
+    };
+  }, 'get_validation_matrix');
 }
 
 export async function rebuildContextIndex() {
@@ -154,4 +199,3 @@ export async function rebuildContextIndex() {
     };
   }
 }
-

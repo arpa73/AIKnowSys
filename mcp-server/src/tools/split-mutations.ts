@@ -1,5 +1,4 @@
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+
 import { z } from 'zod';
 import path from 'path';
 import { getProjectRoot } from './utils/project-root.js';
@@ -9,8 +8,9 @@ import { MCP_AGENT_USER_ID, withStorage, toUserFacingStorageErrorMessage } from 
 
 import { updateSessionCore } from '../../../lib/core/update-session.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
+import { archiveSessions as archiveSessionsCore } from '../../../lib/commands/archive-sessions.js';
+import { archivePlans as archivePlansCore } from '../../../lib/commands/archive-plans.js';
 
-const execFileAsync = promisify(execFile);
 const PROJECT_ROOT = getProjectRoot();
 
 async function syncMcpActivePlanPointer(
@@ -190,27 +190,27 @@ export async function archiveSessions(params: unknown) {
   try {
     const validated = archiveSessionsSchema.parse(params);
 
-    const args = ['aiknowsys', 'archive-sessions', '--threshold', validated.days.toString()];
+    const result = await archiveSessionsCore({
+      threshold: validated.days,
+      dryRun: validated.dryRun,
+      dir: PROJECT_ROOT,
+      _silent: true
+    });
 
-    if (validated.dryRun) {
-      args.push('--dry-run');
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-
+    const action = validated.dryRun ? 'Would archive' : 'Archived';
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `✅ ${action} ${result.dryRun ?? result.archived} old sessions (kept ${result.kept})` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return handleZodError(error, 'updating session metadata', {
-        date: {
-          suggestion: 'Date must be in YYYY-MM-DD format (optional, defaults to today)',
-          examples: ['{\"addTopic\": \"refactoring\", \"date\": \"2026-02-14\"}', '{\"setStatus\": \"complete\"}']
+      return handleZodError(error, 'archiving sessions', {
+        days: {
+          suggestion: 'Days must be a positive number (>= 1, defaults to 30)',
+          examples: ['{"days": 60}', '{"days": 14, "dryRun": true}']
         },
-        addTopic: {
-          suggestion: 'Provide at least one operation: addTopic, addFile, or setStatus',
-          examples: ['{\"addTopic\": \"mcp-tools\"}', '{\"addFile\": \"src/server.ts\", \"addTopic\": \"bugfix\"}']
+        dryRun: {
+          suggestion: 'Dry run must be a boolean (defaults to false)',
+          examples: ['{"dryRun": true}']
         }
       });
     } return {
@@ -236,21 +236,17 @@ export async function archivePlans(params: unknown) {
   try {
     const validated = archivePlansSchema.parse(params);
 
-    const args = [
-      'aiknowsys',
-      'archive-plans',
-      '--status', validated.status,
-      '--threshold', validated.days.toString()
-    ];
+    const result = await archivePlansCore({
+      statusFilter: validated.status,
+      threshold: validated.days,
+      dryRun: validated.dryRun,
+      dir: PROJECT_ROOT,
+      _silent: true
+    });
 
-    if (validated.dryRun) {
-      args.push('--dry-run');
-    }
-
-    const { stdout } = await execFileAsync('npx', args, { cwd: PROJECT_ROOT });
-
+    const action = validated.dryRun ? 'Would archive' : 'Archived';
     return {
-      content: [{ type: 'text' as const, text: stdout.trim() }]
+      content: [{ type: 'text' as const, text: `✅ ${action} ${result.dryRun ?? result.archived} ${validated.status} plans (kept ${result.kept})` }]
     };
   } catch (error) {
     if (error instanceof z.ZodError) {

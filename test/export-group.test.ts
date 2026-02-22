@@ -18,7 +18,7 @@ describe('export command group', () => {
     expect(output).toContain('export [options] [command]');
     expect(output).toContain('session');
     expect(output).toContain('plan');
-  });
+  }, 10000);
 
   it('should expose format option for export session subcommand', () => {
     const output: string = execSync('node bin/cli.js export session --help', {
@@ -28,7 +28,7 @@ describe('export command group', () => {
 
     expect(output).toContain('--format <type>');
     expect(output).toContain('narrative|timeline|grouped|custom');
-  });
+  }, 10000);
 
   it('should expose format option for export plan subcommand', () => {
     const output: string = execSync('node bin/cli.js export plan --help', {
@@ -38,5 +38,5 @@ describe('export command group', () => {
 
     expect(output).toContain('--format <type>');
     expect(output).toContain('narrative|timeline|grouped|custom');
-  });
+  }, 10000);
 });

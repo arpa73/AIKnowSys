@@ -22,6 +22,8 @@ import {
   checkConstraintsTool,
   setActivePlanPointer,
   getActivePlanPointer,
+  logWorkEventTool,
+  logWorkEventSchema,
 } from './tools/mutations.js';
 import { createReview, createLink } from './tools/reviews.js';
 import {
@@ -176,9 +178,11 @@ Returns execution result or validation error with details.`,
       {
         description:
           'Returns the 8 critical invariants that must ALWAYS be enforced. These are non-optional rules that prevent bugs and maintain code quality. Use this instead of reading CODEBASE_ESSENTIALS.md manually.',
-        inputSchema: z.object({}),
+        inputSchema: z.object({
+          projectId: z.string().optional(),
+        }),
       },
-      async () => getCriticalInvariants()
+      async (args) => getCriticalInvariants(args.projectId)
     );
 
     this.server.registerTool(
@@ -186,9 +190,11 @@ Returns execution result or validation error with details.`,
       {
         description:
           'Returns all validation commands with their purpose and expected output. Use this to know which commands to run after making changes (tests, linting, deliverables, etc.).',
-        inputSchema: z.object({}),
+        inputSchema: z.object({
+          projectId: z.string().optional(),
+        }),
       },
-      async () => getValidationMatrix()
+      async (args) => getValidationMatrix(args.projectId)
     );
 
     this.server.registerTool(
@@ -459,6 +465,16 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         }),
       },
       async (args) => getActivePlanPointer(args)
+    );
+
+    this.server.registerTool(
+      'log_work_event',
+      {
+        description:
+          'Log a structured work event to the database (e.g., validation_passed, task_completed). Crucial for EVENT SOURCING and unblocking COMPLETE_PLAN constraint checks.',
+        inputSchema: logWorkEventSchema,
+      },
+      async (args) => logWorkEventTool(args)
     );
 
     // Session Mutation Tools (Split from update_session for clarity)

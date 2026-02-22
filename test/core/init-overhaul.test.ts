@@ -46,5 +46,25 @@ describe('Init Flow Overhaul (Phase 2)', () => {
 
         const dbPath = path.join(targetDir, '.aiknowsys', 'knowledge.db');
         expect(fs.existsSync(dbPath)).toBe(true);
+
+        const storage = new SqliteStorage();
+        await storage.init(targetDir);
+        const storageInternal = storage as unknown as {
+            db: {
+                prepare(sql: string): {
+                    all(...params: unknown[]): unknown[];
+                };
+            } | null;
+        };
+        const projectId = path.basename(path.resolve(targetDir));
+        const configRows = storageInternal.db
+            ?.prepare('SELECT key FROM project_config WHERE project_id = ?')
+            .all(projectId) as Array<{ key: string }> | undefined;
+
+        expect((configRows || []).length).toBeGreaterThanOrEqual(2);
+        expect((configRows || []).map((row) => row.key)).toContain('validation_matrix');
+        expect((configRows || []).map((row) => row.key)).toContain('critical_invariants');
+
+        await storage.close();
     });
 });

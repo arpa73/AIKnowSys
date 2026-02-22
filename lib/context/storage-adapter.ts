@@ -60,7 +60,44 @@ export class StorageAdapter {
   }
 
   /**
-   * Insert project metadata into storage.
+   * Upsert project metadata into storage.
+   * @param _project - Project metadata to store
+   */
+  async upsertProject(_project: {
+    id: string;
+    name: string;
+    path?: string;
+    tech_stack?: unknown;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void> {
+    throw new Error('StorageAdapter.upsertProject() must be implemented by subclass');
+  }
+
+  /**
+   * Upsert a per-project config key/value.
+   * @param _entry - Config entry to store
+   */
+  async upsertProjectConfig(_entry: {
+    project_id: string;
+    key: string;
+    value: string;
+    updated_at: string;
+  }): Promise<void> {
+    throw new Error('StorageAdapter.upsertProjectConfig() must be implemented by subclass');
+  }
+
+  /**
+   * Read a per-project config value.
+   * @param _projectId - Project identifier
+   * @param _key - Config key
+   */
+  async getProjectConfig(_projectId: string, _key: string): Promise<string | null> {
+    throw new Error('StorageAdapter.getProjectConfig() must be implemented by subclass');
+  }
+
+  /**
+   * @deprecated Use upsertProject() for idempotent project persistence.
    * @param _project - Project metadata to store
    */
   async insertProject(_project: {

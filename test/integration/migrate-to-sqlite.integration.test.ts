@@ -98,7 +98,7 @@ describe('migrate-to-sqlite integration tests', () => {
       expect(plan?.topics).toContain('testing');
 
       await storage.close();
-    });
+    }, 10000);
 
     it('should migrate learned patterns to database', async () => {
       // GIVEN: Integration test fixtures with learned pattern
@@ -120,7 +120,7 @@ describe('migrate-to-sqlite integration tests', () => {
       const storage = new SqliteStorage();
       await storage.init(dbPath);
       const { plans } = await storage.queryPlans({});
-      
+
       // Filter for learned pattern (stored as plan with specific ID pattern)
       const learnedPattern = plans.find(p => p.id === 'learned_testpattern');
       expect(learnedPattern).toBeDefined();

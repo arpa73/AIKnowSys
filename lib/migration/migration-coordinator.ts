@@ -161,7 +161,6 @@ export class MigrationCoordinator {
     }
     return result;
   }
-
   /**
    * Ensure a project exists in database
    * @param projectId - Project identifier
@@ -169,26 +168,25 @@ export class MigrationCoordinator {
    * @param projectPath - Absolute path to project directory
    */
   private async ensureProjectExists(projectId: string, projectName: string, projectPath?: string): Promise<void> {
-    try {
-      // Try to insert project - will fail if already exists
+    if (projectPath) {
+      const { seedProjectConfig } = await import('../core/seed-project-config.js');
+      await seedProjectConfig({
+        targetDir: projectPath,
+        projectId,
+        storage: this.storage
+      });
+    } else {
       const now = new Date().toISOString();
-      await this.storage.insertProject({
+      await this.storage.upsertProject({
         id: projectId,
         name: projectName,
         path: projectPath,
         created_at: now,
         updated_at: now
       });
-    } catch (error) {
-      if ((error as Error).message.includes('UNIQUE constraint')) {
-        // Project already exists - this is expected during re-migration
-        // No action needed, project data is already in database
-        return;
-      }
-      // Unexpected error - re-throw with context
-      throw new Error(`Failed to create project ${projectId}: ${(error as Error).message}`);
     }
   }
+
 
   /**
    * Insert session into database

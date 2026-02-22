@@ -36,12 +36,10 @@ export const VALIDATION_TOOLS: ToolMetadata[] = [
   {
     name: 'validate_skill',
     description:
-      'Validate skill file format and content. Use when creating or modifying skills.',
+      'Validate skill file formats and content across the entire project. Use when creating or modifying skills.',
     category: 'validation',
     tags: ['skills', 'validate', 'format', 'quality'],
-    inputSchema: z.object({
-      skillPath: z.string(),
-    }),
+    inputSchema: z.object({}),
     handler: validateSkill,
   },
 ];

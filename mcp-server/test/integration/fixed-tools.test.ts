@@ -98,10 +98,8 @@ describe('Integration: Fixed MCP Tools', () => {
   });
 
   describe('validate_skill (Fixed: removed --file flag)', () => {
-    it('should validate all skills without --file flag', async () => {
-      const result = await validateSkill({
-        skillPath: '.github/skills/tdd-workflow/SKILL.md'
-      });
+    it('should validate all skills', async () => {
+      const result = await validateSkill({});
 
       // Debug: log the result
       if (result.isError) {
@@ -117,13 +115,5 @@ describe('Integration: Fixed MCP Tools', () => {
       // Should mention skills (validates ALL, not individual file)
       expect(output.toLowerCase()).toMatch(/skill|valid|check/i);
     }, 15000); // 15s timeout (validation can be slow)
-
-    it('should still require skillPath parameter', async () => {
-      const result = await validateSkill({
-        skillPath: ''
-      });
-
-      expect(result.isError).toBe(true);
-    });
   });
 });

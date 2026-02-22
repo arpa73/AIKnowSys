@@ -84,6 +84,13 @@ vi.mock('../../../lib/core/constraints.js', () => ({
   },
 }));
 
+const mockLogWorkEvent = vi.fn();
+vi.mock('../../../lib/tools/log-work-event.js', () => ({
+  async logWorkEvent(...args: unknown[]) {
+    return mockLogWorkEvent(...args);
+  },
+}));
+
 vi.mock('../../../lib/core/create-plan.js', () => ({
   async createPlanCore(...args: unknown[]) {
     return mockCreatePlanCore(...args);
@@ -108,6 +115,7 @@ describe('Mutation Tools', () => {
     mockStorageInit.mockReset();
     mockCheckConstraints.mockReset();
     mockCreatePlanCore.mockReset();
+    mockLogWorkEvent.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockInsertReview.mockResolvedValue(undefined);
     mockInsertLink.mockResolvedValue(undefined);
@@ -115,6 +123,7 @@ describe('Mutation Tools', () => {
     mockInsertPlan.mockResolvedValue(undefined);
     mockInsertSession.mockResolvedValue(undefined);
     mockInsertEvent.mockResolvedValue(undefined);
+    mockLogWorkEvent.mockResolvedValue('Event logged mock string');
     mockGetActivePlanId.mockResolvedValue('PLAN_auto_from_state');
     mockGetUserState.mockResolvedValue({
       activePlanId: null,
@@ -179,7 +188,7 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for missing title', async () => {
       const { createSession } = await import('../../src/tools/mutations.js');
-      
+
       const result = await createSession({ title: '' });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'title\'');
@@ -188,8 +197,8 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for invalid topics type', async () => {
       const { createSession } = await import('../../src/tools/mutations.js');
-      
-      const result = await createSession({ 
+
+      const result = await createSession({
         title: 'Valid Title',
         topics: 'not-an-array'
       });
@@ -237,13 +246,13 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for invalid operation', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updateSession({
         section: 'Test',
         content: 'Content',
         operation: 'invalid'
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'operation\'');
       expect(result.content[0].text).toMatch(/append|prepend|insert-after|insert-before/);
@@ -251,14 +260,14 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for invalid date format', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updateSession({
         date: 'invalid-date',
         section: 'Test',
         content: 'Content',
         operation: 'append'
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'date\'');
       expect(result.content[0].text).toContain('YYYY-MM-DD');
@@ -266,14 +275,14 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for missing section', async () => {
       const { updateSession } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updateSession({
         date: '2026-02-08',
         section: '',  // Too short
         content: 'Content',
         operation: 'append'
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'section\'');
       expect(result.content[0].text).toContain('at least 1 character');
@@ -339,7 +348,7 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for missing title', async () => {
       const { createPlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await createPlan({ title: 'ab' });  // Too short
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'title\'');
@@ -348,7 +357,7 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for invalid topics type', async () => {
       const { createPlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await createPlan({
         title: 'Valid Plan Title',
         topics: 'not-an-array'
@@ -388,13 +397,13 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for invalid planId format', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updatePlan({
         planId: 'invalid',
         operation: 'append',
         content: 'Test'
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter \'planId\'');
       expect(result.content[0].text).toContain('PLAN_');
@@ -402,13 +411,13 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for append without content', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updatePlan({
         planId: 'PLAN_test',
         operation: 'append'
         // Missing content
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter');
       expect(result.content[0].text).toContain('content');
@@ -416,13 +425,13 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for unsupported prepend operation', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updatePlan({
         planId: 'PLAN_test',
         operation: 'prepend'
         // Note: 'prepend' not in discriminated union - unsupported operation
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter');
       expect(result.content[0].text).toContain('operation');
@@ -430,13 +439,13 @@ describe('Mutation Tools', () => {
 
     it('should return conversational error for set-status without status', async () => {
       const { updatePlan } = await import('../../src/tools/mutations.js');
-      
+
       const result = await updatePlan({
         planId: 'PLAN_test',
         operation: 'set-status'
         // Missing status
       });
-      
+
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Invalid parameter');
       expect(result.content[0].text).toContain('status');
@@ -551,6 +560,58 @@ describe('Mutation Tools', () => {
       expect(result.content[0].text).toContain('Failed during createLearnedPattern storage operation: DB write failed');
       expect(mockStorageInit).toHaveBeenCalledTimes(1);
       expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('log_work_event', () => {
+    it('should successfully parse arguments and call core logWorkEvent', async () => {
+      const { logWorkEventTool } = await import('../../src/tools/mutations.js');
+
+      const payload = {
+        type: 'validation_passed',
+        data: { test: true },
+        projectId: 'test-project',
+      };
+
+      const result = await logWorkEventTool(payload);
+
+      expect(result.isError).toBeFalsy();
+      expect(result.content[0].text).toContain('Event logged mock string');
+      expect(mockLogWorkEvent).toHaveBeenCalledWith(expect.objectContaining(payload));
+    });
+
+    it('should return Zod validation error for missing type', async () => {
+      const { logWorkEventTool } = await import('../../src/tools/mutations.js');
+
+      const payload = {
+        data: { test: true },
+        projectId: 'test-project',
+      };
+
+      const result = await logWorkEventTool(payload);
+
+      expect(result.isError).toBe(true);
+      const parsed = JSON.parse(result.content[0].text as string);
+      expect(parsed.success).toBe(false);
+      expect(parsed.error.type).toBe('ValidationFailed');
+      expect(parsed.error.message).toContain('type');
+    });
+
+    it('should return error response if core logWorkEvent throws', async () => {
+      mockLogWorkEvent.mockRejectedValueOnce(new Error('Core failed'));
+
+      const { logWorkEventTool } = await import('../../src/tools/mutations.js');
+
+      const payload = {
+        type: 'validation_passed',
+        data: { test: true },
+        projectId: 'test-project',
+      };
+
+      const result = await logWorkEventTool(payload);
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Core failed');
     });
   });
 

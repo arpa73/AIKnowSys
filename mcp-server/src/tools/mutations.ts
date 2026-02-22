@@ -14,6 +14,7 @@ import type { CreateSessionCoreOptions } from '../../../lib/core/create-session.
 import { createPlanCore } from '../../../lib/core/create-plan.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
 import { updateSessionCore } from '../../../lib/core/update-session.js';
+import { logWorkEvent } from '../../../lib/tools/log-work-event.js';
 import { EventFactory } from '../../../lib/events/event-factory.js';
 
 const PROJECT_ROOT = getProjectRoot();
@@ -97,6 +98,19 @@ const getActivePlanPointerSchema = z.object({
   projectId: z.string().optional(),
 });
 
+export const logWorkEventSchema = z.object({
+  type: z.enum([
+    'validation_passed', 'task_completed', 'decision_made',
+    'pattern_discovered', 'bug_encountered', 'bug_resolved',
+    'learning_captured', 'session_started', 'goal_defined'
+  ]),
+  data: z.record(z.unknown()),
+  projectId: z.string().min(1),
+  planId: z.string().optional(),
+  sessionId: z.string().optional(),
+  projectPath: z.string().optional(),
+});
+
 function toSafePatternSlug(value: string): string {
   return value
     .toLowerCase()
@@ -168,7 +182,7 @@ export async function createSession(params: unknown) {
         }
       });
     }
-    
+
     // Generic validation failure
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
       'session creation',
@@ -190,14 +204,14 @@ export async function createSession(params: unknown) {
 export async function updateSession(params: unknown) {
   try {
     const validated = updateSessionSchema.parse(params);
-    
+
     // Map MCP schema to core function options
     const coreOptions: any = {
       targetDir: PROJECT_ROOT,
       date: validated.date,
       content: validated.content
     };
-    
+
     // Map operation to appropriate section option
     switch (validated.operation) {
       case 'append':
@@ -213,10 +227,10 @@ export async function updateSession(params: unknown) {
         coreOptions.insertBefore = validated.section;
         break;
     }
-    
+
     // Direct function call (NO subprocess!)
     const result = await updateSessionCore(coreOptions);
-    
+
     // Format MCP response
     if (result.updated) {
       return {
@@ -251,7 +265,7 @@ export async function updateSession(params: unknown) {
         }
       });
     }
-    
+
     // Generic validation failure
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
       'session update',
@@ -273,7 +287,7 @@ export async function updateSession(params: unknown) {
 export async function createPlan(params: unknown) {
   try {
     const validated = createPlanSchema.parse(params);
-    
+
     const { result, pointerMessage } = await withStorage(async (storage) => {
       const coreResult = await createPlanCore({
         title: validated.title,
@@ -340,7 +354,7 @@ export async function createPlan(params: unknown) {
         }
       });
     }
-    
+
     // Generic validation failure
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
       'plan creation',
@@ -376,7 +390,7 @@ export async function updatePlan(params: unknown) {
     const changes = result.changes || [];
     const changeList = changes.map(c => `   • ${c}`).join('\n');
     const fileLine = result.filePath ? `\n📂 File path: ${result.filePath}` : '';
-    
+
     return {
       content: [{
         type: 'text' as const,
@@ -405,7 +419,7 @@ export async function updatePlan(params: unknown) {
         }
       });
     }
-    
+
     // Generic validation failure
     const errorResponse = AIFriendlyErrorBuilder.validationFailed(
       'plan update',
@@ -746,6 +760,31 @@ export async function getActivePlanPointer(params: unknown) {
       'get active plan pointer',
       error instanceof Error ? error.message : String(error),
       'Ensure storage is available and userId is valid'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
+export async function logWorkEventTool(params: unknown) {
+  try {
+    const validated = logWorkEventSchema.parse(params);
+    const result = await logWorkEvent(validated);
+    return {
+      content: [{ type: 'text' as const, text: `✅ ${result}` }],
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'log work event', {});
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'log work event',
+      error instanceof Error ? error.message : String(error),
+      'Ensure required fields for specific event type are provided in data object'
     );
 
     return {

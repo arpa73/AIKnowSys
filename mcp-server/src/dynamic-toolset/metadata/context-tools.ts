@@ -14,8 +14,10 @@ export const CONTEXT_TOOLS: ToolMetadata[] = [
       'Returns the 8 critical invariants that must ALWAYS be enforced. These are non-optional rules that prevent bugs and maintain code quality. Use this instead of reading CODEBASE_ESSENTIALS.md manually.',
     category: 'context',
     tags: ['rules', 'invariants', 'essentials', 'mandatory'],
-    inputSchema: z.object({}),
-    handler: getCriticalInvariants,
+    inputSchema: z.object({
+      projectId: z.string().optional(),
+    }),
+    handler: (args) => getCriticalInvariants(args.projectId),
   },
   {
     name: 'get_validation_matrix',
@@ -23,8 +25,10 @@ export const CONTEXT_TOOLS: ToolMetadata[] = [
       'Returns all validation commands with their purpose and expected output. Use this to know which commands to run after making changes (tests, linting, deliverables, etc.).',
     category: 'context',
     tags: ['validation', 'commands', 'testing', 'matrix'],
-    inputSchema: z.object({}),
-    handler: getValidationMatrix,
+    inputSchema: z.object({
+      projectId: z.string().optional(),
+    }),
+    handler: (args) => getValidationMatrix(args.projectId),
   },
   {
     name: 'find_skill_for_task',

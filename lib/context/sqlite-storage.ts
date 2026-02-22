@@ -1547,6 +1547,90 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Upsert a project into the database.
+   * Preserves existing tech_stack when omitted in subsequent writes.
+   */
+  async upsertProject(project: {
+    id: string;
+    name: string;
+    path?: string;
+    tech_stack?: unknown;
+    created_at: string;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before inserting data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO projects (id, name, path, tech_stack, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        path = COALESCE(excluded.path, projects.path),
+        tech_stack = COALESCE(excluded.tech_stack, projects.tech_stack),
+        updated_at = excluded.updated_at
+    `);
+
+    stmt.run(
+      project.id,
+      project.name,
+      project.path || null,
+      project.tech_stack ? JSON.stringify(project.tech_stack) : null,
+      project.created_at,
+      project.updated_at
+    );
+  }
+
+  /**
+   * Upsert a project-scoped configuration key/value.
+   */
+  async upsertProjectConfig(entry: {
+    project_id: string;
+    key: string;
+    value: string;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before inserting data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const stmt = this.db.prepare(`
+      INSERT INTO project_config (project_id, key, value, updated_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(project_id, key) DO UPDATE SET
+        value = excluded.value,
+        updated_at = excluded.updated_at
+    `);
+
+    stmt.run(entry.project_id, entry.key, entry.value, entry.updated_at);
+  }
+
+  /**
+   * Read a single project-scoped configuration value.
+   */
+  async getProjectConfig(projectId: string, key: string): Promise<string | null> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const row = this.db
+      .prepare('SELECT value FROM project_config WHERE project_id = ? AND key = ?')
+      .get(projectId, key) as { value: string } | undefined;
+
+    return row?.value ?? null;
+  }
+
+  /**
    * Insert a project into the database (for testing and migration)
    * Internal use only - will be used by migration tools
    */
@@ -2588,4 +2672,3 @@ export class SqliteStorage extends StorageAdapter {
     }));
   }
 }
-

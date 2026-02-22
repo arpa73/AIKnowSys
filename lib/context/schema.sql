@@ -12,6 +12,18 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TEXT NOT NULL       -- ISO 8601 timestamp
 );
 
+-- Project-scoped configuration values (validation matrix, invariants, etc.)
+CREATE TABLE IF NOT EXISTS project_config (
+  project_id TEXT NOT NULL,
+  key TEXT NOT NULL,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (project_id, key),
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_config_project ON project_config(project_id);
+
 -- Project Invariants (Critical rules for AI agents)
 CREATE TABLE IF NOT EXISTS invariants (
   id TEXT PRIMARY KEY,
@@ -270,4 +282,3 @@ CREATE TABLE IF NOT EXISTS user_state (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_state_project ON user_state(project_id);
-

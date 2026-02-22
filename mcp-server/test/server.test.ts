@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 36 tools (33 direct + 3 dynamic)', async () => {
+  it('should register all 37 tools (34 direct + 3 dynamic)', async () => {
     const server = new AIKnowSysServer();
 
     // Access the internal low-level server instance
@@ -15,7 +15,7 @@ describe('MCP Server Registration', () => {
       params: {}
     });
 
-    expect(response.tools).toHaveLength(36);
+    expect(response.tools).toHaveLength(37);
 
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);

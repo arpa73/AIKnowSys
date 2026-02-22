@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['test/**/*.test.{ts,js}'],  // Exclude .cjs (node:test files)
+    include: ['test/**/*.test.{ts,js}', 'mcp-server/test/**/*.test.{ts,js}'],  // Exclude .cjs (node:test files)
     exclude: ['**/node_modules/**', '**/dist/**', 'test/types/**'],  // Exclude type-only tests
     setupFiles: ['./vitest.setup.ts'],
     cache: false,  // Disable caching to avoid stale module issues
@@ -19,7 +19,7 @@ export default defineConfig({
           name: 'source-tests',
           globals: true,
           environment: 'node',
-          include: ['test/**/*.test.{ts,js}'],
+          include: ['test/**/*.test.{ts,js}', 'mcp-server/test/**/*.test.{ts,js}'],
           exclude: [
             '**/node_modules/**',
             '**/dist/**',

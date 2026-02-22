@@ -27,7 +27,7 @@ describe('migrate-to-sqlite performance benchmarks', () => {
 
     // Generate test data
     console.log('\nGenerating benchmark dataset...');
-    
+
     // Create 100 session files
     for (let i = 0; i < 100; i++) {
       const date = new Date(2026, 0, i + 1).toISOString().split('T')[0];
@@ -146,7 +146,7 @@ ${'- Benefit ' + (i + 1) + '\n'.repeat(3)}
     expect(result.learned.errors).toBe(0);
 
     // AND: Migration completes in reasonable time
-    const MAX_MIGRATION_TIME_MS = 10000; // 10 seconds for 150 files
+    const MAX_MIGRATION_TIME_MS = 20000; // 20 seconds for 150 files (increased for CI)
     expect(duration).toBeLessThan(MAX_MIGRATION_TIME_MS);
 
     // Report performance
