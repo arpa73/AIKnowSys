@@ -170,4 +170,71 @@ describe('updatePlanCore (SQLite-first)', () => {
 
     await storage.close();
   });
+
+  it('allows COMPLETE with force=true even when there is a pending review', async () => {
+    const storage = new SqliteStorage();
+    await storage.init(testDir);
+
+    const now = new Date().toISOString();
+    const projectId = 'project_update_plan_force_complete';
+    const planId = 'PLAN_force_complete_pending_review';
+
+    await storage.insertProject({
+      id: projectId,
+      name: projectId,
+      path: testDir,
+      created_at: now,
+      updated_at: now,
+    });
+
+    await storage.insertPlan({
+      id: planId,
+      project_id: projectId,
+      title: 'Force complete plan',
+      status: 'ACTIVE',
+      author: 'phase-e-test',
+      created: now,
+      updated: now,
+      content: [
+        '---',
+        'id: "force_complete_pending_review"',
+        'title: "Force complete plan"',
+        'status: "ACTIVE"',
+        'author: "phase-e-test"',
+        'created: "2026-02-23"',
+        'updated: "2026-02-23"',
+        '---',
+        '',
+        '# Force complete plan',
+      ].join('\n'),
+      topics: ['constraints'],
+      type: 'feature',
+    });
+
+    await storage.insertReview({
+      id: `review-${randomUUID()}`,
+      project_id: projectId,
+      target_id: planId,
+      author: 'architect-test',
+      status: 'PENDING',
+      content: 'Pending review should be bypassed with force',
+      created_at: now,
+      updated_at: now,
+    });
+
+    const result = await updatePlanCore({
+      planId,
+      setStatus: 'COMPLETE',
+      force: true,
+      targetDir: testDir,
+      storage,
+      writeMarkdown: false,
+    });
+
+    const updatedPlan = await storage.getPlanById(planId);
+    expect(result.updated).toBe(true);
+    expect(updatedPlan?.status).toBe('COMPLETE');
+
+    await storage.close();
+  });
 });

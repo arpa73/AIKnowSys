@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,8 +9,19 @@ const __dirname = path.dirname(__filename);
 
 describe('findKnowledgeDb', () => {
   let tempDirs: string[] = [];
+  let originalEnvDbPath: string | undefined;
+
+  beforeEach(() => {
+    originalEnvDbPath = process.env.AIKNOWSYS_DB_PATH;
+  });
   
   afterEach(() => {
+    if (originalEnvDbPath === undefined) {
+      delete process.env.AIKNOWSYS_DB_PATH;
+    } else {
+      process.env.AIKNOWSYS_DB_PATH = originalEnvDbPath;
+    }
+
     // Cleanup temp directories
     tempDirs.forEach(dir => {
       if (fs.existsSync(dir)) {
@@ -118,5 +129,18 @@ describe('findKnowledgeDb', () => {
     expect(result).toContain('.aiknowsys');
     expect(result).toContain('knowledge.db');
     expect(path.isAbsolute(result)).toBe(true);
+  });
+
+  it('returns AIKNOWSYS_DB_PATH when explicitly provided', () => {
+    const tempDir = path.join(__dirname, `../../test-tmp-finddb-env-${Date.now()}`);
+    const dbPath = path.join(tempDir, 'custom.db');
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.writeFileSync(dbPath, '');
+    tempDirs.push(tempDir);
+
+    process.env.AIKNOWSYS_DB_PATH = dbPath;
+
+    const result = findKnowledgeDb('/tmp/should-not-be-searched');
+    expect(result).toBe(path.resolve(dbPath));
   });
 });

@@ -51,7 +51,7 @@ export interface PlanFile {
 
 // AI-Friendly Response Types (v0.11.0+)
 
-export type ErrorType = 
+export type ErrorType =
   | 'InvalidParameter'
   | 'ToolNotFound'
   | 'ValidationFailed'
@@ -281,6 +281,7 @@ export interface QuerySessionsOptions {
   dateBefore?: string;
   topic?: string;
   status?: string;
+  planId?: string; // Filter sessions by linked plan
   projectId?: string; // Filter by specific project ID (Phase 1: Cross-Repository)
   allProjects?: boolean; // Query across all projects (default: false - query current project only)
   includeContent?: boolean; // DEPRECATED: Use mode instead

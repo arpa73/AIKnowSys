@@ -2,7 +2,10 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Find the AIKnowSys knowledge database by walking up the directory tree
+ * Find the AIKnowSys knowledge database path
+ * Priority:
+ * 1. AIKNOWSYS_DB_PATH environment variable
+ * 2. Walk up directory tree for .aiknowsys/knowledge.db
  * 
  * @param startDir - Directory to start searching from (defaults to process.cwd())
  * @returns Absolute path to knowledge.db
@@ -18,6 +21,10 @@ import path from 'path';
  * ```
  */
 export function findKnowledgeDb(startDir: string = process.cwd()): string {
+  if (process.env.AIKNOWSYS_DB_PATH) {
+    return path.resolve(process.env.AIKNOWSYS_DB_PATH);
+  }
+
   let currentDir = path.resolve(startDir);
   const root = path.parse(currentDir).root;
   

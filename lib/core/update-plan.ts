@@ -19,6 +19,38 @@ import type { SqliteStorage } from '../context/sqlite-storage.js';
 // Define valid plan statuses (single source of truth)
 const VALID_STATUSES = ['PLANNED', 'ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED'] as const;
 type PlanStatus = typeof VALID_STATUSES[number];
+const NO_FRONTMATTER_ERROR = 'No YAML frontmatter found';
+
+function isMissingFrontmatterError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes(NO_FRONTMATTER_ERROR);
+}
+
+function formatYamlValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    const quoted = value.map((item) => `"${String(item)}"`).join(', ');
+    return `[${quoted}]`;
+  }
+
+  if (typeof value === 'string') {
+    return `"${value}"`;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return `"${String(value)}"`;
+}
+
+function prependFrontmatter(contentBody: string, frontmatter: Record<string, unknown>): string {
+  const lines = Object.entries(frontmatter)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `${key}: ${formatYamlValue(value)}`);
+
+  const trimmedBody = contentBody.replace(/^\n+/, '');
+  return `---\n${lines.join('\n')}\n---\n${trimmedBody}`;
+}
 
 /**
  * Options for updating a plan
@@ -26,6 +58,7 @@ type PlanStatus = typeof VALID_STATUSES[number];
 export interface UpdatePlanCoreOptions {
   planId?: string;           // Plan ID or auto-detect from ACTIVE status
   setStatus?: PlanStatus;
+  force?: boolean;           // Bypass COMPLETE_PLAN constraints when true
   append?: string;           // Append progress note
   appendFile?: string;       // Append from file
   prepend?: string;          // Prepend critical update
@@ -69,6 +102,7 @@ export async function updatePlanCore(
   const {
     planId: providedPlanId,
     setStatus,
+    force = false,
     append,
     appendFile: appendFileOption,
     prepend,
@@ -106,7 +140,7 @@ export async function updatePlanCore(
 
   // Phase 2: Enforce constraints for Plan Completion
   // Must pass validation checks and have no pending reviews
-  if (setStatus === 'COMPLETE') {
+  if (setStatus === 'COMPLETE' && !force) {
     const locator = new DatabaseLocator();
     // Resolve project config to get ID
     const config = await locator.getDatabaseConfig(resolvedTargetDir);
@@ -130,11 +164,21 @@ export async function updatePlanCore(
   }
 
   let content: string;
+  let planRecord: {
+    id: string;
+    title?: string;
+    status?: string;
+    author?: string;
+    topics?: string | null;
+    created_at?: string;
+    updated_at?: string;
+  } | null = null;
   if (storage) {
     const plan = await storage.getPlanById(planId);
     if (!plan) {
       throw new Error(`Plan not found: ${planId}`);
     }
+    planRecord = plan;
     content = plan.content || '';
   } else {
     if (!existsSync(planPath)) {
@@ -143,7 +187,38 @@ export async function updatePlanCore(
     content = await fs.readFile(planPath, 'utf-8');
   }
 
-  const { frontmatter } = parseFrontmatter(content);
+  let hasFrontmatter = true;
+  let frontmatter: Record<string, unknown>;
+  try {
+    frontmatter = parseFrontmatter(content).frontmatter;
+  } catch (error) {
+    if (!isMissingFrontmatterError(error)) {
+      throw error;
+    }
+
+    let parsedTopics: string[] | undefined;
+    if (planRecord?.topics) {
+      try {
+        const topics = JSON.parse(planRecord.topics);
+        if (Array.isArray(topics)) {
+          parsedTopics = topics.map((topic) => String(topic));
+        }
+      } catch {
+        parsedTopics = undefined;
+      }
+    }
+
+    hasFrontmatter = false;
+    frontmatter = {
+      id: planId,
+      title: planRecord?.title || planId,
+      status: planRecord?.status || 'PLANNED',
+      author: planRecord?.author || author,
+      created: planRecord?.created_at?.split('T')[0],
+      updated: planRecord?.updated_at?.split('T')[0],
+      topics: parsedTopics,
+    };
+  }
 
   // Track changes
   const changes: string[] = [];
@@ -226,7 +301,9 @@ export async function updatePlanCore(
   }
 
   // Update plan content
-  const updatedContent = updateFrontmatter(updatedBody, updates);
+  const updatedContent = hasFrontmatter
+    ? updateFrontmatter(updatedBody, updates)
+    : prependFrontmatter(updatedBody, { ...frontmatter, ...updates });
 
   if (storage) {
     await storage.updatePlan({

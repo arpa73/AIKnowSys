@@ -174,23 +174,33 @@ Follow critical invariants from `mcp_aiknowsys_get_critical_invariants()` and th
 **🚨 RULE: Never claim work is complete without running validation!**
 **✅ Only say "done" after all relevant tests pass!**
 
-### 5️⃣ DOCUMENT: Update Changelog (MANDATORY for significant changes)
+### 5️⃣ DOCUMENT: Generate Changelog (MANDATORY for significant changes)
 
-**When to update CODEBASE_CHANGELOG.md** (milestone entries only):
+**Default workflow (DB-generated):**
+```bash
+npx aiknowsys generate-changelog --output CODEBASE_CHANGELOG.md
+```
+
+**When milestone changelog generation is required:**
 - ✅ **Version releases** (v0.11.0, v0.12.0, etc.)
 - ✅ **Major architectural changes** (storage layer redesign, new subsystems)
 - ✅ **Breaking changes** (API changes, migration required)
 - ✅ **Critical security fixes** (CVEs, vulnerability patches)
 
-**When NOT to update CODEBASE_CHANGELOG.md** (record in DB context instead):
+**When NOT to generate milestone changelog entries** (record in DB context instead):
 - ❌ Daily feature work (record via MCP/CLI context mutation tools)
 - ❌ Bug fixes (unless revealing major design issue)
 - ❌ Refactoring (unless changing fundamental patterns)
 - ❌ Documentation updates (unless changing workflow)
 
+**Legacy compatibility path:**
+- Keep manual/archive markdown workflows available for existing users
+- Treat manual editing as compatibility-only, not source of truth
+
 **What to update**:
 ```bash
-# For MILESTONES: Add entry to CODEBASE_CHANGELOG.md at the TOP
+# For MILESTONES: Generate CODEBASE_CHANGELOG.md from DB context
+# npx aiknowsys generate-changelog --output CODEBASE_CHANGELOG.md
 # For DAILY WORK: Persist progress via MCP/CLI mutation tools
 # For PATTERNS: Update AGENTS.md and MCP invariant sources if rules changed
 ```
@@ -241,7 +251,7 @@ mcp_aiknowsys_append_to_session({
 4. **Confirm to user:**
    - What you fixed/built
    - What tests passed
-   - That changelog is updated (if applicable)
+   - That changelog generation/workflow docs are updated (if applicable)
    - Session notes saved (if complex work)
 
 ---

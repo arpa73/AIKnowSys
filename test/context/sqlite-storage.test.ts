@@ -41,6 +41,32 @@ type TestStorageInternals = SqliteStorage & {
     duration?: string;
     phases?: string[];
   }): Promise<void>;
+  updateSessionFields(session: {
+    id: string;
+    status?: string;
+    topics?: string[];
+    updated_at?: string;
+  }): Promise<void>;
+  updateSessionContent(session: {
+    id: string;
+    content: string;
+    updated_at?: string;
+  }): Promise<void>;
+  upsertSkill(skill: {
+    name: string;
+    description?: string | null;
+    keywords?: string[];
+    content: string;
+    updated_at: string;
+  }): Promise<void>;
+  getSkillByName(skillName: string): Promise<{
+    name: string;
+    description: string | null;
+    keywords: string[];
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  } | undefined>;
   insertReview(review: {
     id: string;
     project_id?: string;
@@ -597,6 +623,72 @@ describe('SqliteStorage', () => {
         topic: 'reviews'
       });
       expect(userState?.updatedAt).toBe('2026-02-17T20:18:00Z');
+    });
+  });
+
+  describe('session and skill updates', () => {
+    beforeEach(async () => {
+      await storage.init(tmpDir);
+
+      await storageInternal.insertProject({
+        id: testProjectId,
+        name: 'Test Project',
+        created_at: '2026-02-01T00:00:00Z',
+        updated_at: '2026-02-01T00:00:00Z'
+      });
+
+      await storageInternal.insertSession({
+        id: 'session-update-target',
+        project_id: testProjectId,
+        date: '2026-02-24',
+        topic: 'Session Update',
+        status: 'active',
+        created: '2026-02-24T10:00:00Z',
+        updated: '2026-02-24T10:00:00Z',
+        content: '# Session Update\n\nOriginal body',
+        topics: ['initial']
+      });
+    });
+
+    it('should update session metadata fields', async () => {
+      await storageInternal.updateSessionFields({
+        id: 'session-update-target',
+        status: 'complete',
+        topics: ['updated', 'sqlite'],
+        updated_at: '2026-02-24T11:00:00Z'
+      });
+
+      const result = await storage.queryFullSessions({ id: 'session-update-target' });
+      expect(result.sessions[0].status).toBe('complete');
+      expect(JSON.parse(result.sessions[0].topics || '[]')).toEqual(['updated', 'sqlite']);
+      expect(result.sessions[0].updated_at).toBe('2026-02-24T11:00:00Z');
+    });
+
+    it('should update session content body without changing metadata fields', async () => {
+      await storageInternal.updateSessionContent({
+        id: 'session-update-target',
+        content: '# Session Update\n\nBody-only content'
+      });
+
+      const result = await storage.queryFullSessions({ id: 'session-update-target' });
+      expect(result.sessions[0].content).toContain('Body-only content');
+      expect(result.sessions[0].status).toBe('active');
+    });
+
+    it('should upsert and read skills from sqlite', async () => {
+      await storageInternal.upsertSkill({
+        name: 'feature-implementation',
+        description: 'Feature workflow',
+        keywords: ['feature', 'implement'],
+        content: '# Feature Implementation\n\nDo this first.',
+        updated_at: '2026-02-24T12:00:00Z'
+      });
+
+      const skill = await storageInternal.getSkillByName('feature-implementation');
+      expect(skill).toBeDefined();
+      expect(skill?.name).toBe('feature-implementation');
+      expect(skill?.keywords).toEqual(['feature', 'implement']);
+      expect(skill?.content).toContain('Do this first');
     });
   });
 

@@ -138,11 +138,11 @@ export async function querySessionsSqlite(
   const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
-  
+
   try {
     // Determine mode using utility (supports legacy includeContent flag)
     const mode = resolveQueryMode(options);
-    
+
     if (mode === 'preview') {
       // Ultra-lightweight: just stats and previews
       const stats = await storage.getSessionStats({
@@ -150,8 +150,9 @@ export async function querySessionsSqlite(
         dateBefore: options.dateBefore,
         topic: options.topic,
         status: options.status,
+        plan: options.planId,
       });
-      
+
       return {
         count: stats.count,
         date_range: stats.earliest && stats.latest ? `${stats.earliest} to ${stats.latest}` : undefined,
@@ -160,7 +161,7 @@ export async function querySessionsSqlite(
         sessions: stats.sessions,
       };
     }
-    
+
     if (mode === 'full') {
       // Full content mode
       const result = await storage.queryFullSessions({
@@ -168,8 +169,9 @@ export async function querySessionsSqlite(
         dateBefore: options.dateBefore,
         topic: options.topic,
         status: options.status,
+        plan: options.planId,
       });
-      
+
       const sessions: SessionRecord[] = result.sessions.map((row) => ({
         date: row.date,
         title: row.topic,
@@ -180,21 +182,22 @@ export async function querySessionsSqlite(
         created_at: row.created_at,
         updated_at: row.updated_at,
       }));
-      
+
       return {
         count: sessions.length,
         sessions,
       };
     }
-    
+
     // section and metadata modes both use metadata query
     const result = await storage.querySessionsMetadata({
       dateAfter: options.dateAfter,
       dateBefore: options.dateBefore,
       topic: options.topic,
       status: options.status,
+      plan: options.planId,
     });
-    
+
     if (mode === 'section' && options.section) {
       // Section extraction mode - get full content, extract section
       const section = options.section;
@@ -203,12 +206,13 @@ export async function querySessionsSqlite(
         dateBefore: options.dateBefore,
         topic: options.topic,
         status: options.status,
+        plan: options.planId,
       });
-      
+
       const sessions = fullResult.sessions.map((row) => {
         // Extract requested section using utility function
         const extraction = extractMarkdownSection(row.content, section);
-        
+
         return {
           date: row.date,
           title: row.topic,
@@ -222,13 +226,13 @@ export async function querySessionsSqlite(
           updated_at: row.updated_at,
         };
       });
-      
+
       return {
         count: sessions.length,
         sessions,
       };
     }
-    
+
     // Default: metadata-only mode (95% token savings vs full)
     const sessions = await Promise.all(result.sessions.map(async (row) => {
       const linkedPlan = row.planId
@@ -267,7 +271,7 @@ export async function querySessionsSqlite(
         // No content field - token efficient!
       };
     }));
-    
+
     return {
       count: sessions.length,
       sessions,
@@ -333,11 +337,11 @@ export async function queryPlansSqlite(
   const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
-  
+
   try {
     // Determine mode using utility (supports legacy includeContent flag)
     const mode = resolveQueryMode(options);
-    
+
     if (mode === 'preview') {
       // Ultra-lightweight: just stats and previews
       const stats = await storage.getPlanStats({
@@ -346,18 +350,18 @@ export async function queryPlansSqlite(
         topic: options.topic,
         priority: options.priority,
       });
-      
+
       return {
         count: stats.count,
-        date_range: stats.earliestCreated && stats.latestUpdated 
-          ? `${stats.earliestCreated} to ${stats.latestUpdated}` 
+        date_range: stats.earliestCreated && stats.latestUpdated
+          ? `${stats.earliestCreated} to ${stats.latestUpdated}`
           : undefined,
         topics: stats.uniqueTopics,
         status_counts: stats.statusCounts,
         plans: stats.plans,
       };
     }
-    
+
     if (mode === 'full') {
       // Full content mode
       const result = await storage.queryFullPlans({
@@ -366,7 +370,7 @@ export async function queryPlansSqlite(
         topic: options.topic,
         priority: options.priority,
       });
-      
+
       // Filter out learned patterns (they have separate query function)
       const plans: PlanRecord[] = result.plans
         .filter((row) => !row.id.startsWith('learned_'))
@@ -381,13 +385,13 @@ export async function queryPlansSqlite(
           created_at: row.created_at,
           updated_at: row.updated_at,
         }));
-      
+
       return {
         count: plans.length,
         plans,
       };
     }
-    
+
     // section and metadata modes both start with metadata query
     const result = await storage.queryPlansMetadata({
       status: options.status,
@@ -395,7 +399,7 @@ export async function queryPlansSqlite(
       topic: options.topic,
       priority: options.priority,
     });
-    
+
     if (mode === 'section' && options.section) {
       // Section extraction mode - get full content, extract section
       const section = options.section;
@@ -405,13 +409,13 @@ export async function queryPlansSqlite(
         topic: options.topic,
         priority: options.priority,
       });
-      
+
       const plans = fullResult.plans
         .filter((row) => !row.id.startsWith('learned_'))
         .map((row) => {
           // Extract requested section using utility function
           const extraction = extractMarkdownSection(row.content, section);
-          
+
           return {
             id: row.id,
             title: row.title,
@@ -423,13 +427,13 @@ export async function queryPlansSqlite(
             updated_at: row.updated_at,
           };
         });
-      
+
       return {
         count: plans.length,
         plans,
       };
     }
-    
+
     // Default: metadata-only mode (95% token savings vs full)
     const plans = result.plans
       .filter((row) => !row.id.startsWith('learned_'))
@@ -444,7 +448,7 @@ export async function queryPlansSqlite(
         updated_at: row.updatedAt,
         // No content field - token efficient!
       }));
-    
+
     return {
       count: plans.length,
       plans,
@@ -469,37 +473,37 @@ export async function queryLearnedPatternsSqlite(
   const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
-  
+
   try {
     const includeContent = options.includeContent ?? false; // Default to metadata-only
-    
+
     if (includeContent) {
       // Full content mode
       const result = await storage.queryFullPlans({
         idStartsWith: 'learned_'
       });
-      
+
       let patterns = result.plans.map((row): LearnedPatternRecord => ({
-          id: row.id,
-          category: row.type || 'general',
-          title: row.title,
-          content: row.content,
-          keywords: parseTopics(row.topics),
-          created_at: row.created_at,
-        }));
-      
+        id: row.id,
+        category: row.type || 'general',
+        title: row.title,
+        content: row.content,
+        keywords: parseTopics(row.topics),
+        created_at: row.created_at,
+      }));
+
       // Apply filters in memory
       if (options.category) {
         patterns = patterns.filter((p) => p.category === options.category);
       }
-      
+
       if (options.keywords && options.keywords.length > 0) {
         const keywords = options.keywords;
         patterns = patterns.filter((p) =>
           keywords.some((keyword) => p.keywords.includes(keyword))
         );
       }
-      
+
       return {
         count: patterns.length,
         patterns,
@@ -510,7 +514,7 @@ export async function queryLearnedPatternsSqlite(
         category: options.category,
         keywords: options.keywords,
       });
-      
+
       const patterns = result.patterns.map((row) => ({
         id: row.id,
         category: row.type || 'general',
@@ -519,7 +523,7 @@ export async function queryLearnedPatternsSqlite(
         created_at: row.createdAt,
         // No content field - token efficient!
       }));
-      
+
       return {
         count: patterns.length,
         patterns,
@@ -543,11 +547,11 @@ export async function searchContextSqlite(
   const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
-  
+
   try {
     const results: SearchContextResult['results'] = [];
     const query = options.query;
-    
+
     // Search sessions with database filtering
     const sessions = await storage.queryFullSessions({
       contentContains: query
@@ -571,7 +575,7 @@ export async function searchContextSqlite(
         });
       }
     });
-    
+
     // Search plans with database filtering
     const plans = await storage.queryFullPlans({
       contentContains: query
@@ -586,7 +590,7 @@ export async function searchContextSqlite(
           Math.max(0, startIdx - 50),
           Math.min(plan.content.length, startIdx + 100)
         );
-        
+
         // Distinguish learned patterns from regular plans
         const type = plan.id.startsWith('learned_') ? 'learned' : 'plan';
         results.push({
@@ -598,10 +602,10 @@ export async function searchContextSqlite(
         });
       }
     });
-    
+
     // Apply limit if specified
     const limited = options.limit ? results.slice(0, options.limit) : results;
-    
+
     return {
       count: limited.length,
       results: limited,
@@ -624,12 +628,12 @@ export async function getDbStats(
   const dbPath = resolve(options.dbPath || findKnowledgeDb());
   const storage = new SqliteStorage();
   await storage.init(dbPath);
-  
+
   try {
     // Use optimized COUNT(*) queries instead of loading all records
     const stats = await storage.getStats();
     const dbSize = statSync(dbPath).size;
-    
+
     return {
       sessions: stats.sessions,
       plans: stats.plans,

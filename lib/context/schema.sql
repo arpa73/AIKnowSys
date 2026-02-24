@@ -93,6 +93,18 @@ CREATE TABLE IF NOT EXISTS patterns (
 
 CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category);
 
+-- Skills (SQLite-backed MCP skill content, no file I/O at runtime)
+CREATE TABLE IF NOT EXISTS skills (
+  name TEXT PRIMARY KEY,         -- Skill identifier (folder name)
+  description TEXT,              -- Optional short description
+  keywords JSON,                 -- Optional keyword list for matching
+  content TEXT NOT NULL,         -- Full SKILL.md markdown content
+  created_at TEXT NOT NULL,      -- ISO 8601 timestamp
+  updated_at TEXT NOT NULL       -- ISO 8601 timestamp
+);
+
+CREATE INDEX IF NOT EXISTS idx_skills_updated_at ON skills(updated_at);
+
 -- Knowledge Events (Phase 2: Event-Sourced Storage)
 -- Structured events replace markdown blobs for AI-optimized queries
 CREATE TABLE IF NOT EXISTS knowledge_events (

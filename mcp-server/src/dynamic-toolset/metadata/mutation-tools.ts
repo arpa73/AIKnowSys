@@ -9,6 +9,7 @@ import {
   setActivePlanPointer,
   logWorkEventTool,
   logWorkEventSchema,
+  updateReview,
 } from '../../tools/mutations.js';
 import {
   setPlanStatus,
@@ -58,6 +59,18 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
       status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional().default('PENDING'),
     }),
     handler: createReview,
+  },
+  {
+    name: 'update_review',
+    description:
+      'Update the status of an existing review entry. Use to close stale PENDING reviews or mark reviews as ADDRESSED.',
+    category: 'mutation',
+    tags: ['reviews', 'update', 'workflow', 'constraints'],
+    inputSchema: z.object({
+      reviewId: z.string().min(1),
+      status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']),
+    }),
+    handler: updateReview,
   },
   {
     name: 'create_link',
@@ -211,6 +224,7 @@ export const MUTATION_TOOLS: ToolMetadata[] = [
     inputSchema: z.object({
       planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
       status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED']),
+      force: z.boolean().optional().default(false),
     }),
     handler: setPlanStatus,
   },

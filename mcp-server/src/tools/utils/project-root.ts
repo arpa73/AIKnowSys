@@ -1,44 +1,44 @@
+import { dirname, resolve, sep } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { existsSync } from 'fs';
 
 let cachedRoot: string | null = null;
 
+function inferProjectRootFromModulePath(): string {
+  const moduleDir = dirname(fileURLToPath(import.meta.url));
+  const srcSegment = `${sep}src${sep}tools${sep}utils`;
+  const distSegment = `${sep}dist${sep}tools${sep}utils`;
+
+  if (moduleDir.includes(srcSegment)) {
+    return resolve(moduleDir, '../../../../');
+  }
+
+  if (moduleDir.includes(distSegment)) {
+    return resolve(moduleDir, '../../../');
+  }
+
+  return process.cwd();
+}
+
 /**
- * Find project root by searching for .aiknowsys/ directory
- * 
- * This works in both development (src/) and production (dist/) environments.
- * Results are cached for performance (avoids repeated filesystem operations).
- * 
- * @returns Absolute path to project root
- * @throws Error if .aiknowsys/ directory not found within 10 parent levels
+ * Resolve project root without filesystem probing.
+ *
+ * Priority:
+ * 1) AIKNOWSYS_PROJECT_ROOT env var
+ * 2) Infer repository root from module location
+ * 3) process.cwd()
+ *
+ * Results are cached for performance.
  */
 export function getProjectRoot(): string {
   if (cachedRoot) {
     return cachedRoot;
   }
-  
-  // Start from this file's location
-  let current = dirname(fileURLToPath(import.meta.url));
-  
-  // Try up to 10 levels (should be more than enough)
-  for (let i = 0; i < 10; i++) {
-    // Check for .aiknowsys/ AND bin/cli.js (to avoid mcp-server/.aiknowsys/ test artifacts)
-    if (existsSync(resolve(current, '.aiknowsys')) && existsSync(resolve(current, 'bin', 'cli.js'))) {
-      cachedRoot = current;
-      return current;
-    }
-    const parent = resolve(current, '..');
-    if (parent === current) {
-      // Reached filesystem root
-      break;
-    }
-    current = parent;
-  }
-  
-  throw new Error(
-    'Could not locate AIKnowSys project root.\n' +
-    'Expected: .aiknowsys/ directory AND bin/cli.js file in same directory.\n' +
-    'Are you running from outside an AIKnowSys project or in a test subdirectory?'
-  );
+
+  const configuredRoot = process.env.AIKNOWSYS_PROJECT_ROOT?.trim();
+  const root =
+    configuredRoot && configuredRoot.length > 0
+      ? configuredRoot
+      : inferProjectRootFromModulePath();
+  cachedRoot = resolve(root);
+  return cachedRoot;
 }

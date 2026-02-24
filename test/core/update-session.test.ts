@@ -19,6 +19,23 @@ import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { updateSessionCore } from '../../lib/core/update-session.js';
 
+type MockSqliteStorage = {
+  queryFullSessions: (filters?: { date?: string }) => Promise<{
+    sessions: Array<{ id: string; content: string; status?: string; topics?: string | null }>;
+  }>;
+  updateSessionFields: (payload: {
+    id: string;
+    status?: string;
+    topics?: string[];
+    updated_at?: string;
+  }) => Promise<void>;
+  updateSessionContent: (payload: {
+    id: string;
+    content: string;
+    updated_at?: string;
+  }) => Promise<void>;
+};
+
 describe('updateSessionCore (Pure Business Logic)', () => {
   const TEST_DIR = resolve(process.cwd(), `test-tmp-update-session-${Date.now()}`);
   const TODAY = new Date().toISOString().split('T')[0];
@@ -484,6 +501,60 @@ status: in-progress
       // Verify context index was updated
       const indexPath = resolve(TEST_DIR, '.aiknowsys', 'context-index.json');
       expect(existsSync(indexPath)).toBe(true);
+    });
+  });
+
+  describe('SQLite storage mode', () => {
+    it('should update session fields and body content via storage API', async () => {
+      const storage: MockSqliteStorage = {
+        queryFullSessions: vi.fn().mockResolvedValue({
+          sessions: [{
+            id: 'session-db-1',
+            content: '# Session\n\n## Progress\nInitial',
+            status: 'active',
+            topics: '["existing"]',
+          }],
+        }),
+        updateSessionFields: vi.fn().mockResolvedValue(undefined),
+        updateSessionContent: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const result = await updateSessionCore({
+        storage: storage as unknown as any,
+        writeMarkdown: false,
+        date: TODAY,
+        addTopic: 'sqlite',
+        setStatus: 'complete',
+        appendSection: '## Update',
+        content: 'Body-only append',
+      });
+
+      expect(result.updated).toBe(true);
+      expect(storage.updateSessionFields).toHaveBeenCalledTimes(1);
+      expect(storage.updateSessionContent).toHaveBeenCalledTimes(1);
+      expect(storage.updateSessionContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'session-db-1',
+          content: expect.not.stringContaining('---'),
+        })
+      );
+    });
+
+    it('should throw when no sqlite session exists for the date', async () => {
+      const storage: MockSqliteStorage = {
+        queryFullSessions: vi.fn().mockResolvedValue({ sessions: [] }),
+        updateSessionFields: vi.fn().mockResolvedValue(undefined),
+        updateSessionContent: vi.fn().mockResolvedValue(undefined),
+      };
+
+      await expect(
+        updateSessionCore({
+          storage: storage as unknown as any,
+          writeMarkdown: false,
+          date: TODAY,
+          addTopic: 'sqlite',
+        })
+      ).rejects.toThrow(/No session found in database/i);
     });
   });
 });

@@ -12,18 +12,23 @@
  * Unit tests passed (they mock the call), integration caught it in review.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { findSkillForTask } from '../../src/tools/skills.js';
 
 describe('Integration: MCP Tool Wiring', () => {
+  beforeAll(() => {
+    // Ensure we fall back to file IO since the test DB doesn't have the skills
+    process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO = '1';
+  });
+
   describe('find_skill_for_task registration', () => {
     it('should accept params object (not bare string)', async () => {
       // This tests that findSkillForTask expects { task: string }
       // NOT just a string parameter
-      
+
       // ✅ CORRECT: Object with task property
-      const result = await findSkillForTask({ 
-        task: 'write tests first' 
+      const result = await findSkillForTask({
+        task: 'write tests first'
       });
 
       expect(result.isError).toBeFalsy();
@@ -79,12 +84,12 @@ describe('Integration: MCP Tool Wiring', () => {
       // 1. Client sends: { task: "refactoring code" }
       // 2. Server destructures: async ({ task }) => ...
       // 3. Server calls: findSkillForTask({ task })
-      
+
       const mcpParams = { task: 'refactoring code' };
       const { task } = mcpParams; // Destructure like server.ts
-      
+
       const result = await findSkillForTask({ task }); // Wrap like server.ts should
-      
+
       expect(result.isError).toBeFalsy();
       const data = JSON.parse(result.content[0].text);
       expect(data.found).toBe(true);

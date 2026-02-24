@@ -3,10 +3,15 @@ import { promisify } from 'util';
 import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { searchContextCore } from '../../../lib/core/search-context.js';
 import { queryLearnedPatternsSqlite } from '../../../lib/core/sqlite-query.js';
 import { handleZodError, MCPErrorResponse } from './utils/error-helpers.js';
+import { getProjectRoot } from './utils/project-root.js';
+import {
+  SKILL_MAPPINGS,
+  isSqliteOnlyMode,
+} from './skills.js';
+import { getSkillContentFromSqlite } from './utils/skills-storage.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -113,11 +118,43 @@ export async function findPattern(params: unknown) {
 export async function getSkillByName(params: unknown) {
   try {
     const validated = getSkillByNameSchema.parse(params);
+
+    const mapping = SKILL_MAPPINGS.find((skill) => skill.name === validated.skillName);
+
+    if (isSqliteOnlyMode()) {
+      if (!mapping) {
+        return {
+          content: [{ 
+            type: 'text' as const, 
+            text: `Error getting skill: Skill '${validated.skillName}' not found in SQLITE-only mode` 
+          }],
+          isError: true
+        };
+      }
+
+      const sqliteSkillContent = await getSkillContentFromSqlite(mapping.name);
+      if (!sqliteSkillContent) {
+        return {
+          content: [{
+            type: 'text' as const,
+            text: `Error getting skill: Skill '${validated.skillName}' not found in SQLite. Run 'aiknowsys sync-skills' first.`
+          }],
+          isError: true
+        };
+      }
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: sqliteSkillContent,
+        }]
+      };
+    }
     
-    // Read skill file directly
-    // Use process.cwd() to get workspace root (where MCP server is invoked from)
+    // Resolve from project root (works in src/ and dist/ execution)
+    const projectRoot = getProjectRoot();
     const skillPath = path.resolve(
-      process.cwd(),
+      projectRoot,
       '.github/skills',
       validated.skillName,
       'SKILL.md'

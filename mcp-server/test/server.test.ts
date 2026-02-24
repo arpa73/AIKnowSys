@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AIKnowSysServer } from '../src/server.js';
 
 describe('MCP Server Registration', () => {
-  it('should register all 37 tools (34 direct + 3 dynamic)', async () => {
+  it('should register all 41 tools (38 direct + 3 dynamic)', async () => {
     const server = new AIKnowSysServer();
 
     // Access the internal low-level server instance
@@ -15,7 +15,7 @@ describe('MCP Server Registration', () => {
       params: {}
     });
 
-    expect(response.tools).toHaveLength(37);
+    expect(response.tools).toHaveLength(41);
 
     // Verify tool names (split mutation tools + new query tools)
     const toolNames = response.tools.map((t: any) => t.name);
@@ -40,6 +40,7 @@ describe('MCP Server Registration', () => {
     expect(toolNames).toContain('create_session');
     expect(toolNames).toContain('create_plan');
     expect(toolNames).toContain('create_review');
+    expect(toolNames).toContain('update_review');
     expect(toolNames).toContain('create_link');
     expect(toolNames).toContain('create_learned_pattern');
     expect(toolNames).toContain('check_constraints');
@@ -48,6 +49,7 @@ describe('MCP Server Registration', () => {
 
     // SQLite single-record query tool
     expect(toolNames).toContain('get_session');
+    expect(toolNames).toContain('get_plan');
 
     // Session mutation tools (split from update_session)
     expect(toolNames).toContain('append_to_session');
@@ -75,7 +77,9 @@ describe('MCP Server Registration', () => {
 
     // Enhanced query tools
     expect(toolNames).toContain('search_context');
-    expect(toolNames).toContain('find_pattern');
+    expect(toolNames).toContain('get_db_stats_sqlite');
+    expect(toolNames).toContain('query_reviews');
+    expect(toolNames).toContain('query_events');
     expect(toolNames).toContain('get_skill_by_name');
   });
 });

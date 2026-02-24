@@ -19,10 +19,16 @@ As of **v0.11.0** (Feb 2026), the project evolved to a **milestone-focused chang
 - ❌ Redundant with session files in `.aiknowsys/sessions/`
 
 ### New Approach (v0.11.0+)
-- ✅ **Milestone-only entries** in CODEBASE_CHANGELOG.md (releases, arch changes)
+- ✅ **DB-generated milestone changelog** in CODEBASE_CHANGELOG.md (releases, arch changes)
 - ✅ **Session files** indexed in `.aiknowsys/context-index.json` (queryable)
 - ✅ **CLI queries** for finding historical work (`query-sessions`, `search-context`)
 - ✅ Changelog stays lean (~500 lines), focused on major events
+
+Generate current milestone changelog on demand:
+
+```bash
+npx aiknowsys generate-changelog --output CODEBASE_CHANGELOG.md
+```
 
 ## How to Find Historical Context
 
@@ -61,6 +67,10 @@ Archives are **permanent historical records**:
 - ✅ Never modified after creation
 - ❌ Don't add new entries (use session files instead)
 - ❌ Don't move content back to main changelog
+
+Legacy note:
+- Manual markdown/archive workflows remain available for compatibility.
+- DB-generated changelog output is the default source-of-truth.
 
 If you need to reference archived work:
 1. Search the archive with grep

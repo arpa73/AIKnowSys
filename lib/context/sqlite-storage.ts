@@ -154,6 +154,15 @@ interface UserStateRecord {
   updatedAt: string;
 }
 
+interface SkillRecord {
+  name: string;
+  description: string | null;
+  keywords: string | null;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 /**
  * SQLite storage adapter for cross-repository knowledge management
  */
@@ -715,6 +724,11 @@ export class SqliteStorage extends StorageAdapter {
     const params: SqliteValue[] = [];
 
     if (filters) {
+      if (!filters.allProjects && filters.projectId) {
+        query += ' AND project_id = ?';
+        params.push(filters.projectId);
+      }
+
       if (filters.idStartsWith) {
         query += ' AND id LIKE ?';
         params.push(`${filters.idStartsWith}%`);
@@ -786,6 +800,11 @@ export class SqliteStorage extends StorageAdapter {
     const params: SqliteValue[] = [];
 
     if (filters) {
+      if (!filters.allProjects && filters.projectId) {
+        query += ' AND project_id = ?';
+        params.push(filters.projectId);
+      }
+
       if (filters.id) {
         query += ' AND id = ?';
         params.push(filters.id);
@@ -1547,6 +1566,158 @@ export class SqliteStorage extends StorageAdapter {
   }
 
   /**
+   * Update mutable session metadata fields.
+   */
+  async updateSessionFields(session: {
+    id: string;
+    status?: string;
+    topics?: string[];
+    updated_at?: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before updating data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const result = this.db
+      .prepare(`
+        UPDATE sessions
+        SET
+          status = COALESCE(?, status),
+          topics = COALESCE(?, topics),
+          updated_at = COALESCE(?, CURRENT_TIMESTAMP)
+        WHERE id = ?
+      `)
+      .run(
+        session.status ?? null,
+        session.topics ? JSON.stringify(session.topics) : null,
+        session.updated_at ?? null,
+        session.id
+      );
+
+    if (result.changes === 0) {
+      throw new Error(`Session not found: ${session.id}`);
+    }
+  }
+
+  /**
+   * Update session body content (without frontmatter).
+   */
+  async updateSessionContent(session: {
+    id: string;
+    content: string;
+    updated_at?: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before updating data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const result = this.db
+      .prepare(`
+        UPDATE sessions
+        SET
+          content = ?,
+          updated_at = COALESCE(?, CURRENT_TIMESTAMP)
+        WHERE id = ?
+      `)
+      .run(session.content, session.updated_at ?? null, session.id);
+
+    if (result.changes === 0) {
+      throw new Error(`Session not found: ${session.id}`);
+    }
+  }
+
+  /**
+   * Upsert skill content for SQLite-only MCP skill loading.
+   */
+  async upsertSkill(skill: {
+    name: string;
+    description?: string | null;
+    keywords?: string[];
+    content: string;
+    updated_at: string;
+  }): Promise<void> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before updating data. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    this.db
+      .prepare(`
+        INSERT INTO skills (name, description, keywords, content, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(name) DO UPDATE SET
+          description = excluded.description,
+          keywords = excluded.keywords,
+          content = excluded.content,
+          updated_at = excluded.updated_at
+      `)
+      .run(
+        skill.name,
+        skill.description ?? null,
+        JSON.stringify(skill.keywords ?? []),
+        skill.content,
+        skill.updated_at,
+        skill.updated_at
+      );
+  }
+
+  /**
+   * Fetch a single skill from SQLite.
+   */
+  async getSkillByName(skillName: string): Promise<{
+    name: string;
+    description: string | null;
+    keywords: string[];
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+  } | undefined> {
+    if (!this.db) {
+      throw new Error(
+        'Database not initialized. Call init(targetDir) before querying. ' +
+        'Example: await storage.init(process.cwd())'
+      );
+    }
+
+    const row = this.db
+      .prepare('SELECT * FROM skills WHERE name = ? LIMIT 1')
+      .get(skillName) as SkillRecord | undefined;
+
+    if (!row) {
+      return undefined;
+    }
+
+    let parsedKeywords: string[] = [];
+    if (row.keywords) {
+      try {
+        const keywords = JSON.parse(row.keywords);
+        if (Array.isArray(keywords)) {
+          parsedKeywords = keywords.map((value) => String(value));
+        }
+      } catch {
+        parsedKeywords = [];
+      }
+    }
+
+    return {
+      name: row.name,
+      description: row.description,
+      keywords: parsedKeywords,
+      content: row.content,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  /**
    * Upsert a project into the database.
    * Preserves existing tech_stack when omitted in subsequent writes.
    */
@@ -1780,9 +1951,21 @@ export class SqliteStorage extends StorageAdapter {
       );
     }
 
-    this.db
+    const result = this.db
       .prepare('UPDATE reviews SET status = ?, updated_at = ? WHERE id = ?')
       .run(status, updatedAt, id);
+
+    if (result.changes === 0) {
+      throw new Error(`Review not found: ${id}`);
+    }
+  }
+
+  /**
+   * Update a review's mutable fields (status).
+   * Convenience wrapper used by the MCP update_review tool.
+   */
+  async updateReview(id: string, fields: { status: ReviewStatus }): Promise<void> {
+    await this.updateReviewStatus(id, fields.status, new Date().toISOString());
   }
 
   /**
@@ -2441,6 +2624,40 @@ export class SqliteStorage extends StorageAdapter {
     const row = stmt.get(planId) as PlanRow | undefined;
 
     return row || null;
+  }
+
+  /**
+   * Get a single plan with related entities in one call.
+   * Returns plan + linked sessions + reviews + events.
+   */
+  async getPlanWithRelations(planId: string): Promise<{
+    plan: PlanRow;
+    sessions: SessionMetadataRecord[];
+    reviews: ReviewRecord[];
+    events: KnowledgeEvent[];
+  } | undefined> {
+    if (!this.db) {
+      throw AIFriendlyErrorBuilder.databaseError(
+        'Database not initialized. Call init(targetDir) before querying.',
+        'await storage.init(process.cwd())'
+      );
+    }
+
+    const plan = await this.getPlanById(planId);
+    if (!plan) {
+      return undefined;
+    }
+
+    const sessionsResult = await this.querySessionsMetadata({ plan: planId });
+    const reviewsResult = await this.queryReviews({ targetId: planId });
+    const events = await this.queryEvents({ planId, limit: 200 });
+
+    return {
+      plan,
+      sessions: sessionsResult.sessions,
+      reviews: reviewsResult.reviews,
+      events,
+    };
   }
 
   /**

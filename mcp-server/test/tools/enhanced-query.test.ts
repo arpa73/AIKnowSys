@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Mock fs/promises for file reading (used by getSkillByName)
 const mockReadFile = vi.fn();
+const mockGetSkillContentFromSqlite = vi.fn();
 
 // Mock execFile for findPattern (child_process)
 const mockExecFileAsync = vi.fn();
@@ -20,6 +21,9 @@ vi.mock('fs/promises', () => ({
   default: {
     readFile: mockReadFile
   }
+}));
+vi.mock('../../src/tools/utils/skills-storage.js', () => ({
+  getSkillContentFromSqlite: mockGetSkillContentFromSqlite
 }));
 
 // Mock child_process execFile (used by findPattern)
@@ -40,6 +44,9 @@ describe('Enhanced Query Tools', () => {
     vi.clearAllMocks();
     mockReadFile.mockReset();
     mockExecFileAsync.mockReset();
+    mockGetSkillContentFromSqlite.mockReset();
+    delete process.env.AIKNOWSYS_SQLITE_ONLY;
+    process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO = 'true';
   });
 
   describe('search_context', () => {
@@ -319,6 +326,47 @@ describe('Enhanced Query Tools', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Error getting skill');
+    });
+
+    it('should avoid filesystem reads in SQLITE-only mode', async () => {
+      process.env.AIKNOWSYS_SQLITE_ONLY = 'true';
+      delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+      mockReadFile.mockRejectedValue(new Error('read should not be called'));
+      mockGetSkillContentFromSqlite.mockResolvedValue('# Feature Implementation Skill\n\nFrom SQLite');
+
+      const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
+      const result = await getSkillByName({ skillName: 'feature-implementation' });
+
+      expect(result.isError).toBeFalsy();
+      expect(result.content[0].text).toContain('From SQLite');
+      expect(mockReadFile).not.toHaveBeenCalled();
+      expect(mockGetSkillContentFromSqlite).toHaveBeenCalledWith('feature-implementation');
+    });
+
+    it('should default to SQLITE-only mode when no env override is provided', async () => {
+      delete process.env.AIKNOWSYS_SQLITE_ONLY;
+      delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+      mockReadFile.mockRejectedValue(new Error('read should not be called'));
+      mockGetSkillContentFromSqlite.mockResolvedValue('# Feature Implementation Skill\n\nSQLite default');
+
+      const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
+      const result = await getSkillByName({ skillName: 'feature-implementation' });
+
+      expect(result.isError).toBeFalsy();
+      expect(result.content[0].text).toContain('SQLite default');
+      expect(mockReadFile).not.toHaveBeenCalled();
+    });
+
+    it('should return helpful error when sqlite skill is missing', async () => {
+      process.env.AIKNOWSYS_SQLITE_ONLY = 'true';
+      delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+      mockGetSkillContentFromSqlite.mockResolvedValue(null);
+
+      const { getSkillByName } = await import('../../src/tools/enhanced-query.js');
+      const result = await getSkillByName({ skillName: 'feature-implementation' });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Run \'aiknowsys sync-skills\' first');
     });
   });
 });

@@ -10,15 +10,34 @@ import { updateSessionCore } from '../../../lib/core/update-session.js';
 import { updatePlanCore } from '../../../lib/core/update-plan.js';
 import { archiveSessions as archiveSessionsCore } from '../../../lib/commands/archive-sessions.js';
 import { archivePlans as archivePlansCore } from '../../../lib/commands/archive-plans.js';
+import { DatabaseLocator } from '../../../lib/context/database-locator.js';
 
 const PROJECT_ROOT = getProjectRoot();
+let cachedProjectId: string | null = null;
+
+async function getResolvedProjectId(): Promise<string> {
+  if (cachedProjectId) {
+    return cachedProjectId;
+  }
+
+  try {
+    const locator = new DatabaseLocator();
+    const config = await locator.getDatabaseConfig(PROJECT_ROOT);
+    cachedProjectId = config.projectId;
+    return config.projectId;
+  } catch {
+    const fallback = path.basename(PROJECT_ROOT);
+    cachedProjectId = fallback;
+    return fallback;
+  }
+}
 
 async function syncMcpActivePlanPointer(
   status: 'ACTIVE' | 'PAUSED' | 'COMPLETE' | 'CANCELLED',
   planId: string
 ): Promise<void> {
   const userId = MCP_AGENT_USER_ID;
-  const projectId = path.basename(PROJECT_ROOT);
+  const projectId = await getResolvedProjectId();
 
   await withStorage(async (storage) => {
     if (status === 'ACTIVE') {
@@ -294,9 +313,10 @@ export async function setPlanStatus(params: unknown) {
 
     if (!validated.force && (validated.status === 'COMPLETE' || validated.status === 'CANCELLED')) {
       const action = validated.status === 'COMPLETE' ? 'COMPLETE_PLAN' : 'CANCEL_PLAN';
+      const projectId = await getResolvedProjectId();
       const constraintResult = await checkConstraints(action, {
         userId: 'mcp-server',
-        projectId: path.basename(PROJECT_ROOT),
+        projectId,
         targetId: validated.planId,
         targetDir: PROJECT_ROOT,
       });
@@ -320,6 +340,7 @@ export async function setPlanStatus(params: unknown) {
       return updatePlanCore({
         planId: validated.planId,
         setStatus: validated.status,
+        force: validated.force,
         targetDir: PROJECT_ROOT,
         storage,
         writeMarkdown: false,

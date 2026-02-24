@@ -1,0 +1,11 @@
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      AIKNOWSYS_SQLITE_ONLY: "true"
+      AIKNOWSYS_DB_PATH: /app/.aiknowsys/knowledge.db
+      AIKNOWSYS_PROJECT_ROOT: /app
+    stdin_open: true
+    tty: true

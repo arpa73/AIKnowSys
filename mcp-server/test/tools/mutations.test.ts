@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockInsertReview = vi.fn();
+const mockUpdateReview = vi.fn();
 const mockInsertLink = vi.fn();
 const mockInsertProject = vi.fn();
 const mockInsertPlan = vi.fn();
@@ -24,6 +25,10 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
 
     async insertReview(...args: unknown[]) {
       return mockInsertReview(...args);
+    }
+
+    async updateReview(...args: unknown[]) {
+      return mockUpdateReview(...args);
     }
 
     async insertLink(...args: unknown[]) {
@@ -101,6 +106,7 @@ describe('Mutation Tools', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockInsertReview.mockReset();
+    mockUpdateReview.mockReset();
     mockInsertLink.mockReset();
     mockInsertProject.mockReset();
     mockInsertPlan.mockReset();
@@ -118,6 +124,7 @@ describe('Mutation Tools', () => {
     mockLogWorkEvent.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockInsertReview.mockResolvedValue(undefined);
+    mockUpdateReview.mockResolvedValue(undefined);
     mockInsertLink.mockResolvedValue(undefined);
     mockInsertProject.mockResolvedValue(undefined);
     mockInsertPlan.mockResolvedValue(undefined);
@@ -478,6 +485,86 @@ describe('Mutation Tools', () => {
 
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('Failed during createReview storage operation: DB locked');
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('update_review', () => {
+    it('should update review status to ADDRESSED', async () => {
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: 'rev-abc-123',
+        status: 'ADDRESSED',
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Review updated');
+      expect(result.content[0].text).toContain('rev-abc-123');
+      expect(result.content[0].text).toContain('ADDRESSED');
+      expect(mockUpdateReview).toHaveBeenCalledTimes(1);
+      expect(mockUpdateReview).toHaveBeenCalledWith('rev-abc-123', { status: 'ADDRESSED' });
+      expect(mockStorageInit).toHaveBeenCalledTimes(1);
+      expect(mockStorageClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should update review status to PENDING', async () => {
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: 'rev-abc-123',
+        status: 'PENDING',
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Review updated');
+    });
+
+    it('should return error when review not found', async () => {
+      mockUpdateReview.mockRejectedValueOnce(new Error('Review not found: rev-missing'));
+
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: 'rev-missing',
+        status: 'ADDRESSED',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Review not found');
+    });
+
+    it('should validate reviewId is required', async () => {
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: '',
+        status: 'ADDRESSED',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid parameter 'reviewId'");
+    });
+
+    it('should validate status is a valid enum value', async () => {
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: 'rev-abc-123',
+        status: 'INVALID',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid parameter 'status'");
+      expect(result.content[0].text).toContain('PENDING, ACTIVE, ADDRESSED');
+    });
+
+    it('should close storage when update fails', async () => {
+      mockUpdateReview.mockRejectedValueOnce(new Error('DB locked'));
+
+      const { updateReview } = await import('../../src/tools/mutations.js');
+      const result = await updateReview({
+        reviewId: 'rev-abc-123',
+        status: 'ADDRESSED',
+      });
+
+      expect(result.isError).toBe(true);
       expect(mockStorageInit).toHaveBeenCalledTimes(1);
       expect(mockStorageClose).toHaveBeenCalledTimes(1);
     });

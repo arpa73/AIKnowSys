@@ -22,6 +22,7 @@ import type {
   QueryPlansOptions,
   QueryLearnedPatternsOptions,
 } from '../../../lib/types/index.js';
+import { EventType } from '../../../lib/events/types.js';
 
 import { parseQueryParams } from '../utils/query-parser.js';
 import { findKnowledgeDb } from '../../../lib/utils/find-knowledge-db.js';
@@ -53,6 +54,7 @@ export async function querySessions(params: {
   dateBefore?: string;
   topic?: string;
   status?: string;
+  planId?: string;
   includeContent?: boolean;
 }) {
   try {
@@ -72,6 +74,7 @@ export async function querySessions(params: {
       dateBefore: parsed.dateBefore,
       topic: parsed.topic,
       status: parsed.status,
+      planId: parsed.planId || params.planId, // support both flat param and natural language parse
       includeContent: parsed.includeContent,
     };
 
@@ -148,6 +151,59 @@ export async function getSession(params: {
           text: JSON.stringify({
             error: true,
             message: `Failed to load session with relations: ${message}`,
+          }, null, 2),
+        },
+      ],
+    };
+  } finally {
+    await storage.close();
+  }
+}
+
+/**
+ * Get a single plan by id
+ */
+export async function getPlan(params: {
+  planId: string;
+  dbPath?: string;
+}) {
+  const storage = new SqliteStorage();
+  try {
+    await storage.init(params.dbPath || findKnowledgeDb());
+
+    const result = await storage.getPlanWithRelations(params.planId);
+
+    if (!result) {
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              error: true,
+              message: `Plan not found: ${params.planId}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: true,
+            message: `Failed to load plan: ${message}`,
           }, null, 2),
         },
       ],
@@ -384,5 +440,109 @@ export async function getDbStats(params: {
         },
       ],
     };
+  }
+}
+
+/**
+ * Query reviews from SQLite database
+ * 
+ * Returns reviews filtered by target ID (plan or session) or status.
+ * 
+ * @param params - Search filters and dbPath
+ * @returns MCP-compliant response with reviews
+ */
+export async function queryReviews(params: {
+  targetId?: string;
+  status?: 'PENDING' | 'ACTIVE' | 'ADDRESSED';
+  dbPath?: string;
+}) {
+  const storage = new SqliteStorage();
+  try {
+    await storage.init(params.dbPath || findKnowledgeDb());
+
+    const result = await storage.queryReviews({
+      targetId: params.targetId,
+      status: params.status, // matches ReviewStatus union exactly
+    });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: true,
+            message: `Failed to query reviews: ${message}`,
+            count: 0,
+            reviews: [],
+          }, null, 2),
+        },
+      ],
+    };
+  } finally {
+    await storage.close();
+  }
+}
+
+/**
+ * Query knowledge events from SQLite database
+ * 
+ * Allows filtering events to reconstruct timelines or debug structural issues.
+ * 
+ * @param params - Search filters and dbPath
+ * @returns MCP-compliant response with events
+ */
+export async function queryEvents(params: {
+  eventType?: string | string[];
+  planId?: string;
+  sessionId?: string;
+  limit?: number;
+  dbPath?: string;
+}) {
+  const storage = new SqliteStorage();
+  try {
+    await storage.init(params.dbPath || findKnowledgeDb());
+
+    const events = await storage.queryEvents({
+      eventType: params.eventType as EventType | EventType[], // string values match enum members
+      planId: params.planId,
+      sessionId: params.sessionId,
+      limit: params.limit ?? 500, // Caller-controlled, safe default cap
+    });
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({ count: events.length, events }, null, 2),
+        },
+      ],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: JSON.stringify({
+            error: true,
+            message: `Failed to query events: ${message}`,
+            count: 0,
+            events: [],
+          }, null, 2),
+        },
+      ],
+    };
+  } finally {
+    await storage.close();
   }
 }

@@ -25,10 +25,12 @@ import { migrateToMultidev } from '../dist/lib/commands/migrate-to-multidev.js';
 import { migrateEssentials } from '../dist/lib/commands/migrate-essentials.js';
 import { migrateToSqlite } from '../dist/lib/commands/migrate-to-sqlite.js';
 import { migrateToEvents } from '../dist/lib/commands/migrate-to-events.js';
+import { syncSkills } from '../dist/lib/commands/sync-skills.js';
 import { exportSession } from '../dist/lib/commands/export-session.js';
 import { exportSessions } from '../dist/lib/commands/export-sessions.js';
 import { exportPlan } from '../dist/lib/commands/export-plan.js';
 import { validateDeliverables } from '../dist/lib/commands/validate-deliverables.js';
+import { generateChangelog } from '../dist/lib/commands/generate-changelog.js';
 import { queryPlans } from '../dist/lib/commands/query-plans.js';
 import { querySessions } from '../dist/lib/commands/query-sessions.js';
 import { searchContext } from '../dist/lib/commands/search-context.js';
@@ -162,6 +164,34 @@ program
       dryRun: options.dryRun,
       verbose: options.verbose
     });
+  });
+
+program
+  .command('sync-skills')
+  .description('Sync .github/skills/*/SKILL.md into SQLite skills table')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path')
+  .option('--dry-run', 'Preview without writing to database')
+  .option('-v, --verbose', 'Show detailed output')
+  .action(async (options) => {
+    const result = await syncSkills({
+      dir: options.dir,
+      dbPath: options.dbPath,
+      dryRun: options.dryRun,
+      verbose: options.verbose,
+    });
+
+    if (options.dryRun) {
+      console.log(chalk.yellow('🔍 DRY RUN MODE'));
+    }
+
+    console.log(chalk.green('✓'), 'Skills sync complete');
+    console.log(chalk.dim(`  Found: ${result.found}`));
+    console.log(chalk.dim(`  Synced: ${result.synced}`));
+    if (result.skipped > 0) {
+      console.log(chalk.yellow(`  Skipped: ${result.skipped}`));
+    }
+    console.log(chalk.dim(`  DB: ${result.dbPath}`));
   });
 
 async function runExportSession(id, options) {
@@ -545,6 +575,45 @@ program
   });
 
 // Context query commands
+program
+  .command('generate-changelog')
+  .description('Generate milestone-only changelog markdown from SQLite project context')
+  .option('-d, --dir <directory>', 'Target directory', '.')
+  .option('--db-path <path>', 'Database file path (defaults to auto-detected project/global DB)')
+  .option('--project-id <id>', 'Explicit project ID scope (default: inferred from --dir/current directory)')
+  .option('--all-projects', 'Include milestones from all projects in shared database')
+  .option('--from <YYYY-MM-DD>', 'Filter milestones from date (inclusive)')
+  .option('--to <YYYY-MM-DD>', 'Filter milestones to date (inclusive)')
+  .option('--limit <number>', 'Maximum number of milestones to include')
+  .option('-o, --output <path>', 'Write generated changelog to file')
+  .option('--dry-run', 'Generate output without writing files')
+  .action(async (options) => {
+    const result = await generateChangelog({
+      dir: options.dir,
+      dbPath: options.dbPath,
+      projectId: options.projectId,
+      allProjects: options.allProjects,
+      from: options.from,
+      to: options.to,
+      limit: options.limit ? parseInt(options.limit, 10) : undefined,
+      output: options.output,
+      dryRun: options.dryRun
+    });
+
+    if (!result.success) {
+      console.error(chalk.red('✗'), result.error);
+      process.exit(1);
+    }
+
+    if (!options.output || options.dryRun) {
+      console.log(result.markdown);
+    }
+
+    if (options.output && !options.dryRun) {
+      console.log(chalk.green('✓'), `Wrote changelog to ${result.outputPath}`);
+    }
+  });
+
 program
   .command('query-plans')
   .description('Query plan metadata with filters (status, author, topic, dates)')

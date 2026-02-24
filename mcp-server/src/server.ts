@@ -24,6 +24,7 @@ import {
   getActivePlanPointer,
   logWorkEventTool,
   logWorkEventSchema,
+  updateReview,
 } from './tools/mutations.js';
 import { createReview, createLink } from './tools/reviews.js';
 import {
@@ -44,10 +45,13 @@ import { searchContext, findPattern, getSkillByName } from './tools/enhanced-que
 import {
   querySessions,
   getSession,
+  getPlan,
   queryPlans,
   queryLearnedPatterns,
   searchContext as searchContextSqlite,
   getDbStats as getDbStatsSqlite,
+  queryReviews,
+  queryEvents,
 } from './tools/sqlite-query.js';
 
 export class AIKnowSysServer {
@@ -266,6 +270,18 @@ Natural language also supported:
     );
 
     this.server.registerTool(
+      'get_plan',
+      {
+        description: 'Get a single plan by id.',
+        inputSchema: z.object({
+          planId: z.string().min(1),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+        }),
+      },
+      async (args) => getPlan(args)
+    );
+
+    this.server.registerTool(
       'query_plans',
       {
         description: `This is a tool from the aiknowsys MCP server.
@@ -360,6 +376,36 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
       async (args) => getDbStatsSqlite(args)
     );
 
+    this.server.registerTool(
+      'query_reviews',
+      {
+        description:
+          'Query reviews from SQLite database. Returns reviews filtered by target ID (plan or session) or status.',
+        inputSchema: z.object({
+          targetId: z.string().optional(),
+          status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional(),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+        }),
+      },
+      async (args) => await queryReviews(args)
+    );
+
+    this.server.registerTool(
+      'query_events',
+      {
+        description:
+          'Query knowledge events from SQLite database. Allows filtering events to reconstruct timelines or debug structural issues across a plan or session.',
+        inputSchema: z.object({
+          eventType: z.union([z.string(), z.array(z.string())]).optional(),
+          planId: z.string().optional(),
+          sessionId: z.string().optional(),
+          limit: z.number().optional(),
+          dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+        }),
+      },
+      async (args) => await queryEvents(args)
+    );
+
     // Phase 2A: Mutation Tools
     this.server.registerTool(
       'create_session',
@@ -388,6 +434,19 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         }),
       },
       async (args) => createReview(args)
+    );
+
+    this.server.registerTool(
+      'update_review',
+      {
+        description:
+          'Update the status of an existing review entry. Use to close stale PENDING reviews or mark reviews as ADDRESSED.',
+        inputSchema: z.object({
+          reviewId: z.string().min(1),
+          status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']),
+        }),
+      },
+      async (args) => updateReview(args)
     );
 
     this.server.registerTool(
@@ -560,6 +619,7 @@ Returns metadata-only by default (95% savings). Set includeContent:true for full
         inputSchema: z.object({
           planId: z.string().regex(/^PLAN_[a-z0-9_]+$/),
           status: z.enum(['ACTIVE', 'PAUSED', 'COMPLETE', 'CANCELLED']),
+          force: z.boolean().optional().default(false),
         }),
       },
       async (args) => setPlanStatus(args)

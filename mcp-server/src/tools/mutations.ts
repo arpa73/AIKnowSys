@@ -486,6 +486,52 @@ export async function createReview(params: unknown) {
   }
 }
 
+const updateReviewSchema = z.object({
+  reviewId: z.string().min(1),
+  status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']),
+});
+
+export async function updateReview(params: unknown) {
+  try {
+    const validated = updateReviewSchema.parse(params);
+
+    await withStorage(async (storage) => {
+      await storage.updateReview(validated.reviewId, { status: validated.status });
+    }, 'updateReview storage operation');
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Review updated\nID: ${validated.reviewId}\nStatus: ${validated.status}`
+      }]
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return handleZodError(error, 'review update', {
+        reviewId: {
+          suggestion: 'Provide a valid review ID (e.g. from create_review output)',
+          examples: ['{ "reviewId": "review_abc-123", "status": "ADDRESSED" }']
+        },
+        status: {
+          suggestion: 'Status must be one of: PENDING, ACTIVE, ADDRESSED',
+          examples: ['{ "reviewId": "review_abc-123", "status": "ADDRESSED" }']
+        }
+      });
+    }
+
+    const errorResponse = AIFriendlyErrorBuilder.validationFailed(
+      'review update',
+      error instanceof Error ? error.message : String(error),
+      'Ensure review ID exists in the database'
+    );
+
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(errorResponse, null, 2) }],
+      isError: true,
+    };
+  }
+}
+
 export async function createLink(params: unknown) {
   try {
     const validated = createLinkSchema.parse(params);

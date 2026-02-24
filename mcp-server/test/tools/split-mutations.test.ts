@@ -8,7 +8,10 @@ const mockGetUserState = vi.fn();
 const mockQueryFullSessions = vi.fn();
 const mockGetPlanById = vi.fn();
 const mockUpdatePlan = vi.fn();
+const mockUpdateSessionFields = vi.fn();
+const mockUpdateSessionContent = vi.fn();
 const mockPrepare = vi.fn();
+const mockGetDatabaseConfig = vi.fn();
 
 vi.mock('child_process', () => ({
   execFile: vi.fn(),
@@ -29,6 +32,16 @@ vi.mock('../../../lib/core/constraints.js', () => ({
 vi.mock('../../../lib/utils/find-knowledge-db.js', () => ({
   findKnowledgeDb: vi.fn(() => '.aiknowsys/knowledge.db'),
 }));
+
+vi.mock('../../../lib/context/database-locator.js', () => {
+  class MockDatabaseLocator {
+    async getDatabaseConfig(...args: unknown[]) {
+      return mockGetDatabaseConfig(...args);
+    }
+  }
+
+  return { DatabaseLocator: MockDatabaseLocator };
+});
 
 vi.mock('../../../lib/context/sqlite-storage.js', () => {
   class MockSqliteStorage {
@@ -54,6 +67,14 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
 
     async updatePlan(...args: unknown[]) {
       return mockUpdatePlan(...args);
+    }
+
+    async updateSessionFields(...args: unknown[]) {
+      return mockUpdateSessionFields(...args);
+    }
+
+    async updateSessionContent(...args: unknown[]) {
+      return mockUpdateSessionContent(...args);
     }
 
     async close(...args: unknown[]) {
@@ -83,7 +104,10 @@ describe('Split Plan Mutation Tools', () => {
     mockQueryFullSessions.mockReset();
     mockGetPlanById.mockReset();
     mockUpdatePlan.mockReset();
+    mockUpdateSessionFields.mockReset();
+    mockUpdateSessionContent.mockReset();
     mockPrepare.mockReset();
+    mockGetDatabaseConfig.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
     mockUpsertUserState.mockResolvedValue(undefined);
@@ -105,6 +129,13 @@ Test the plan mutations.`,
       status: 'ACTIVE'
     });
     mockUpdatePlan.mockResolvedValue({ changes: 1 });
+    mockUpdateSessionFields.mockResolvedValue({ changes: 1 });
+    mockUpdateSessionContent.mockResolvedValue({ changes: 1 });
+    mockGetDatabaseConfig.mockResolvedValue({
+      dbPath: '/tmp/test.db',
+      projectId: 'resolved-project-id',
+      projectName: 'test-project',
+    });
     mockPrepare.mockReturnValue({
       run: vi.fn().mockReturnValue({ changes: 1 })
     });
@@ -123,6 +154,7 @@ Test the plan mutations.`,
       expect(result.content[0].text).toContain('Plan status updated');
       expect(result.content[0].text).toContain('COMPLETE');
       expect(mockCheckConstraints).toHaveBeenCalledWith('COMPLETE_PLAN', expect.objectContaining({
+        projectId: 'resolved-project-id',
         targetId: 'PLAN_feature_x',
         targetDir: expect.any(String),
       }));
@@ -153,6 +185,7 @@ Test the plan mutations.`,
 
       expect(result.isError).not.toBe(true);
       expect(mockCheckConstraints).toHaveBeenCalledWith('CANCEL_PLAN', expect.objectContaining({
+        projectId: 'resolved-project-id',
         targetId: 'PLAN_feature_x',
         targetDir: expect.any(String),
       }));
@@ -183,6 +216,7 @@ Test the plan mutations.`,
 
       expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'mcp-agent',
+        project_id: 'resolved-project-id',
         active_plan_id: 'PLAN_test'
       }));
     });
@@ -198,6 +232,7 @@ Test the plan mutations.`,
 
       expect(mockUpsertUserState).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'mcp-agent',
+        project_id: 'resolved-project-id',
         active_plan_id: null
       }));
     });
@@ -283,6 +318,26 @@ Test the plan mutations.`,
       expect(errorText).toContain("Invalid parameter 'content'");
       expect(errorText).toContain('Content must be a non-empty string');
     });
+
+    it('should succeed when stored plan content is missing frontmatter', async () => {
+      mockGetPlanById.mockResolvedValue({
+        id: 'PLAN_feature_x',
+        title: 'Test Plan',
+        content: '# Test Plan\n\n## Goal\nLegacy content without frontmatter.',
+        status: 'ACTIVE',
+        author: 'test',
+      });
+
+      const { appendToPlan } = await import('../../src/tools/split-mutations.js');
+      const result = await appendToPlan({
+        planId: 'PLAN_feature_x',
+        content: 'Recovered append works'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Plan appended successfully');
+      expect(mockUpdatePlan).toHaveBeenCalled();
+    });
   });
 
   describe('prepend_to_plan', () => {
@@ -320,6 +375,8 @@ Test the session mutations.
         content: mockSessionContent
       }]
     });
+    mockUpdateSessionFields.mockResolvedValue({ changes: 1 });
+    mockUpdateSessionContent.mockResolvedValue({ changes: 1 });
     mockPrepare.mockReturnValue({
       run: vi.fn().mockReturnValue({ changes: 1 })
     });
@@ -359,6 +416,26 @@ Test the session mutations.
       const errorText = result.content[0].text;
       expect(errorText).toContain("Invalid parameter 'content'");
       expect(errorText).toContain('Content must be a non-empty string');
+    });
+
+    it('should succeed when stored session content is missing frontmatter', async () => {
+      mockQueryFullSessions.mockResolvedValue({
+        sessions: [{
+          id: '2026-02-21',
+          content: '# Session: Legacy\n\n## Goal\nNo frontmatter block.'
+        }]
+      });
+
+      const { appendToSession } = await import('../../src/tools/split-mutations.js');
+      const result = await appendToSession({
+        section: '## Progress',
+        content: 'Recovered append works'
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(result.content[0].text).toContain('Updated session');
+      expect(mockUpdateSessionFields).toHaveBeenCalled();
+      expect(mockUpdateSessionContent).toHaveBeenCalled();
     });
   });
 

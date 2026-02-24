@@ -1,19 +1,29 @@
 # Milestone Changelog Format Guide
 
 > **Version:** v0.11.0  
-> **Purpose:** Guide for updating CODEBASE_CHANGELOG.md with milestone entries only
+> **Purpose:** Guide for generating `CODEBASE_CHANGELOG.md` from SQLite milestone context
 
 ---
 
 ## Overview
 
-As of **v0.11.0**, CODEBASE_CHANGELOG.md serves as a **milestone-focused timeline** of major events in the project. Daily development work is tracked in session files (`.aiknowsys/sessions/`) and indexed for CLI queries.
+As of **v0.11.0+**, `CODEBASE_CHANGELOG.md` is a **generated milestone timeline** derived from SQLite-backed context (plans/sessions/events). Daily development work stays in database-backed session/plan context and is queryable via CLI/MCP.
 
-**Goal:** Keep changelog **lean** (~500 lines), **scannable** (major events only), and **authoritative** (for releases, breaking changes, architecture decisions).
+**Default command:**
+
+```bash
+npx aiknowsys generate-changelog --output CODEBASE_CHANGELOG.md
+```
+
+**Goal:** Keep changelog **lean** (~500 lines), **scannable** (major events only), and **authoritative** (for releases, breaking changes, architecture decisions, security milestones).
+
+### Legacy Compatibility
+
+Legacy manual/archive workflows remain supported for transition scenarios, but are considered compatibility paths rather than primary source-of-truth.
 
 ---
 
-## When to Add Milestone Entries
+## Milestone Inclusion Policy
 
 ### ✅ DO Add Entries For:
 
@@ -280,7 +290,7 @@ Never:
 
 ### Q: What if a milestone spans multiple sessions?
 
-**A:** Add ONE milestone entry at completion. Session files track the journey; milestone entry documents the outcome.
+**A:** Complete the milestone work, then regenerate `CODEBASE_CHANGELOG.md` once. Session files track the journey; the generated milestone changelog documents the outcome.
 
 ---
 

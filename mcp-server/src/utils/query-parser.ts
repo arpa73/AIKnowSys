@@ -27,6 +27,7 @@ interface FlexibleQueryParams {
   status?: string;
   author?: string;
   priority?: string;
+  planId?: string;
   // Pattern-specific
   category?: string;
   keywords?: string[];
@@ -50,6 +51,7 @@ interface ParsedQueryParams {
   // Plan-specific
   author?: string;
   priority?: 'high' | 'medium' | 'low';
+  planId?: string;
   // Pattern-specific
   category?: string;
   keywords?: string[];
@@ -101,7 +103,7 @@ export function parseQueryParams(
   } else if (params.last !== undefined && params.unit) {
     // Relative dates: { last: 7, unit: "days" }
     const date = new Date(now);
-    
+
     if (params.unit === 'days') {
       date.setUTCDate(date.getUTCDate() - params.last);
     } else if (params.unit === 'weeks') {
@@ -111,7 +113,7 @@ export function parseQueryParams(
       // Handles month boundaries correctly (Jan 31 - 1 month = Feb 28/29)
       date.setUTCMonth(date.getUTCMonth() - params.last);
     }
-    
+
     result.dateAfter = formatDate(date);
   } else {
     // Absolute dates

@@ -11,14 +11,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   querySessions,
   getSession,
+  getPlan,
   queryPlans,
   queryLearnedPatterns,
   searchContext,
   getDbStats,
+  queryReviews,
+  queryEvents,
 } from '../../src/tools/sqlite-query.js';
 
 const mockStorageInit = vi.fn();
 const mockGetSessionWithRelations = vi.fn();
+const mockGetPlanById = vi.fn();
+const mockGetPlanWithRelations = vi.fn();
+const mockQueryReviews = vi.fn();
+const mockQueryEvents = vi.fn();
 const mockStorageClose = vi.fn();
 
 vi.mock('../../../lib/context/sqlite-storage.js', () => {
@@ -29,6 +36,22 @@ vi.mock('../../../lib/context/sqlite-storage.js', () => {
 
     async getSessionWithRelations(...args: unknown[]) {
       return mockGetSessionWithRelations(...args);
+    }
+
+    async getPlanById(...args: unknown[]) {
+      return mockGetPlanById(...args);
+    }
+
+    async getPlanWithRelations(...args: unknown[]) {
+      return mockGetPlanWithRelations(...args);
+    }
+
+    async queryReviews(...args: unknown[]) {
+      return mockQueryReviews(...args);
+    }
+
+    async queryEvents(...args: unknown[]) {
+      return mockQueryEvents(...args);
     }
 
     async close(...args: unknown[]) {
@@ -61,6 +84,7 @@ describe('querySessions (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -127,6 +151,7 @@ describe('querySessions (MCP Tool)', () => {
       dateBefore: '2026-02-10',
       topic: 'testing',
       status: 'complete',
+      planId: 'PLAN_test',
     };
 
     await querySessions(filters);
@@ -144,6 +169,7 @@ describe('queryPlans (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -198,6 +224,7 @@ describe('queryLearnedPatterns (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -249,6 +276,7 @@ describe('searchContext (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -333,6 +361,7 @@ describe('getDbStats (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -399,6 +428,7 @@ describe('getSession (MCP Tool)', () => {
     vi.clearAllMocks();
     mockStorageInit.mockReset();
     mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
     mockStorageClose.mockReset();
     mockStorageInit.mockResolvedValue(undefined);
     mockStorageClose.mockResolvedValue(undefined);
@@ -443,5 +473,178 @@ describe('getSession (MCP Tool)', () => {
     expect(data.error).toBe(true);
     expect(data.message).toContain('DB init failed');
     expect(mockStorageClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('getPlan (MCP Tool)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockGetSessionWithRelations.mockReset();
+    mockGetPlanById.mockReset();
+    mockGetPlanWithRelations.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
+  });
+
+  it('should return a single plan by id with relations', async () => {
+    mockGetPlanWithRelations.mockResolvedValue({
+      plan: {
+        id: 'PLAN_test',
+        title: 'Test plan',
+        status: 'ACTIVE',
+      },
+      sessions: [],
+      reviews: [],
+      events: []
+    });
+
+    const result = await getPlan({ planId: 'PLAN_test', dbPath: '/tmp/test.db' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.plan.id).toBe('PLAN_test');
+    expect(data.plan.title).toBe('Test plan');
+    expect(mockStorageInit).toHaveBeenCalledTimes(1);
+    expect(mockGetPlanWithRelations).toHaveBeenCalledWith('PLAN_test');
+    expect(mockStorageClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should return structured not-found response', async () => {
+    mockGetPlanWithRelations.mockResolvedValue(undefined);
+
+    const result = await getPlan({ planId: 'PLAN_missing', dbPath: '/tmp/test.db' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('Plan not found: PLAN_missing');
+    expect(mockStorageClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('queryReviews (MCP Tool)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockQueryReviews.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
+  });
+
+  it('should query reviews with targetId and status filters', async () => {
+    // GIVEN: Mock storage returns reviews
+    const mockResult = {
+      count: 1,
+      reviews: [
+        {
+          id: 'rev-1',
+          target_id: 'PLAN_test',
+          content: 'review content',
+          status: 'PENDING',
+        }
+      ]
+    };
+    mockQueryReviews.mockResolvedValue(mockResult);
+
+    // WHEN: Tool is called
+    const result = await queryReviews({
+      dbPath: '/tmp/test.db',
+      targetId: 'PLAN_test',
+      status: 'PENDING'
+    });
+
+    // THEN: Returns MCP-compliant response
+    const data = JSON.parse(result.content[0].text);
+    expect(data.count).toBe(1);
+    expect(data.reviews).toHaveLength(1);
+
+    // Core function verified
+    expect(mockQueryReviews).toHaveBeenCalledWith({
+      targetId: 'PLAN_test',
+      status: 'PENDING'
+    });
+  });
+
+  it('should handle errors gracefully', async () => {
+    mockQueryReviews.mockRejectedValue(new Error('Query failed'));
+
+    const result = await queryReviews({
+      dbPath: '/tmp/test.db',
+    });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('Failed to query reviews: Query failed');
+  });
+});
+
+describe('queryEvents (MCP Tool)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStorageInit.mockReset();
+    mockQueryEvents.mockReset();
+    mockStorageClose.mockReset();
+    mockStorageInit.mockResolvedValue(undefined);
+    mockStorageClose.mockResolvedValue(undefined);
+  });
+
+  it('should query events with planId, sessionId, and eventType filters', async () => {
+    // GIVEN: Mock storage returns events
+    const mockEvents = [
+      {
+        id: 'evt-1',
+        event_type: 'task_completed',
+        plan_id: 'PLAN_test',
+        session_id: 'sess-1'
+      }
+    ];
+    mockQueryEvents.mockResolvedValue(mockEvents);
+
+    // WHEN: Tool is called
+    const result = await queryEvents({
+      dbPath: '/tmp/test.db',
+      planId: 'PLAN_test',
+      sessionId: 'sess-1',
+      eventType: 'task_completed'
+    });
+
+    // THEN: Returns MCP-compliant response
+    const data = JSON.parse(result.content[0].text);
+    expect(data.count).toBe(1);
+    expect(data.events).toHaveLength(1);
+
+    // Core function verified
+    expect(mockQueryEvents).toHaveBeenCalledWith({
+      planId: 'PLAN_test',
+      sessionId: 'sess-1',
+      eventType: 'task_completed',
+      limit: 500
+    });
+  });
+
+  it('should support custom limit', async () => {
+    mockQueryEvents.mockResolvedValue([]);
+
+    await queryEvents({
+      dbPath: '/tmp/test.db',
+      limit: 100
+    });
+
+    expect(mockQueryEvents).toHaveBeenCalledWith({
+      limit: 100
+    });
+  });
+
+  it('should handle errors gracefully', async () => {
+    mockQueryEvents.mockRejectedValue(new Error('Query failed'));
+
+    const result = await queryEvents({
+      dbPath: '/tmp/test.db',
+    });
+
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('Failed to query events: Query failed');
   });
 });

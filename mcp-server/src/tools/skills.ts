@@ -7,9 +7,10 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { z } from 'zod';
 import { handleZodError } from './utils/error-helpers.js';
+import { getProjectRoot } from './utils/project-root.js';
+import { getSkillContentFromSqlite } from './utils/skills-storage.js';
 
 // Zod schema for parameter validation
 const findSkillSchema = z.object({
@@ -22,7 +23,7 @@ const findSkillSchema = z.object({
  * This is the knowledge graph that matches task descriptions
  * to skill workflows. Update this when adding new skills.
  */
-const SKILL_MAPPINGS = [
+export const SKILL_MAPPINGS = [
   {
     name: 'tdd-workflow',
     keywords: [
@@ -153,6 +154,41 @@ const SKILL_MAPPINGS = [
   },
 ];
 
+function parseBooleanEnv(value: string | undefined): boolean | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+    return true;
+  }
+
+  if (['0', 'false', 'no', 'off'].includes(normalized)) {
+    return false;
+  }
+
+  return null;
+}
+
+export function isFileSkillLoadingEnabled(): boolean {
+  const explicitFileIo = parseBooleanEnv(process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO);
+  if (explicitFileIo === true) {
+    return true;
+  }
+
+  const sqliteOnly = parseBooleanEnv(process.env.AIKNOWSYS_SQLITE_ONLY);
+  if (sqliteOnly === false) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isSqliteOnlyMode(): boolean {
+  return !isFileSkillLoadingEnabled();
+}
+
 /**
  * Find the most relevant skill for a given task
  * 
@@ -206,12 +242,46 @@ export async function findSkillForTask(params: unknown) {
         ],
       };
     }
-    
-    // Read skill file (use absolute path from source file location)
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+    if (isSqliteOnlyMode()) {
+      const sqliteSkillContent = await getSkillContentFromSqlite(bestMatch.name);
+      if (!sqliteSkillContent) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: true,
+                message: `Skill '${bestMatch.name}' not found in SQLite. Run 'aiknowsys sync-skills' first.`,
+                task: validated.task,
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({
+              found: true,
+              skillName: bestMatch.name,
+              description: bestMatch.description,
+              matchScore: bestMatch.score,
+              task: validated.task,
+              skillContent: sqliteSkillContent,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    // Resolve from project root (works in src/ and dist/ execution)
+    const projectRoot = getProjectRoot();
     const skillPath = path.resolve(
-      __dirname,
-      '../../../.github/skills',
+      projectRoot,
+      '.github/skills',
       bestMatch.name,
       'SKILL.md'
     );

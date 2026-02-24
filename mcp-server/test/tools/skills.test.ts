@@ -1,14 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { findSkillForTask } from '../../src/tools/skills.js';
+import { getProjectRoot } from '../../src/tools/utils/project-root.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { getSkillContentFromSqlite } from '../../src/tools/utils/skills-storage.js';
 
 // Mock fs module
 vi.mock('fs/promises');
+vi.mock('../../src/tools/utils/skills-storage.js', () => ({
+  getSkillContentFromSqlite: vi.fn()
+}));
 
 describe('findSkillForTask', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.AIKNOWSYS_SQLITE_ONLY;
+    process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO = 'true';
+    vi.mocked(getSkillContentFromSqlite).mockResolvedValue('# SQLite Skill\n\nFrom DB');
   });
 
   it('should find skill by keyword match', async () => {
@@ -114,6 +122,18 @@ describe('findSkillForTask', () => {
     expect(data.task).toBe(task);
   });
 
+  it('should resolve skills from project root (not compiled dist path)', async () => {
+    const mockSkillContent = '# TDD Workflow';
+    vi.mocked(fs.readFile).mockResolvedValue(mockSkillContent);
+
+    await findSkillForTask({ task: 'write tests first' });
+
+    expect(vi.mocked(fs.readFile)).toHaveBeenCalledWith(
+      path.resolve(getProjectRoot(), '.github/skills/tdd-workflow/SKILL.md'),
+      'utf-8'
+    );
+  });
+
   it('should return MCP-compliant response format', async () => {
     const result = await findSkillForTask({ task: 'random task' });
 
@@ -166,5 +186,48 @@ describe('findSkillForTask', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain("Invalid parameter 'task'");
+  });
+
+  it('should avoid filesystem reads in SQLITE-only mode', async () => {
+    process.env.AIKNOWSYS_SQLITE_ONLY = 'true';
+    delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('read should not be called'));
+    vi.mocked(getSkillContentFromSqlite).mockResolvedValue('# TDD Workflow\n\nDB content');
+
+    const result = await findSkillForTask({ task: 'write tests first' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.found).toBe(true);
+    expect(data.skillName).toBe('tdd-workflow');
+    expect(data.skillContent).toContain('DB content');
+    expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
+    expect(vi.mocked(getSkillContentFromSqlite)).toHaveBeenCalledWith('tdd-workflow');
+  });
+
+  it('should default to SQLITE-only mode when no env override is provided', async () => {
+    delete process.env.AIKNOWSYS_SQLITE_ONLY;
+    delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('read should not be called'));
+    vi.mocked(getSkillContentFromSqlite).mockResolvedValue('# TDD Workflow\n\nFrom sqlite');
+
+    const result = await findSkillForTask({ task: 'write tests first' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.found).toBe(true);
+    expect(data.skillName).toBe('tdd-workflow');
+    expect(data.skillContent).toContain('From sqlite');
+    expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
+  });
+
+  it('should return helpful error when sqlite skill content is missing', async () => {
+    process.env.AIKNOWSYS_SQLITE_ONLY = 'true';
+    delete process.env.AIKNOWSYS_ENABLE_SKILL_FILE_IO;
+    vi.mocked(getSkillContentFromSqlite).mockResolvedValue(null);
+
+    const result = await findSkillForTask({ task: 'write tests first' });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.error).toBe(true);
+    expect(data.message).toContain('Run \'aiknowsys sync-skills\' first');
   });
 });

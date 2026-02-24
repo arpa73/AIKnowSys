@@ -3,10 +3,13 @@ import { z } from 'zod';
 import {
   querySessions,
   getSession,
+  getPlan,
   queryPlans,
   queryLearnedPatterns,
   searchContext,
   getDbStats,
+  queryReviews,
+  queryEvents,
 } from '../../tools/sqlite-query.js';
 import { findPattern, getSkillByName } from '../../tools/enhanced-query.js';
 import { getActivePlanPointer } from '../../tools/mutations.js';
@@ -37,6 +40,7 @@ export const QUERY_TOOLS: ToolMetadata[] = [
       dateBefore: z.string().optional(),
       topic: z.string().optional(),
       status: z.string().optional(),
+      planId: z.string().optional(),
       includeContent: z.boolean().optional().default(false),
     }),
     handler: querySessions,
@@ -52,6 +56,17 @@ export const QUERY_TOOLS: ToolMetadata[] = [
       dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
     }),
     handler: getSession,
+  },
+  {
+    name: 'get_plan',
+    description: 'Get a single plan by id.',
+    category: 'query',
+    tags: ['plans', 'database', 'single-record'],
+    inputSchema: z.object({
+      planId: z.string().min(1),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+    }),
+    handler: getPlan,
   },
   {
     name: 'query_plans',
@@ -166,4 +181,32 @@ export const QUERY_TOOLS: ToolMetadata[] = [
     }),
     handler: getSkillByName,
   },
+  {
+    name: 'query_reviews',
+    description:
+      'Query reviews from SQLite database. Returns reviews filtered by target ID (plan or session) or status.',
+    category: 'query',
+    tags: ['reviews', 'database', 'fast', 'relational'],
+    inputSchema: z.object({
+      targetId: z.string().optional(),
+      status: z.enum(['PENDING', 'ACTIVE', 'ADDRESSED']).optional(),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+    }),
+    handler: queryReviews,
+  },
+  {
+    name: 'query_events',
+    description:
+      'Query knowledge events from SQLite database. Allows filtering events to reconstruct timelines or debug structural issues across a plan or session.',
+    category: 'query',
+    tags: ['events', 'database', 'history', 'relational'],
+    inputSchema: z.object({
+      eventType: z.union([z.string(), z.array(z.string())]).optional(),
+      planId: z.string().optional(),
+      sessionId: z.string().optional(),
+      limit: z.number().optional(),
+      dbPath: z.string().optional().default('.aiknowsys/knowledge.db'),
+    }),
+    handler: queryEvents,
+  }
 ];

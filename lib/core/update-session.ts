@@ -122,11 +122,27 @@ interface SessionFrontmatter {
   [key: string]: unknown;
 }
 
-function parseFrontmatter(content: string): { frontmatter: SessionFrontmatter; body: string } {
+function parseFrontmatter(
+  content: string,
+  fallback: {
+    date: string;
+    status?: string;
+    topics?: string[];
+    files?: string[];
+  }
+): { frontmatter: SessionFrontmatter; body: string } {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
 
   if (!match) {
-    throw new Error('Invalid session file: missing frontmatter');
+    return {
+      frontmatter: {
+        date: fallback.date,
+        topics: fallback.topics ?? [],
+        files: fallback.files ?? [],
+        status: fallback.status ?? 'in-progress',
+      },
+      body: content,
+    };
   }
 
   const yamlText = match[1];
@@ -219,6 +235,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
 
   let originalContent = '';
   let sessionPath = '';
+  let storageSessionDoc: { status?: string; topics?: string | null } | null = null;
 
   if (opts.storage) {
     const sessionsResult = await opts.storage.queryFullSessions({ date });
@@ -226,6 +243,7 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
       throw new Error(`No session found in database for date: ${date}`);
     }
     const sessionDoc = sessionsResult.sessions[0];
+    storageSessionDoc = sessionDoc as { status?: string; topics?: string | null };
     originalContent = sessionDoc.content;
     sessionPath = `sessions/${date}-session.md`;
   } else {
@@ -238,7 +256,34 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     originalContent = await readFile(sessionPath, 'utf-8');
   }
 
-  const { frontmatter, body } = parseFrontmatter(originalContent);
+  let fallbackFrontmatter = {
+    date,
+    status: 'in-progress',
+    topics: [] as string[],
+    files: [] as string[],
+  };
+
+  if (storageSessionDoc) {
+      const doc = storageSessionDoc;
+      let parsedTopics: string[] = [];
+      if (doc.topics) {
+        try {
+          const topics = JSON.parse(doc.topics);
+          if (Array.isArray(topics)) {
+            parsedTopics = topics.map((topic) => String(topic));
+          }
+        } catch {
+          parsedTopics = [];
+        }
+      }
+      fallbackFrontmatter = {
+        ...fallbackFrontmatter,
+        status: doc.status || 'in-progress',
+        topics: parsedTopics,
+      };
+  }
+
+  const { frontmatter, body } = parseFrontmatter(originalContent, fallbackFrontmatter);
 
   const changes: string[] = [];
   let frontmatterUpdated = false;
@@ -394,26 +439,25 @@ export async function updateSessionCore(options: UpdateSessionOptions): Promise<
     };
   }
 
-  // Combine frontmatter and body
+  // Keep body-only content in SQLite. Frontmatter metadata is stored in fields.
   const newContent = serializeFrontmatter(frontmatter) + newBody;
 
   if (opts.storage) {
     const sessionsResult = await opts.storage.queryFullSessions({ date });
     if (sessionsResult.sessions.length > 0) {
       const sessionDoc = sessionsResult.sessions[0];
-      await opts.storage['db']?.prepare(`
-        UPDATE sessions SET 
-          content = ?, 
-          topics = ?, 
-          status = ?, 
-          updated_at = CURRENT_TIMESTAMP 
-        WHERE id = ?
-      `).run(
-        newContent,
-        JSON.stringify(frontmatter.topics),
-        frontmatter.status,
-        sessionDoc.id
-      );
+      const updatedAt = new Date().toISOString();
+      await opts.storage.updateSessionFields({
+        id: sessionDoc.id,
+        status: frontmatter.status,
+        topics: frontmatter.topics,
+        updated_at: updatedAt,
+      });
+      await opts.storage.updateSessionContent({
+        id: sessionDoc.id,
+        content: newBody,
+        updated_at: updatedAt,
+      });
     }
   }
 
