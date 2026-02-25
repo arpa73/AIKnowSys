@@ -9,6 +9,7 @@
 import path from 'node:path';
 import { withStorage } from './utils/storage-helpers.js';
 import { rebuildIndex } from '../../../lib/commands/rebuild-index.js';
+import { BASE_INVARIANTS } from '../../../lib/seeds/base.js';
 
 function resolveProjectId(projectId?: string): string {
   if (projectId && projectId.trim().length > 0) {
@@ -121,9 +122,12 @@ export async function getCriticalInvariants(projectId?: string) {
     );
 
     const configuredInvariants = parseProjectConfigValue<unknown[]>(configValue);
+    const dbInvariants = await storage.queryInvariants();
     const invariants = Array.isArray(configuredInvariants)
       ? configuredInvariants
-      : await storage.queryInvariants();
+      : (dbInvariants.length > 0
+        ? dbInvariants
+        : BASE_INVARIANTS);
 
     return {
       content: [
